@@ -39,7 +39,7 @@ func secretRotationResourceV0() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"duration": {
+						names.AttrDuration: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},

@@ -232,7 +232,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 						Optional: true,
 						Default:  false,
 					},
-					"iops": {
+					names.AttrIOPS: {
 						Type:     schema.TypeInt,
 						Optional: true,
 						Default:  0,
@@ -250,7 +250,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 						Optional: true,
 						Default:  "",
 					},
-					"size": {
+					names.AttrSize: {
 						Type:     schema.TypeInt,
 						Required: true,
 					},
@@ -318,7 +318,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      10,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
-								"instance_count": {
+								names.AttrInstanceCount: {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Default:  1,
@@ -368,7 +368,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      5,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
-								"instance_count": {
+								names.AttrInstanceCount: {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Default:  1,
@@ -1221,7 +1221,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
 		apiObject.Iops = aws.Int64(int64(v))
 	}
 
@@ -1239,7 +1239,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 		}
 	}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		apiObject.Size = aws.Int64(int64(v))
 	}
 
@@ -1288,7 +1288,7 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	}
 
 	if v := apiObject.Iops; v != nil {
-		tfMap["iops"] = aws.Int64Value(v)
+		tfMap[names.AttrIOPS] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MountPoint; v != nil {
@@ -1304,7 +1304,7 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	}
 
 	if v := apiObject.Size; v != nil {
-		tfMap["size"] = aws.Int64Value(v)
+		tfMap[names.AttrSize] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeType; v != nil {
@@ -1373,7 +1373,7 @@ func expandAutoScalingThresholds(tfMap map[string]interface{}) *opsworks.AutoSca
 		apiObject.IgnoreMetricsTime = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["instance_count"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrInstanceCount].(int); ok && v != 0 {
 		apiObject.InstanceCount = aws.Int64(int64(v))
 	}
 
@@ -1434,7 +1434,7 @@ func flattenAutoScalingThresholds(apiObject *opsworks.AutoScalingThresholds) map
 	}
 
 	if v := apiObject.InstanceCount; v != nil {
-		tfMap["instance_count"] = aws.Int64Value(v)
+		tfMap[names.AttrInstanceCount] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.LoadThreshold; v != nil {

@@ -52,14 +52,14 @@ func ResourceDashboard() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"created_time": {
+				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -70,7 +70,7 @@ func ResourceDashboard() *schema.Resource {
 				},
 				"dashboard_publish_options": quicksightschema.DashboardPublishOptionsSchema(),
 				"definition":                quicksightschema.DashboardDefinitionSchema(),
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -84,7 +84,7 @@ func ResourceDashboard() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
 				names.AttrParameters: quicksightschema.ParametersSchema(),
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
@@ -146,7 +146,7 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	dashboardId := d.Get("dashboard_id").(string)
@@ -180,7 +180,7 @@ func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
@@ -217,9 +217,9 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("aws_account_id", awsAccountId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrAWSAccountID, awsAccountId)
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)
@@ -254,7 +254,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("describing QuickSight Dashboard (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -269,7 +269,7 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateDashboardInput{
 			AwsAccountId:       aws.String(awsAccountId),
 			DashboardId:        aws.String(dashboardId),
@@ -314,8 +314,8 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("permissions") {
-		oraw, nraw := d.GetChange("permissions")
+	if d.HasChange(names.AttrPermissions) {
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 

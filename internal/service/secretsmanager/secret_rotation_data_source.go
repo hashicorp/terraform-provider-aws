@@ -37,7 +37,7 @@ func dataSourceSecretRotation() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"duration": {
+						names.AttrDuration: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

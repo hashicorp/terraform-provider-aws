@@ -48,7 +48,7 @@ func DataSourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},

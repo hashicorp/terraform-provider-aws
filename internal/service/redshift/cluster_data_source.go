@@ -179,7 +179,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"s3_key_prefix": {
+			names.AttrS3KeyPrefix: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -301,7 +301,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("enable_logging", loggingStatus.LoggingEnabled)
 		d.Set("log_destination_type", loggingStatus.LogDestinationType)
 		d.Set("log_exports", aws.StringValueSlice(loggingStatus.LogExports))
-		d.Set("s3_key_prefix", loggingStatus.S3KeyPrefix)
+		d.Set(names.AttrS3KeyPrefix, loggingStatus.S3KeyPrefix)
 	}
 
 	return diags

@@ -80,7 +80,7 @@ func (r *delegationSignerRecordResource) Schema(ctx context.Context, request res
 								int64planmodifier.RequiresReplace(),
 							},
 						},
-						"public_key": schema.StringAttribute{
+						names.AttrPublicKey: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),

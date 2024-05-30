@@ -112,7 +112,7 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 
 	m := map[string]interface{}{
 		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		"subnets":                  flex.FlattenStringValueSet(apiObject.Subnets),
+		names.AttrSubnets:          flex.FlattenStringValueSet(apiObject.Subnets),
 	}
 
 	return []interface{}{m}
@@ -127,7 +127,7 @@ func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
 
 	a := &types.VpcConfig{
 		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringValueSet(tfMap["subnets"].(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(tfMap[names.AttrSubnets].(*schema.Set)),
 	}
 
 	return a

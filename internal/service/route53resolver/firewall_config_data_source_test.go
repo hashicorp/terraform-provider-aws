@@ -28,7 +28,7 @@ func TestAccRoute53ResolverFirewallConfigDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_fail_open", resourceName, "firewall_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_id", resourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrResourceID),
 				),
 			},
 		},

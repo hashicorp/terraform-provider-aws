@@ -73,7 +73,7 @@ func ResourceExtension() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -259,7 +259,7 @@ func expandExtensionActions(actionsListRaw interface{}) []awstypes.Action {
 			Description: aws.String(actionMap[names.AttrDescription].(string)),
 			Name:        aws.String(actionMap[names.AttrName].(string)),
 			RoleArn:     aws.String(actionMap[names.AttrRoleARN].(string)),
-			Uri:         aws.String(actionMap["uri"].(string)),
+			Uri:         aws.String(actionMap[names.AttrURI].(string)),
 		}
 
 		actions = append(actions, action)
@@ -313,7 +313,7 @@ func flattenExtensionActions(actions []awstypes.Action) []interface{} {
 			names.AttrName:        aws.ToString(action.Name),
 			names.AttrDescription: aws.ToString(action.Description),
 			names.AttrRoleARN:     aws.ToString(action.RoleArn),
-			"uri":                 aws.ToString(action.Uri),
+			names.AttrURI:         aws.ToString(action.Uri),
 		}
 		rawActions = append(rawActions, rawAction)
 	}

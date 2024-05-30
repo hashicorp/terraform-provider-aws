@@ -46,7 +46,7 @@ func resourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,7 +82,7 @@ func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	username := d.Get(names.AttrUsername).(string)
 	input := &iam.UploadSSHPublicKeyInput{
-		SSHPublicKeyBody: aws.String(d.Get("public_key").(string)),
+		SSHPublicKeyBody: aws.String(d.Get(names.AttrPublicKey).(string)),
 		UserName:         aws.String(username),
 	}
 
@@ -141,7 +141,7 @@ func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	if encoding == string(awstypes.EncodingTypeSsh) {
 		publicKey = cleanSSHKey(publicKey)
 	}
-	d.Set("public_key", publicKey)
+	d.Set(names.AttrPublicKey, publicKey)
 	d.Set("ssh_public_key_id", key.SSHPublicKeyId)
 	d.Set(names.AttrStatus, key.Status)
 

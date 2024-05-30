@@ -36,7 +36,7 @@ func resourceRiskConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -294,7 +294,7 @@ func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	userPoolId := d.Get("user_pool_id").(string)
+	userPoolId := d.Get(names.AttrUserPoolID).(string)
 	id := userPoolId
 	input := &cognitoidentityprovider.SetRiskConfigurationInput{
 		UserPoolId: aws.String(userPoolId),
@@ -348,7 +348,7 @@ func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Cognito Risk Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("user_pool_id", userPoolId)
+	d.Set(names.AttrUserPoolID, userPoolId)
 
 	if clientId != "" {
 		d.Set(names.AttrClientID, clientId)

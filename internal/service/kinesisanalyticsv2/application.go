@@ -804,7 +804,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"vpc_configuration": {
+						names.AttrVPCConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -846,6 +846,14 @@ func ResourceApplication() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"application_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ApplicationMode_Values(), false),
 			},
 
 			"cloudwatch_logging_options": {
@@ -949,6 +957,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:                     getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("application_mode"); ok {
+		input.ApplicationMode = aws.String(v.(string))
+	}
+
 	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 		return conn.CreateApplicationWithContext(ctx, input)
 	})
@@ -992,6 +1004,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, arn)
 	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrDescription, application.ApplicationDescription)
+	d.Set("application_mode", application.ApplicationMode)
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, application.ApplicationName)
 	d.Set("runtime_environment", application.RuntimeEnvironment)
@@ -1793,7 +1806,7 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *ki
 		applicationConfiguration.SqlApplicationConfiguration = sqlApplicationConfiguration
 	}
 
-	if vVpcConfiguration, ok := mApplicationConfiguration["vpc_configuration"].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
+	if vVpcConfiguration, ok := mApplicationConfiguration[names.AttrVPCConfiguration].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
 		applicationConfiguration.VpcConfigurations = []*kinesisanalyticsv2.VpcConfiguration{expandVPCConfiguration(vVpcConfiguration)}
 	}
 
@@ -2794,7 +2807,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			names.AttrVPCID:            aws.StringValue(vpcConfigurationDescription.VpcId),
 		}
 
-		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
+		mApplicationConfiguration[names.AttrVPCConfiguration] = []interface{}{mVpcConfiguration}
 	}
 
 	return []interface{}{mApplicationConfiguration}

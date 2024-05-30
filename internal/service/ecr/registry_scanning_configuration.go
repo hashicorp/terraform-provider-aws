@@ -38,7 +38,7 @@ func resourceRegistryScanningConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 0,
@@ -90,7 +90,7 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 
 	input := ecr.PutRegistryScanningConfigurationInput{
 		ScanType: types.ScanType(d.Get("scan_type").(string)),
-		Rules:    expandScanningRegistryRules(d.Get("rule").(*schema.Set).List()),
+		Rules:    expandScanningRegistryRules(d.Get(names.AttrRule).(*schema.Set).List()),
 	}
 
 	_, err := conn.PutRegistryScanningConfiguration(ctx, &input)
@@ -123,7 +123,7 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 	}
 
 	d.Set("registry_id", output.RegistryId)
-	if err := d.Set("rule", flattenScanningConfigurationRules(output.ScanningConfiguration.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenScanningConfigurationRules(output.ScanningConfiguration.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set("scan_type", output.ScanningConfiguration.ScanType)

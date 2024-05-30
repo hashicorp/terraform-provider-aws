@@ -80,7 +80,7 @@ func ResourceReportPlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -275,7 +275,7 @@ func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.Re
 		result.Formats = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
 		result.S3KeyPrefix = aws.String(v)
 	}
 
@@ -333,7 +333,7 @@ func flattenReportDeliveryChannel(reportDeliveryChannel *backup.ReportDeliveryCh
 	}
 
 	if v := reportDeliveryChannel.S3KeyPrefix; v != nil {
-		values["s3_key_prefix"] = aws.StringValue(v)
+		values[names.AttrS3KeyPrefix] = aws.StringValue(v)
 	}
 
 	return []interface{}{values}

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,6 +62,7 @@ func resourceWebACLAssociation() *schema.Resource {
 }
 
 func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	webACLARN := d.Get("web_acl_arn").(string)
@@ -77,20 +79,21 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	})
 
 	if err != nil {
-		return diag.Errorf("creating WAFv2 WebACL Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAFv2 WebACL Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceWebACLAssociationRead(ctx, d, meta)
+	return append(diags, resourceWebACLAssociationRead(ctx, d, meta)...)
 }
 
 func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	parts, err := flex.ExpandResourceId(d.Id(), webACLAssociationResourceIDPartCount, true)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resourceARN := parts[1]
@@ -99,25 +102,26 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAFv2 WebACL Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrResourceARN, resourceARN)
 	d.Set("web_acl_arn", webACL.ARN)
 
-	return nil
+	return diags
 }
 
 func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	parts, err := flex.ExpandResourceId(d.Id(), webACLAssociationResourceIDPartCount, true)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Association: %s", d.Id())
@@ -127,14 +131,14 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 	})
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting WAFv2 WebACL Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAFv2 WebACL Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findWebACLByResourceARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.WebACL, error) {

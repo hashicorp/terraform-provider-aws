@@ -66,7 +66,7 @@ func ResourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -216,7 +216,7 @@ func flattenAliasRoutingConfigurationItem(apiObject *sfn.RoutingConfigurationLis
 	}
 
 	if v := apiObject.Weight; v != nil {
-		tfMap["weight"] = aws.Int64Value(v)
+		tfMap[names.AttrWeight] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -275,7 +275,7 @@ func expandAliasRoutingConfigurationItem(tfMap map[string]interface{}) *sfn.Rout
 		apiObject.StateMachineVersionArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrWeight].(int); ok && v != 0 {
 		apiObject.Weight = aws.Int64(int64(v))
 	}
 

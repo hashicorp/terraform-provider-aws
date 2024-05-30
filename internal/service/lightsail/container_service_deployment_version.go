@@ -67,7 +67,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"environment": {
+						names.AttrEnvironment: {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
@@ -105,7 +105,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"health_check": {
+						names.AttrHealthCheck: {
 							Type:     schema.TypeList,
 							Required: true,
 							ForceNew: true,
@@ -292,7 +292,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 			container.Command = aws.ToStringSlice(flex.ExpandStringList(v))
 		}
 
-		if v, ok := tfMap["environment"].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
 			container.Environment = aws.ToStringMap(flex.ExpandStringMap(v))
 		}
 
@@ -344,7 +344,7 @@ func expandContainerServiceDeploymentPublicEndpoint(tfList []interface{}) *types
 		ContainerPort: aws.Int32(int32(tfMap["container_port"].(int))),
 	}
 
-	if v, ok := tfMap["health_check"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrHealthCheck].([]interface{}); ok && len(v) > 0 {
 		endpoint.HealthCheck = expandContainerServiceDeploymentPublicEndpointHealthCheck(v)
 	}
 
@@ -381,11 +381,11 @@ func flattenContainerServiceDeploymentContainers(containers map[string]types.Con
 	var rawContainers []interface{}
 	for containerName, container := range containers {
 		rawContainer := map[string]interface{}{
-			"container_name": containerName,
-			"image":          aws.ToString(container.Image),
-			"command":        container.Command,
-			"environment":    container.Environment,
-			"ports":          container.Ports,
+			"container_name":      containerName,
+			"image":               aws.ToString(container.Image),
+			"command":             container.Command,
+			names.AttrEnvironment: container.Environment,
+			"ports":               container.Ports,
 		}
 
 		rawContainers = append(rawContainers, rawContainer)
@@ -401,9 +401,9 @@ func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerSe
 
 	return []interface{}{
 		map[string]interface{}{
-			"container_name": aws.ToString(endpoint.ContainerName),
-			"container_port": int(aws.ToInt32(endpoint.ContainerPort)),
-			"health_check":   flattenContainerServiceDeploymentPublicEndpointHealthCheck(endpoint.HealthCheck),
+			"container_name":      aws.ToString(endpoint.ContainerName),
+			"container_port":      int(aws.ToInt32(endpoint.ContainerPort)),
+			names.AttrHealthCheck: flattenContainerServiceDeploymentPublicEndpointHealthCheck(endpoint.HealthCheck),
 		},
 	}
 }

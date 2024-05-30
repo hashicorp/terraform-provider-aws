@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rta ec2.RouteTableAssociation
+	var rta awstypes.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
 	resourceNameSubnet := "aws_subnet.test"
@@ -53,7 +53,7 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 
 func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rta ec2.RouteTableAssociation
+	var rta awstypes.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable1 := "aws_route_table.test"
 	resourceNameRouteTable2 := "aws_route_table.test2"
@@ -88,7 +88,7 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 
 func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rta ec2.RouteTableAssociation
+	var rta awstypes.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable := "aws_route_table.test"
 	resourceNameGateway := "aws_internet_gateway.test"
@@ -120,7 +120,7 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 
 func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rta ec2.RouteTableAssociation
+	var rta awstypes.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	resourceNameRouteTable1 := "aws_route_table.test"
 	resourceNameRouteTable2 := "aws_route_table.test2"
@@ -155,7 +155,7 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 
 func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rta ec2.RouteTableAssociation
+	var rta awstypes.RouteTableAssociation
 	resourceName := "aws_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -179,14 +179,14 @@ func TestAccVPCRouteTableAssociation_disappears(t *testing.T) {
 
 func testAccCheckRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route_table_association" {
 				continue
 			}
 
-			_, err := tfec2.FindRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindRouteTableAssociationByIDV2(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -203,7 +203,7 @@ func testAccCheckRouteTableAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *ec2.RouteTableAssociation) resource.TestCheckFunc {
+func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *awstypes.RouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -214,9 +214,9 @@ func testAccCheckRouteTableAssociationExists(ctx context.Context, n string, v *e
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		association, err := tfec2.FindRouteTableAssociationByID(ctx, conn, rs.Primary.ID)
+		association, err := tfec2.FindRouteTableAssociationByIDV2(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

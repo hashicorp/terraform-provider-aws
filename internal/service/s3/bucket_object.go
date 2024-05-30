@@ -40,6 +40,9 @@ import (
 
 // @SDKResource("aws_s3_bucket_object", name="Bucket Object")
 // @Tags(identifierAttribute="arn", resourceType="BucketObject")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
+// @Testing(importStateIdFunc=testAccBucketObjectImportStateIdFunc)
+// @Testing(importIgnore="acl;force_destroy")
 func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
@@ -83,7 +86,7 @@ func resourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{names.AttrSource, "content_base64"},
@@ -91,7 +94,7 @@ func resourceBucketObject() *schema.Resource {
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrSource, "content"},
+				ConflictsWith: []string{names.AttrSource, names.AttrContent},
 			},
 			"content_disposition": {
 				Type:     schema.TypeString,
@@ -174,13 +177,13 @@ func resourceBucketObject() *schema.Resource {
 			names.AttrSource: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
+				ConflictsWith: []string{names.AttrContent, "content_base64"},
 			},
 			"source_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -246,9 +249,9 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("server_side_encryption", output.ServerSideEncryption)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
@@ -396,7 +399,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 				log.Printf("[WARN] Error closing S3 object source (%s): %s", path, err)
 			}
 		}()
-	} else if v, ok := d.GetOk("content"); ok {
+	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		content := v.(string)
 		body = bytes.NewReader([]byte(content))
 	} else if v, ok := d.GetOk("content_base64"); ok {
@@ -471,7 +474,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		input.ServerSideEncryption = types.ServerSideEncryption(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_class"); ok {
+	if v, ok := d.GetOk(names.AttrStorageClass); ok {
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
@@ -545,14 +548,14 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"content_encoding",
 		"content_language",
 		names.AttrContentType,
-		"content",
+		names.AttrContent,
 		"etag",
 		names.AttrKMSKeyID,
 		"metadata",
 		"server_side_encryption",
 		names.AttrSource,
 		"source_hash",
-		"storage_class",
+		names.AttrStorageClass,
 		"website_redirect",
 	} {
 		if d.HasChange(key) {

@@ -43,7 +43,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"rule": {
+						names.AttrRule: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 10,
@@ -183,7 +183,7 @@ func expandReplicationConfigurationReplicationConfiguration(data []interface{}) 
 
 	ec := data[0].(map[string]interface{})
 	config := &types.ReplicationConfiguration{
-		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec["rule"].([]interface{})),
+		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec[names.AttrRule].([]interface{})),
 	}
 	return config
 }
@@ -194,7 +194,7 @@ func flattenReplicationConfigurationReplicationConfiguration(ec *types.Replicati
 	}
 
 	config := map[string]interface{}{
-		"rule": flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
+		names.AttrRule: flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
 	}
 
 	return []map[string]interface{}{

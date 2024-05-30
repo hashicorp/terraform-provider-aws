@@ -39,7 +39,7 @@ func resourceUser() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type: schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -99,7 +99,7 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -148,7 +148,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	username := d.Get(names.AttrUsername).(string)
-	userPoolId := d.Get("user_pool_id").(string)
+	userPoolId := d.Get(names.AttrUserPoolID).(string)
 
 	params := &cognitoidentityprovider.AdminCreateUserInput{
 		Username:   aws.String(username),
@@ -173,7 +173,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		params.MessageAction = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("attributes"); ok {
+	if v, ok := d.GetOk(names.AttrAttributes); ok {
 		attributes := v.(map[string]interface{})
 		params.UserAttributes = expandAttribute(attributes)
 	}
@@ -201,7 +201,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if v := d.Get(names.AttrEnabled); !v.(bool) {
 		disableParams := &cognitoidentityprovider.AdminDisableUserInput{
 			Username:   aws.String(d.Get(names.AttrUsername).(string)),
-			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+			UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 		}
 
 		_, err := conn.AdminDisableUserWithContext(ctx, disableParams)
@@ -213,7 +213,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk(names.AttrPassword); ok {
 		setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
 			Username:   aws.String(d.Get(names.AttrUsername).(string)),
-			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+			UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 			Password:   aws.String(v.(string)),
 			Permanent:  aws.Bool(true),
 		}
@@ -231,7 +231,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	user, err := findUserByTwoPartKey(ctx, conn, d.Get("user_pool_id").(string), d.Get(names.AttrUsername).(string))
+	user, err := findUserByTwoPartKey(ctx, conn, d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get(names.AttrUsername).(string))
@@ -243,7 +243,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get(names.AttrUsername).(string), err)
 	}
 
-	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
+	if err := d.Set(names.AttrAttributes, flattenUserAttributes(user.UserAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user attributes (%s): %s", d.Id(), err)
 	}
 
@@ -267,15 +267,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	log.Println("[DEBUG] Updating Cognito User")
 
-	if d.HasChange("attributes") {
-		old, new := d.GetChange("attributes")
+	if d.HasChange(names.AttrAttributes) {
+		old, new := d.GetChange(names.AttrAttributes)
 
 		upd, del := computeUserAttributesUpdate(old, new)
 
 		if len(upd) > 0 {
 			params := &cognitoidentityprovider.AdminUpdateUserAttributesInput{
 				Username:       aws.String(d.Get(names.AttrUsername).(string)),
-				UserPoolId:     aws.String(d.Get("user_pool_id").(string)),
+				UserPoolId:     aws.String(d.Get(names.AttrUserPoolID).(string)),
 				UserAttributes: expandAttribute(upd),
 			}
 
@@ -292,7 +292,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if len(del) > 0 {
 			params := &cognitoidentityprovider.AdminDeleteUserAttributesInput{
 				Username:           aws.String(d.Get(names.AttrUsername).(string)),
-				UserPoolId:         aws.String(d.Get("user_pool_id").(string)),
+				UserPoolId:         aws.String(d.Get(names.AttrUserPoolID).(string)),
 				UserAttributeNames: expandUserAttributesDelete(del),
 			}
 			_, err := conn.AdminDeleteUserAttributesWithContext(ctx, params)
@@ -308,7 +308,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if enabled {
 			enableParams := &cognitoidentityprovider.AdminEnableUserInput{
 				Username:   aws.String(d.Get(names.AttrUsername).(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 			}
 			_, err := conn.AdminEnableUserWithContext(ctx, enableParams)
 			if err != nil {
@@ -317,7 +317,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		} else {
 			disableParams := &cognitoidentityprovider.AdminDisableUserInput{
 				Username:   aws.String(d.Get(names.AttrUsername).(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 			}
 			_, err := conn.AdminDisableUserWithContext(ctx, disableParams)
 			if err != nil {
@@ -332,7 +332,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if password != "" {
 			setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
 				Username:   aws.String(d.Get(names.AttrUsername).(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 				Password:   aws.String(password),
 				Permanent:  aws.Bool(false),
 			}
@@ -352,7 +352,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if password != "" {
 			setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
 				Username:   aws.String(d.Get(names.AttrUsername).(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 				Password:   aws.String(password),
 				Permanent:  aws.Bool(true),
 			}
@@ -376,7 +376,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Deleting Cognito User: %s", d.Id())
 	_, err := conn.AdminDeleteUserWithContext(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
 		Username:   aws.String(d.Get(names.AttrUsername).(string)),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
@@ -397,7 +397,7 @@ func resourceUserImport(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	userPoolId := idSplit[0]
 	name := idSplit[1]
-	d.Set("user_pool_id", userPoolId)
+	d.Set(names.AttrUserPoolID, userPoolId)
 	d.Set(names.AttrUsername, name)
 	return []*schema.ResourceData{d}, nil
 }
@@ -546,7 +546,7 @@ func UserAttributeKeyMatchesStandardAttribute(input string) bool {
 	var standardAttributeKeys = []string{
 		names.AttrAddress,
 		"birthdate",
-		"email",
+		names.AttrEmail,
 		"email_verified",
 		"gender",
 		"given_name",

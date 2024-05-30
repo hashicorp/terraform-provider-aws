@@ -69,7 +69,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew:     true,
 				Computed:     true,
 				Optional:     true,
-				AtLeastOneOf: []string{"ami", "launch_template"},
+				AtLeastOneOf: []string{"ami", names.AttrLaunchTemplate},
 			},
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -247,7 +247,7 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -260,7 +260,7 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -268,7 +268,7 @@ func ResourceInstance() *schema.Resource {
 						},
 						names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
 						names.AttrTagsAll: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -279,13 +279,13 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -298,7 +298,7 @@ func ResourceInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -339,7 +339,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -349,7 +349,7 @@ func ResourceInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					if v, ok := m["no_device"].(bool); ok && v {
 						buf.WriteString(fmt.Sprintf("%t-", v))
 					}
@@ -462,7 +462,7 @@ func ResourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				AtLeastOneOf: []string{names.AttrInstanceType, "launch_template"},
+				AtLeastOneOf: []string{names.AttrInstanceType, names.AttrLaunchTemplate},
 			},
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
@@ -487,12 +487,12 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:         schema.TypeList,
 				MaxItems:     1,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{"ami", names.AttrInstanceType, "launch_template"},
+				AtLeastOneOf: []string{"ami", names.AttrInstanceType, names.AttrLaunchTemplate},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrID: {
@@ -708,7 +708,7 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -722,7 +722,7 @@ func ResourceInstance() *schema.Resource {
 						},
 						names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
 						names.AttrTagsAll: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -732,12 +732,12 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -841,7 +841,7 @@ func ResourceInstance() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				_, ok := diff.GetOk("launch_template")
+				_, ok := diff.GetOk(names.AttrLaunchTemplate)
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
 					conn := meta.(*conns.AWSClient).EC2Conn(ctx)
@@ -942,7 +942,7 @@ func ResourceInstance() *schema.Resource {
 func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	// Suppress diff if volume_type is not io1, io2, or gp3 and iops is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
-	vt := k[:i+1] + "volume_type"
+	vt := k[:i+1] + names.AttrVolumeType
 	v := d.Get(vt).(string)
 	return (strings.ToLower(v) != ec2.VolumeTypeIo1 && strings.ToLower(v) != ec2.VolumeTypeIo2 && strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
 }
@@ -950,7 +950,7 @@ func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	// Suppress diff if volume_type is not gp3 and throughput is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
-	vt := k[:i+1] + "volume_type"
+	vt := k[:i+1] + names.AttrVolumeType
 	v := d.Get(vt).(string)
 	return strings.ToLower(v) != ec2.VolumeTypeGp3 && new == "0"
 }
@@ -1218,7 +1218,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) launch template: %s", d.Id(), err)
 		}
 
-		if err := d.Set("launch_template", launchTemplate); err != nil {
+		if err := d.Set(names.AttrLaunchTemplate, launchTemplate); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	}
@@ -2257,8 +2257,8 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 						m[k] = v
 					}
 
-					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
-						m["snapshot_id"] = snapshotID
+					if snapshotID, ok := ibds[names.AttrSnapshotID].(string); ok {
+						m[names.AttrSnapshotID] = snapshotID
 					}
 
 					ibds["ebs"] = []interface{}{m}
@@ -2333,13 +2333,13 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd[names.AttrDeleteOnTermination] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
 		}
 		if vol.Size != nil {
-			bd["volume_size"] = aws.Int64Value(vol.Size)
+			bd[names.AttrVolumeSize] = aws.Int64Value(vol.Size)
 		}
 		if vol.VolumeType != nil {
-			bd["volume_type"] = aws.StringValue(vol.VolumeType)
+			bd[names.AttrVolumeType] = aws.StringValue(vol.VolumeType)
 		}
 		if vol.Iops != nil {
-			bd["iops"] = aws.Int64Value(vol.Iops)
+			bd[names.AttrIOPS] = aws.Int64Value(vol.Iops)
 		}
 		if vol.Encrypted != nil {
 			bd[names.AttrEncrypted] = aws.BoolValue(vol.Encrypted)
@@ -2348,7 +2348,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd[names.AttrKMSKeyID] = aws.StringValue(vol.KmsKeyId)
 		}
 		if vol.Throughput != nil {
-			bd["throughput"] = aws.Int64Value(vol.Throughput)
+			bd[names.AttrThroughput] = aws.Int64Value(vol.Throughput)
 		}
 		if instanceBd.DeviceName != nil {
 			bd[names.AttrDeviceName] = aws.StringValue(instanceBd.DeviceName)
@@ -2367,7 +2367,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			blockDevices["root"] = bd
 		} else {
 			if vol.SnapshotId != nil {
-				bd["snapshot_id"] = aws.StringValue(vol.SnapshotId)
+				bd[names.AttrSnapshotID] = aws.StringValue(vol.SnapshotId)
 			}
 
 			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
@@ -2378,7 +2378,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	// we'll need to set the ebs_block_device as a clone of the root device
 	// with the snapshot_id populated; thus, we store the ID for safe-keeping
 	if blockDevices["root"] != nil && len(blockDevices["ebs"].([]map[string]interface{})) == 0 {
-		blockDevices["snapshot_id"] = volResp.Volumes[0].SnapshotId
+		blockDevices[names.AttrSnapshotID] = volResp.Volumes[0].SnapshotId
 	}
 
 	return blockDevices, nil
@@ -2555,7 +2555,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
@@ -2567,13 +2567,13 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.KmsKeyId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-				if iops, ok := bd["iops"].(int); ok && iops > 0 {
+				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Condition: This parameter is required for requests to create io1 or io2
 						// volumes and optional for gp3; it is not used in requests to create gp2, st1, sc1, or
@@ -2586,7 +2586,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						return nil, fmt.Errorf("creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
-				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				if throughput, ok := bd[names.AttrThroughput].(int); ok && throughput > 0 {
 					// `throughput` is only valid for gp3
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
@@ -2609,7 +2609,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			bd := v.(map[string]interface{})
 			bdm := &ec2.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			}
 			if v, ok := bd["no_device"].(bool); ok && v {
 				bdm.NoDevice = aws.String("")
@@ -2641,13 +2641,13 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.KmsKeyId = aws.String(bd[names.AttrKMSKeyID].(string))
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-				if iops, ok := bd["iops"].(int); ok && iops > 0 {
+				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Only set the iops attribute if the volume type is io1, io2, or gp3. Setting otherwise
 						// can trigger a refresh/plan loop based on the computed value that is given
@@ -2661,7 +2661,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						return nil, fmt.Errorf("creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
-				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				if throughput, ok := bd[names.AttrThroughput].(int); ok && throughput > 0 {
 					// throughput is only valid for gp3
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
@@ -2674,7 +2674,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 
 			var amiID string
 
-			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				launchTemplateData, err := findLaunchTemplateData(ctx, conn, expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{})))
 
 				if err != nil {
@@ -2901,7 +2901,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	var instanceInterruptionBehavior string
 
-	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
 		launchTemplateData, err := findLaunchTemplateData(ctx, conn, launchTemplateSpecification)
 

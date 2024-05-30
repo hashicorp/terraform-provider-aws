@@ -62,7 +62,7 @@ func resourceScheduledAction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
@@ -174,7 +174,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 		input.EndTime = aws.Time(t)
 	}
 
-	if v, ok := d.GetOk("start_time"); ok {
+	if v, ok := d.GetOk(names.AttrStartTime); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
 
 		input.StartTime = aws.Time(t)
@@ -234,9 +234,9 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrName, scheduledAction.ScheduledActionName)
 	d.Set(names.AttrSchedule, scheduledAction.Schedule)
 	if scheduledAction.StartTime != nil {
-		d.Set("start_time", aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
+		d.Set(names.AttrStartTime, aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
 	} else {
-		d.Set("start_time", nil)
+		d.Set(names.AttrStartTime, nil)
 	}
 
 	if scheduledAction.TargetAction != nil {
@@ -280,7 +280,7 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 		input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 	}
 
-	if hasChange, v := d.HasChange("start_time"), d.Get("start_time").(string); hasChange && v != "" {
+	if hasChange, v := d.HasChange(names.AttrStartTime), d.Get(names.AttrStartTime).(string); hasChange && v != "" {
 		t, _ := time.Parse(time.RFC3339, v)
 
 		input.StartTime = aws.Time(t)

@@ -33,7 +33,7 @@ func ResourceTransitGatewayRouteTablePropagation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,7 +106,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_id", transitGatewayPropagation.ResourceId)
+	d.Set(names.AttrResourceID, transitGatewayPropagation.ResourceId)
 	d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)

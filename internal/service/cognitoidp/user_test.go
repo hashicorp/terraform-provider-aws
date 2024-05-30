@@ -41,8 +41,8 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "sub"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
-					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeForceChangePassword),
 				),
 			},
@@ -217,10 +217,10 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 				Config: testAccUserConfig_attributes(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.one", "1"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "attributes.one", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attributes.two", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attributes.three", acctest.Ct3),
 				),
 			},
 			{
@@ -240,10 +240,10 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 				Config: testAccUserConfig_attributesUpdated(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "attributes.two", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "three"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.four", "4"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.four", acctest.Ct4),
 				),
 			},
 		},
@@ -266,7 +266,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 				Config: testAccUserConfig_enable(rUserPoolName, rUserName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -286,7 +286,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 				Config: testAccUserConfig_enable(rUserPoolName, rUserName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -306,7 +306,7 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrUsername])
+		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrUsername])
 
 		return err
 	}
@@ -321,7 +321,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrUsername])
+			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrUsername])
 
 			if tfresource.NotFound(err) {
 				continue

@@ -28,7 +28,7 @@ func dataSourceUserPools() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -73,7 +73,7 @@ func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(name)
-	d.Set("ids", userPoolIDs)
+	d.Set(names.AttrIDs, userPoolIDs)
 	d.Set(names.AttrARNs, arns)
 
 	return diags

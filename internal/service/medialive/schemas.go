@@ -59,7 +59,7 @@ func inputLocationSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"uri": {
+				names.AttrURI: {
 					Type:     schema.TypeString,
 					Required: true,
 				},

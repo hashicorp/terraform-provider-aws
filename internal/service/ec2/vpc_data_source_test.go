@@ -35,10 +35,10 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 				Config: testAccVPCDataSourceConfig_basic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrARN, vpcResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_hostnames", "false"),
-					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(ds1ResourceName, "enable_network_address_usage_metrics", "false"),
+					resource.TestCheckResourceAttr(ds1ResourceName, names.AttrCIDRBlock, cidr),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_hostnames", acctest.CtFalse),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_association_id", vpcResourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_cidr_block", vpcResourceName, "ipv6_cidr_block"),
@@ -48,17 +48,17 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrOwnerID, vpcResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(ds2ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds2ResourceName, names.AttrCIDRBlock, cidr),
 					resource.TestCheckResourceAttr(ds2ResourceName, "tags.Name", rName),
 
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds3ResourceName, names.AttrOwnerID, vpcResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(ds3ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds3ResourceName, names.AttrCIDRBlock, cidr),
 					resource.TestCheckResourceAttr(ds3ResourceName, "tags.Name", rName),
 
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(ds4ResourceName, names.AttrOwnerID, vpcResourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(ds4ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds4ResourceName, names.AttrCIDRBlock, cidr),
 					resource.TestCheckResourceAttr(ds4ResourceName, "tags.Name", rName),
 				),
 			},
@@ -80,7 +80,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 			{
 				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", acctest.Ct2),
 				),
 			},
 		},

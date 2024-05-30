@@ -184,7 +184,7 @@ func resourceSchedule() *schema.Resource {
 													Required:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:             schema.TypeInt,
 													Optional:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 1000)),
@@ -226,7 +226,7 @@ func resourceSchedule() *schema.Resource {
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
-												"subnets": {
+												names.AttrSubnets: {
 													Type:     schema.TypeSet,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -261,7 +261,7 @@ func resourceSchedule() *schema.Resource {
 										Set:      placementStrategyHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"field": {
+												names.AttrField: {
 													Type:     schema.TypeString,
 													Optional: true,
 													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -280,7 +280,7 @@ func resourceSchedule() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"propagate_tags": {
+									names.AttrPropagateTags: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.PropagateTags](),
@@ -713,7 +713,7 @@ func capacityProviderHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := m["weight"].(int); ok {
+	if v, ok := m[names.AttrWeight].(int); ok {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
 
@@ -739,7 +739,7 @@ func placementStrategyHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	if v, ok := m["field"]; ok {
+	if v, ok := m[names.AttrField]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 

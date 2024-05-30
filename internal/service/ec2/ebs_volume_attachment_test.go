@@ -73,7 +73,7 @@ func TestAccEC2EBSVolumeAttachment_skipDestroy(t *testing.T) {
 				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"skip_destroy", // attribute only used on resource deletion
+					names.AttrSkipDestroy, // attribute only used on resource deletion
 				},
 			},
 		},
@@ -140,8 +140,8 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "force_detach", "false"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 				),
 			},
 			{
@@ -150,15 +150,15 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_detach", // attribute only used on resource deletion
-					"skip_destroy", // attribute only used on resource deletion
+					"force_detach",        // attribute only used on resource deletion
+					names.AttrSkipDestroy, // attribute only used on resource deletion
 				},
 			},
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "force_detach", "true"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 			{
@@ -167,8 +167,8 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_detach", // attribute only used on resource deletion
-					"skip_destroy", // attribute only used on resource deletion
+					"force_detach",        // attribute only used on resource deletion
+					names.AttrSkipDestroy, // attribute only used on resource deletion
 				},
 			},
 		},

@@ -124,7 +124,7 @@ func TestValidRolePolicyRoleName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validRolePolicyRole(tc.Value, "role")
+		_, errors := validRolePolicyRole(tc.Value, names.AttrRole)
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d Role Policy role name validation errors, got %d", tc.ErrCount, len(errors))

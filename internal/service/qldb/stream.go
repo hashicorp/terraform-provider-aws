@@ -69,7 +69,7 @@ func resourceStream() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -356,7 +356,7 @@ func expandKinesisConfiguration(tfMap map[string]interface{}) *types.KinesisConf
 		apiObject.AggregationEnabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamArn = aws.String(v)
 	}
 
@@ -375,7 +375,7 @@ func flattenKinesisConfiguration(apiObject *types.KinesisConfiguration) map[stri
 	}
 
 	if v := apiObject.StreamArn; v != nil {
-		tfMap["stream_arn"] = aws.ToString(v)
+		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
 
 	return tfMap

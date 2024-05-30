@@ -72,7 +72,7 @@ func ResourceEBSVolume() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -95,22 +95,22 @@ func ResourceEBSVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"size": {
+			names.AttrSize: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				AtLeastOneOf: []string{"size", "snapshot_id"},
+				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{"size", "snapshot_id"},
+				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput": {
+			names.AttrThroughput: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -139,7 +139,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Encrypted = aws.Bool(value.(bool))
 	}
 
-	if value, ok := d.GetOk("iops"); ok {
+	if value, ok := d.GetOk(names.AttrIOPS); ok {
 		input.Iops = aws.Int32(int32(value.(int)))
 	}
 
@@ -155,15 +155,15 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.OutpostArn = aws.String(value.(string))
 	}
 
-	if value, ok := d.GetOk("size"); ok {
+	if value, ok := d.GetOk(names.AttrSize); ok {
 		input.Size = aws.Int32(int32(value.(int)))
 	}
 
-	if value, ok := d.GetOk("snapshot_id"); ok {
+	if value, ok := d.GetOk(names.AttrSnapshotID); ok {
 		input.SnapshotId = aws.String(value.(string))
 	}
 
-	if value, ok := d.GetOk("throughput"); ok {
+	if value, ok := d.GetOk(names.AttrThroughput); ok {
 		input.Throughput = aws.Int32(int32(value.(int)))
 	}
 
@@ -212,13 +212,13 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
 	d.Set(names.AttrEncrypted, volume.Encrypted)
-	d.Set("iops", volume.Iops)
+	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set("size", volume.Size)
-	d.Set("snapshot_id", volume.SnapshotId)
-	d.Set("throughput", volume.Throughput)
+	d.Set(names.AttrSize, volume.Size)
+	d.Set(names.AttrSnapshotID, volume.SnapshotId)
+	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set(names.AttrType, volume.VolumeType)
 
 	setTagsOutV2(ctx, volume.Tags)
@@ -235,18 +235,18 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			VolumeId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("iops") {
-			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		if d.HasChange(names.AttrIOPS) {
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 
-		if d.HasChange("size") {
-			input.Size = aws.Int32(int32(d.Get("size").(int)))
+		if d.HasChange(names.AttrSize) {
+			input.Size = aws.Int32(int32(d.Get(names.AttrSize).(int)))
 		}
 
 		// "If no throughput value is specified, the existing value is retained."
 		// Not currently correct, so always specify any non-zero throughput value.
 		// Throughput is valid only for gp3 volumes.
-		if v := d.Get("throughput").(int); v > 0 && d.Get(names.AttrType).(string) == string(awstypes.VolumeTypeGp3) {
+		if v := d.Get(names.AttrThroughput).(int); v > 0 && d.Get(names.AttrType).(string) == string(awstypes.VolumeTypeGp3) {
 			input.Throughput = aws.Int32(int32(v))
 		}
 
@@ -258,7 +258,7 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			// if you change the volume type to io1, io2, or gp3, the default is 3,000.
 			// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifyVolume.html
 			if volumeType == awstypes.VolumeTypeIo1 || volumeType == awstypes.VolumeTypeIo2 || volumeType == awstypes.VolumeTypeGp3 {
-				input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+				input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 			}
 		}
 
@@ -337,9 +337,9 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	iops := diff.Get("iops").(int)
+	iops := diff.Get(names.AttrIOPS).(int)
 	multiAttachEnabled := diff.Get("multi_attach_enabled").(bool)
-	throughput := diff.Get("throughput").(int)
+	throughput := diff.Get(names.AttrThroughput).(int)
 	volumeType := awstypes.VolumeType(diff.Get(names.AttrType).(string))
 
 	if diff.Id() == "" {
@@ -378,8 +378,8 @@ func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff
 		// Update.
 
 		// Setting 'iops = 0' is a no-op if the volume type does not require Iops to be specified.
-		if diff.HasChange("iops") && volumeType != awstypes.VolumeTypeIo1 && volumeType != awstypes.VolumeTypeIo2 && volumeType != awstypes.VolumeTypeGp3 && iops == 0 {
-			return diff.Clear("iops")
+		if diff.HasChange(names.AttrIOPS) && volumeType != awstypes.VolumeTypeIo1 && volumeType != awstypes.VolumeTypeIo2 && volumeType != awstypes.VolumeTypeGp3 && iops == 0 {
+			return diff.Clear(names.AttrIOPS)
 		}
 	}
 

@@ -63,7 +63,7 @@ func ResourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -178,7 +178,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		Type:       aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -228,11 +228,11 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrDescription, output.Description)
 	if output.LoggingConfiguration != nil {
-		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
 			return diag.Errorf("setting logging_configuration: %s", err)
 		}
 	} else {
-		d.Set("logging_configuration", nil)
+		d.Set(names.AttrLoggingConfiguration, nil)
 	}
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))
@@ -285,8 +285,8 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.VersionDescription = aws.String(d.Get("version_description").(string))
 		}
 
-		if d.HasChange("logging_configuration") {
-			if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrLoggingConfiguration) {
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}

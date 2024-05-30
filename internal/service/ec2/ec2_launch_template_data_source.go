@@ -57,7 +57,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -65,19 +65,19 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -88,7 +88,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

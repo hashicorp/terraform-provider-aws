@@ -552,7 +552,7 @@ var codeHookResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 5),
 		},
-		"uri": {
+		names.AttrURI: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: verify.ValidARN,
@@ -562,7 +562,7 @@ var codeHookResource = &schema.Resource{
 
 var messageResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"content": {
+		names.AttrContent: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -587,7 +587,7 @@ var promptResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.IntBetween(1, 5),
 		},
-		"message": {
+		names.AttrMessage: {
 			Type:     schema.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -604,7 +604,7 @@ var promptResource = &schema.Resource{
 
 var statementResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"message": {
+		names.AttrMessage: {
 			Type:     schema.TypeSet,
 			Required: true,
 			MinItems: 1,
@@ -623,7 +623,7 @@ func flattenCodeHook(hook *lexmodelbuildingservice.CodeHook) (flattened []map[st
 	return []map[string]interface{}{
 		{
 			"message_version": aws.StringValue(hook.MessageVersion),
-			"uri":             aws.StringValue(hook.Uri),
+			names.AttrURI:     aws.StringValue(hook.Uri),
 		},
 	}
 }
@@ -633,7 +633,7 @@ func expandCodeHook(rawObject interface{}) (hook *lexmodelbuildingservice.CodeHo
 
 	return &lexmodelbuildingservice.CodeHook{
 		MessageVersion: aws.String(m["message_version"].(string)),
-		Uri:            aws.String(m["uri"].(string)),
+		Uri:            aws.String(m[names.AttrURI].(string)),
 	}
 }
 
@@ -685,7 +685,7 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *lexmodelbuilding
 func flattenMessages(messages []*lexmodelbuildingservice.Message) (flattenedMessages []map[string]interface{}) {
 	for _, message := range messages {
 		flattenedMessages = append(flattenedMessages, map[string]interface{}{
-			"content":             aws.StringValue(message.Content),
+			names.AttrContent:     aws.StringValue(message.Content),
 			names.AttrContentType: aws.StringValue(message.ContentType),
 			"group_number":        aws.Int64Value(message.GroupNumber),
 		})
@@ -707,7 +707,7 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 		}
 
 		message := &lexmodelbuildingservice.Message{
-			Content:     aws.String(value["content"].(string)),
+			Content:     aws.String(value[names.AttrContent].(string)),
 			ContentType: aws.String(value[names.AttrContentType].(string)),
 		}
 
@@ -724,8 +724,8 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 func flattenPrompt(prompt *lexmodelbuildingservice.Prompt) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"max_attempts": aws.Int64Value(prompt.MaxAttempts),
-			"message":      flattenMessages(prompt.Messages),
+			"max_attempts":    aws.Int64Value(prompt.MaxAttempts),
+			names.AttrMessage: flattenMessages(prompt.Messages),
 		},
 	}
 
@@ -741,7 +741,7 @@ func expandPrompt(rawObject interface{}) (prompt *lexmodelbuildingservice.Prompt
 
 	prompt = &lexmodelbuildingservice.Prompt{}
 	prompt.MaxAttempts = aws.Int64(int64(m["max_attempts"].(int)))
-	prompt.Messages = expandMessages(m["message"].(*schema.Set).List())
+	prompt.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		prompt.ResponseCard = aws.String(v.(string))
@@ -837,7 +837,7 @@ func expandSlots(rawValues []interface{}) []*lexmodelbuildingservice.Slot {
 func flattenStatement(statement *lexmodelbuildingservice.Statement) (flattened []map[string]interface{}) {
 	flattened = []map[string]interface{}{
 		{
-			"message": flattenMessages(statement.Messages),
+			names.AttrMessage: flattenMessages(statement.Messages),
 		},
 	}
 
@@ -852,7 +852,7 @@ func expandStatement(rawObject interface{}) (statement *lexmodelbuildingservice.
 	m := rawObject.([]interface{})[0].(map[string]interface{})
 
 	statement = &lexmodelbuildingservice.Statement{}
-	statement.Messages = expandMessages(m["message"].(*schema.Set).List())
+	statement.Messages = expandMessages(m[names.AttrMessage].(*schema.Set).List())
 
 	if v, ok := m["response_card"]; ok && v != "" {
 		statement.ResponseCard = aws.String(v.(string))

@@ -172,7 +172,7 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -249,7 +249,7 @@ func resourceCluster() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -382,7 +382,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"retention_period": {
+						names.AttrRetentionPeriod: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  7,
@@ -719,12 +719,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return aws.StringValue(v.VpcSecurityGroupId)
 	}))
 
-	d.Set("dns_name", nil)
+	d.Set(names.AttrDNSName, nil)
 	d.Set(names.AttrEndpoint, nil)
 	d.Set(names.AttrPort, nil)
 	if endpoint := rsc.Endpoint; endpoint != nil {
 		if address := aws.StringValue(endpoint.Address); address != "" {
-			d.Set("dns_name", address)
+			d.Set(names.AttrDNSName, address)
 			if port := aws.Int64Value(endpoint.Port); port != 0 {
 				d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", address, port))
 				d.Set(names.AttrPort, port)
@@ -1059,7 +1059,7 @@ func enableLogging(ctx context.Context, conn *redshift.Redshift, clusterID strin
 		input.LogExports = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
 		input.S3KeyPrefix = aws.String(v)
 	}
 
@@ -1102,7 +1102,7 @@ func enableSnapshotCopy(ctx context.Context, conn *redshift.Redshift, clusterID 
 		DestinationRegion: aws.String(tfMap["destination_region"].(string)),
 	}
 
-	if v, ok := tfMap["retention_period"]; ok {
+	if v, ok := tfMap[names.AttrRetentionPeriod]; ok {
 		input.RetentionPeriod = aws.Int64(int64(v.(int)))
 	}
 

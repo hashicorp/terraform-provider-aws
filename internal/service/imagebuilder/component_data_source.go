@@ -56,7 +56,7 @@ func DataSourceComponent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrEncrypted, component.Encrypted)
 	d.Set(names.AttrKMSKeyID, component.KmsKeyId)
 	d.Set(names.AttrName, component.Name)
-	d.Set("owner", component.Owner)
+	d.Set(names.AttrOwner, component.Owner)
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 

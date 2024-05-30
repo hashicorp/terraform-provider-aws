@@ -77,7 +77,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"source_type": {
+			names.AttrSourceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -103,7 +103,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
-		SourceType:       aws.String(d.Get("source_type").(string)),
+		SourceType:       aws.String(d.Get(names.AttrSourceType).(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -156,7 +156,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrName, d.Id())
 	d.Set(names.AttrSNSTopicARN, subscription.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(subscription.SourceIdsList))
-	d.Set("source_type", subscription.SourceType)
+	d.Set(names.AttrSourceType, subscription.SourceType)
 
 	return diags
 }
@@ -170,7 +170,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 			Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 			SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
-			SourceType:       aws.String(d.Get("source_type").(string)),
+			SourceType:       aws.String(d.Get(names.AttrSourceType).(string)),
 			SubscriptionName: aws.String(d.Id()),
 		}
 

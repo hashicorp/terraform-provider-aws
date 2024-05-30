@@ -89,7 +89,7 @@ func tableVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"content": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldLinkContentConfiguration.html
+																			names.AttrContent: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableFieldLinkContentConfiguration.html
 																				Type:     schema.TypeList,
 																				Optional: true,
 																				MinItems: 1,
@@ -681,7 +681,7 @@ func expandTableFieldLinkConfiguration(tfList []interface{}) *quicksight.TableFi
 	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		options.Target = aws.String(v)
 	}
-	if v, ok := tfMap["content"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrContent].([]interface{}); ok && len(v) > 0 {
 		options.Content = expandTableFieldLinkContentConfiguration(v)
 	}
 
@@ -1153,7 +1153,7 @@ func flattenTableFieldLinkConfiguration(apiObject *quicksight.TableFieldLinkConf
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Content != nil {
-		tfMap["content"] = flattenTableFieldLinkContentConfiguration(apiObject.Content)
+		tfMap[names.AttrContent] = flattenTableFieldLinkContentConfiguration(apiObject.Content)
 	}
 	if apiObject.Target != nil {
 		tfMap[names.AttrTarget] = aws.StringValue(apiObject.Target)

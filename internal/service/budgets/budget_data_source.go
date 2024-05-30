@@ -235,7 +235,7 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

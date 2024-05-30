@@ -36,7 +36,7 @@ func testAccLambdaFunctionAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLambdaFunctionAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttrSet(resourceName, "function_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrFunctionARN),
 				),
 			},
 			{

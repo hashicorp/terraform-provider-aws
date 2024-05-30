@@ -86,7 +86,7 @@ func DataSourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -179,7 +179,7 @@ func DataSourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -303,7 +303,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -368,7 +368,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenResourcePermissions(cleanPermissions))
+	d.Set(names.AttrPermissions, flattenResourcePermissions(cleanPermissions))
 	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
 	if cleanPermissions[0].Resource.Catalog != nil {
@@ -394,11 +394,11 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set(names.AttrDatabase, []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
-		d.Set("database", nil)
+		d.Set(names.AttrDatabase, nil)
 	}
 
 	if cleanPermissions[0].Resource.LFTag != nil {

@@ -148,7 +148,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
-				"language_code": {
+				names.AttrLanguageCode: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.CallAnalyticsLanguageCode](),
@@ -259,7 +259,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
-				"language_code": {
+				names.AttrLanguageCode: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.CallAnalyticsLanguageCode](),
@@ -691,7 +691,7 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.AmazonTranscribeCallAnalyticsProcessorConfiguration = &awstypes.AmazonTranscribeCallAnalyticsProcessorConfiguration{
-			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration["language_code"].(string)),
+			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration[names.AttrLanguageCode].(string)),
 		}
 
 		if callAnalyticsStreamCategories, ok := rawConfiguration["call_analytics_stream_categories"].([]interface{}); ok && len(callAnalyticsStreamCategories) > 0 {
@@ -761,7 +761,7 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.AmazonTranscribeProcessorConfiguration = &awstypes.AmazonTranscribeProcessorConfiguration{
-			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration["language_code"].(string)),
+			LanguageCode: awstypes.CallAnalyticsLanguageCode(rawConfiguration[names.AttrLanguageCode].(string)),
 		}
 
 		if contentIdentificationType, ok := rawConfiguration["content_identification_type"].(string); ok && contentIdentificationType != "" {
@@ -979,7 +979,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["content_redaction_type"] = processorConfiguration.ContentRedactionType
 		configuration["enable_partial_results_stabilization"] = processorConfiguration.EnablePartialResultsStabilization
 		configuration["filter_partial_results"] = processorConfiguration.FilterPartialResults
-		configuration["language_code"] = processorConfiguration.LanguageCode
+		configuration[names.AttrLanguageCode] = processorConfiguration.LanguageCode
 		configuration["language_model_name"] = processorConfiguration.LanguageModelName
 		configuration["partial_results_stability"] = processorConfiguration.PartialResultsStability
 		configuration["pii_entity_types"] = processorConfiguration.PiiEntityTypes
@@ -1003,7 +1003,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		configuration["content_redaction_type"] = processorConfiguration.ContentRedactionType
 		configuration["enable_partial_results_stabilization"] = processorConfiguration.EnablePartialResultsStabilization
 		configuration["filter_partial_results"] = processorConfiguration.FilterPartialResults
-		configuration["language_code"] = processorConfiguration.LanguageCode
+		configuration[names.AttrLanguageCode] = processorConfiguration.LanguageCode
 		configuration["language_model_name"] = processorConfiguration.LanguageModelName
 		configuration["partial_results_stability"] = processorConfiguration.PartialResultsStability
 		configuration["pii_entity_types"] = processorConfiguration.PiiEntityTypes

@@ -60,7 +60,7 @@ func resourceRepository() *schema.Resource {
 							Default:          types.EncryptionTypeAes256,
 							ValidateDiagFunc: enum.Validate[types.EncryptionType](),
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -71,7 +71,7 @@ func resourceRepository() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				ForceNew:         true,
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -246,7 +246,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Deleting ECR Repository: %s", d.Id())
 	_, err := conn.DeleteRepository(ctx, &ecr.DeleteRepositoryInput{
-		Force:          d.Get("force_delete").(bool),
+		Force:          d.Get(names.AttrForceDelete).(bool),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 		RepositoryName: aws.String(d.Id()),
 	})
@@ -325,7 +325,7 @@ func expandRepositoryEncryptionConfiguration(data []interface{}) *types.Encrypti
 	config := &types.EncryptionConfiguration{
 		EncryptionType: types.EncryptionType((ec["encryption_type"].(string))),
 	}
-	if v, ok := ec["kms_key"]; ok {
+	if v, ok := ec[names.AttrKMSKey]; ok {
 		if s := v.(string); s != "" {
 			config.KmsKey = aws.String(v.(string))
 		}
@@ -340,7 +340,7 @@ func flattenRepositoryEncryptionConfiguration(ec *types.EncryptionConfiguration)
 
 	config := map[string]interface{}{
 		"encryption_type": ec.EncryptionType,
-		"kms_key":         aws.ToString(ec.KmsKey),
+		names.AttrKMSKey:  aws.ToString(ec.KmsKey),
 	}
 
 	return []map[string]interface{}{

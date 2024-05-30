@@ -31,7 +31,7 @@ func dataSourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(publicKey.SSHPublicKeyId))
 	d.Set("fingerprint", publicKey.Fingerprint)
-	d.Set("public_key", publicKeyBody)
+	d.Set(names.AttrPublicKey, publicKeyBody)
 	d.Set(names.AttrStatus, publicKey.Status)
 
 	return diags

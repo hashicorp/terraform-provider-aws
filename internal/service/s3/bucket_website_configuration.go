@@ -56,7 +56,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -106,7 +106,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 				ConflictsWith: []string{"routing_rules"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"condition": {
+						names.AttrCondition: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -209,7 +209,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	}
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
 		WebsiteConfiguration: websiteConfig,
@@ -267,7 +267,7 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	if err := d.Set("error_document", flattenErrorDocument(output.ErrorDocument)); err != nil {
 		return diag.Errorf("setting error_document: %s", err)
 	}
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set("index_document", flattenIndexDocument(output.IndexDocument)); err != nil {
 		return diag.Errorf("setting index_document: %s", err)
 	}
@@ -526,7 +526,7 @@ func expandRoutingRules(l []interface{}) []types.RoutingRule {
 
 		rule := types.RoutingRule{}
 
-		if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrCondition].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Condition = expandCondition(v)
 		}
 
@@ -649,7 +649,7 @@ func flattenRoutingRules(rules []types.RoutingRule) []interface{} {
 		m := make(map[string]interface{})
 
 		if rule.Condition != nil {
-			m["condition"] = flattenCondition(rule.Condition)
+			m[names.AttrCondition] = flattenCondition(rule.Condition)
 		}
 
 		if rule.Redirect != nil {

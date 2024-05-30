@@ -55,7 +55,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("managed_owner_name", firewallDomainList.ManagedOwnerName)
 	d.Set("modification_time", firewallDomainList.ModificationTime)
 	d.Set(names.AttrStatus, firewallDomainList.Status)
-	d.Set("status_message", firewallDomainList.StatusMessage)
+	d.Set(names.AttrStatusMessage, firewallDomainList.StatusMessage)
 
 	return nil
 }

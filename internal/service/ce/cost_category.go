@@ -51,7 +51,7 @@ func resourceCostCategory() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"default_value": {
+				names.AttrDefaultValue: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 50),
@@ -71,7 +71,7 @@ func resourceCostCategory() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 50),
 				},
-				"rule": {
+				names.AttrRule: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Resource{
@@ -95,7 +95,7 @@ func resourceCostCategory() *schema.Resource {
 									},
 								},
 							},
-							"rule": {
+							names.AttrRule: {
 								Type:     schema.TypeList,
 								MaxItems: 1,
 								Optional: true,
@@ -305,11 +305,11 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:         aws.String(name),
 		ResourceTags: getTagsIn(ctx),
-		Rules:        expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
+		Rules:        expandCostCategoryRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		RuleVersion:  awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 	}
 
-	if v, ok := d.GetOk("default_value"); ok {
+	if v, ok := d.GetOk(names.AttrDefaultValue); ok {
 		input.DefaultValue = aws.String(v.(string))
 	}
 
@@ -352,11 +352,11 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, costCategory.CostCategoryArn)
-	d.Set("default_value", costCategory.DefaultValue)
+	d.Set(names.AttrDefaultValue, costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set(names.AttrName, costCategory.Name)
-	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
+	if err = d.Set(names.AttrRule, flattenCostCategoryRules(costCategory.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
@@ -375,12 +375,12 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
 			CostCategoryArn: aws.String(d.Id()),
 			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
-			Rules:           expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
+			Rules:           expandCostCategoryRules(d.Get(names.AttrRule).(*schema.Set).List()),
 			RuleVersion:     awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 		}
 
-		if d.HasChange("default_value") {
-			input.DefaultValue = aws.String(d.Get("default_value").(string))
+		if d.HasChange(names.AttrDefaultValue) {
+			input.DefaultValue = aws.String(d.Get(names.AttrDefaultValue).(string))
 		}
 
 		if d.HasChange("split_charge_rule") {
@@ -450,7 +450,7 @@ func expandCostCategoryRule(tfMap map[string]interface{}) *awstypes.CostCategory
 		apiObject.InheritedValue = expandCostCategoryInheritedValueDimension(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrRule].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Rule = expandExpression(v[0].(map[string]interface{}))
 	}
 
@@ -716,7 +716,7 @@ func flattenCostCategoryRule(apiObject *awstypes.CostCategoryRule) map[string]in
 	tfMap := map[string]interface{}{}
 
 	tfMap["inherited_value"] = flattenCostCategoryInheritedValueDimension(apiObject.InheritedValue)
-	tfMap["rule"] = []interface{}{flattenExpression(apiObject.Rule)}
+	tfMap[names.AttrRule] = []interface{}{flattenExpression(apiObject.Rule)}
 	tfMap[names.AttrType] = string(apiObject.Type)
 	tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
 

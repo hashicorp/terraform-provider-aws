@@ -72,7 +72,7 @@ func resourceGatewayRoute() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -232,7 +232,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"header": {
+								names.AttrHeader: {
 									Type:     schema.TypeSet,
 									Optional: true,
 									MinItems: 0,
@@ -560,7 +560,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("mesh_name", gatewayRoute.MeshName)
 	d.Set("mesh_owner", gatewayRoute.Metadata.MeshOwner)
 	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
-	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, gatewayRoute.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -848,7 +848,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 		routeMatch.Prefix = aws.String(vPrefix)
 	}
 
-	if vHeaders, ok := mRouteMatch["header"].(*schema.Set); ok && vHeaders.Len() > 0 {
+	if vHeaders, ok := mRouteMatch[names.AttrHeader].(*schema.Set); ok && vHeaders.Len() > 0 {
 		headers := []*appmesh.HttpGatewayRouteHeader{}
 
 		for _, vHeader := range vHeaders.List() {
@@ -1104,7 +1104,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 		vHeaders = append(vHeaders, mHeader)
 	}
 
-	mRouteMatch["header"] = vHeaders
+	mRouteMatch[names.AttrHeader] = vHeaders
 
 	if hostname := routeMatch.Hostname; hostname != nil {
 		mHostname := map[string]interface{}{}

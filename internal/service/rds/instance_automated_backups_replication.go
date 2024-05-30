@@ -61,7 +61,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeInt,
 				ForceNew: true,
 				Optional: true,
@@ -82,7 +82,7 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
-		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
+		BackupRetentionPeriod: aws.Int64(int64(d.Get(names.AttrRetentionPeriod).(int))),
 		SourceDBInstanceArn:   aws.String(d.Get("source_db_instance_arn").(string)),
 	}
 
@@ -125,7 +125,7 @@ func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *sch
 	}
 
 	d.Set(names.AttrKMSKeyID, backup.KmsKeyId)
-	d.Set("retention_period", backup.BackupRetentionPeriod)
+	d.Set(names.AttrRetentionPeriod, backup.BackupRetentionPeriod)
 	d.Set("source_db_instance_arn", backup.DBInstanceArn)
 
 	return diags

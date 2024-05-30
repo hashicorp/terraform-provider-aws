@@ -79,7 +79,7 @@ func resourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -105,7 +105,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	keyName := create.Name(d.Get("key_name").(string), d.Get("key_name_prefix").(string))
 	input := &ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
-		PublicKeyMaterial: []byte(d.Get("public_key").(string)),
+		PublicKeyMaterial: []byte(d.Get(names.AttrPublicKey).(string)),
 		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeKeyPair),
 	}
 

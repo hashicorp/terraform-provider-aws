@@ -46,7 +46,7 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccModelImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"schema"},
+				ImportStateVerifyIgnore: []string{names.AttrSchema},
 			},
 		},
 	})

@@ -74,7 +74,7 @@ func ResourceTrustAnchor() *schema.Resource {
 								},
 							},
 						},
-						"source_type": {
+						names.AttrSourceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(trustAnchorTypeValues(types.TrustAnchorType("").Values()...), false),
@@ -200,7 +200,7 @@ func flattenSource(apiObject *types.Source) []interface{} {
 
 	m := map[string]interface{}{}
 
-	m["source_type"] = apiObject.SourceType
+	m[names.AttrSourceType] = apiObject.SourceType
 	m["source_data"] = flattenSourceData(apiObject.SourceData)
 
 	return []interface{}{m}
@@ -239,7 +239,7 @@ func expandSource(tfList []interface{}) *types.Source {
 
 	result := &types.Source{}
 
-	if v, ok := tfMap["source_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSourceType].(string); ok && v != "" {
 		result.SourceType = types.TrustAnchorType(v)
 	}
 

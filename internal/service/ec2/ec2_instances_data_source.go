@@ -30,7 +30,7 @@ func DataSourceInstances() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -115,7 +115,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", instanceIDs)
+	d.Set(names.AttrIDs, instanceIDs)
 	d.Set("ipv6_addresses", ipv6Addresses)
 	d.Set("private_ips", privateIPs)
 	d.Set("public_ips", publicIPs)

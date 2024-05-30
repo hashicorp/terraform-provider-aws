@@ -25,8 +25,8 @@ var tmpl string
 var semgrepTmpl string
 
 type ConstantDatum struct {
-	Constant      string
-	ConstantLower string
+	Constant string
+	Literal  string
 }
 
 type TemplateData struct {
@@ -90,8 +90,8 @@ func readConstants(filename string) ([]ConstantDatum, error) {
 		}
 
 		constantList = append(constantList, ConstantDatum{
-			ConstantLower: row[0],
-			Constant:      row[1],
+			Literal:  row[0],
+			Constant: row[1],
 		})
 	}
 

@@ -81,7 +81,7 @@ func ResourceRoom() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(fallbackResultValues(types.FallbackResult("").Values()), false),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -280,7 +280,7 @@ func flattenMessageReviewHandler(apiObject *types.MessageReviewHandler) []interf
 	}
 
 	if v := apiObject.Uri; v != nil {
-		m["uri"] = aws.ToString(v)
+		m[names.AttrURI] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -299,7 +299,7 @@ func expandMessageReviewHandler(vSettings []interface{}) *types.MessageReviewHan
 		messageReviewHandler.FallbackResult = types.FallbackResult(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok {
+	if v, ok := tfMap[names.AttrURI].(string); ok {
 		messageReviewHandler.Uri = aws.String(v)
 	}
 

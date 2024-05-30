@@ -52,7 +52,7 @@ func resourceDomainName() *schema.Resource {
 			names.AttrCertificateARN: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_body", "certificate_chain", "certificate_name", "certificate_private_key", "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, "certificate_name", "certificate_private_key", "regional_certificate_arn", "regional_certificate_name"},
 			},
 			"certificate_body": {
 				Type:          schema.TypeString,
@@ -60,7 +60,7 @@ func resourceDomainName() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn"},
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
@@ -143,7 +143,7 @@ func resourceDomainName() *schema.Resource {
 			"regional_certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrCertificateARN, "certificate_body", "certificate_chain", "certificate_name", "certificate_private_key", "regional_certificate_name"},
+				ConflictsWith: []string{names.AttrCertificateARN, "certificate_body", names.AttrCertificateChain, "certificate_name", "certificate_private_key", "regional_certificate_name"},
 			},
 			"regional_certificate_name": {
 				Type:          schema.TypeString,
@@ -191,7 +191,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CertificateBody = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("certificate_chain"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
 		input.CertificateChain = aws.String(v.(string))
 	}
 

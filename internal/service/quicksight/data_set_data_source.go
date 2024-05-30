@@ -28,7 +28,7 @@ func DataSourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -137,7 +137,7 @@ func DataSourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -239,7 +239,7 @@ func DataSourceDataSet() *schema.Resource {
 func logicalTableMapDataSourceSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -543,7 +543,7 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -620,7 +620,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	dataSetId := d.Get("data_set_id").(string)
@@ -640,7 +640,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(createDataSetID(awsAccountId, dataSetId))
 
 	d.Set(names.AttrARN, dataSet.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("data_set_id", dataSet.DataSetId)
 	d.Set(names.AttrName, dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
@@ -703,7 +703,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 	return nil

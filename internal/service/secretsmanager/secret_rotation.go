@@ -72,7 +72,7 @@ func resourceSecretRotation() *schema.Resource {
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
 							ValidateFunc:  validation.IntBetween(1, 1000),
 						},
-						"duration": {
+						names.AttrDuration: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
@@ -216,7 +216,7 @@ func expandRotationRules(l []interface{}) *types.RotationRulesType {
 		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
 		rules.Duration = aws.String(v)
 	}
 
@@ -240,7 +240,7 @@ func flattenRotationRules(rules *types.RotationRulesType) []interface{} {
 	}
 
 	if v := rules.Duration; v != nil {
-		m["duration"] = aws.ToString(v)
+		m[names.AttrDuration] = aws.ToString(v)
 	}
 
 	if v := rules.ScheduleExpression; v != nil {

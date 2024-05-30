@@ -76,26 +76,26 @@ func TestAccRDSCluster_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
+					resource.TestCheckResourceAttr(resourceName, "backtrack_window", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "db_system_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", "true"),
-					resource.TestCheckResourceAttr(resourceName, "domain", ""),
+					resource.TestCheckResourceAttr(resourceName, "delete_automated_backups", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, ""),
 					resource.TestCheckResourceAttr(resourceName, "domain_iam_role_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -188,29 +188,29 @@ func TestAccRDSCluster_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			testAccClusterImportStep(resourceName),
 			{
-				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -239,8 +239,8 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
 				),
 			},
@@ -249,8 +249,8 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, "version_actual"),
 				),
 			},
@@ -280,8 +280,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) 
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
 				),
 			},
@@ -290,8 +290,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeNoApplyImmediately(t *testing.T) 
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, tfrds.ClusterEngineAuroraPostgreSQL, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, "version_actual"),
 				),
 			},
@@ -319,8 +319,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, false, tfrds.ClusterEngineAuroraPostgreSQL, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
@@ -328,8 +328,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, tfrds.ClusterEngineAuroraPostgreSQL, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
@@ -357,8 +357,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, false, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
@@ -367,8 +367,8 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
@@ -397,7 +397,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 				Config: testAccClusterConfig_majorVersionOnly(rName, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, "version_actual"),
 				),
 			},
@@ -443,7 +443,7 @@ func TestAccRDSCluster_minorVersion(t *testing.T) {
 				Config: testAccClusterConfig_minorVersion(rName, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
@@ -451,7 +451,7 @@ func TestAccRDSCluster_minorVersion(t *testing.T) {
 				Config: testAccClusterConfig_minorVersion(rName, tfrds.ClusterEngineAuroraPostgreSQL, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
@@ -501,7 +501,7 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "io1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "io1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io1"),
 				),
 			},
 		},
@@ -528,7 +528,7 @@ func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "io2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "io2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io2"),
 				),
 			},
 		},
@@ -558,7 +558,7 @@ func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
 				),
 			},
 		},
@@ -586,7 +586,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageType(rName, storageType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageType),
 				),
 			},
 		},
@@ -615,7 +615,7 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageTypeNotDefined(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
 				),
 			},
 			{
@@ -623,7 +623,7 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeAuroraIOPT1),
 				),
 			},
 		},
@@ -650,7 +650,7 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 				Config: testAccClusterConfig_allocatedStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
 				),
 			},
 		},
@@ -681,7 +681,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeAuroraIOPT1),
 				),
 			},
 			{
@@ -689,7 +689,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
 				),
 			},
 		},
@@ -716,7 +716,7 @@ func TestAccRDSCluster_iops(t *testing.T) {
 				Config: testAccClusterConfig_iops(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
 		},
@@ -830,7 +830,7 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, sourceResourceName, &sourceDBCluster),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceResourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, sourceResourceName, names.AttrEngine),
 				),
 			},
 		},
@@ -859,7 +859,7 @@ func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, sourceResourceName, &sourceDBCluster),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
@@ -930,7 +930,7 @@ func TestAccRDSCluster_domain(t *testing.T) {
 				Config: testAccClusterConfig_domain(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
@@ -954,7 +954,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 				Config: testAccClusterConfig_enabledCloudWatchLogsExports1(rName, "audit"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
@@ -962,7 +962,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 				Config: testAccClusterConfig_enabledCloudWatchLogsExports2(rName, "slowquery", "error"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
 				),
@@ -971,7 +971,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 				Config: testAccClusterConfig_enabledCloudWatchLogsExports1(rName, "error"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster3),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
 			},
@@ -999,7 +999,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 				Config: testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, "postgresql"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 				),
 			},
@@ -1007,7 +1007,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 				Config: testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, "postgresql", "upgrade"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "upgrade"),
 				),
@@ -1039,7 +1039,7 @@ func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "iam_roles.#", "2"),
+						resourceName, "iam_roles.#", acctest.Ct2),
 				),
 			},
 			{
@@ -1047,7 +1047,7 @@ func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "iam_roles.#", "1"),
+						resourceName, "iam_roles.#", acctest.Ct1),
 				),
 			},
 		},
@@ -1126,7 +1126,7 @@ func TestAccRDSCluster_encrypted(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 		},
@@ -1149,21 +1149,21 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 		},
@@ -1237,7 +1237,7 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "preferred_backup_window", "03:00-09:00"),
 					resource.TestCheckResourceAttr(
-						resourceName, "backup_retention_period", "10"),
+						resourceName, "backup_retention_period", acctest.Ct10),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrPreferredMaintenanceWindow, "wed:01:00-wed:01:30"),
 				),
@@ -1262,7 +1262,7 @@ func TestAccRDSCluster_iamAuth(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "iam_database_authentication_enabled", "true"),
+						resourceName, "iam_database_authentication_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1285,14 +1285,14 @@ func TestAccRDSCluster_deletionProtection(t *testing.T) {
 				Config: testAccClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -1321,8 +1321,8 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct0),
 				),
 			},
 			{
@@ -1331,8 +1331,8 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct0),
 				),
 			},
 		},
@@ -1360,7 +1360,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
@@ -1394,7 +1394,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, dataSourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceName, names.AttrVersion),
 				),
 			},
@@ -1402,7 +1402,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceNameUpgrade, "engine"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, dataSourceNameUpgrade, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, dataSourceNameUpgrade, names.AttrVersion),
 				),
 			},
@@ -1655,7 +1655,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
 					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
-					resource.TestCheckResourceAttr(resourceNameSecondary, "enable_global_write_forwarding", "true"),
+					resource.TestCheckResourceAttr(resourceNameSecondary, "enable_global_write_forwarding", acctest.CtTrue),
 				),
 			},
 		},
@@ -1680,10 +1680,10 @@ func TestAccRDSCluster_ManagedMasterPassword_managed(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -1712,10 +1712,10 @@ func TestAccRDSCluster_ManagedMasterPassword_managedSpecificKMSKey(t *testing.T)
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -1759,7 +1759,7 @@ func TestAccRDSCluster_ManagedMasterPassword_convertToManaged(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "manage_master_user_password"),
-					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", acctest.CtTrue),
 				),
 			},
 		},
@@ -1817,10 +1817,10 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "4"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
@@ -1829,8 +1829,8 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 86400, "ForceApplyCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "true"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
@@ -1862,7 +1862,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 0.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0.5"),
 				),
@@ -1871,7 +1871,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 128.0, 8.5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "8.5"),
 				),
@@ -1898,10 +1898,10 @@ func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 				Config: testAccClusterConfig_ScalingConfiguration_defaultMinCapacity(rName, false, 128, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "301"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "RollbackCapacityChange"),
 				),
@@ -1968,7 +1968,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			// Ensure we disable deletion protection before attempting to delete :)
@@ -1978,7 +1978,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -2319,8 +2319,8 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -2389,8 +2389,8 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -2425,7 +2425,7 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 		},
@@ -2453,14 +2453,14 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 				Config: testAccClusterConfig_enableHTTPEndpoint(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_enableHTTPEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtFalse),
 				),
 			},
 		},
@@ -2485,7 +2485,7 @@ func TestAccRDSCluster_enableHTTPEndpointProvisioned(t *testing.T) {
 				Config: testAccClusterConfig_enableHTTPEndpointProvisioned(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", acctest.CtTrue),
 				),
 			},
 		},
@@ -2752,7 +2752,7 @@ func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "enable_local_write_forwarding", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_local_write_forwarding", acctest.CtTrue),
 				),
 			},
 			testAccClusterImportStep(resourceName),

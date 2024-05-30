@@ -73,7 +73,7 @@ func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest
 					),
 				},
 			},
-			"s3_key_prefix": schema.StringAttribute{
+			names.AttrS3KeyPrefix: schema.StringAttribute{
 				Optional: true,
 			},
 		},

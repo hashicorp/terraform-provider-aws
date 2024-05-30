@@ -40,7 +40,7 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "publicly_advertisable", resourceName, "publicly_advertisable"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "source_ipam_pool_id", resourceName, "source_ipam_pool_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

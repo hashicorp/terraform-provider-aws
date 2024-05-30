@@ -62,7 +62,7 @@ func (r *scraperResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"alias": schema.StringAttribute{
+			names.AttrAlias: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

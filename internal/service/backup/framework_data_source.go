@@ -52,7 +52,7 @@ func DataSourceFramework() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"scope": {
+						names.AttrScope: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{

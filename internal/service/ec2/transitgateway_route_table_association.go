@@ -39,7 +39,7 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_id", transitGatewayRouteTableAssociation.ResourceId)
+	d.Set(names.AttrResourceID, transitGatewayRouteTableAssociation.ResourceId)
 	d.Set(names.AttrResourceType, transitGatewayRouteTableAssociation.ResourceType)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayRouteTableAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)

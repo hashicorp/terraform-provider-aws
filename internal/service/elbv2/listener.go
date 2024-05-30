@@ -69,7 +69,7 @@ func ResourceListener() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -92,7 +92,7 @@ func ResourceListener() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -143,12 +143,12 @@ func ResourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -158,7 +158,7 @@ func ResourceListener() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -207,7 +207,7 @@ func ResourceListener() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -235,7 +235,7 @@ func ResourceListener() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:         schema.TypeInt,
 													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      1,
@@ -251,7 +251,7 @@ func ResourceListener() *schema.Resource {
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"duration": {
+												names.AttrDuration: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 604800),
@@ -313,7 +313,7 @@ func ResourceListener() *schema.Resource {
 										Default:      "#{query}",
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
@@ -392,7 +392,7 @@ func ResourceListener() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			validateListenerActionsCustomDiff("default_action"),
+			validateListenerActionsCustomDiff(names.AttrDefaultAction),
 		),
 	}
 }
@@ -432,8 +432,8 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}}
 	}
 
-	if v, ok := d.GetOk("default_action"); ok && len(v.([]interface{})) > 0 {
-		input.DefaultActions = expandLbListenerActions(cty.GetAttrPath("default_action"), v.([]any), &diags)
+	if v, ok := d.GetOk(names.AttrDefaultAction); ok && len(v.([]interface{})) > 0 {
+		input.DefaultActions = expandLbListenerActions(cty.GetAttrPath(names.AttrDefaultAction), v.([]any), &diags)
 		if diags.HasError() {
 			return diags
 		}
@@ -532,7 +532,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
 	})
-	if err := d.Set("default_action", flattenLbListenerActions(d, "default_action", listener.DefaultActions)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenLbListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
@@ -565,8 +565,8 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}}
 		}
 
-		if d.HasChange("default_action") {
-			input.DefaultActions = expandLbListenerActions(cty.GetAttrPath("default_action"), d.Get("default_action").([]any), &diags)
+		if d.HasChange(names.AttrDefaultAction) {
+			input.DefaultActions = expandLbListenerActions(cty.GetAttrPath(names.AttrDefaultAction), d.Get(names.AttrDefaultAction).([]any), &diags)
 			if diags.HasError() {
 				return diags
 			}
@@ -769,7 +769,7 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.Authen
 		config.OnUnauthenticatedRequest = awstypes.AuthenticateCognitoActionConditionalBehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		config.Scope = aws.String(v)
 	}
 
@@ -799,8 +799,8 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
 		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
-		ClientSecret:                     aws.String(tfMap["client_secret"].(string)),
-		Issuer:                           aws.String(tfMap["issuer"].(string)),
+		ClientSecret:                     aws.String(tfMap[names.AttrClientSecret].(string)),
+		Issuer:                           aws.String(tfMap[names.AttrIssuer].(string)),
 		TokenEndpoint:                    aws.String(tfMap["token_endpoint"].(string)),
 		UserInfoEndpoint:                 aws.String(tfMap["user_info_endpoint"].(string)),
 	}
@@ -809,7 +809,7 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 		config.OnUnauthenticatedRequest = awstypes.AuthenticateOidcActionConditionalBehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		config.Scope = aws.String(v)
 	}
 
@@ -838,7 +838,7 @@ func expandLbListenerFixedResponseConfig(l []interface{}) *awstypes.FixedRespons
 	return &awstypes.FixedResponseActionConfig{
 		ContentType: aws.String(tfMap[names.AttrContentType].(string)),
 		MessageBody: aws.String(tfMap["message_body"].(string)),
-		StatusCode:  aws.String(tfMap["status_code"].(string)),
+		StatusCode:  aws.String(tfMap[names.AttrStatusCode].(string)),
 	}
 }
 
@@ -859,7 +859,7 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 		Port:       aws.String(tfMap[names.AttrPort].(string)),
 		Protocol:   aws.String(tfMap[names.AttrProtocol].(string)),
 		Query:      aws.String(tfMap["query"].(string)),
-		StatusCode: awstypes.RedirectActionStatusCodeEnum(tfMap["status_code"].(string)),
+		StatusCode: awstypes.RedirectActionStatusCodeEnum(tfMap[names.AttrStatusCode].(string)),
 	}
 }
 
@@ -930,7 +930,7 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes
 
 		group := awstypes.TargetGroupTuple{
 			TargetGroupArn: aws.String(tfMap[names.AttrARN].(string)),
-			Weight:         aws.Int32(int32(tfMap["weight"].(int))),
+			Weight:         aws.Int32(int32(tfMap[names.AttrWeight].(int))),
 		}
 
 		groups = append(groups, group)
@@ -951,7 +951,7 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 
 	// The Plugin SDK stores a `nil` returned by the API as a `0` in the state. This is a invalid value.
 	var duration *int32
-	if v := tfMap["duration"].(int); v > 0 {
+	if v := tfMap[names.AttrDuration].(int); v > 0 {
 		duration = aws.Int32(int32(v))
 	}
 
@@ -1080,10 +1080,10 @@ func flattenAuthenticateOIDCActionConfig(config *awstypes.AuthenticateOidcAction
 		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
 		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
 		names.AttrClientID:                    aws.ToString(config.ClientId),
-		"client_secret":                       clientSecret,
-		"issuer":                              aws.ToString(config.Issuer),
+		names.AttrClientSecret:                clientSecret,
+		names.AttrIssuer:                      aws.ToString(config.Issuer),
 		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
-		"scope":                               aws.ToString(config.Scope),
+		names.AttrScope:                       aws.ToString(config.Scope),
 		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
 		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
 		"token_endpoint":                      aws.ToString(config.TokenEndpoint),
@@ -1101,7 +1101,7 @@ func flattenLbListenerActionAuthenticateCognitoConfig(config *awstypes.Authentic
 	m := map[string]interface{}{
 		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
 		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
-		"scope":                               aws.ToString(config.Scope),
+		names.AttrScope:                       aws.ToString(config.Scope),
 		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
 		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
 		"user_pool_arn":                       aws.ToString(config.UserPoolArn),
@@ -1120,7 +1120,7 @@ func flattenLbListenerActionFixedResponseConfig(config *awstypes.FixedResponseAc
 	m := map[string]interface{}{
 		names.AttrContentType: aws.ToString(config.ContentType),
 		"message_body":        aws.ToString(config.MessageBody),
-		"status_code":         aws.ToString(config.StatusCode),
+		names.AttrStatusCode:  aws.ToString(config.StatusCode),
 	}
 
 	return []interface{}{m}
@@ -1148,8 +1148,8 @@ func flattenLbListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGr
 
 	for _, group := range groups {
 		m := map[string]interface{}{
-			names.AttrARN: aws.ToString(group.TargetGroupArn),
-			"weight":      aws.ToInt32(group.Weight),
+			names.AttrARN:    aws.ToString(group.TargetGroupArn),
+			names.AttrWeight: aws.ToInt32(group.Weight),
 		}
 
 		vGroups = append(vGroups, m)
@@ -1164,8 +1164,8 @@ func flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config *aws
 	}
 
 	m := map[string]interface{}{
-		names.AttrEnabled: aws.ToBool(config.Enabled),
-		"duration":        aws.ToInt32(config.DurationSeconds),
+		names.AttrEnabled:  aws.ToBool(config.Enabled),
+		names.AttrDuration: aws.ToInt32(config.DurationSeconds),
 	}
 
 	return []interface{}{m}
@@ -1177,12 +1177,12 @@ func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig
 	}
 
 	m := map[string]interface{}{
-		"host":             aws.ToString(config.Host),
-		names.AttrPath:     aws.ToString(config.Path),
-		names.AttrPort:     aws.ToString(config.Port),
-		names.AttrProtocol: aws.ToString(config.Protocol),
-		"query":            aws.ToString(config.Query),
-		"status_code":      string(config.StatusCode),
+		"host":               aws.ToString(config.Host),
+		names.AttrPath:       aws.ToString(config.Path),
+		names.AttrPort:       aws.ToString(config.Port),
+		names.AttrProtocol:   aws.ToString(config.Protocol),
+		"query":              aws.ToString(config.Query),
+		names.AttrStatusCode: string(config.StatusCode),
 	}
 
 	return []interface{}{m}

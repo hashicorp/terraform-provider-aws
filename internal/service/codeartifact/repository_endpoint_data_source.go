@@ -25,7 +25,7 @@ func dataSourceRepositoryEndpoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRepositoryEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -56,7 +56,7 @@ func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domainName := d.Get("domain").(string)
+	domainName := d.Get(names.AttrDomain).(string)
 	var domainOwner string
 	if v, ok := d.GetOk("domain_owner"); ok {
 		domainOwner = v.(string)

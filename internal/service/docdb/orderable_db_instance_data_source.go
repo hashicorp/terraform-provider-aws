@@ -28,7 +28,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  engineDocDB,
@@ -74,7 +74,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.DBInstanceClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -123,7 +123,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *docdb.AvailabilityZone) string {
 		return aws.StringValue(v.Name)
 	}))
-	d.Set("engine", orderableDBInstance.Engine)
+	d.Set(names.AttrEngine, orderableDBInstance.Engine)
 	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
 	d.Set("instance_class", orderableDBInstance.DBInstanceClass)
 	d.Set("license_model", orderableDBInstance.LicenseModel)

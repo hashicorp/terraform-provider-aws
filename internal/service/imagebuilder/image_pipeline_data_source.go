@@ -81,7 +81,7 @@ func DataSourceImagePipeline() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

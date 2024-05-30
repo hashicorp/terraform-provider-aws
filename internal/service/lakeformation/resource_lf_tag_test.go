@@ -184,7 +184,7 @@ func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terr
 		log.Printf("[WARN] %s", err)
 	}
 
-	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("database"), lfdata.Database)); err != nil {
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrDatabase), lfdata.Database)); err != nil {
 		log.Printf("[WARN] %s", err)
 	}
 
@@ -236,7 +236,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 					input.Resource.Table.Name = aws.String(v)
 				}
 
-				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 					input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 				}
 			}
@@ -345,7 +345,7 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 				input.Resource.Table.Name = aws.String(v)
 			}
 
-			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 				input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 			}
 		}

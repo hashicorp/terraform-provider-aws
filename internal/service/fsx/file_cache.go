@@ -64,7 +64,7 @@ func resourceFileCache() *schema.Resource {
 				MaxItems: 8,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"association_id": {
+						names.AttrAssociationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -151,7 +151,7 @@ func resourceFileCache() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -364,7 +364,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, filecache.ResourceARN)
 	dataRepositoryAssociationIDs := aws.StringValueSlice(filecache.DataRepositoryAssociationIds)
 	d.Set("data_repository_association_ids", dataRepositoryAssociationIDs)
-	d.Set("dns_name", filecache.DNSName)
+	d.Set(names.AttrDNSName, filecache.DNSName)
 	d.Set("file_cache_id", filecache.FileCacheId)
 	d.Set("file_cache_type", filecache.FileCacheType)
 	d.Set("file_cache_type_version", filecache.FileCacheTypeVersion)
@@ -596,7 +596,7 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
-			"association_id":                 dataRepositoryAssociation.AssociationId,
+			names.AttrAssociationID:          dataRepositoryAssociation.AssociationId,
 			"data_repository_path":           dataRepositoryAssociation.DataRepositoryPath,
 			"data_repository_subdirectories": aws.StringValueSlice(dataRepositoryAssociation.DataRepositorySubdirectories),
 			"file_cache_id":                  dataRepositoryAssociation.FileCacheId,

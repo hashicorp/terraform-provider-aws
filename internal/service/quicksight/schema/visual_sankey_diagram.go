@@ -45,7 +45,7 @@ func sankeyDiagramVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													names.AttrDestination: dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													names.AttrSource:      dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"weight":              measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													names.AttrWeight:      measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -169,7 +169,7 @@ func expandSankeyDiagramAggregatedFieldWells(tfList []interface{}) *quicksight.S
 	if v, ok := tfMap[names.AttrSource].([]interface{}); ok && len(v) > 0 {
 		config.Source = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["weight"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrWeight].([]interface{}); ok && len(v) > 0 {
 		config.Weight = expandMeasureFields(v)
 	}
 
@@ -270,7 +270,7 @@ func flattenSankeyDiagramAggregatedFieldWells(apiObject *quicksight.SankeyDiagra
 		tfMap[names.AttrSource] = flattenDimensionFields(apiObject.Source)
 	}
 	if apiObject.Weight != nil {
-		tfMap["weight"] = flattenMeasureFields(apiObject.Weight)
+		tfMap[names.AttrWeight] = flattenMeasureFields(apiObject.Weight)
 	}
 
 	return []interface{}{tfMap}

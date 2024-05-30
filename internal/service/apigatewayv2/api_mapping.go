@@ -49,7 +49,7 @@ func resourceAPIMapping() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,7 +64,7 @@ func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
-		Stage:      aws.String(d.Get("stage").(string)),
+		Stage:      aws.String(d.Get(names.AttrStage).(string)),
 	}
 
 	if v, ok := d.GetOk("api_mapping_key"); ok {
@@ -100,7 +100,7 @@ func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("api_id", output.ApiId)
 	d.Set("api_mapping_key", output.ApiMappingKey)
-	d.Set("stage", output.Stage)
+	d.Set(names.AttrStage, output.Stage)
 
 	return diags
 }
@@ -119,8 +119,8 @@ func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ApiMappingKey = aws.String(d.Get("api_mapping_key").(string))
 	}
 
-	if d.HasChange("stage") {
-		input.Stage = aws.String(d.Get("stage").(string))
+	if d.HasChange(names.AttrStage) {
+		input.Stage = aws.String(d.Get(names.AttrStage).(string))
 	}
 
 	_, err := conn.UpdateApiMapping(ctx, input)

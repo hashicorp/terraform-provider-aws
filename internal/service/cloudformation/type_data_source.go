@@ -74,7 +74,7 @@ func dataSourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -157,7 +157,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("logging_config", nil)
 	}
 	d.Set("provisioning_type", output.ProvisioningType)
-	d.Set("schema", output.Schema)
+	d.Set(names.AttrSchema, output.Schema)
 	d.Set("source_url", output.SourceUrl)
 	d.Set(names.AttrType, output.Type)
 	d.Set("type_name", output.TypeName)

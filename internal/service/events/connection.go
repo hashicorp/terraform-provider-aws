@@ -74,7 +74,7 @@ func resourceConnection() *schema.Resource {
 							Elem:         element(),
 							AtLeastOneOf: atLeastOneOf,
 						},
-						"header": {
+						names.AttrHeader: {
 							Type:         schema.TypeList,
 							Optional:     true,
 							Elem:         element(),
@@ -196,7 +196,7 @@ func resourceConnection() *schema.Resource {
 															validation.StringLenBetween(1, 512),
 														),
 													},
-													"client_secret": {
+													names.AttrClientSecret: {
 														Type:      schema.TypeString,
 														Required:  true,
 														Sensitive: true,
@@ -561,7 +561,7 @@ func expandCreateConnectionOAuthClientRequestParameters(config []interface{}) *t
 		if val, ok := param[names.AttrClientID].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(val)
 		}
-		if val, ok := param["client_secret"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientSecret].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientSecret = aws.String(val)
 		}
 	}
@@ -578,7 +578,7 @@ func expandConnectionHTTPParameters(config []interface{}) *types.ConnectionHttpP
 		if val, ok := param["body"]; ok {
 			httpParameters.BodyParameters = expandConnectionHTTPParametersBody(val.([]interface{}))
 		}
-		if val, ok := param["header"]; ok {
+		if val, ok := param[names.AttrHeader]; ok {
 			httpParameters.HeaderParameters = expandConnectionHTTPParametersHeader(val.([]interface{}))
 		}
 		if val, ok := param["query_string"]; ok {
@@ -744,7 +744,7 @@ func flattenConnectionOAuthClientResponseParameters(oAuthClientRequestParameters
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.oauth.0.client_parameters.0.client_secret"); ok {
-		config["client_secret"] = v.(string)
+		config[names.AttrClientSecret] = v.(string)
 	}
 
 	result := []map[string]interface{}{config}
@@ -800,7 +800,7 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 
 	parameters := make(map[string]interface{})
 	parameters["body"] = bodyParameters
-	parameters["header"] = headerParameters
+	parameters[names.AttrHeader] = headerParameters
 	parameters["query_string"] = queryStringParameters
 
 	result := []map[string]interface{}{parameters}
@@ -892,7 +892,7 @@ func expandUpdateConnectionOAuthClientRequestParameters(config []interface{}) *t
 		if val, ok := param[names.AttrClientID].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(val)
 		}
-		if val, ok := param["client_secret"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientSecret].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientSecret = aws.String(val)
 		}
 	}

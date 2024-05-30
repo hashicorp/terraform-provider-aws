@@ -52,7 +52,7 @@ func resourceParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -101,7 +101,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	name := d.Get(names.AttrName).(string)
 	input := &redshift.CreateClusterParameterGroupInput{
 		Description:          aws.String(d.Get(names.AttrDescription).(string)),
-		ParameterGroupFamily: aws.String(d.Get("family").(string)),
+		ParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		ParameterGroupName:   aws.String(name),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -155,7 +155,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, parameterGroup.Description)
-	d.Set("family", parameterGroup.ParameterGroupFamily)
+	d.Set(names.AttrFamily, parameterGroup.ParameterGroupFamily)
 	d.Set(names.AttrName, parameterGroup.ParameterGroupName)
 
 	setTagsOut(ctx, parameterGroup.Tags)

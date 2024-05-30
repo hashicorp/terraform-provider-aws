@@ -42,7 +42,7 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T, semaphore t
 				Config: testAccTransitGatewayPolicyTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayPeeringResourceName, "transit_gateway_peering_attachment_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_policy_table_id", transitGatewayPolicyTableResourceName, names.AttrID),

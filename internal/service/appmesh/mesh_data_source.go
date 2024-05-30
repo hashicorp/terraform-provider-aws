@@ -45,7 +45,7 @@ func dataSourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -75,7 +75,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	meshOwner := aws.StringValue(mesh.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

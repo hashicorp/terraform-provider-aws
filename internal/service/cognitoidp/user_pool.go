@@ -140,7 +140,7 @@ func resourceUserPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      cognitoidentityprovider.DeletionProtectionTypeInactive,
@@ -163,7 +163,7 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -408,7 +408,7 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
@@ -486,7 +486,7 @@ func resourceUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"external_id": {
+						names.AttrExternalID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -674,7 +674,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.EmailConfiguration = expandUserPoolEmailConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.String(v.(string))
 	}
 
@@ -715,7 +715,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		input.Schema = expandUserPoolSchema(v.(*schema.Set).List())
 	}
 
@@ -848,11 +848,11 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("auto_verified_attributes", aws.StringValueSlice(userPool.AutoVerifiedAttributes))
 	d.Set(names.AttrCreationDate, userPool.CreationDate.Format(time.RFC3339))
 	d.Set("custom_domain", userPool.CustomDomain)
-	d.Set("deletion_protection", userPool.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, userPool.DeletionProtection)
 	if err := d.Set("device_configuration", flattenUserPoolDeviceConfiguration(userPool.DeviceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting device_configuration: %s", err)
 	}
-	d.Set("domain", userPool.Domain)
+	d.Set(names.AttrDomain, userPool.Domain)
 	if err := d.Set("email_configuration", flattenUserPoolEmailConfiguration(userPool.EmailConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting email_configuration: %s", err)
 	}
@@ -869,10 +869,10 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting password_policy: %s", err)
 	}
 	var configuredSchema []interface{}
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		configuredSchema = v.(*schema.Set).List()
 	}
-	if err := d.Set("schema", flattenUserPoolSchema(expandUserPoolSchema(configuredSchema), userPool.SchemaAttributes)); err != nil {
+	if err := d.Set(names.AttrSchema, flattenUserPoolSchema(expandUserPoolSchema(configuredSchema), userPool.SchemaAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 	d.Set("sms_authentication_message", userPool.SmsAuthenticationMessage)
@@ -962,7 +962,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"account_recovery_setting",
 		"admin_create_user_config",
 		"auto_verified_attributes",
-		"deletion_protection",
+		names.AttrDeletionProtection,
 		"device_configuration",
 		"email_configuration",
 		"email_verification_message",
@@ -1002,7 +1002,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("deletion_protection"); ok {
+		if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 			input.DeletionProtection = aws.String(v.(string))
 		}
 
@@ -1143,8 +1143,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("schema") {
-		o, n := d.GetChange("schema")
+	if d.HasChange(names.AttrSchema) {
+		o, n := d.GetChange(names.AttrSchema)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if os.Difference(ns).Len() == 0 {
@@ -1232,7 +1232,7 @@ func expandSMSConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsCo
 
 	apiObject := &cognitoidentityprovider.SmsConfigurationType{}
 
-	if v, ok := tfMap["external_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExternalID].(string); ok && v != "" {
 		apiObject.ExternalId = aws.String(v)
 	}
 
@@ -1271,7 +1271,7 @@ func flattenSMSConfiguration(apiObject *cognitoidentityprovider.SmsConfiguration
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ExternalId; v != nil {
-		tfMap["external_id"] = aws.StringValue(v)
+		tfMap[names.AttrExternalID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SnsCallerArn; v != nil {
@@ -1988,7 +1988,7 @@ func UserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovi
 			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
-			Name:                   aws.String("email"),
+			Name:                   aws.String(names.AttrEmail),
 			Required:               aws.Bool(false),
 			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),

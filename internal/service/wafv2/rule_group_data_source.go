@@ -36,7 +36,7 @@ func dataSourceRuleGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
@@ -53,7 +53,7 @@ func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	var foundRuleGroup awstypes.RuleGroupSummary
 	input := &wafv2.ListRuleGroupsInput{
-		Scope: awstypes.Scope(d.Get("scope").(string)),
+		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Limit: aws.Int32(100),
 	}
 

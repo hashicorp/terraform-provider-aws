@@ -75,7 +75,7 @@ func ResourcePartition() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
+									names.AttrComment: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},

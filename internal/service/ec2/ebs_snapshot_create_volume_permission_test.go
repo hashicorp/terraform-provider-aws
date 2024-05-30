@@ -38,7 +38,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccSnapshotCreateVolumePermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
-					resource.TestCheckResourceAttrSet(resourceName, "snapshot_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSnapshotID),
 				),
 			},
 		},

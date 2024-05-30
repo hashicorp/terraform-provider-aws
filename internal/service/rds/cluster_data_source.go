@@ -76,7 +76,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -157,7 +157,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -209,7 +209,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("db_system_id", dbc.DBSystemId)
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
-	d.Set("engine", dbc.Engine)
+	d.Set(names.AttrEngine, dbc.Engine)
 	d.Set("engine_mode", dbc.EngineMode)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
 	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
@@ -232,7 +232,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))

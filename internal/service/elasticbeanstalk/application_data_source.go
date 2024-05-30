@@ -36,7 +36,7 @@ func DataSourceApplication() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"service_role": {
+						names.AttrServiceRole: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

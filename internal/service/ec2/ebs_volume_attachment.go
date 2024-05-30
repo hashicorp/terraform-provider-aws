@@ -76,7 +76,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -160,7 +160,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if _, ok := d.GetOk("skip_destroy"); ok {
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
 		return diags
 	}
 

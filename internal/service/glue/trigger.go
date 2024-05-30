@@ -65,7 +65,7 @@ func ResourceTrigger() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
@@ -500,7 +500,7 @@ func expandActions(l []interface{}) []*glue.Action {
 			action.Arguments = flex.ExpandStringMap(v)
 		}
 
-		if v, ok := m["timeout"].(int); ok && v > 0 {
+		if v, ok := m[names.AttrTimeout].(int); ok && v > 0 {
 			action.Timeout = aws.Int64(int64(v))
 		}
 
@@ -581,8 +581,8 @@ func flattenActions(actions []*glue.Action) []interface{} {
 
 	for _, action := range actions {
 		m := map[string]interface{}{
-			"arguments": aws.StringValueMap(action.Arguments),
-			"timeout":   int(aws.Int64Value(action.Timeout)),
+			"arguments":       aws.StringValueMap(action.Arguments),
+			names.AttrTimeout: int(aws.Int64Value(action.Timeout)),
 		}
 
 		if v := aws.StringValue(action.CrawlerName); v != "" {

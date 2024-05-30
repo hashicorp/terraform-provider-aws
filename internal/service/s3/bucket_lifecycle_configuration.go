@@ -53,13 +53,13 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -207,7 +207,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -240,7 +240,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -259,8 +259,8 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
@@ -346,8 +346,8 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", flattenLifecycleRules(ctx, output)); err != nil {
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
+	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -362,7 +362,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
@@ -790,7 +790,7 @@ func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersi
 			transition.NoncurrentDays = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -828,7 +828,7 @@ func expandTransitions(l []interface{}) []types.Transition {
 			transition.Days = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -1015,7 +1015,7 @@ func flattenNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTr
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.NewerNoncurrentVersions != nil {
@@ -1041,7 +1041,7 @@ func flattenTransitions(transitions []types.Transition) []interface{} {
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.Date != nil {
