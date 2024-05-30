@@ -344,9 +344,10 @@ resource "aws_qbusiness_index" "test" {
 func testAccDatasourceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_datasource" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
+  application_id       = aws_qbusiness_app.test.id
   index_id             = aws_qbusiness_index.test.index_id
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
@@ -378,6 +379,12 @@ resource "aws_s3_bucket" "test" {
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -401,7 +408,7 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.application_id
+  application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
   capacity_configuration {
     units = 1
@@ -465,7 +472,7 @@ resource "aws_qbusiness_datasource" "test" {
         key      = "STRING_VALUE1"
         operator = "EXISTS"
         value {
-          long_value = 123
+          long_value = 1234
         }
       }
       document_content_operator = "DELETE"

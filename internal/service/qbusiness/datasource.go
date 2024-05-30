@@ -326,8 +326,8 @@ func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequ
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"condition":      conditionSchema(ctx),
-									names.AttrTarget: documentAttributeTargetSchema(ctx),
+									names.AttrCondition: conditionSchema(ctx),
+									names.AttrTarget:    documentAttributeTargetSchema(ctx),
 								},
 							},
 						},
@@ -758,7 +758,7 @@ func (r *resourceDatasourceData) expandToUpdateDataSourceInput(ctx context.Conte
 	if input.DocumentEnrichmentConfiguration, diags = r.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
-	if input.VpcConfiguration, diags = r.expandVpcConfiguration(ctx); diags.HasError() {
+	if input.VpcConfiguration, diags = r.expandVPCConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
 	return input, nil
@@ -782,13 +782,13 @@ func (r *resourceDatasourceData) expandToCreateDataSourceInput(ctx context.Conte
 	if input.DocumentEnrichmentConfiguration, diags = r.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
-	if input.VpcConfiguration, diags = r.expandVpcConfiguration(ctx); diags.HasError() {
+	if input.VpcConfiguration, diags = r.expandVPCConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
 	return input, nil
 }
 
-func (r *resourceDatasourceData) expandVpcConfiguration(ctx context.Context) (*awstypes.DataSourceVpcConfiguration, diag.Diagnostics) {
+func (r *resourceDatasourceData) expandVPCConfiguration(ctx context.Context) (*awstypes.DataSourceVpcConfiguration, diag.Diagnostics) {
 	vpcConf := awstypes.DataSourceVpcConfiguration{}
 	if r.VpcConfiguration.IsNull() {
 		return nil, nil
