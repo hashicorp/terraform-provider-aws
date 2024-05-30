@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -2212,7 +2212,7 @@ func TestAccDMSEndpoint_pauseReplicationTasks(t *testing.T) {
 	endpointNameSource := "aws_dms_endpoint.source"
 	endpointNameTarget := "aws_dms_endpoint.target"
 	replicationTaskName := "aws_dms_replication_task.test"
-	var task dms.ReplicationTask
+	var task awstypes.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2253,7 +2253,7 @@ func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, servi
 
 func testAccCheckEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_endpoint" {
@@ -2288,7 +2288,7 @@ func testAccCheckEndpointExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No DMS Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindEndpointByID(ctx, conn, rs.Primary.ID)
 

@@ -6,7 +6,7 @@ package dms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -572,7 +572,7 @@ func DataSourceEndpoint() *schema.Resource {
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -583,9 +583,9 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", endptID, err)
 	}
 
-	d.SetId(aws.StringValue(out.EndpointIdentifier))
+	d.SetId(aws.ToString(out.EndpointIdentifier))
 	d.Set("endpoint_id", out.EndpointIdentifier)
-	arn := aws.StringValue(out.EndpointArn)
+	arn := aws.ToString(out.EndpointArn)
 	d.Set("endpoint_arn", arn)
 	d.Set(names.AttrEndpointType, out.EndpointType)
 	d.Set(names.AttrDatabaseName, out.DatabaseName)

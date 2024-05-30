@@ -11,9 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -63,9 +66,9 @@ func ResourceS3Endpoint() *schema.Resource {
 				ValidateFunc: validEndpointID,
 			},
 			names.AttrEndpointType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(dms.ReplicationEndpointTypeValue_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ReplicationEndpointTypeValue](),
 			},
 			"engine_display_name": {
 				Type:     schema.TypeString,
@@ -83,10 +86,10 @@ func ResourceS3Endpoint() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"ssl_mode": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.DmsSslModeValue_Values(), false),
+				Type:             schema.TypeString,
+				Computed:         true,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DmsSslModeValue](),
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
@@ -114,9 +117,9 @@ func ResourceS3Endpoint() *schema.Resource {
 				Required: true,
 			},
 			"canned_acl_for_objects": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.CannedAclForObjectsValue_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.CannedAclForObjectsValue](),
 				StateFunc: func(v interface{}) string {
 					return strings.ToLower(v.(string))
 				},
@@ -146,10 +149,10 @@ func ResourceS3Endpoint() *schema.Resource {
 				Optional: true,
 			},
 			"compression_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.CompressionTypeValue_Values(), true),
-				Default:      strings.ToUpper(dms.CompressionTypeValueNone),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.CompressionTypeValue](),
+				Default:          strings.ToUpper(string(awstypes.CompressionTypeValueNone)),
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
@@ -173,9 +176,9 @@ func ResourceS3Endpoint() *schema.Resource {
 				Default:  "\\n",
 			},
 			"data_format": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.DataFormatValue_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DataFormatValue](),
 			},
 			"data_page_size": {
 				Type:         schema.TypeInt,
@@ -183,9 +186,9 @@ func ResourceS3Endpoint() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"date_partition_delimiter": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.DatePartitionDelimiterValue_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DatePartitionDelimiterValue](),
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
@@ -196,9 +199,9 @@ func ResourceS3Endpoint() *schema.Resource {
 				Default:  false,
 			},
 			"date_partition_sequence": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.DatePartitionSequenceValue_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DatePartitionSequenceValue](),
 				StateFunc: func(v interface{}) string {
 					return strings.ToLower(v.(string))
 				},
@@ -222,9 +225,9 @@ func ResourceS3Endpoint() *schema.Resource {
 				Default:  true,
 			},
 			"encoding_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.EncodingTypeValue_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EncodingTypeValue](),
 			},
 			"encryption_mode": {
 				Type:         schema.TypeString,
@@ -272,9 +275,9 @@ func ResourceS3Endpoint() *schema.Resource {
 				Default:  false,
 			},
 			"parquet_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(dms.ParquetVersionValue_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ParquetVersionValue](),
 			},
 			"preserve_transactions": {
 				Type:     schema.TypeBool,
@@ -327,11 +330,11 @@ const (
 
 func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
-		EndpointType:       aws.String(d.Get(names.AttrEndpointType).(string)),
+		EndpointType:       awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string)),
 		EngineName:         aws.String("s3"),
 		Tags:               getTagsIn(ctx),
 	}
@@ -345,14 +348,14 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("ssl_mode"); ok {
-		input.SslMode = aws.String(v.(string))
+		input.SslMode = awstypes.DmsSslModeValue(v.(string))
 	}
 
 	if v, ok := d.GetOk("service_access_role_arn"); ok {
 		input.ServiceAccessRoleArn = aws.String(v.(string))
 	}
 
-	input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == dms.ReplicationEndpointTypeValueTarget)
+	input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == string(awstypes.ReplicationEndpointTypeValueTarget))
 
 	input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 
@@ -361,7 +364,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var out *dms.CreateEndpointOutput
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
-		out, err = conn.CreateEndpointWithContext(ctx, input)
+		out, err = conn.CreateEndpoint(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
 			return retry.RetryableError(err)
@@ -375,7 +378,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if tfresource.TimedOut(err) {
-		out, err = conn.CreateEndpointWithContext(ctx, input)
+		out, err = conn.CreateEndpoint(ctx, input)
 	}
 
 	if err != nil || out == nil || out.Endpoint == nil {
@@ -395,7 +398,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
@@ -417,7 +420,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrCertificateARN, endpoint.CertificateArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
-	d.Set(names.AttrEndpointType, strings.ToLower(*endpoint.EndpointType)) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
+	d.Set(names.AttrEndpointType, strings.ToLower(string(endpoint.EndpointType))) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
 	d.Set("engine_display_name", endpoint.EngineDisplayName)
 	d.Set(names.AttrExternalID, endpoint.ExternalId)
 	// d.Set("external_table_definition", endpoint.ExternalTableDefinition) // set from s3 settings
@@ -426,7 +429,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("ssl_mode", endpoint.SslMode)
 	d.Set(names.AttrStatus, endpoint.Status)
 
-	setDetachTargetOnLobLookupFailureParquet(d, aws.StringValue(endpoint.ExtraConnectionAttributes))
+	setDetachTargetOnLobLookupFailureParquet(d, aws.ToString(endpoint.ExtraConnectionAttributes))
 
 	s3settings := endpoint.S3Settings
 	d.Set("add_column_name", s3settings.AddColumnName)
@@ -455,12 +458,12 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("timestamp_column_name", s3settings.TimestampColumnName)
 	d.Set("use_task_start_time_for_full_load_timestamp", s3settings.UseTaskStartTimeForFullLoadTimestamp)
 
-	if d.Get(names.AttrEndpointType).(string) == dms.ReplicationEndpointTypeValueTarget {
+	if d.Get(names.AttrEndpointType).(string) == string(awstypes.ReplicationEndpointTypeValueTarget) {
 		d.Set("add_trailing_padding_character", s3settings.AddTrailingPaddingCharacter)
 		d.Set("compression_type", s3settings.CompressionType)
 		d.Set("csv_no_sup_value", s3settings.CsvNoSupValue)
 		d.Set("data_format", s3settings.DataFormat)
-		d.Set("date_partition_delimiter", strings.ToUpper(aws.StringValue(s3settings.DatePartitionDelimiter)))
+		d.Set("date_partition_delimiter", strings.ToUpper(string(s3settings.DatePartitionDelimiter)))
 		d.Set("date_partition_enabled", s3settings.DatePartitionEnabled)
 		d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
 		d.Set("date_partition_timezone", s3settings.DatePartitionTimezone)
@@ -473,7 +476,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("use_csv_no_sup_value", s3settings.UseCsvNoSupValue)
 	}
 
-	p, err := structure.NormalizeJsonString(aws.StringValue(s3settings.ExternalTableDefinition))
+	p, err := structure.NormalizeJsonString(aws.ToString(s3settings.ExternalTableDefinition))
 	if err != nil {
 		return create.AppendDiagError(diags, names.DMS, create.ErrActionSetting, ResNameS3Endpoint, d.Id(), err)
 	}
@@ -485,7 +488,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &dms.ModifyEndpointInput{
@@ -497,13 +500,13 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChange(names.AttrEndpointType) {
-			input.EndpointType = aws.String(d.Get(names.AttrEndpointType).(string))
+			input.EndpointType = awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string))
 		}
 
 		input.EngineName = aws.String(engineNameS3)
 
 		if d.HasChange("ssl_mode") {
-			input.SslMode = aws.String(d.Get("ssl_mode").(string))
+			input.SslMode = awstypes.DmsSslModeValue(d.Get("ssl_mode").(string))
 		}
 
 		if d.HasChangesExcept(
@@ -511,7 +514,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			names.AttrEndpointType,
 			"ssl_mode",
 		) {
-			input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == dms.ReplicationEndpointTypeValueTarget)
+			input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == string(awstypes.ReplicationEndpointTypeValueTarget))
 			input.ServiceAccessRoleArn = aws.String(d.Get("service_access_role_arn").(string))
 
 			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
@@ -520,7 +523,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		log.Println("[DEBUG] DMS update endpoint:", input)
 
 		err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-			_, err := conn.ModifyEndpointWithContext(ctx, input)
+			_, err := conn.ModifyEndpoint(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, "AccessDeniedFault") {
 				return retry.RetryableError(err)
@@ -534,7 +537,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyEndpointWithContext(ctx, input)
+			_, err = conn.ModifyEndpoint(ctx, input)
 		}
 
 		if err != nil {
@@ -547,14 +550,14 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
-	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
+	_, err := conn.DeleteEndpoint(ctx, &dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
 	}
 
@@ -569,8 +572,8 @@ func resourceS3EndpointDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
-	s3s := &dms.S3Settings{}
+func s3Settings(d *schema.ResourceData, target bool) *awstypes.S3Settings {
+	s3s := &awstypes.S3Settings{}
 
 	if v, ok := d.Get("add_column_name").(bool); ok { // likely only useful for target
 		s3s.AddColumnName = aws.Bool(v)
@@ -589,7 +592,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("canned_acl_for_objects"); ok { // likely only useful for target
-		s3s.CannedAclForObjects = aws.String(v.(string))
+		s3s.CannedAclForObjects = awstypes.CannedAclForObjectsValue(v.(string))
 	}
 
 	if v, ok := d.Get("cdc_inserts_and_updates").(bool); ok { // likely only useful for target
@@ -601,11 +604,11 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("cdc_max_batch_interval"); ok { // likely only useful for target
-		s3s.CdcMaxBatchInterval = aws.Int64(int64(v.(int)))
+		s3s.CdcMaxBatchInterval = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("cdc_min_file_size"); ok { // likely only useful for target
-		s3s.CdcMinFileSize = aws.Int64(int64(v.(int)))
+		s3s.CdcMinFileSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("cdc_path"); ok {
@@ -613,7 +616,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("compression_type"); ok && target { // likely only useful for target
-		s3s.CompressionType = aws.String(v.(string))
+		s3s.CompressionType = awstypes.CompressionTypeValue(v.(string))
 	}
 
 	if v, ok := d.GetOk("csv_delimiter"); ok {
@@ -633,15 +636,15 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("data_format"); ok && target { // target
-		s3s.DataFormat = aws.String(v.(string))
+		s3s.DataFormat = awstypes.DataFormatValue(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_page_size"); ok { // likely only useful for target
-		s3s.DataPageSize = aws.Int64(int64(v.(int)))
+		s3s.DataPageSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("date_partition_delimiter"); ok && target { // target
-		s3s.DatePartitionDelimiter = aws.String(v.(string))
+		s3s.DatePartitionDelimiter = awstypes.DatePartitionDelimiterValue(v.(string))
 	}
 
 	if v, ok := d.Get("date_partition_enabled").(bool); ok && target { // likely only useful for target
@@ -649,7 +652,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("date_partition_sequence"); ok && target { // target
-		s3s.DatePartitionSequence = aws.String(v.(string))
+		s3s.DatePartitionSequence = awstypes.DatePartitionSequenceValue(v.(string))
 	}
 
 	if v, ok := d.GetOk("date_partition_timezone"); ok && target { // target
@@ -657,7 +660,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("dict_page_size_limit"); ok { // likely only useful for target
-		s3s.DictPageSizeLimit = aws.Int64(int64(v.(int)))
+		s3s.DictPageSizeLimit = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.Get("enable_statistics").(bool); ok { // likely only useful for target
@@ -665,11 +668,11 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("encoding_type"); ok { // likely only useful for target
-		s3s.EncodingType = aws.String(v.(string))
+		s3s.EncodingType = awstypes.EncodingTypeValue(v.(string))
 	}
 
 	if v, ok := d.GetOk("encryption_mode"); ok && target { // target
-		s3s.EncryptionMode = aws.String(v.(string))
+		s3s.EncryptionMode = awstypes.EncryptionModeValue(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok { // likely only useful for target
@@ -685,7 +688,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("ignore_header_rows"); ok {
-		s3s.IgnoreHeaderRows = aws.Int64(int64(v.(int)))
+		s3s.IgnoreHeaderRows = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.Get("include_op_for_full_load").(bool); ok { // likely only useful for target
@@ -693,7 +696,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("max_file_size"); ok { // likely only useful for target
-		s3s.MaxFileSize = aws.Int64(int64(v.(int)))
+		s3s.MaxFileSize = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.Get("parquet_timestamp_in_millisecond").(bool); ok && target { // target
@@ -701,7 +704,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("parquet_version"); ok && target { // target
-		s3s.ParquetVersion = aws.String(v.(string))
+		s3s.ParquetVersion = awstypes.ParquetVersionValue(v.(string))
 	}
 
 	if v, ok := d.Get("preserve_transactions").(bool); ok && target { // target
@@ -713,7 +716,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 	}
 
 	if v, ok := d.GetOk("row_group_length"); ok { // likely only useful for target
-		s3s.RowGroupLength = aws.Int64(int64(v.(int)))
+		s3s.RowGroupLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("server_side_encryption_kms_key_id"); ok && target { // target

@@ -8,15 +8,17 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -77,7 +79,7 @@ func ResourceCertificate() *schema.Resource {
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	certificateID := d.Get("certificate_id").(string)
 	input := &dms.ImportCertificateInput{
@@ -97,7 +99,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.CertificateWallet = v
 	}
 
-	_, err := conn.ImportCertificateWithContext(ctx, input)
+	_, err := conn.ImportCertificate(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DMS Certificate (%s): %s", certificateID, err)
@@ -110,7 +112,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	certificate, err := FindCertificateByID(ctx, conn, d.Id())
 
@@ -139,14 +141,14 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Certificate: %s", d.Id())
-	_, err := conn.DeleteCertificateWithContext(ctx, &dms.DeleteCertificateInput{
+	_, err := conn.DeleteCertificate(ctx, &dms.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
 	}
 
@@ -157,13 +159,13 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) {
-	d.SetId(aws.StringValue(cert.CertificateIdentifier))
+func resourceCertificateSetState(d *schema.ResourceData, cert *awstypes.Certificate) {
+	d.SetId(aws.ToString(cert.CertificateIdentifier))
 
 	d.Set("certificate_id", cert.CertificateIdentifier)
 	d.Set(names.AttrCertificateARN, cert.CertificateArn)
 
-	if aws.StringValue(cert.CertificatePem) != "" {
+	if aws.ToString(cert.CertificatePem) != "" {
 		d.Set("certificate_pem", cert.CertificatePem)
 	}
 	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
@@ -171,12 +173,12 @@ func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) 
 	}
 }
 
-func FindCertificateByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.Certificate, error) {
+func FindCertificateByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Certificate, error) {
 	input := &dms.DescribeCertificatesInput{
-		Filters: []*dms.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("certificate-id"),
-				Values: []*string{aws.String(id)},
+				Values: []string{id},
 			},
 		},
 	}
@@ -184,7 +186,7 @@ func FindCertificateByID(ctx context.Context, conn *dms.DatabaseMigrationService
 	return findCertificate(ctx, conn, input)
 }
 
-func findCertificate(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeCertificatesInput) (*dms.Certificate, error) {
+func findCertificate(ctx context.Context, conn *dms.Client, input *dms.DescribeCertificatesInput) (*awstypes.Certificate, error) {
 	output, err := findCertificates(ctx, conn, input)
 
 	if err != nil {
@@ -194,33 +196,27 @@ func findCertificate(ctx context.Context, conn *dms.DatabaseMigrationService, in
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findCertificates(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeCertificatesInput) ([]*dms.Certificate, error) {
-	var output []*dms.Certificate
+func findCertificates(ctx context.Context, conn *dms.Client, input *dms.DescribeCertificatesInput) ([]*awstypes.Certificate, error) {
+	var output []awstypes.Certificate
 
-	err := conn.DescribeCertificatesPagesWithContext(ctx, input, func(page *dms.DescribeCertificatesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := dms.NewDescribeCertificatesPaginator(conn, input)
 
-		for _, v := range page.Certificates {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
+
+		output = append(output, page.Certificates...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return tfslices.ToPointers(output), nil
 }

@@ -6,8 +6,8 @@ package dms
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -98,7 +98,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 
 func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -109,7 +109,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Instance (%s): %s", rID, err)
 	}
 
-	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
+	d.SetId(aws.ToString(instance.ReplicationInstanceIdentifier))
 	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
 	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
@@ -119,15 +119,15 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("network_type", instance.NetworkType)
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
-	arn := aws.StringValue(instance.ReplicationInstanceArn)
+	arn := aws.ToString(instance.ReplicationInstanceArn)
 	d.Set("replication_instance_arn", arn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
-	d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses))
-	d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses))
+	d.Set("replication_instance_private_ips", instance.ReplicationInstancePrivateIpAddresses)
+	d.Set("replication_instance_public_ips", instance.ReplicationInstancePublicIpAddresses)
 	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
-	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
-		return aws.StringValue(sg.VpcSecurityGroupId)
+	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg awstypes.VpcSecurityGroupMembership) string {
+		return aws.ToString(sg.VpcSecurityGroupId)
 	})
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 

@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -79,7 +79,7 @@ func DataSourceCertificate() *schema.Resource {
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -90,8 +90,8 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading DMS Certificate (%s): %s", certificateID, err)
 	}
 
-	d.SetId(aws.StringValue(out.CertificateIdentifier))
-	arn := aws.StringValue(out.CertificateArn)
+	d.SetId(aws.ToString(out.CertificateIdentifier))
+	arn := aws.ToString(out.CertificateArn)
 	d.Set(names.AttrCertificateARN, arn)
 	d.Set("certificate_id", out.CertificateIdentifier)
 	d.Set("certificate_pem", out.CertificatePem)

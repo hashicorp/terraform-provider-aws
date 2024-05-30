@@ -8,14 +8,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -153,7 +154,7 @@ func ResourceReplicationInstance() *schema.Resource {
 
 func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	replicationInstanceID := d.Get("replication_instance_id").(string)
 	input := &dms.CreateReplicationInstanceInput{
@@ -170,7 +171,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	// to set the default value. See GitHub Issue #5694 https://github.com/hashicorp/terraform/issues/5694
 
 	if v, ok := d.GetOk(names.AttrAllocatedStorage); ok {
-		input.AllocatedStorage = aws.Int64(int64(v.(int)))
+		input.AllocatedStorage = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
@@ -191,10 +192,10 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 		input.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok {
-		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := conn.CreateReplicationInstanceWithContext(ctx, input)
+	_, err := conn.CreateReplicationInstance(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Instance (%s): %s", replicationInstanceID, err)
@@ -211,7 +212,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	instance, err := FindReplicationInstanceByID(ctx, conn, d.Id())
 
@@ -237,11 +238,11 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
-	d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses))
-	d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses))
+	d.Set("replication_instance_private_ips", instance.ReplicationInstancePrivateIpAddresses)
+	d.Set("replication_instance_public_ips", instance.ReplicationInstancePublicIpAddresses)
 	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
-	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
-		return aws.StringValue(sg.VpcSecurityGroupId)
+	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg awstypes.VpcSecurityGroupMembership) string {
+		return aws.ToString(sg.VpcSecurityGroupId)
 	})
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
@@ -250,19 +251,19 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 
 func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "allow_major_version_upgrade") {
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
 		// as it results in InvalidParameterCombination: No modifications were requested
 		input := &dms.ModifyReplicationInstanceInput{
-			AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
-			ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
+			AllowMajorVersionUpgrade: d.Get("allow_major_version_upgrade").(bool),
+			ApplyImmediately:         d.Get(names.AttrApplyImmediately).(bool),
 			ReplicationInstanceArn:   aws.String(d.Get("replication_instance_arn").(string)),
 		}
 
 		if d.HasChange(names.AttrAllocatedStorage) {
-			input.AllocatedStorage = aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int)))
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 		}
 
 		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
@@ -290,10 +291,10 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set))
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set))
 		}
 
-		_, err := conn.ModifyReplicationInstanceWithContext(ctx, input)
+		_, err := conn.ModifyReplicationInstance(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Instance (%s): %s", d.Id(), err)
@@ -309,14 +310,14 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DMS Replication Instance: %s", d.Id())
-	_, err := conn.DeleteReplicationInstanceWithContext(ctx, &dms.DeleteReplicationInstanceInput{
+	_, err := conn.DeleteReplicationInstance(ctx, &dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
 	}
 
@@ -331,12 +332,12 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func FindReplicationInstanceByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationInstance, error) {
+func FindReplicationInstanceByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationInstance, error) {
 	input := &dms.DescribeReplicationInstancesInput{
-		Filters: []*dms.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("replication-instance-id"),
-				Values: aws.StringSlice([]string{id}),
+				Values: []string{id},
 			},
 		},
 	}
@@ -344,7 +345,7 @@ func FindReplicationInstanceByID(ctx context.Context, conn *dms.DatabaseMigratio
 	return findReplicationInstance(ctx, conn, input)
 }
 
-func findReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationInstancesInput) (*dms.ReplicationInstance, error) {
+func findReplicationInstance(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationInstancesInput) (*awstypes.ReplicationInstance, error) {
 	output, err := findReplicationInstances(ctx, conn, input)
 
 	if err != nil {
@@ -354,38 +355,32 @@ func findReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationSer
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findReplicationInstances(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationInstancesInput) ([]*dms.ReplicationInstance, error) {
-	var output []*dms.ReplicationInstance
+func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationInstancesInput) ([]*awstypes.ReplicationInstance, error) {
+	var output []awstypes.ReplicationInstance
 
-	err := conn.DescribeReplicationInstancesPagesWithContext(ctx, input, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := dms.NewDescribeReplicationInstancesPaginator(conn, input)
 
-		for _, v := range page.ReplicationInstances {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
+
+		output = append(output, page.ReplicationInstances...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return tfslices.ToPointers(output), nil
 }
 
-func statusReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+func statusReplicationInstance(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindReplicationInstanceByID(ctx, conn, id)
 
@@ -397,11 +392,11 @@ func statusReplicationInstance(ctx context.Context, conn *dms.DatabaseMigrationS
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ReplicationInstanceStatus), nil
+		return output, aws.ToString(output.ReplicationInstanceStatus), nil
 	}
 }
 
-func waitReplicationInstanceCreated(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
+func waitReplicationInstanceCreated(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusCreating, replicationInstanceStatusModifying},
 		Target:     []string{replicationInstanceStatusAvailable},
@@ -413,14 +408,14 @@ func waitReplicationInstanceCreated(ctx context.Context, conn *dms.DatabaseMigra
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationInstance); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitReplicationInstanceUpdated(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
+func waitReplicationInstanceUpdated(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusModifying, replicationInstanceStatusUpgrading},
 		Target:     []string{replicationInstanceStatusAvailable},
@@ -432,14 +427,14 @@ func waitReplicationInstanceUpdated(ctx context.Context, conn *dms.DatabaseMigra
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationInstance); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationInstance, error) {
+func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationInstanceStatusDeleting},
 		Target:     []string{},
@@ -451,7 +446,7 @@ func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.DatabaseMigra
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationInstance); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationInstance); ok {
 		return output, err
 	}
 

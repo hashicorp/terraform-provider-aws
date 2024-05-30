@@ -519,7 +519,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		_, err := tfdms.FindReplicationInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -529,7 +529,7 @@ func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resour
 
 func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dms_replication_instance" {

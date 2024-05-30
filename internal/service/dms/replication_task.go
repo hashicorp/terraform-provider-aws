@@ -11,16 +11,19 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -54,9 +57,9 @@ func ResourceReplicationTask() *schema.Resource {
 				ConflictsWith: []string{"cdc_start_position"},
 			},
 			"migration_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(dms.MigrationTypeValue_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.MigrationTypeValue](),
 			},
 			"replication_instance_arn": {
 				Type:         schema.TypeString,
@@ -134,11 +137,11 @@ func ResourceReplicationTask() *schema.Resource {
 
 func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	taskID := d.Get("replication_task_id").(string)
 	input := &dms.CreateReplicationTaskInput{
-		MigrationType:             aws.String(d.Get("migration_type").(string)),
+		MigrationType:             awstypes.MigrationTypeValue(d.Get("migration_type").(string)),
 		ReplicationInstanceArn:    aws.String(d.Get("replication_instance_arn").(string)),
 		ReplicationTaskIdentifier: aws.String(taskID),
 		SourceEndpointArn:         aws.String(d.Get("source_endpoint_arn").(string)),
@@ -168,7 +171,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 		input.ResourceIdentifier = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateReplicationTaskWithContext(ctx, input)
+	_, err := conn.CreateReplicationTask(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Task (%s): %s", taskID, err)
@@ -191,7 +194,7 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	task, err := FindReplicationTaskByID(ctx, conn, d.Id())
 
@@ -221,7 +224,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "replication_instance_arn", "start_replication_task") {
 		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
@@ -229,7 +232,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		input := &dms.ModifyReplicationTaskInput{
-			MigrationType:      aws.String(d.Get("migration_type").(string)),
+			MigrationType:      awstypes.MigrationTypeValue(d.Get("migration_type").(string)),
 			ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 			TableMappings:      aws.String(d.Get("table_mappings").(string)),
 		}
@@ -259,7 +262,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 
-		_, err := conn.ModifyReplicationTaskWithContext(ctx, input)
+		_, err := conn.ModifyReplicationTask(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Task (%s): %s", d.Id(), err)
@@ -286,7 +289,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 			TargetReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
 		}
 
-		_, err := conn.MoveReplicationTaskWithContext(ctx, input)
+		_, err := conn.MoveReplicationTask(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "moving DMS Replication Task (%s): %s", d.Id(), err)
@@ -304,7 +307,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChanges("start_replication_task") {
-		var f func(context.Context, *dms.DatabaseMigrationService, string) error
+		var f func(context.Context, *dms.Client, string) error
 		if d.Get("start_replication_task").(bool) {
 			f = startReplicationTask
 		} else {
@@ -320,18 +323,18 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
 	if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting DMS Replication Task: %s", d.Id())
-	_, err := conn.DeleteReplicationTaskWithContext(ctx, &dms.DeleteReplicationTaskInput{
+	_, err := conn.DeleteReplicationTask(ctx, &dms.DeleteReplicationTaskInput{
 		ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
 	}
 
@@ -346,12 +349,12 @@ func resourceReplicationTaskDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+func FindReplicationTaskByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
 	input := &dms.DescribeReplicationTasksInput{
-		Filters: []*dms.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("replication-task-id"),
-				Values: aws.StringSlice([]string{id}),
+				Values: []string{id},
 			},
 		},
 	}
@@ -359,7 +362,7 @@ func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationSer
 	return findReplicationTask(ctx, conn, input)
 }
 
-func findReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationTasksInput) (*dms.ReplicationTask, error) {
+func findReplicationTask(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationTasksInput) (*awstypes.ReplicationTask, error) {
 	output, err := findReplicationTasks(ctx, conn, input)
 
 	if err != nil {
@@ -369,38 +372,32 @@ func findReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findReplicationTasks(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeReplicationTasksInput) ([]*dms.ReplicationTask, error) {
-	var output []*dms.ReplicationTask
+func findReplicationTasks(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationTasksInput) ([]*awstypes.ReplicationTask, error) {
+	var output []awstypes.ReplicationTask
 
-	err := conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := dms.NewDescribeReplicationTasksPaginator(conn, input)
 
-		for _, v := range page.ReplicationTasks {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
+
+		output = append(output, page.ReplicationTasks...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
+	return tfslices.ToPointers(output), nil
 }
 
-func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) retry.StateRefreshFunc {
+func statusReplicationTask(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindReplicationTaskByID(ctx, conn, id)
 
@@ -412,24 +409,24 @@ func statusReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationServi
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func setLastReplicationTaskError(err error, replication *dms.ReplicationTask) {
+func setLastReplicationTaskError(err error, replication *awstypes.ReplicationTask) {
 	var errs []error
 
-	if v := aws.StringValue(replication.LastFailureMessage); v != "" {
+	if v := aws.ToString(replication.LastFailureMessage); v != "" {
 		errs = append(errs, errors.New(v))
 	}
-	if v := aws.StringValue(replication.StopReason); v != "" {
+	if v := aws.ToString(replication.StopReason); v != "" {
 		errs = append(errs, errors.New(v))
 	}
 
 	tfresource.SetLastError(err, errors.Join(errs...))
 }
 
-func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusDeleting},
 		Target:     []string{},
@@ -441,7 +438,7 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigration
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationTask); ok {
 		setLastReplicationTaskError(err, output)
 		return output, err
 	}
@@ -449,7 +446,7 @@ func waitReplicationTaskDeleted(ctx context.Context, conn *dms.DatabaseMigration
 	return nil, err
 }
 
-func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskModified(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
@@ -461,7 +458,7 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigratio
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationTask); ok {
 		setLastReplicationTaskError(err, output)
 		return output, err
 	}
@@ -469,7 +466,7 @@ func waitReplicationTaskModified(ctx context.Context, conn *dms.DatabaseMigratio
 	return nil, err
 }
 
-func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskMoved(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusModifying, replicationTaskStatusMoving},
 		Target:     []string{replicationTaskStatusReady, replicationTaskStatusStopped, replicationTaskStatusFailed},
@@ -481,7 +478,7 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationSe
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationTask); ok {
 		setLastReplicationTaskError(err, output)
 		return output, err
 	}
@@ -489,7 +486,7 @@ func waitReplicationTaskMoved(ctx context.Context, conn *dms.DatabaseMigrationSe
 	return nil, err
 }
 
-func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationService, id string, timeout time.Duration) (*dms.ReplicationTask, error) {
+func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationTask, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{replicationTaskStatusCreating},
 		Target:     []string{replicationTaskStatusReady},
@@ -501,7 +498,7 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationSe
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationTask); ok {
 		setLastReplicationTaskError(err, output)
 		return output, err
 	}
@@ -509,7 +506,7 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.DatabaseMigrationSe
 	return nil, err
 }
 
-func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
 	const (
 		timeout = 5 * time.Minute
 	)
@@ -524,7 +521,7 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigration
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationTask); ok {
 		setLastReplicationTaskError(err, output)
 		return output, err
 	}
@@ -532,7 +529,7 @@ func waitReplicationTaskRunning(ctx context.Context, conn *dms.DatabaseMigration
 	return nil, err
 }
 
-func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+func waitReplicationTaskStopped(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
 	const (
 		timeout = 5 * time.Minute
 	)
@@ -548,7 +545,7 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigration
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationTask); ok {
 		setLastReplicationTaskError(err, output)
 		return output, err
 	}
@@ -556,7 +553,7 @@ func waitReplicationTaskStopped(ctx context.Context, conn *dms.DatabaseMigration
 	return nil, err
 }
 
-func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+func waitReplicationTaskSteady(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
 	const (
 		timeout = 5 * time.Minute
 	)
@@ -572,7 +569,7 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationS
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*dms.ReplicationTask); ok {
+	if output, ok := outputRaw.(*awstypes.ReplicationTask); ok {
 		setLastReplicationTaskError(err, output)
 		return output, err
 	}
@@ -580,28 +577,28 @@ func waitReplicationTaskSteady(ctx context.Context, conn *dms.DatabaseMigrationS
 	return nil, err
 }
 
-func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+func startReplicationTask(ctx context.Context, conn *dms.Client, id string) error {
 	task, err := FindReplicationTaskByID(ctx, conn, id)
 
 	if err != nil {
 		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
 	}
 
-	taskStatus := aws.StringValue(task.Status)
+	taskStatus := aws.ToString(task.Status)
 	if taskStatus == replicationTaskStatusRunning {
 		return nil
 	}
 
-	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
+	startReplicationTaskType := awstypes.StartReplicationTaskTypeValueStartReplication
 	if taskStatus != replicationTaskStatusReady {
-		startReplicationTaskType = dms.StartReplicationTaskTypeValueResumeProcessing
+		startReplicationTaskType = awstypes.StartReplicationTaskTypeValueResumeProcessing
 	}
 	input := &dms.StartReplicationTaskInput{
 		ReplicationTaskArn:       task.ReplicationTaskArn,
-		StartReplicationTaskType: aws.String(startReplicationTaskType),
+		StartReplicationTaskType: startReplicationTaskType,
 	}
 
-	_, err = conn.StartReplicationTaskWithContext(ctx, input)
+	_, err = conn.StartReplicationTask(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("starting DMS Replication Task (%s): %w", id, err)
@@ -614,7 +611,7 @@ func startReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationServic
 	return nil
 }
 
-func stopReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService, id string) error {
+func stopReplicationTask(ctx context.Context, conn *dms.Client, id string) error {
 	task, err := FindReplicationTaskByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
@@ -625,7 +622,7 @@ func stopReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService
 		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
 	}
 
-	taskStatus := aws.StringValue(task.Status)
+	taskStatus := aws.ToString(task.Status)
 	if taskStatus != replicationTaskStatusRunning {
 		return nil
 	}
@@ -634,9 +631,9 @@ func stopReplicationTask(ctx context.Context, conn *dms.DatabaseMigrationService
 		ReplicationTaskArn: task.ReplicationTaskArn,
 	}
 
-	_, err = conn.StopReplicationTaskWithContext(ctx, input)
+	_, err = conn.StopReplicationTask(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, dms.ErrCodeInvalidResourceStateFault, "is currently not running") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidResourceStateFault](err, "is currently not running") {
 		return nil
 	}
 

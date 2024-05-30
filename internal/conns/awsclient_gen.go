@@ -62,6 +62,7 @@ import (
 	costexplorer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	databasemigrationservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
@@ -186,7 +187,6 @@ import (
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
@@ -518,8 +518,8 @@ func (c *AWSClient) DLMClient(ctx context.Context) *dlm_sdkv2.Client {
 	return errs.Must(client[*dlm_sdkv2.Client](ctx, c, names.DLM, make(map[string]any)))
 }
 
-func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
-	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS, make(map[string]any)))
+func (c *AWSClient) DMSClient(ctx context.Context) *databasemigrationservice_sdkv2.Client {
+	return errs.Must(client[*databasemigrationservice_sdkv2.Client](ctx, c, names.DMS, make(map[string]any)))
 }
 
 func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
