@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -133,7 +132,7 @@ func conditionSchema(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"value": valueSchema(ctx),
+				names.AttrValue: valueSchema(ctx),
 			},
 		},
 	}
@@ -156,12 +155,12 @@ func hookConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 						stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws[a-zA-Z-]*:lambda:[a-z-]*-[0-9]:[0-9]{12}:function:[a-zA-Z0-9-_]+(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})?(:[a-zA-Z0-9-_]+)?$`), "must be a valid Lambda ARN"),
 					},
 				},
-				"role_arn": schema.StringAttribute{
+				names.AttrRoleARN: schema.StringAttribute{
 					CustomType:  fwtypes.ARNType,
 					Description: "ARN of a role with permission to run PreExtractionHookConfiguration and PostExtractionHookConfiguration for altering document metadata and content during the document ingestion process.",
 					Optional:    true,
 				},
-				"s3_bucket": schema.StringAttribute{
+				names.AttrS3Bucket: schema.StringAttribute{
 					Description: "Stores the original, raw documents or the structured, parsed documents before and after altering them.",
 					Optional:    true,
 					Validators: []validator.String{
@@ -185,7 +184,7 @@ func documentAttributeTargetSchema(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"key": schema.StringAttribute{
+				names.AttrKey: schema.StringAttribute{
 					Description: "The identifier of the document attribute used for the condition.",
 					Required:    true,
 					Validators: []validator.String{
@@ -203,7 +202,7 @@ func documentAttributeTargetSchema(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"value": valueSchema(ctx),
+				names.AttrValue: valueSchema(ctx),
 			},
 		},
 	}
@@ -231,7 +230,7 @@ func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Configuration information (JSON) to connect to your data source repository.",
 				Required:    true,
 			},
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Description: "Identifier of the Amazon Q application associated with the datasource",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
@@ -327,8 +326,8 @@ func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequ
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"condition": conditionSchema(ctx),
-									"target":    documentAttributeTargetSchema(ctx),
+									"condition":      conditionSchema(ctx),
+									names.AttrTarget: documentAttributeTargetSchema(ctx),
 								},
 							},
 						},
@@ -740,61 +739,61 @@ func flattenValue(ctx context.Context, av awstypes.DocumentAttributeValue) *reso
 	return &rvd
 }
 
-func (data *resourceDatasourceData) expandToUpdateDataSourceInput(ctx context.Context) (*qbusiness.UpdateDataSourceInput, diag.Diagnostics) {
+func (r *resourceDatasourceData) expandToUpdateDataSourceInput(ctx context.Context) (*qbusiness.UpdateDataSourceInput, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	input := &qbusiness.UpdateDataSourceInput{}
 
-	input.ApplicationId = data.ApplicationId.ValueStringPointer()
-	input.DataSourceId = data.DatasourceId.ValueStringPointer()
-	input.DisplayName = data.DisplayName.ValueStringPointer()
-	input.Description = data.Description.ValueStringPointer()
-	input.DisplayName = data.DisplayName.ValueStringPointer()
-	input.IndexId = data.IndexId.ValueStringPointer()
-	input.RoleArn = data.RoleArn.ValueStringPointer()
-	input.SyncSchedule = data.SyncSchedule.ValueStringPointer()
+	input.ApplicationId = r.ApplicationId.ValueStringPointer()
+	input.DataSourceId = r.DatasourceId.ValueStringPointer()
+	input.DisplayName = r.DisplayName.ValueStringPointer()
+	input.Description = r.Description.ValueStringPointer()
+	input.DisplayName = r.DisplayName.ValueStringPointer()
+	input.IndexId = r.IndexId.ValueStringPointer()
+	input.RoleArn = r.RoleArn.ValueStringPointer()
+	input.SyncSchedule = r.SyncSchedule.ValueStringPointer()
 
-	if input.Configuration, diags = data.expandConfiguration(); diags.HasError() {
+	if input.Configuration, diags = r.expandConfiguration(); diags.HasError() {
 		return nil, diags
 	}
-	if input.DocumentEnrichmentConfiguration, diags = data.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
+	if input.DocumentEnrichmentConfiguration, diags = r.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
-	if input.VpcConfiguration, diags = data.expandVpcConfiguration(ctx); diags.HasError() {
+	if input.VpcConfiguration, diags = r.expandVpcConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
 	return input, nil
 }
 
-func (data *resourceDatasourceData) expandToCreateDataSourceInput(ctx context.Context) (*qbusiness.CreateDataSourceInput, diag.Diagnostics) {
+func (r *resourceDatasourceData) expandToCreateDataSourceInput(ctx context.Context) (*qbusiness.CreateDataSourceInput, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	input := &qbusiness.CreateDataSourceInput{}
 
-	input.ApplicationId = data.ApplicationId.ValueStringPointer()
-	input.DisplayName = data.DisplayName.ValueStringPointer()
-	input.Description = data.Description.ValueStringPointer()
-	input.DisplayName = data.DisplayName.ValueStringPointer()
-	input.IndexId = data.IndexId.ValueStringPointer()
-	input.RoleArn = data.RoleArn.ValueStringPointer()
-	input.SyncSchedule = data.SyncSchedule.ValueStringPointer()
+	input.ApplicationId = r.ApplicationId.ValueStringPointer()
+	input.DisplayName = r.DisplayName.ValueStringPointer()
+	input.Description = r.Description.ValueStringPointer()
+	input.DisplayName = r.DisplayName.ValueStringPointer()
+	input.IndexId = r.IndexId.ValueStringPointer()
+	input.RoleArn = r.RoleArn.ValueStringPointer()
+	input.SyncSchedule = r.SyncSchedule.ValueStringPointer()
 
-	if input.Configuration, diags = data.expandConfiguration(); diags.HasError() {
+	if input.Configuration, diags = r.expandConfiguration(); diags.HasError() {
 		return nil, diags
 	}
-	if input.DocumentEnrichmentConfiguration, diags = data.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
+	if input.DocumentEnrichmentConfiguration, diags = r.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
-	if input.VpcConfiguration, diags = data.expandVpcConfiguration(ctx); diags.HasError() {
+	if input.VpcConfiguration, diags = r.expandVpcConfiguration(ctx); diags.HasError() {
 		return nil, diags
 	}
 	return input, nil
 }
 
-func (data *resourceDatasourceData) expandVpcConfiguration(ctx context.Context) (*awstypes.DataSourceVpcConfiguration, diag.Diagnostics) {
+func (r *resourceDatasourceData) expandVpcConfiguration(ctx context.Context) (*awstypes.DataSourceVpcConfiguration, diag.Diagnostics) {
 	vpcConf := awstypes.DataSourceVpcConfiguration{}
-	if data.VpcConfiguration.IsNull() {
+	if r.VpcConfiguration.IsNull() {
 		return nil, nil
 	}
-	conf, d := data.VpcConfiguration.ToPtr(ctx)
+	conf, d := r.VpcConfiguration.ToPtr(ctx)
 	if d.HasError() {
 		return nil, d
 	}
@@ -807,15 +806,15 @@ func (data *resourceDatasourceData) expandVpcConfiguration(ctx context.Context) 
 	return &vpcConf, nil
 }
 
-func (data *resourceDatasourceData) expandDocumentEnrichmentConfiguration(
+func (r *resourceDatasourceData) expandDocumentEnrichmentConfiguration(
 	ctx context.Context) (*awstypes.DocumentEnrichmentConfiguration, diag.Diagnostics) {
-	if data.DocumentEnrichmentConfiguration.IsNull() {
+	if r.DocumentEnrichmentConfiguration.IsNull() {
 		return &awstypes.DocumentEnrichmentConfiguration{}, nil
 	}
 
 	dec := awstypes.DocumentEnrichmentConfiguration{}
 
-	ic, diags := data.DocumentEnrichmentConfiguration.ToPtr(ctx)
+	ic, diags := r.DocumentEnrichmentConfiguration.ToPtr(ctx)
 	if diags.HasError() {
 		return nil, diags
 	}

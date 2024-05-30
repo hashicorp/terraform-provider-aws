@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessDatasource_basic(t *testing.T) {
@@ -34,11 +35,11 @@ func TestAccQBusinessDatasource_basic(t *testing.T) {
 				Config: testAccDatasourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttrSet(resourceName, "index_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "datasource_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "sync_schedule"),
 				),
 			},
@@ -88,12 +89,12 @@ func TestAccQBusinessDatasource_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDatasourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatasourceConfig_tags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccDatasourceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -102,12 +103,12 @@ func TestAccQBusinessDatasource_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDatasourceConfig_tags(rName, "key1", "value1new", "key2", "value2new"),
+				Config: testAccDatasourceConfig_tags(rName, acctest.CtKey1, "value1new", acctest.CtKey2, "value2new"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1new"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2new"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "value1new"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2new"),
 				),
 			},
 		},
@@ -132,7 +133,7 @@ func TestAccQBusinessDatasource_documentEnrichmentConfiguration(t *testing.T) {
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.key", "STRING_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.operator", "EXISTS"),
-					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.value.string_list_value.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.value.string_list_value.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.document_content_operator", "DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.target.0.key", "STRING_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.target.0.attribute_value_operator", "DELETE"),
@@ -160,7 +161,7 @@ func TestAccQBusinessDatasource_documentEnrichmentConfiguration(t *testing.T) {
 				Config: testAccDatasourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.#", acctest.Ct0),
 				),
 			},
 		},
@@ -191,7 +192,7 @@ func TestAccQBusinessDatasource_vpcConfiguration(t *testing.T) {
 				Config: testAccDatasourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 		},
@@ -275,15 +276,15 @@ resource "aws_qbusiness_datasource" "test" {
   description          = %[1]q
 
   configuration = jsonencode({
-    type                     = "S3"
-    version                  = "1.0.0"
-    connectionConfiguration  = {
+    type    = "S3"
+    version = "1.0.0"
+    connectionConfiguration = {
       repositoryEndpointMetadata = {
         BucketName = aws_s3_bucket.test.bucket
       }
     }
-    enableIdentityCrawler    = false
-    syncMode                 = "FULL_CRAWL"
+    enableIdentityCrawler = false
+    syncMode              = "FULL_CRAWL"
     repositoryConfigurations = {
       document = {
         fieldMappings = []
@@ -293,9 +294,9 @@ resource "aws_qbusiness_datasource" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
-} 
+}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
@@ -329,12 +330,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = "Index name"
+  description = "Index name"
 }
 
 `, rName)
@@ -349,14 +350,14 @@ resource "aws_qbusiness_datasource" "test" {
   index_id             = aws_qbusiness_index.test.index_id
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
-  configuration        = jsonencode({
-    type                     = "S3"
-    connectionConfiguration  = {
+  configuration = jsonencode({
+    type = "S3"
+    connectionConfiguration = {
       repositoryEndpointMetadata = {
         BucketName = aws_s3_bucket.test.bucket
       }
     }
-    syncMode                 = "FULL_CRAWL"
+    syncMode = "FULL_CRAWL"
     repositoryConfigurations = {
       document = {
         fieldMappings = []
@@ -370,7 +371,7 @@ resource "aws_qbusiness_datasource" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -400,12 +401,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.application_id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.application_id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = "Index name"
+  description = "Index name"
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
@@ -413,6 +414,7 @@ resource "aws_qbusiness_index" "test" {
 func testAccDatasourceConfig_documentEnrichmentConfiguration(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_region" "current" {}
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_datasource" "test" {
@@ -424,13 +426,13 @@ resource "aws_qbusiness_datasource" "test" {
   description          = %[1]q
 
   configuration = jsonencode({
-    type                     = "S3"
-    connectionConfiguration  = {
+    type = "S3"
+    connectionConfiguration = {
       repositoryEndpointMetadata = {
         BucketName = aws_s3_bucket.test.bucket
       }
     }
-    syncMode                 = "FULL_CRAWL"
+    syncMode = "FULL_CRAWL"
     repositoryConfigurations = {
       document = {
         fieldMappings = []
@@ -450,7 +452,7 @@ resource "aws_qbusiness_datasource" "test" {
       }
       document_content_operator = "DELETE"
       target {
-        key = "STRING_VALUE"
+        key                      = "STRING_VALUE"
         attribute_value_operator = "DELETE"
         value {
           string_value = "STRING_VALUE"
@@ -468,7 +470,7 @@ resource "aws_qbusiness_datasource" "test" {
       }
       document_content_operator = "DELETE"
       target {
-        key = "STRING_VALUE"
+        key                      = "STRING_VALUE"
         attribute_value_operator = "DELETE"
         value {
           date_value = "2012-03-25T12:30:10+01:00"
@@ -477,27 +479,27 @@ resource "aws_qbusiness_datasource" "test" {
     }
 
     pre_extraction_hook_configuration {
-      lambda_arn = "arn:aws:lambda:us-west-2:123456789012:function:my-function"
+      lambda_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:123456789012:function:my-function"
       role_arn   = aws_iam_role.test.arn
       s3_bucket  = aws_s3_bucket.test.bucket
       invocation_condition {
-        key = "STRING_VALUE"
+        key      = "STRING_VALUE"
         operator = "EXISTS"
         value {
-            string_value = "STRING_VALUE"
+          string_value = "STRING_VALUE"
         }
       }
     }
 
     post_extraction_hook_configuration {
-      lambda_arn = "arn:aws:lambda:us-west-2:123456789012:function:my-function"
+      lambda_arn = "arn:${data.aws_partition.current.partition}:lambda:${data.aws_region.current.name}:123456789012:function:my-function"
       role_arn   = aws_iam_role.test.arn
       s3_bucket  = aws_s3_bucket.test.bucket
       invocation_condition {
-        key = "STRING_VALUE"
+        key      = "STRING_VALUE"
         operator = "EXISTS"
         value {
-            string_value = "STRING_VALUE"
+          string_value = "STRING_VALUE"
         }
       }
     }
@@ -506,7 +508,7 @@ resource "aws_qbusiness_datasource" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -542,12 +544,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = "Index name"
+  description = "Index name"
 }
 `, rName)
 }
@@ -566,13 +568,13 @@ resource "aws_qbusiness_datasource" "test" {
   description          = %[1]q
 
   configuration = jsonencode({
-    type                     = "S3"
-    connectionConfiguration  = {
+    type = "S3"
+    connectionConfiguration = {
       repositoryEndpointMetadata = {
         BucketName = aws_s3_bucket.test.bucket
       }
     }
-    syncMode                 = "FULL_CRAWL"
+    syncMode = "FULL_CRAWL"
     repositoryConfigurations = {
       document = {
         fieldMappings = []
@@ -582,12 +584,12 @@ resource "aws_qbusiness_datasource" "test" {
 
   vpc_config {
     vpc_security_group_ids = ["sg-12345678"]
-    subnet_ids = ["subnet-12345678"]
+    subnet_ids             = ["subnet-12345678"]
   }
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -623,12 +625,12 @@ EOF
 }
 
 resource "aws_qbusiness_index" "test" {
-  application_id       = aws_qbusiness_app.test.id
-  display_name         = %[1]q
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
   capacity_configuration {
     units = 1
   }
-  description          = "Index name"
+  description = "Index name"
 }
 `, rName)
 }
