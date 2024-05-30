@@ -20,9 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -73,6 +73,14 @@ func valueSchema(ctx context.Context) schema.SingleNestedBlock {
 				CustomType:  timetypes.RFC3339Type{},
 				Description: "A date expressed as an ISO 8601 string.",
 				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.AtLeastOneOf(
+						path.MatchRelative().AtParent().AtName("date_value"),
+						path.MatchRelative().AtParent().AtName("long_value"),
+						path.MatchRelative().AtParent().AtName("string_list_value"),
+						path.MatchRelative().AtParent().AtName("string_value"),
+					),
+				},
 			},
 			"long_value": schema.Int64Attribute{
 				Description: "A long integer value.",
@@ -83,6 +91,10 @@ func valueSchema(ctx context.Context) schema.SingleNestedBlock {
 				ElementType: types.StringType,
 				Description: "A list of string values.",
 				Optional:    true,
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(2048),
+					listvalidator.SizeAtLeast(1),
+				},
 			},
 			"string_value": schema.StringAttribute{
 				Description: "A string value.",
@@ -149,7 +161,7 @@ func hookConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
 					Description: "ARN of a role with permission to run PreExtractionHookConfiguration and PostExtractionHookConfiguration for altering document metadata and content during the document ingestion process.",
 					Optional:    true,
 				},
-				"s3_bucket_name": schema.StringAttribute{
+				"s3_bucket": schema.StringAttribute{
 					Description: "Stores the original, raw documents or the structured, parsed documents before and after altering them.",
 					Optional:    true,
 					Validators: []validator.String{
@@ -211,7 +223,7 @@ func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "A description of the Amazon Q datasource.",
 				Optional:    true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 1000),
+					stringvalidator.LengthBetween(1, 1000),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
 				},
 			},
@@ -254,7 +266,7 @@ func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: "Frequency for Amazon Q to check the documents in your data source repository and update your index.",
 				Optional:    true,
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 998),
+					stringvalidator.LengthBetween(1, 998),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
 				},
 			},
@@ -264,9 +276,6 @@ func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequ
 		Blocks: map[string]schema.Block{
 			names.AttrVPCConfig: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceVPCConfigurationData](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -510,7 +519,7 @@ type resourceConditionData struct {
 type resourceHookConfigurationData struct {
 	LambdaARN    types.String                                           `tfsdk:"lambda_arn"`
 	RoleARN      types.String                                           `tfsdk:"role_arn"`
-	S3BucketName types.String                                           `tfsdk:"s3_bucket_name"`
+	S3BucketName types.String                                           `tfsdk:"s3_bucket"`
 	Condition    fwtypes.ListNestedObjectValueOf[resourceConditionData] `tfsdk:"invocation_condition"`
 }
 
@@ -533,8 +542,8 @@ type resourceDocumentEnrichmentConfigurationData struct {
 }
 
 type resourceVPCConfigurationData struct {
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
+	SecurityGroupIds fwtypes.SetValueOf[types.String] `tfsdk:"vpc_security_group_ids"`
+	SubnetIds        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
 }
 
 func (data *resourceDatasourceData) expandConfiguration() (document.Interface, diag.Diagnostics) {
@@ -551,20 +560,24 @@ func (data *resourceDatasourceData) expandConfiguration() (document.Interface, d
 }
 
 func (data *resourceDatasourceData) flattenFromGetDataSourceOutput(ctx context.Context, out *qbusiness.GetDataSourceOutput) diag.Diagnostics {
-	data.ApplicationId = fwflex.StringToFramework(ctx, out.ApplicationId)
-	data.DatasourceArn = fwflex.StringToFramework(ctx, out.DataSourceArn)
-	data.DatasourceId = fwflex.StringToFramework(ctx, out.DataSourceId)
-	data.Description = fwflex.StringToFramework(ctx, out.Description)
-	data.DisplayName = fwflex.StringToFramework(ctx, out.DisplayName)
-	data.IndexId = fwflex.StringToFramework(ctx, out.IndexId)
-	data.RoleArn = fwflex.StringToFrameworkARN(ctx, out.RoleArn)
-	data.SyncSchedule = fwflex.StringToFramework(ctx, out.SyncSchedule)
+	data.ApplicationId = fwflex.StringValueToFramework(ctx, aws.ToString(out.ApplicationId))
+	data.DatasourceArn = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceArn))
+	data.DatasourceId = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceId))
+	data.Description = fwflex.StringValueToFramework(ctx, aws.ToString(out.Description))
+	data.DisplayName = fwflex.StringValueToFramework(ctx, aws.ToString(out.DisplayName))
+	data.IndexId = fwflex.StringValueToFramework(ctx, aws.ToString(out.IndexId))
+	if len(aws.ToString(out.RoleArn)) > 0 {
+		data.RoleArn = fwflex.StringToFrameworkARN(ctx, out.RoleArn)
+	}
+	data.SyncSchedule = fwflex.StringValueToFramework(ctx, aws.ToString(out.SyncSchedule))
+
 	if d := data.flattenConfiguration(out.Configuration); d.HasError() {
 		return d
 	}
 	if d := data.flattenDocumentEnrichmentConfiguration(ctx, out.DocumentEnrichmentConfiguration); d.HasError() {
 		return d
 	}
+	data.setID()
 	return nil
 }
 
@@ -579,20 +592,16 @@ func flattenInlineConfiguration(ctx context.Context, conf []awstypes.InlineDocum
 		if d.HasError() {
 			return nil, d
 		}
-		ccond, d := fwtypes.NewListNestedObjectValueOfPtr[resourceConditionData](ctx, cond)
-		if d.HasError() {
-			return nil, d
+		if ic.Condition, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceConditionData](ctx, cond); diags.HasError() {
+			return nil, diags
 		}
-		ic.Condition = ccond
 		target, d := flattenResourceDocumentAttributeTargetData(ctx, c.Target)
 		if d.HasError() {
 			return nil, d
 		}
-		ctarget, d := fwtypes.NewListNestedObjectValueOfPtr[resourceDocumentAttributeTargetData](ctx, target)
-		if d.HasError() {
-			return nil, d
+		if ic.Target, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceDocumentAttributeTargetData](ctx, target); diags.HasError() {
+			return nil, diags
 		}
-		ic.Target = ctarget
 		idec = append(idec, &ic)
 	}
 
@@ -648,17 +657,16 @@ func flattenHookConfiguration(ctx context.Context, conf *awstypes.HookConfigurat
 
 func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx context.Context, conf *awstypes.DocumentEnrichmentConfiguration) diag.Diagnostics {
 	var dec resourceDocumentEnrichmentConfigurationData
+	var diags diag.Diagnostics
 
 	if conf.InlineConfigurations != nil {
 		ic, d := flattenInlineConfiguration(ctx, conf.InlineConfigurations)
 		if d.HasError() {
 			return d
 		}
-		l, d := fwtypes.NewListNestedObjectValueOfSlice[resourceInlineDocumentEnrichmentConfigurationData](ctx, ic)
-		if d.HasError() {
-			return d
+		if dec.InlineConfigurations, diags = fwtypes.NewListNestedObjectValueOfSlice[resourceInlineDocumentEnrichmentConfigurationData](ctx, ic); diags.HasError() {
+			return diags
 		}
-		dec.InlineConfigurations = l
 	} else {
 		dec.InlineConfigurations = fwtypes.NewListNestedObjectValueOfNull[resourceInlineDocumentEnrichmentConfigurationData](ctx)
 	}
@@ -668,11 +676,9 @@ func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx c
 		if d.HasError() {
 			return d
 		}
-		l, d := fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, pre)
-		if d.HasError() {
-			return d
+		if dec.PreExreactionHookConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, pre); diags.HasError() {
+			return diags
 		}
-		dec.PreExreactionHookConfiguration = l
 	} else {
 		dec.PreExreactionHookConfiguration = fwtypes.NewListNestedObjectValueOfNull[resourceHookConfigurationData](ctx)
 	}
@@ -682,13 +688,16 @@ func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx c
 		if d.HasError() {
 			return d
 		}
-		l, d := fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, post)
-		if d.HasError() {
-			return d
+		if dec.PostExtractionHookConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, post); diags.HasError() {
+			return diags
 		}
-		dec.PostExtractionHookConfiguration = l
 	} else {
 		dec.PostExtractionHookConfiguration = fwtypes.NewListNestedObjectValueOfNull[resourceHookConfigurationData](ctx)
+	}
+
+	if dec.InlineConfigurations.IsNull() && dec.PreExreactionHookConfiguration.IsNull() && dec.PostExtractionHookConfiguration.IsNull() {
+		data.DocumentEnrichmentConfiguration = fwtypes.NewListNestedObjectValueOfNull[resourceDocumentEnrichmentConfigurationData](ctx)
+		return nil
 	}
 
 	l, d := fwtypes.NewListNestedObjectValueOfPtr[resourceDocumentEnrichmentConfigurationData](ctx, &dec)
@@ -701,7 +710,7 @@ func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx c
 
 func (data *resourceDatasourceData) flattenConfiguration(conf document.Interface) diag.Diagnostics {
 	var diags diag.Diagnostics
-	b, err := json.Marshal(conf)
+	b, err := conf.MarshalSmithyDocument()
 	if err != nil {
 		diags.AddError("failed to marshal configuration", err.Error())
 		return diags
@@ -736,6 +745,7 @@ func (data *resourceDatasourceData) expandToUpdateDataSourceInput(ctx context.Co
 	input := &qbusiness.UpdateDataSourceInput{}
 
 	input.ApplicationId = data.ApplicationId.ValueStringPointer()
+	input.DataSourceId = data.DatasourceId.ValueStringPointer()
 	input.DisplayName = data.DisplayName.ValueStringPointer()
 	input.Description = data.Description.ValueStringPointer()
 	input.DisplayName = data.DisplayName.ValueStringPointer()
@@ -788,10 +798,10 @@ func (data *resourceDatasourceData) expandVpcConfiguration(ctx context.Context) 
 	if d.HasError() {
 		return nil, d
 	}
-	if d := conf.SecurityGroupIDs.ElementsAs(ctx, &vpcConf.SecurityGroupIds, false); d.HasError() {
+	if d := conf.SecurityGroupIds.ElementsAs(ctx, &vpcConf.SecurityGroupIds, false); d.HasError() {
 		return nil, d
 	}
-	if d := conf.SubnetIDs.ElementsAs(ctx, &vpcConf.SubnetIds, false); d.HasError() {
+	if d := conf.SubnetIds.ElementsAs(ctx, &vpcConf.SubnetIds, false); d.HasError() {
 		return nil, d
 	}
 	return &vpcConf, nil
@@ -800,7 +810,7 @@ func (data *resourceDatasourceData) expandVpcConfiguration(ctx context.Context) 
 func (data *resourceDatasourceData) expandDocumentEnrichmentConfiguration(
 	ctx context.Context) (*awstypes.DocumentEnrichmentConfiguration, diag.Diagnostics) {
 	if data.DocumentEnrichmentConfiguration.IsNull() {
-		return nil, nil
+		return &awstypes.DocumentEnrichmentConfiguration{}, nil
 	}
 
 	dec := awstypes.DocumentEnrichmentConfiguration{}
@@ -867,6 +877,10 @@ func expandInlineConfiguration(ctx context.Context, conf []*resourceInlineDocume
 }
 
 func expandDocumentAttributeTarget(ctx context.Context, conf *resourceDocumentAttributeTargetData) (*awstypes.DocumentAttributeTarget, diag.Diagnostics) {
+	if conf == nil {
+		return nil, nil
+	}
+
 	var diags diag.Diagnostics
 	var dat awstypes.DocumentAttributeTarget
 
@@ -886,24 +900,31 @@ func expandDocumentAttributeTarget(ctx context.Context, conf *resourceDocumentAt
 }
 
 func expandHookConfiguration(ctx context.Context, conf *resourceHookConfigurationData) (*awstypes.HookConfiguration, diag.Diagnostics) {
-	c, d := conf.Condition.ToPtr(ctx)
-	if d.HasError() {
-		return nil, d
+	if conf == nil {
+		return &awstypes.HookConfiguration{}, nil
 	}
-	invokeCond, d := expandDocumentAttributeCondition(ctx, c)
-	if d.HasError() {
-		return nil, d
+
+	var hookConf awstypes.HookConfiguration
+	if !conf.Condition.IsNull() {
+		c, d := conf.Condition.ToPtr(ctx)
+		if d.HasError() {
+			return nil, d
+		}
+		if hookConf.InvocationCondition, d = expandDocumentAttributeCondition(ctx, c); d.HasError() {
+			return nil, d
+		}
 	}
-	hookConf := awstypes.HookConfiguration{
-		LambdaArn:           conf.LambdaARN.ValueStringPointer(),
-		RoleArn:             conf.RoleARN.ValueStringPointer(),
-		S3BucketName:        conf.S3BucketName.ValueStringPointer(),
-		InvocationCondition: invokeCond,
-	}
+	hookConf.LambdaArn = conf.LambdaARN.ValueStringPointer()
+	hookConf.RoleArn = conf.RoleARN.ValueStringPointer()
+	hookConf.S3BucketName = conf.S3BucketName.ValueStringPointer()
 	return &hookConf, nil
 }
 
 func expandDocumentAttributeCondition(ctx context.Context, conf *resourceConditionData) (*awstypes.DocumentAttributeCondition, diag.Diagnostics) {
+	if conf == nil {
+		return nil, nil
+	}
+
 	c, d := conf.Value.ToPtr(ctx)
 	if d.HasError() {
 		return nil, d
@@ -921,6 +942,10 @@ func expandDocumentAttributeCondition(ctx context.Context, conf *resourceConditi
 }
 
 func expandValue(ctx context.Context, rvd *resourceValueData) (awstypes.DocumentAttributeValue, diag.Diagnostics) {
+	if rvd == nil {
+		return nil, nil
+	}
+
 	if !rvd.DateValue.IsNull() {
 		tv, d := rvd.DateValue.ValueRFC3339Time()
 		if d.HasError() {
