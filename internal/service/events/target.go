@@ -489,6 +489,20 @@ func resourceTarget() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateTargetID,
 			},
+			"appsync_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"graphql_operation": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1048576)),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -618,6 +632,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if target.DeadLetterConfig != nil {
 		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(target.DeadLetterConfig)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
+		}
+	}
+
+	if target.AppSyncParameters != nil {
+		if err := d.Set("appsync_target", flattenTargetAppSyncParameters(target.AppSyncParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting appsync_target: %s", err)
 		}
 	}
 
@@ -869,6 +889,10 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 
 	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		target.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("appsync_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		target.AppSyncParameters = expandTargetAppSyncParameters(v.([]interface{}))
 	}
 
 	input := &eventbridge.PutTargetsInput{
@@ -1483,4 +1507,23 @@ func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyI
 		results = append(results, s)
 	}
 	return results
+}
+
+func flattenTargetAppSyncParameters(appSyncParameters *types.AppSyncParameters) []map[string]interface{} {
+	config := make(map[string]interface{})
+	config["graphql_operation"] = aws.ToString(appSyncParameters.GraphQLOperation)
+	result := []map[string]interface{}{config}
+	return result
+}
+
+func expandTargetAppSyncParameters(config []interface{}) *types.AppSyncParameters {
+	appSyncParameters := &types.AppSyncParameters{}
+	for _, c := range config {
+		param := c.(map[string]interface{})
+		if v, ok := param["graphql_operation"].(string); ok && v != "" {
+			appSyncParameters.GraphQLOperation = aws.String(v)
+		}
+	}
+
+	return appSyncParameters
 }
