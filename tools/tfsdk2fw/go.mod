@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.53.11 // indirect
+	github.com/aws/aws-sdk-go v1.53.12 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.16 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.34.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/athena v1.40.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/athena v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.9 // indirect
@@ -68,7 +68,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.27.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.36.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.13.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.22.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.25.8 // indirect
@@ -163,7 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.79.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.4 // indirect
@@ -176,7 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.48.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.8 // indirect
@@ -234,7 +234,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.6.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
-	github.com/hashicorp/go-version v1.6.0 // indirect
+	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/hc-install v0.6.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.20.1 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
