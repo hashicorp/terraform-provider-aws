@@ -457,6 +457,7 @@ func resourceFunction() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			checkHandlerRuntimeForZipFunction,
+			checkImageUriForImageFunction,
 			updateComputedAttributesOnPublish,
 			verify.SetTagsDiff,
 		),
@@ -496,6 +497,9 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Code.ZipFile = zipFile
 	} else if v, ok := d.GetOk("image_uri"); ok {
 		input.Code.ImageUri = aws.String(v.(string))
+		if len(input.PackageType) == 0 {
+			input.PackageType = awstypes.PackageTypeImage
+		}
 	} else {
 		input.Code.S3Bucket = aws.String(d.Get(names.AttrS3Bucket).(string))
 		input.Code.S3Key = aws.String(d.Get("s3_key").(string))
@@ -1328,6 +1332,19 @@ func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff
 
 	if packageType == string(awstypes.PackageTypeZip) && (!handlerOk || !runtimeOk) {
 		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
+	}
+	return nil
+}
+
+func checkImageUriForImageFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	packageType := d.Get("package_type")
+	_, imageUriOk := d.GetOk("image_uri")
+
+	if packageType == awstypes.PackageTypeImage && !imageUriOk {
+		return fmt.Errorf("image_uri can only be set when PackageType is Image")
+	}
+	if packageType == awstypes.PackageTypeZip && imageUriOk {
+		return fmt.Errorf("image_uri cannot be set when PackageType is Zip")
 	}
 	return nil
 }

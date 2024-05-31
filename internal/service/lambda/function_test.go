@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 	"time"
 
@@ -1014,6 +1015,20 @@ func TestAccLambdaFunction_image(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
 				),
 			},
+			// Ensure a function with lambda image configuration can be created when package_type is not specified
+			{
+				Config: testAccFunctionConfig_imageAndNoPackageType(rName, imageLatestID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
+				),
+			},
 			// Ensure configuration can be imported
 			{
 				ResourceName:            resourceName,
@@ -1037,6 +1052,50 @@ func TestAccLambdaFunction_image(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV2ID),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.another_handler"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_expectImagePackageTypeSpecifiedAndImageUri(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := sdkacctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_expect_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_expect_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_expect_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
+	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
+	imageLatestID := os.Getenv(key)
+	if imageLatestID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		CheckDestroy: testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLambdaConfigWithZipAndImageUri(policyName, roleName, sgName, funcName, imageLatestID),
+				ExpectError: regexp.MustCompile(`image_uri cannot be set when PackageType is Zip`),
+			},
+		},
+	})
+}
+
+func TestAccAWSLambdaFunction_expectImageUriGivenWithImagePackage(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := sdkacctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_expect_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_expect_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_expect_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		CheckDestroy: testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLambdaConfigWithImageNoUri(policyName, roleName, sgName, funcName),
+				ExpectError: regexp.MustCompile(`image_uri can only be set when PackageType is Image`),
 			},
 		},
 	})
@@ -3269,6 +3328,23 @@ resource "aws_lambda_function" "test" {
 `, imageID, rName))
 }
 
+func testAccFunctionConfig_imageAndNoPackageType(rName, imageID string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri     = %[1]q
+  function_name = %[2]q
+  role          = aws_iam_role.iam_for_lambda.arn  
+  image_config {
+    entry_point       = ["/bootstrap-with-handler"]
+    command           = ["app.lambda_handler"]
+    working_directory = "/var/task"
+  }
+}
+`, imageID, rName))
+}
+
 func testAccFunctionConfig_imageUpdateCode(rName, imageID string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
@@ -4111,4 +4187,27 @@ func testAccPreCheckSignerSigningProfile(ctx context.Context, t *testing.T, plat
 	}
 
 	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
+}
+
+func testAccAWSLambdaConfigWithImageNoUri(policyName, roleName, sgName, funcName string) string {
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(policyName, roleName, sgName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  package_type  = "Image"
+}
+`, funcName))
+}
+
+func testAccAWSLambdaConfigWithZipAndImageUri(policyName, roleName, sgName, funcName, imageID string) string {
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(policyName, roleName, sgName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri      = %[1]q
+  function_name = %[2]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  package_type  = "Image"
+}
+`, imageID, funcName))
 }
