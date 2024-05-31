@@ -51,7 +51,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(5, 6144),
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -252,11 +252,11 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "allow_major_version_upgrade") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, names.AttrAllowMajorVersionUpgrade) {
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
 		// as it results in InvalidParameterCombination: No modifications were requested
 		input := &dms.ModifyReplicationInstanceInput{
-			AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
+			AllowMajorVersionUpgrade: aws.Bool(d.Get(names.AttrAllowMajorVersionUpgrade).(bool)),
 			ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			ReplicationInstanceArn:   aws.String(d.Get("replication_instance_arn").(string)),
 		}
