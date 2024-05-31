@@ -127,6 +127,20 @@ rules:
     severity: ERROR
     fix: "names.AttrAllocatedStorage"
 
+  - id: literal-allow_major_version_upgrade-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAllowMajorVersionUpgrade` for the string literal "allow_major_version_upgrade"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"allow_major_version_upgrade"'
+      - pattern-not-regex: '"allow_major_version_upgrade":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrAllowMajorVersionUpgrade"
+
   - id: literal-application_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrApplicationID` for the string literal "application_id"
@@ -281,6 +295,20 @@ rules:
     severity: ERROR
     fix: "names.AttrCIDRBlock"
 
+  - id: literal-capacity_provider_strategy-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCapacityProviderStrategy` for the string literal "capacity_provider_strategy"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"capacity_provider_strategy"'
+      - pattern-not-regex: '"capacity_provider_strategy":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrCapacityProviderStrategy"
+
   - id: literal-catalog_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrCatalogID` for the string literal "catalog_id"
@@ -364,6 +392,34 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrClientSecret"
+
+  - id: literal-cloudwatch_log_group_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCloudWatchLogGroupARN` for the string literal "cloudwatch_log_group_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cloudwatch_log_group_arn"'
+      - pattern-not-regex: '"cloudwatch_log_group_arn":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrCloudWatchLogGroupARN"
+
+  - id: literal-cloudwatch_logs-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCloudWatchLogs` for the string literal "cloudwatch_logs"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cloudwatch_logs"'
+      - pattern-not-regex: '"cloudwatch_logs":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrCloudWatchLogs"
 
   - id: literal-cluster_identifier-string-constant
     languages: [go]
@@ -1022,6 +1078,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrFilter"
+
+  - id: literal-final_snapshot_identifier-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrFinalSnapshotIdentifier` for the string literal "final_snapshot_identifier"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"final_snapshot_identifier"'
+      - pattern-not-regex: '"final_snapshot_identifier":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrFinalSnapshotIdentifier"
 
   - id: literal-force_delete-string-constant
     languages: [go]

@@ -18,6 +18,7 @@ const (
 	AttrAddress                    = "address"
 	AttrAlias                      = "alias"
 	AttrAllocatedStorage           = "allocated_storage"
+	AttrAllowMajorVersionUpgrade   = "allow_major_version_upgrade"
 	AttrApplicationID              = "application_id"
 	AttrApplyImmediately           = "apply_immediately"
 	AttrAssociationID              = "association_id"
@@ -29,12 +30,15 @@ const (
 	AttrBucketName                 = "bucket_name"
 	AttrBucketPrefix               = "bucket_prefix"
 	AttrCIDRBlock                  = "cidr_block"
+	AttrCapacityProviderStrategy   = "capacity_provider_strategy"
 	AttrCatalogID                  = "catalog_id"
 	AttrCertificate                = "certificate"
 	AttrCertificateARN             = "certificate_arn"
 	AttrCertificateChain           = "certificate_chain"
 	AttrClientID                   = "client_id"
 	AttrClientSecret               = "client_secret"
+	AttrCloudWatchLogGroupARN      = "cloudwatch_log_group_arn"
+	AttrCloudWatchLogs             = "cloudwatch_logs"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrClusterName                = "cluster_name"
 	AttrComment                    = "comment"
@@ -82,6 +86,7 @@ const (
 	AttrField                      = "field"
 	AttrFileSystemID               = "file_system_id"
 	AttrFilter                     = "filter"
+	AttrFinalSnapshotIdentifier    = "final_snapshot_identifier"
 	AttrForceDelete                = "force_delete"
 	AttrForceDestroy               = "force_destroy"
 	AttrFormat                     = "format"
@@ -247,6 +252,7 @@ func ConstOrQuote(constant string) string {
 		"address":                       "AttrAddress",
 		"alias":                         "AttrAlias",
 		"allocated_storage":             "AttrAllocatedStorage",
+		"allow_major_version_upgrade":   "AttrAllowMajorVersionUpgrade",
 		"application_id":                "AttrApplicationID",
 		"apply_immediately":             "AttrApplyImmediately",
 		"association_id":                "AttrAssociationID",
@@ -258,12 +264,15 @@ func ConstOrQuote(constant string) string {
 		"bucket_name":                   "AttrBucketName",
 		"bucket_prefix":                 "AttrBucketPrefix",
 		"cidr_block":                    "AttrCIDRBlock",
+		"capacity_provider_strategy":    "AttrCapacityProviderStrategy",
 		"catalog_id":                    "AttrCatalogID",
 		"certificate":                   "AttrCertificate",
 		"certificate_arn":               "AttrCertificateARN",
 		"certificate_chain":             "AttrCertificateChain",
 		"client_id":                     "AttrClientID",
 		"client_secret":                 "AttrClientSecret",
+		"cloudwatch_log_group_arn":      "AttrCloudWatchLogGroupARN",
+		"cloudwatch_logs":               "AttrCloudWatchLogs",
 		"cluster_identifier":            "AttrClusterIdentifier",
 		"cluster_name":                  "AttrClusterName",
 		"comment":                       "AttrComment",
@@ -311,6 +320,7 @@ func ConstOrQuote(constant string) string {
 		"field":                         "AttrField",
 		"file_system_id":                "AttrFileSystemID",
 		"filter":                        "AttrFilter",
+		"final_snapshot_identifier":     "AttrFinalSnapshotIdentifier",
 		"force_delete":                  "AttrForceDelete",
 		"force_destroy":                 "AttrForceDestroy",
 		"format":                        "AttrFormat",

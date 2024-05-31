@@ -4,6 +4,7 @@ action,Action
 address,Address
 alias,Alias
 allocated_storage,AllocatedStorage
+allow_major_version_upgrade,AllowMajorVersionUpgrade
 application_id,ApplicationID
 apply_immediately,ApplyImmediately
 arn,ARN
@@ -17,6 +18,7 @@ aws_account_id,AWSAccountID
 bucket,Bucket
 bucket_name,BucketName
 bucket_prefix,BucketPrefix
+capacity_provider_strategy,CapacityProviderStrategy
 catalog_id,CatalogID
 certificate,Certificate
 certificate_arn,CertificateARN
@@ -24,6 +26,8 @@ certificate_chain,CertificateChain
 cidr_block,CIDRBlock
 client_id,ClientID
 client_secret,ClientSecret
+cloudwatch_log_group_arn,CloudWatchLogGroupARN
+cloudwatch_logs,CloudWatchLogs
 cluster_identifier,ClusterIdentifier
 cluster_name,ClusterName
 comment,Comment
@@ -71,6 +75,7 @@ family,Family
 field,Field
 file_system_id,FileSystemID
 filter,Filter
+final_snapshot_identifier,FinalSnapshotIdentifier
 force_delete,ForceDelete
 force_destroy,ForceDestroy
 format,Format

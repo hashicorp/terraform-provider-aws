@@ -55,7 +55,7 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -148,7 +148,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
@@ -541,7 +541,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			input.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 		}
 
@@ -650,7 +650,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if !skipFinalSnapshot {
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "DocumentDB Cluster FinalSnapshotIdentifier is required when a final snapshot is required")

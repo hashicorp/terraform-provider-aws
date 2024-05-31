@@ -66,7 +66,7 @@ func ResourceProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -269,7 +269,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// You can't specify both cloudWatchLogs and s3Destination in the same operation.
-		if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+		if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
 			input.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
 		}
 
@@ -328,7 +328,7 @@ func expandDataDelivery(dataDelivery []interface{}) *awstypes.ProjectDataDeliver
 
 	result := &awstypes.ProjectDataDeliveryConfig{}
 
-	if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs]; ok && len(v.([]interface{})) > 0 {
 		result.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
 	}
 
@@ -389,7 +389,7 @@ func flattenDataDelivery(dataDelivery *awstypes.ProjectDataDelivery) []interface
 	values := map[string]interface{}{}
 
 	if dataDelivery.CloudWatchLogs != nil {
-		values["cloudwatch_logs"] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
+		values[names.AttrCloudWatchLogs] = flattenCloudWatchLogs(dataDelivery.CloudWatchLogs)
 	}
 
 	if dataDelivery.S3Destination != nil {

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -61,7 +62,7 @@ func main() {
 			APICall:           l.EndpointAPICall(),
 			APICallParams:     l.EndpointAPIParams(),
 			AwsEnvVar:         l.AWSServiceEnvVar(),
-			ConfigParameter:   l.AWSConfigParameter(),
+			ConfigParameter:   names.ConstOrQuote(l.AWSConfigParameter()),
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
 			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),

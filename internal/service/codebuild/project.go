@@ -350,7 +350,7 @@ func resourceProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -1395,7 +1395,7 @@ func expandProjectLogsConfig(v interface{}) *types.LogsConfig {
 
 	if v, ok := v.([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		if tfMap := v[0].(map[string]interface{}); tfMap != nil {
-			if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 				apiObject.CloudWatchLogs = expandCloudWatchLogsConfig(v[0].(map[string]interface{}))
 			}
 
@@ -1649,8 +1649,8 @@ func flattenLogsConfig(apiObject *types.LogsConfig) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"cloudwatch_logs": flattenCloudWatchLogs(apiObject.CloudWatchLogs),
-		"s3_logs":         flattenS3Logs(apiObject.S3Logs),
+		names.AttrCloudWatchLogs: flattenCloudWatchLogs(apiObject.CloudWatchLogs),
+		"s3_logs":                flattenS3Logs(apiObject.S3Logs),
 	}
 
 	return []interface{}{tfMap}
