@@ -3,4 +3,5 @@ aws_qbusiness_application
 aws_qbusiness_index
 aws_qbusiness_retriever
 aws_qbusiness_plugin
+aws_qbusiness_datasource
 ```
