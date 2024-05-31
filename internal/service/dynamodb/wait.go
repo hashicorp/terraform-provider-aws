@@ -241,3 +241,21 @@ func waitReplicaSSEUpdated(ctx context.Context, conn *dynamodb.Client, region, t
 
 	return nil, err
 }
+
+func waitTableActiveAfterDeletionProtectionChange(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Delay:   5 * time.Second,
+		Pending: enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
+		Target:  enum.Slice(awstypes.TableStatusActive),
+		Timeout: max(createTableTimeout, timeout),
+		Refresh: statusTable(ctx, conn, tableName),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
