@@ -205,11 +205,32 @@ func testAccCheckAppExists(ctx context.Context, n string, v *qbusiness.GetApplic
 	}
 }
 
-func testAccAppConfig_basic(rName string) string {
+func testAccAppConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_ssoadmin_instances" "test" {}
 
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "qbusiness.${data.aws_partition.current.dns_suffix}"
+        }
+        Effect = "Allow"
+        Sid = ""
+      }
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccAppConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   description          = %[1]q
@@ -221,35 +242,11 @@ resource "aws_qbusiness_app" "test" {
     attachments_control_mode = "ENABLED"
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName)
+`, rName))
 }
 
 func testAccAppConfig_attachmentsConfiguration(rName, mode string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
@@ -260,35 +257,11 @@ resource "aws_qbusiness_app" "test" {
     attachments_control_mode = %[2]q
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName, mode)
+`, rName, mode))
 }
 
 func testAccAppConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
@@ -304,26 +277,5 @@ resource "aws_qbusiness_app" "test" {
     %[4]q = %[5]q
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-  {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -207,41 +207,7 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *qbusiness.GetInde
 }
 
 func testAccIndexConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-	]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_index" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
@@ -250,45 +216,11 @@ resource "aws_qbusiness_index" "test" {
   }
   description = "Index name"
 }
-`, rName)
+`, rName))
 }
 
 func testAccIndexConfig_documentAttributeConfigurations(rName, attr1, attr2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-	]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_index" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
@@ -307,45 +239,11 @@ resource "aws_qbusiness_index" "test" {
     type   = "STRING"
   }
 }
-`, rName, attr1, attr2)
+`, rName, attr1, attr2))
 }
 
 func testAccIndexConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-	]
-}
-EOF
-}
-
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_index" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
@@ -359,5 +257,5 @@ resource "aws_qbusiness_index" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

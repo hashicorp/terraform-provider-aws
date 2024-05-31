@@ -209,32 +209,8 @@ func testAccCheckPluginExists(ctx context.Context, n string, v *qbusiness.GetPlu
 	}
 }
 
-func testAccPluginConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name                 = %[1]q
-  iam_service_role_arn         = aws_iam_role.test.arn
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_qbusiness_plugin" "test" {
-  application_id = aws_qbusiness_app.test.id
-  basic_auth_configuration {
-    role_arn   = aws_iam_role.test.arn
-    secret_arn = aws_secretsmanager_secret.test.arn
-  }
-  display_name = %[1]q
-  server_url   = "https://yourinstance.service-now.com"
-  state        = "ENABLED"
-  type         = "SERVICE_NOW"
-}
-
+func testAccPluginConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 variable "credentials" {
   default = {
     username = "username"
@@ -270,43 +246,27 @@ resource "aws_iam_role_policy_attachment" "test-attach" {
   role       = aws_iam_role.test.name
   policy_arn = aws_iam_policy.test.arn
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
+`, rName))
 }
-EOF
+
+func testAccPluginConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
+resource "aws_qbusiness_plugin" "test" {
+  application_id = aws_qbusiness_app.test.id
+  basic_auth_configuration {
+    role_arn   = aws_iam_role.test.arn
+    secret_arn = aws_secretsmanager_secret.test.arn
+  }
+  display_name = %[1]q
+  server_url   = "https://yourinstance.service-now.com"
+  state        = "ENABLED"
+  type         = "SERVICE_NOW"
 }
-`, rName)
+`, rName))
 }
 
 func testAccPluginConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name                 = %[1]q
-  iam_service_role_arn         = aws_iam_role.test.arn
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
+	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
   basic_auth_configuration {
@@ -323,79 +283,11 @@ resource "aws_qbusiness_plugin" "test" {
     %[4]q = %[5]q
   }
 }
-
-variable "credentials" {
-  default = {
-    username = "username"
-    password = "password"
-  }
-  type = map(string)
-}
-
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode(var.credentials)
-}
-
-resource "aws_iam_policy" "test" {
-  policy = jsonencode(
-    {
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["secretsmanager:GetSecretValue"]
-          Effect   = "Allow"
-          Resource = aws_secretsmanager_secret.test.arn
-        }
-      ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "test-attach" {
-  role       = aws_iam_role.test.name
-  policy_arn = aws_iam_policy.test.arn
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccPluginConfig_customPlugin(rName, state string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name                 = %[1]q
-  iam_service_role_arn         = aws_iam_role.test.arn
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
@@ -427,25 +319,5 @@ paths:
 SCHEMA
   }
 }
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName, state)
+`, rName, state))
 }

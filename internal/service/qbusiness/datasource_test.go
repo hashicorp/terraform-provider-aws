@@ -262,11 +262,18 @@ func testAccCheckDatasourceExists(ctx context.Context, n string, v *qbusiness.Ge
 	}
 }
 
-func testAccDatasourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
+func testAccDatasourceConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccIndexConfig_basic(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName))
+}
 
+func testAccDatasourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDatasourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_datasource" "test" {
   application_id       = aws_qbusiness_app.test.id
   index_id             = aws_qbusiness_index.test.index_id
@@ -292,60 +299,11 @@ resource "aws_qbusiness_datasource" "test" {
     }
   })
 }
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-    ]
-}
-EOF
-}
-
-resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
-  display_name   = %[1]q
-  capacity_configuration {
-    units = 1
-  }
-  description = "Index name"
-}
-
-`, rName)
+`, rName))
 }
 
 func testAccDatasourceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
+	return acctest.ConfigCompose(testAccDatasourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_datasource" "test" {
   application_id       = aws_qbusiness_app.test.id
   index_id             = aws_qbusiness_index.test.index_id
@@ -370,60 +328,11 @@ resource "aws_qbusiness_datasource" "test" {
     %[4]q = %[5]q
   }
 }
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-    ]
-}
-EOF
-}
-
-resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
-  display_name   = %[1]q
-  capacity_configuration {
-    units = 1
-  }
-  description = "Index name"
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccDatasourceConfig_documentEnrichmentConfiguration(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
+	return acctest.ConfigCompose(testAccDatasourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_datasource" "test" {
   application_id       = aws_qbusiness_app.test.id
   index_id             = aws_qbusiness_index.test.index_id
@@ -513,59 +422,11 @@ resource "aws_qbusiness_datasource" "test" {
 
   }
 }
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-    ]
-}
-EOF
-}
-
-resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
-  display_name   = %[1]q
-  capacity_configuration {
-    units = 1
-  }
-  description = "Index name"
-}
-`, rName)
+`, rName))
 }
 
 func testAccDatasourceConfig_vpcConfiguration(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
+	return acctest.ConfigCompose(testAccDatasourceConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_datasource" "test" {
   application_id       = aws_qbusiness_app.test.id
   index_id             = aws_qbusiness_index.test.index_id
@@ -594,50 +455,5 @@ resource "aws_qbusiness_datasource" "test" {
     subnet_ids             = ["subnet-12345678"]
   }
 }
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "ENABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-    ]
-}
-EOF
-}
-
-resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
-  display_name   = %[1]q
-  capacity_configuration {
-    units = 1
-  }
-  description = "Index name"
-}
-`, rName)
+`, rName))
 }

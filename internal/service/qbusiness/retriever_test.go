@@ -222,21 +222,7 @@ func testAccCheckRetrieverExists(ctx context.Context, n string, v *qbusiness.Get
 }
 
 func testAccRetrieverConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  iam_service_role_arn = aws_iam_role.test.arn
-  display_name         = %[1]q
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "DISABLED"
-  }
-}
-
+	return acctest.ConfigCompose(testAccIndexConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_retriever" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
@@ -246,53 +232,11 @@ resource "aws_qbusiness_retriever" "test" {
     index_id = aws_qbusiness_index.test.index_id
   }
 }
-
-resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
-  display_name   = %[1]q
-
-  capacity_configuration {
-    units = 1
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-`, rName)
+`, rName))
 }
 
 func testAccRetrieverConfig_boostOverrides(rName, boostingLevel string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "DISABLED"
-  }
-}
-
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_index" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
@@ -358,33 +302,11 @@ resource "aws_qbusiness_retriever" "test" {
     }
   }
 }
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-`, rName, boostingLevel)
+`, rName, boostingLevel))
 }
 
 func testAccRetrieverConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-data "aws_ssoadmin_instances" "test" {}
-
+	return acctest.ConfigCompose(testAccIndexConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_retriever" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
@@ -399,44 +321,5 @@ resource "aws_qbusiness_retriever" "test" {
     %[4]q = %[5]q
   }
 }
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-
-  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
-
-  attachments_configuration {
-    attachments_control_mode = "DISABLED"
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name               = %[1]q
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_qbusiness_index" "test" {
-  application_id = aws_qbusiness_app.test.id
-  display_name   = %[1]q
-
-  capacity_configuration {
-    units = 1
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
