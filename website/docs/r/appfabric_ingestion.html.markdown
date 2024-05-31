@@ -31,20 +31,7 @@ resource "aws_appfabric_ingestion" "example" {
 The following arguments are required:
 
 * `app` - (Required) Name of the application.
-Valid values are:
-
-  - SLACK
-  - ASANA
-  - JIRA
-  - M365
-  - M365AUDITLOGS
-  - ZOOM
-  - ZENDESK
-  - OKTA
-  - GOOGLE
-  - DROPBOX
-  - SMARTSHEET
-  - CISCO
+Refer to the AWS Documentation for the [list of valid values](https://docs.aws.amazon.com/appfabric/latest/api/API_CreateIngestion.html#appfabric-CreateIngestion-request-app)
 
 * `app_bundle_identifier` - (Required) Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app bundle to use for the request. 
 
