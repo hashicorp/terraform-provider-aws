@@ -105,7 +105,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -137,7 +137,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -152,7 +152,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -188,7 +188,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -202,7 +202,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -237,7 +237,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -252,7 +252,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -284,7 +284,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -314,7 +314,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 						acctest.CtKey1: nil,
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -345,7 +345,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 						acctest.CtKey1: nil,
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -357,7 +357,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				PlanOnly:           true,
@@ -379,7 +379,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -409,7 +409,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -441,7 +441,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -468,7 +468,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -505,7 +505,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -517,7 +517,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -546,7 +546,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -573,7 +573,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -605,7 +605,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -646,7 +646,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -660,7 +660,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -692,7 +692,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -719,7 +719,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -750,7 +750,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -787,7 +787,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -813,7 +813,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -846,7 +846,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -863,7 +863,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -904,7 +904,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -920,7 +920,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -961,7 +961,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -977,7 +977,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1011,7 +1011,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1042,7 +1042,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1083,7 +1083,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1102,7 +1102,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1148,7 +1148,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1161,7 +1161,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1195,7 +1195,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1226,7 +1226,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1265,7 +1265,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1285,7 +1285,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1330,7 +1330,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1348,7 +1348,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1387,7 +1387,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1412,7 +1412,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1448,7 +1448,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1486,7 +1486,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1512,7 +1512,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1543,7 +1543,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -1579,7 +1579,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1610,7 +1610,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1654,7 +1654,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1683,7 +1683,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1721,7 +1721,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					}),
 					acctest.CtResourceTags: nil,
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1752,7 +1752,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 						acctest.CtKey1: nil,
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1787,7 +1787,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 						acctest.CtKey1: nil,
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1818,7 +1818,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 						acctest.CtResourceKey1: nil,
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1853,7 +1853,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 						acctest.CtResourceKey1: nil,
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1876,7 +1876,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1908,7 +1908,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -1933,7 +1933,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1965,7 +1965,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2002,7 +2002,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
@@ -2027,7 +2027,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2057,7 +2057,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2089,7 +2089,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				{{- template "ImportBody" . -}}
