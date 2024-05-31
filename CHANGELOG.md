@@ -18,7 +18,6 @@ BUG FIXES:
 * resource/aws_lightsail_instance: Fix crash when reading a resource that has a key-only tag ([#37587](https://github.com/hashicorp/terraform-provider-aws/issues/37587))
 * resource/aws_lightsail_key_pair: Prevent destroy failure when resource is already deleted outside Terraform ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
 * resource/aws_lightsail_lb: Prevent destroy failure when resource is already deleted outside Terraform ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
-* resource/aws_lambda_function: Permit `package_type` to be empty when `image_uri` is set ([#37780](https://github.com/hashicorp/terraform-provider-aws/issues/37780))
 
 ## 5.51.1 (May 24, 2024)
 
