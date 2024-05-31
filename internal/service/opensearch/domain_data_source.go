@@ -287,7 +287,7 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_group_arn": {
+						names.AttrCloudWatchLogGroupARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
