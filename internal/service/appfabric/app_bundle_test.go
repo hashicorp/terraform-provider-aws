@@ -147,6 +147,35 @@ resource "aws_appfabric_app_bundle" "test" {
 `)
 }
 
+func testAccAppBundleConfig_customer_managed_key() string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+	customer_managed_key = "arn:aws:kms:us-east-1:732859338261:key/c67081be-29a0-4049-a821-1436d27bde94"
+}
+`)
+}
+
+func testAccAppBundleConfig_tags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+	tags = {
+		%[1]q = %[2]q
+	}
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccAppBundleConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+	tags = {
+		%[1]q = %[2]q
+		%[3]q = %[4]q
+	}
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
 func testAccAppBundleConfig_full(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
