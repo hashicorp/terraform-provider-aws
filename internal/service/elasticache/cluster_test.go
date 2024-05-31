@@ -993,7 +993,7 @@ func TestAccElastiCacheCluster_Redis_finalSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_redisFinalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "final_snapshot_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFinalSnapshotIdentifier, rName),
 				),
 			},
 		},
