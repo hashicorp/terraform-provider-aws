@@ -79,6 +79,7 @@ func valueSchema(ctx context.Context) schema.SingleNestedBlock {
 						path.MatchRelative().AtParent().AtName("string_list_value"),
 						path.MatchRelative().AtParent().AtName("string_value"),
 					),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`), "must be an ISO 8601 date/time string"),
 				},
 			},
 			"long_value": schema.Int64Attribute{
@@ -375,7 +376,6 @@ func (r *resourceDatasource) Create(ctx context.Context, req resource.CreateRequ
 		resp.Diagnostics.AddError("failed to wait for datasource to be created", err.Error())
 		return
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -943,11 +943,11 @@ func expandValue(ctx context.Context, rvd *resourceValueData) (awstypes.Document
 	if rvd == nil {
 		return nil, nil
 	}
-
+	var diag diag.Diagnostics
 	if !rvd.DateValue.IsNull() {
-		tv, d := rvd.DateValue.ValueRFC3339Time()
-		if d.HasError() {
-			return nil, d
+		tv, diag := rvd.DateValue.ValueRFC3339Time()
+		if diag.HasError() {
+			return nil, diag
 		}
 		return &awstypes.DocumentAttributeValueMemberDateValue{
 			Value: tv,
@@ -960,8 +960,8 @@ func expandValue(ctx context.Context, rvd *resourceValueData) (awstypes.Document
 	}
 	if !rvd.StringListValue.IsNull() {
 		var l []string
-		if d := rvd.StringListValue.ElementsAs(ctx, &l, false); d.HasError() {
-			return nil, d
+		if diag = rvd.StringListValue.ElementsAs(ctx, &l, false); diag.HasError() {
+			return nil, diag
 		}
 		return &awstypes.DocumentAttributeValueMemberStringListValue{
 			Value: l,

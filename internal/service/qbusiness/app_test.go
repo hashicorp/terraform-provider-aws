@@ -221,7 +221,7 @@ resource "aws_iam_role" "test" {
           Service = "qbusiness.${data.aws_partition.current.dns_suffix}"
         }
         Effect = "Allow"
-        Sid = ""
+        Sid    = ""
       }
     ]
   })

@@ -75,7 +75,7 @@ This resource supports the following arguments:
 
 `value` supports the following:
 
-* `date_value` - (Optional) A date expressed as an ISO 8601 string.
+* `date_value` - (Optional) A date expressed as an ISO 8601 string. Must be in UTC timezone
 * `long_value` - (Optional) A long integer value.
 * `string_list_value` - (Optional) A list of strings.
 * `strings_value` - (Optional) A string.

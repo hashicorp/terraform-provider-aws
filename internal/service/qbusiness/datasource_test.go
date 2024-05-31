@@ -140,7 +140,7 @@ func TestAccQBusinessDatasource_documentEnrichmentConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.target.0.value.string_value", "STRING_VALUE"),
 
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.1.condition.0.value.long_value", "1234"),
-					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.1.target.0.value.date_value", "2012-03-25T12:30:10+01:00"),
+					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.1.target.0.value.date_value", "2012-03-25T12:30:10Z"),
 
 					resource.TestCheckResourceAttrSet(resourceName, "document_enrichment_configuration.0.pre_extraction_hook_configuration.0.lambda_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "document_enrichment_configuration.0.pre_extraction_hook_configuration.0.role_arn"),
@@ -389,7 +389,7 @@ resource "aws_qbusiness_datasource" "test" {
         key                      = "STRING_VALUE"
         attribute_value_operator = "DELETE"
         value {
-          date_value = "2012-03-25T12:30:10+01:00"
+          date_value = "2012-03-25T12:30:10Z"
         }
       }
     }
