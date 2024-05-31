@@ -90,6 +90,10 @@ func resourceTableReplica() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
 			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),         // direct to replica
 			names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
 		},
@@ -315,6 +319,8 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	setTagsOut(ctx, Tags(tags))
 
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
+
 	return diags
 }
 
@@ -403,7 +409,8 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// handled direct to replica
 	// * point_in_time_recovery
 	// * tags
-	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll) {
+	// * deletion_protection_enabled
+	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll, "deletion_protection_enabled") {
 		if d.HasChange(names.AttrTagsAll) {
 			o, n := d.GetChange(names.AttrTagsAll)
 			if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
@@ -414,6 +421,22 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		if d.HasChange("point_in_time_recovery") {
 			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+			}
+		}
+
+		if d.HasChange("deletion_protection_enabled") {
+			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
+			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+				TableName:                 aws.String(tableName),
+				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
+			})
+			if err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+			}
+			// Deletion protection change is reflected only on table status, and not in replicas status field
+			// There is certain lag after attr update and table status change so doing it with delay
+			if _, err := waitTableActiveAfterDeletionProtectionChange(ctx, conn, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
 			}
 		}
 
