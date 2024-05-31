@@ -119,7 +119,7 @@ func main() {
 		}
 
 		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars)
+			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
 			slices.Sort(additionalTfVars)
 			testDirPath := path.Join("testdata", resource.Name)
 
@@ -167,7 +167,13 @@ type ResourceDatum struct {
 	GoImports         []goImport
 	GenerateConfig    bool
 	InitCodeBlocks    []codeBlock
-	AdditionalTfVars  map[string][]string
+	additionalTfVars  map[string]string
+}
+
+func (d ResourceDatum) AdditionalTfVars() map[string]string {
+	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
+		return acctestconsts.ConstOrQuote(k)
+	})
 }
 
 type goImport struct {
@@ -255,7 +261,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		AdditionalTfVars: make(map[string][]string),
+		additionalTfVars: make(map[string]string),
 	}
 	dataSource := false
 	tagged := false
@@ -421,8 +427,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.AdditionalTfVars["certificate_pem"] = []string{acctestconsts.ConstOrQuote("certificate_pem"), "certificatePEM"}
-		d.AdditionalTfVars["private_key_pem"] = []string{acctestconsts.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
+		d.additionalTfVars["certificate_pem"] = "certificatePEM"
+		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
 
 	}
 
