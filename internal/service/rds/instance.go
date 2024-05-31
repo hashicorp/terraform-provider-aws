@@ -114,7 +114,7 @@ func ResourceInstance() *schema.Resource {
 					return false
 				},
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -315,7 +315,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -877,7 +877,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 			// "InvalidParameterCombination: No modifications were requested".
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
@@ -1137,7 +1137,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+		if v, ok := d.GetOk(names.AttrAllowMajorVersionUpgrade); ok {
 			modifyDbInstanceInput.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 			// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 			// InvalidParameterCombination: No modifications were requested
@@ -1991,19 +1991,19 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 	// as it results in "InvalidParameterCombination: No modifications were requested".
 	if d.HasChangesExcept(
-		"allow_major_version_upgrade",
+		names.AttrAllowMajorVersionUpgrade,
 		"blue_green_update",
 		"delete_automated_backups",
-		"final_snapshot_identifier",
+		names.AttrFinalSnapshotIdentifier,
 		"replicate_source_db",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll,
 	) {
 		if d.Get("blue_green_update.0.enabled").(bool) && d.HasChangesExcept(
-			"allow_major_version_upgrade",
+			names.AttrAllowMajorVersionUpgrade,
 			"blue_green_update",
 			"delete_automated_backups",
-			"final_snapshot_identifier",
+			names.AttrFinalSnapshotIdentifier,
 			"replicate_source_db",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
@@ -2167,7 +2167,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			if d.HasChange(names.AttrEngineVersion) {
 				input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
-				input.AllowMajorVersionUpgrade = aws.Bool(d.Get("allow_major_version_upgrade").(bool))
+				input.AllowMajorVersionUpgrade = aws.Bool(d.Get(names.AttrAllowMajorVersionUpgrade).(bool))
 				// if we were to make life easier for practitioners, we could loop through
 				// replicas at this point to update them first, prior to dbInstanceModify()
 				// for the source
@@ -2468,7 +2468,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	} else {
 		input.SkipFinalSnapshot = aws.Bool(false)
 
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")

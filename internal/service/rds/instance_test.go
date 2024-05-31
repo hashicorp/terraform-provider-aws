@@ -54,7 +54,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, acctest.Ct10),
-					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
@@ -102,7 +102,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"manage_master_user_password",
 					"skip_final_snapshot",
@@ -243,7 +243,7 @@ func TestAccRDSInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -340,7 +340,7 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
 					"delete_automated_backups",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -527,7 +527,7 @@ func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 				Config: testAccInstanceConfig_Versions_allowMajor(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 			{
@@ -535,9 +535,9 @@ func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
+					names.AttrAllowMajorVersionUpgrade,
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -546,7 +546,7 @@ func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 				Config: testAccInstanceConfig_Versions_allowMajor(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance1),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtFalse),
 				),
 			},
 		},
@@ -670,7 +670,7 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -876,7 +876,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -922,7 +922,7 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"manage_master_user_password",
 					"skip_final_snapshot",
 				},
@@ -960,7 +960,7 @@ func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"manage_master_user_password",
 					"master_user_secret_kms_key_id",
 					"skip_final_snapshot",
@@ -999,7 +999,7 @@ func TestAccRDSInstance_ManageMasterPassword_convertToManaged(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -1321,7 +1321,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T)
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 		},
@@ -2080,7 +2080,7 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"manage_master_user_password",
 					"skip_final_snapshot",
@@ -2156,7 +2156,7 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"manage_master_user_password",
 					"skip_final_snapshot",
@@ -2433,7 +2433,7 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"manage_master_user_password",
 					"master_user_secret_kms_key_id",
 					"snapshot_identifier",
@@ -2686,7 +2686,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 		},
@@ -3454,7 +3454,7 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -3514,7 +3514,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -3560,7 +3560,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -3604,7 +3604,7 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -4008,7 +4008,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -4051,7 +4051,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_db2(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -4145,7 +4145,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_msSQL(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 				},
@@ -4183,7 +4183,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_oracle(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -4222,7 +4222,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -4389,7 +4389,7 @@ func TestAccRDSInstance_PerformanceInsights_disabledToEnabled(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrPassword,
 					"skip_final_snapshot",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 				},
 			},
 			{
@@ -4437,7 +4437,7 @@ func TestAccRDSInstance_PerformanceInsights_enabledToDisabled(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrPassword,
 					"skip_final_snapshot",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 				},
 			},
 			{
@@ -4487,7 +4487,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrPassword,
 					"skip_final_snapshot",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 				},
 			},
 			{
@@ -4545,7 +4545,7 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrPassword,
 					"skip_final_snapshot",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 				},
 			},
 			{
@@ -4703,7 +4703,7 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
 					"delete_automated_backups",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"latest_restorable_time", // dynamic value of a DBInstance
 					names.AttrPassword,
 					"restore_to_point_in_time",
@@ -4745,7 +4745,7 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
 					"delete_automated_backups",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"latest_restorable_time", // dynamic value of a DBInstance
 					names.AttrPassword,
 					"restore_to_point_in_time",
@@ -4821,7 +4821,7 @@ func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) 
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
 					"delete_automated_backups",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"latest_restorable_time", // dynamic value of a DBInstance
 					"manage_master_user_password",
 					names.AttrPassword,
@@ -4863,7 +4863,7 @@ func TestAccRDSInstance_Oracle_nationalCharacterSet(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -4903,7 +4903,7 @@ func TestAccRDSInstance_Oracle_noNationalCharacterSet(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -4965,7 +4965,7 @@ func TestAccRDSInstance_Outposts_coIPDisabledToEnabled(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrPassword,
 					"skip_final_snapshot",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 				},
 			},
 			{
@@ -5006,7 +5006,7 @@ func TestAccRDSInstance_Outposts_coIPEnabledToDisabled(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrPassword,
 					"skip_final_snapshot",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 				},
 			},
 			{
@@ -5048,7 +5048,7 @@ func TestAccRDSInstance_Outposts_coIPRestoreToPointInTime(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
 					"delete_automated_backups",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"latest_restorable_time", // dynamic value of a DBInstance
 					names.AttrPassword,
 					"restore_to_point_in_time",
@@ -5145,7 +5145,7 @@ func TestAccRDSInstance_license(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5201,7 +5201,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5254,7 +5254,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5306,7 +5306,7 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5357,7 +5357,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5412,7 +5412,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 					names.AttrApplyImmediately,
 					"blue_green_update",
 					"delete_automated_backups",
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"latest_restorable_time",
 					names.AttrPassword,
 					"skip_final_snapshot",
@@ -5462,7 +5462,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5504,7 +5504,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5527,7 +5527,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5605,7 +5605,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5629,7 +5629,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5796,7 +5796,7 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5840,7 +5840,7 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5893,7 +5893,7 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -5946,7 +5946,7 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -6155,7 +6155,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -6429,7 +6429,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				continue
 			}
 
-			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			output, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
 			if err != nil {
 				return err
@@ -6481,7 +6481,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 				continue
 			}
 
-			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			_, err := tfrds.FindDBSnapshotByID(ctx, conn, finalSnapshotID)
 
 			if err != nil {
