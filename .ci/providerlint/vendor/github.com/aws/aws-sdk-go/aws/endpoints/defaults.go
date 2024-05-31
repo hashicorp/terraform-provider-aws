@@ -246,13 +246,6 @@ var awsPartition = partition{
 		},
 	},
 	Services: services{
-		"a4b": service{
-			Endpoints: serviceEndpoints{
-				endpointKey{
-					Region: "us-east-1",
-				}: endpoint{},
-			},
-		},
 		"access-analyzer": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
