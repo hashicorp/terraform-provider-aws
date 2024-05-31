@@ -623,7 +623,7 @@ services = endpoint-test
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, names.AttrCloudWatchLogs, serviceConfigFileEndpoint))
+`, configParam, serviceConfigFileEndpoint))
 	}
 
 	return buf.String()
