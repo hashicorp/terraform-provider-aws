@@ -869,8 +869,8 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "10"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "10"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", acctest.Ct10),
 				),
 			},
 			{
@@ -879,8 +879,8 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "10"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", acctest.Ct10),
 				),
 			},
 			{
