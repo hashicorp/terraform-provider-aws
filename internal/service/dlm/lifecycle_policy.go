@@ -57,6 +57,11 @@ func resourceLifecyclePolicy() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"default_policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.DefaultPolicyTypeValues](),
+			},
 			"policy_details": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -209,6 +214,11 @@ func resourceLifecyclePolicy() *schema.Resource {
 									},
 								},
 							},
+						},
+						"policy_language": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PolicyLanguageValues](),
 						},
 						"policy_type": {
 							Type:             schema.TypeString,
@@ -500,6 +510,10 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:             getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("default_policy"); ok {
+		input.DefaultPolicy = awstypes.DefaultPolicyTypeValues(v.(string))
+	}
+
 	out, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, createRetryTimeout, func() (interface{}, error) {
 		return conn.CreateLifecyclePolicy(ctx, &input)
 	})
@@ -533,6 +547,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, out.Policy.PolicyArn)
 	d.Set(names.AttrDescription, out.Policy.Description)
 	d.Set(names.AttrExecutionRoleARN, out.Policy.ExecutionRoleArn)
+	d.Set("default_policy", out.Policy.DefaultPolicy)
 	d.Set(names.AttrState, out.Policy.State)
 	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
@@ -630,6 +645,9 @@ func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
 	policyDetails := &awstypes.PolicyDetails{
 		PolicyType: awstypes.PolicyTypeValues(policyType),
 	}
+	if v, ok := m["policy_language"].(string); ok {
+		policyDetails.PolicyLanguage = awstypes.PolicyLanguageValues(v)
+	}
 	if v, ok := m["resource_types"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.ResourceTypes = flex.ExpandStringyValueList[awstypes.ResourceTypeValues](v)
 	}
@@ -664,6 +682,7 @@ func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]in
 	result[names.AttrSchedule] = flattenSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenTags(policyDetails.TargetTags)
 	result["policy_type"] = string(policyDetails.PolicyType)
+	result["policy_language"] = string(policyDetails.PolicyLanguage)
 
 	if policyDetails.Parameters != nil {
 		result[names.AttrParameters] = flattenParameters(policyDetails.Parameters)

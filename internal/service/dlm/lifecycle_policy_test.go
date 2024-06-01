@@ -198,6 +198,48 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_defaultPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.interval", "12"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.interval_unit", "HOURS"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", acctest.CtBasic),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
@@ -635,6 +677,33 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
     target_tags = {
       tf-acc-test = "basic"
+    }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_defaultPolicy(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+  default_policy = "VOLUME"
+
+  policy_details {
+    resource_types  = ["VOLUME"]
+    policy_language = "SIMPLIFIED"
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
     }
   }
 }
