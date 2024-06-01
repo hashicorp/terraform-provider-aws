@@ -246,10 +246,22 @@ func resourceTable() *schema.Resource {
 						"max_read_request_units": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "0" && new == "-1" {
+									return true
+								}
+								return false
+							},
 						},
 						"max_write_request_units": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "0" && new == "-1" {
+									return true
+								}
+								return false
+							},
 						},
 					},
 				},
