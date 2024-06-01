@@ -217,7 +217,9 @@ func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "default_policy", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_type", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_language", "SIMPLIFIED"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.#", acctest.Ct1),
@@ -227,8 +229,6 @@ func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", acctest.CtBasic),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -688,10 +688,10 @@ func testAccLifecyclePolicyConfig_defaultPolicy(rName string) string {
 resource "aws_dlm_lifecycle_policy" "test" {
   description        = "tf-acc-basic"
   execution_role_arn = aws_iam_role.test.arn
-  default_policy = "VOLUME"
+  default_policy     = "VOLUME"
 
   policy_details {
-    resource_types  = ["VOLUME"]
+    resource_type   = "VOLUME"
     policy_language = "SIMPLIFIED"
 
     schedule {

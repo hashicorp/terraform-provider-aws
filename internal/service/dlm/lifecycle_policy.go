@@ -179,6 +179,13 @@ func resourceLifecyclePolicy() *schema.Resource {
 								},
 							},
 						},
+						"resource_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
+							ConflictsWith:    []string{"resource_types"},
+							RequiredWith:     []string{"default_policy"},
+						},
 						"resource_types": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -187,6 +194,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
 							},
+							ConflictsWith: []string{"resource_type", "default_policy"},
 						},
 						"resource_locations": {
 							Type:     schema.TypeList,
@@ -648,6 +656,9 @@ func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
 	if v, ok := m["policy_language"].(string); ok {
 		policyDetails.PolicyLanguage = awstypes.PolicyLanguageValues(v)
 	}
+	if v, ok := m["resource_type"].(string); ok {
+		policyDetails.ResourceType = awstypes.ResourceTypeValues(v)
+	}
 	if v, ok := m["resource_types"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.ResourceTypes = flex.ExpandStringyValueList[awstypes.ResourceTypeValues](v)
 	}
@@ -675,6 +686,7 @@ func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
 
 func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]interface{} {
 	result := make(map[string]interface{})
+	result["resource_type"] = string(policyDetails.ResourceType)
 	result["resource_types"] = flex.FlattenStringyValueList(policyDetails.ResourceTypes)
 	result["resource_locations"] = flex.FlattenStringyValueList(policyDetails.ResourceLocations)
 	result[names.AttrAction] = flattenActions(policyDetails.Actions)
