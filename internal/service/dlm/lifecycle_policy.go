@@ -588,7 +588,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrExecutionRoleARN, out.Policy.ExecutionRoleArn)
 	d.Set(names.AttrState, out.Policy.State)
 	if aws.ToBool(out.Policy.DefaultPolicy) {
-		d.Set("default_policy", d.Get("default_policy").(string))
+		d.Set("default_policy", d.Get("default_policy"))
 	}
 	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails, aws.ToBool(out.Policy.DefaultPolicy))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
@@ -743,12 +743,15 @@ func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails, defaultPolicyVa
 	result["policy_language"] = string(policyDetails.PolicyLanguage)
 
 	if defaultPolicyValue {
+		result["create_interval"] = aws.ToInt32(policyDetails.CreateInterval)
+		result["retain_interval"] = aws.ToInt32(policyDetails.RetainInterval)
+	} else {
+		result["create_interval"] = 0
+		result["retain_interval"] = 0
 	}
 	result["copy_tags"] = aws.ToBool(policyDetails.CopyTags)
-	result["create_interval"] = aws.ToInt32(policyDetails.CreateInterval)
 	result["extend_deletion"] = aws.ToBool(policyDetails.ExtendDeletion)
 	result["resource_type"] = string(policyDetails.ResourceType)
-	result["retain_interval"] = aws.ToInt32(policyDetails.RetainInterval)
 
 	if policyDetails.Parameters != nil {
 		result[names.AttrParameters] = flattenParameters(policyDetails.Parameters)
