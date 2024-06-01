@@ -52,6 +52,8 @@ import (
 
 // @SDKResource("aws_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/rds;rds.DBInstance")
+// @Testing(importIgnore="apply_immediately;password")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,
