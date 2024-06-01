@@ -864,7 +864,7 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_billingPayPerRequestIgnoreChanges(rName),
+				Config: testAccTableConfig_OnDemandThroughput(rName, 10, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
@@ -874,7 +874,7 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_billingPayPerRequestIgnoreChanges(rName),
+				Config: testAccTableConfig_OnDemandThroughput(rName, 1, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
@@ -884,7 +884,7 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTableConfig_billingPayPerRequestIgnoreChanges(rName),
+				Config: testAccTableConfig_OnDemandThroughput(rName, -1, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
