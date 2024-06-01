@@ -1,6 +1,7 @@
 access_key,AccessKey
 account_id,AccountID
 action,Action
+actions,Actions
 address,Address
 alias,Alias
 allocated_storage,AllocatedStorage
@@ -107,6 +108,7 @@ language_code,LanguageCode
 last_updated_date,LastUpdatedDate
 last_updated_time,LastUpdatedTime
 launch_template,LaunchTemplate
+location,Location
 log_group_name,LogGroupName
 logging_configuration,LoggingConfiguration
 max,Max
