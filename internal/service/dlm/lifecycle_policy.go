@@ -141,20 +141,23 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							Default:       false,
-							ConflictsWith: []string{names.AttrSchedule},
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
 						},
 						"create_interval": {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Default:       1,
 							ValidateFunc:  validation.IntBetween(1, 7),
-							ConflictsWith: []string{names.AttrSchedule},
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
 						},
 						"extend_deletion": {
 							Type:          schema.TypeBool,
 							Optional:      true,
 							Default:       false,
-							ConflictsWith: []string{names.AttrSchedule},
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
 						},
 						"event_source": {
 							Type:     schema.TypeList,
@@ -202,7 +205,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							ConflictsWith:    []string{"policy_details.0.resource_types", names.AttrSchedule},
+							ConflictsWith:    []string{"policy_details.0.resource_types", "policy_details.0.schedule"},
 							RequiredWith:     []string{"default_policy"},
 						},
 						"resource_types": {
@@ -230,7 +233,8 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Optional:      true,
 							Default:       7,
 							ValidateFunc:  validation.IntBetween(1, 7),
-							ConflictsWith: []string{names.AttrSchedule},
+							ConflictsWith: []string{"policy_details.0.schedule"},
+							RequiredWith:  []string{"default_policy"},
 						},
 						names.AttrParameters: {
 							Type:     schema.TypeList,
@@ -682,8 +686,8 @@ func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
 	if v, ok := m["copy_tags"].(bool); ok {
 		policyDetails.CopyTags = aws.Bool(v)
 	}
-	if v, ok := m["create_interval"].(int32); ok {
-		policyDetails.CreateInterval = aws.Int32(v)
+	if v, ok := m["create_interval"].(int); ok {
+		policyDetails.CreateInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["extend_deletion"].(bool); ok {
 		policyDetails.ExtendDeletion = aws.Bool(v)
@@ -700,8 +704,8 @@ func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
 	if v, ok := m["resource_locations"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.ResourceLocations = flex.ExpandStringyValueList[awstypes.ResourceLocationValues](v)
 	}
-	if v, ok := m["retain_interval"].(int32); ok {
-		policyDetails.RetainInterval = aws.Int32(v)
+	if v, ok := m["retain_interval"].(int); ok {
+		policyDetails.RetainInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m[names.AttrSchedule].([]interface{}); ok && len(v) > 0 {
 		policyDetails.Schedules = expandSchedules(v)

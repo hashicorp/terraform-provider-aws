@@ -217,18 +217,14 @@ func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "default_policy", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.copy_tags", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.create_interval", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.extend_deletion", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_type", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.retain_interval", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_language", "SIMPLIFIED"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.interval", "12"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.interval_unit", "HOURS"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.deprecate_rule.#", acctest.Ct0),
 				),
 			},
 			{
@@ -691,6 +687,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
   default_policy     = "VOLUME"
 
   policy_details {
+    create_interval = 5
     resource_type   = "VOLUME"
     policy_language = "SIMPLIFIED"
   }
