@@ -710,6 +710,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			input.SSESpecification = expandEncryptAtRestOptions(v.([]interface{}))
+		}
+
 		if v, ok := d.GetOk("table_class"); ok {
 			input.TableClass = awstypes.TableClass(v.(string))
 		}
