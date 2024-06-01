@@ -183,7 +183,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
-							ConflictsWith:    []string{"resource_types"},
+							ConflictsWith:    []string{"policy_details.0.resource_types"},
 							RequiredWith:     []string{"default_policy"},
 						},
 						"resource_types": {
@@ -194,7 +194,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
 							},
-							ConflictsWith: []string{"resource_type", "default_policy"},
+							ConflictsWith: []string{"policy_details.0.resource_type", "default_policy"},
 						},
 						"resource_locations": {
 							Type:     schema.TypeList,
