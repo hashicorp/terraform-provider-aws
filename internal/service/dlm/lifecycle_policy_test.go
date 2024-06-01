@@ -693,18 +693,6 @@ resource "aws_dlm_lifecycle_policy" "test" {
   policy_details {
     resource_type   = "VOLUME"
     policy_language = "SIMPLIFIED"
-
-    schedule {
-      name = "tf-acc-basic"
-
-      create_rule {
-        interval = 12
-      }
-
-      retain_rule {
-        count = 10
-      }
-    }
   }
 }
 `)
