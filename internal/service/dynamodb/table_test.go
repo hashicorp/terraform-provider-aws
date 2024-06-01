@@ -3163,7 +3163,7 @@ resource "aws_dynamodb_table" "test" {
   hash_key     = "TestTableHashKey"
 
   on_demand_throughput {
-    max_read_request_units = %[2]d
+    max_read_request_units  = %[2]d
     max_write_request_units = %[3]d
   }
 
