@@ -11,6 +11,7 @@ import (
 const (
 	Ct0                     = "0"
 	Ct1                     = "1"
+	Ct5                     = "5"
 	Ct7                     = "7"
 	Ct10                    = "10"
 	Ct2                     = "2"
@@ -57,6 +58,7 @@ func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
 		"0":                     "Ct0",
 		"1":                     "Ct1",
+		"5":                     "Ct5",
 		"7":                     "Ct7",
 		"10":                    "Ct10",
 		"2":                     "Ct2",

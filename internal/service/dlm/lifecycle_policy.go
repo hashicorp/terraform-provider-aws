@@ -256,6 +256,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 						"policy_language": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.PolicyLanguageValues](),
 						},
 						"policy_type": {
@@ -543,7 +544,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		ExecutionRoleArn: aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
-		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{})),
+		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{}), d.Get("default_policy").(string)),
 		State:            awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -585,9 +586,11 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrARN, out.Policy.PolicyArn)
 	d.Set(names.AttrDescription, out.Policy.Description)
 	d.Set(names.AttrExecutionRoleARN, out.Policy.ExecutionRoleArn)
-	d.Set("default_policy", out.Policy.DefaultPolicy)
 	d.Set(names.AttrState, out.Policy.State)
-	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails)); err != nil {
+	if aws.ToBool(out.Policy.DefaultPolicy) {
+		d.Set("default_policy", d.Get("default_policy").(string))
+	}
+	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails, aws.ToBool(out.Policy.DefaultPolicy))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
 	}
 
@@ -615,7 +618,7 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.State = awstypes.SettablePolicyStateValues(d.Get(names.AttrState).(string))
 		}
 		if d.HasChange("policy_details") {
-			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]interface{}))
+			input.PolicyDetails = expandPolicyDetails(d.Get("policy_details").([]interface{}), d.Get("default_policy").(string))
 		}
 
 		log.Printf("[INFO] Updating lifecycle policy %s", d.Id())
@@ -673,7 +676,7 @@ func findLifecyclePolicyByID(ctx context.Context, conn *dlm.Client, id string) (
 	return output, nil
 }
 
-func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
+func expandPolicyDetails(cfg []interface{}, defaultPolicyValue string) *awstypes.PolicyDetails {
 	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
@@ -683,29 +686,31 @@ func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
 	policyDetails := &awstypes.PolicyDetails{
 		PolicyType: awstypes.PolicyTypeValues(policyType),
 	}
-	if v, ok := m["copy_tags"].(bool); ok {
-		policyDetails.CopyTags = aws.Bool(v)
-	}
-	if v, ok := m["create_interval"].(int); ok {
-		policyDetails.CreateInterval = aws.Int32(int32(v))
-	}
-	if v, ok := m["extend_deletion"].(bool); ok {
-		policyDetails.ExtendDeletion = aws.Bool(v)
+	if defaultPolicyValue != "" {
+		if v, ok := m["copy_tags"].(bool); ok {
+			policyDetails.CopyTags = aws.Bool(v)
+		}
+		if v, ok := m["create_interval"].(int); ok {
+			policyDetails.CreateInterval = aws.Int32(int32(v))
+		}
+		if v, ok := m["extend_deletion"].(bool); ok {
+			policyDetails.ExtendDeletion = aws.Bool(v)
+		}
+		if v, ok := m["resource_type"].(string); ok {
+			policyDetails.ResourceType = awstypes.ResourceTypeValues(v)
+		}
+		if v, ok := m["retain_interval"].(int); ok {
+			policyDetails.RetainInterval = aws.Int32(int32(v))
+		}
 	}
 	if v, ok := m["policy_language"].(string); ok {
 		policyDetails.PolicyLanguage = awstypes.PolicyLanguageValues(v)
-	}
-	if v, ok := m["resource_type"].(string); ok {
-		policyDetails.ResourceType = awstypes.ResourceTypeValues(v)
 	}
 	if v, ok := m["resource_types"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.ResourceTypes = flex.ExpandStringyValueList[awstypes.ResourceTypeValues](v)
 	}
 	if v, ok := m["resource_locations"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.ResourceLocations = flex.ExpandStringyValueList[awstypes.ResourceLocationValues](v)
-	}
-	if v, ok := m["retain_interval"].(int); ok {
-		policyDetails.RetainInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m[names.AttrSchedule].([]interface{}); ok && len(v) > 0 {
 		policyDetails.Schedules = expandSchedules(v)
@@ -726,21 +731,24 @@ func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
 	return policyDetails
 }
 
-func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]interface{} {
+func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails, defaultPolicyValue bool) []map[string]interface{} {
 	result := make(map[string]interface{})
-	result["copy_tags"] = aws.ToBool(policyDetails.CopyTags)
-	result["create_interval"] = aws.ToInt32(policyDetails.CreateInterval)
-	result["extend_deletion"] = aws.ToBool(policyDetails.ExtendDeletion)
-	result["resource_type"] = string(policyDetails.ResourceType)
 	result["resource_types"] = flex.FlattenStringyValueList(policyDetails.ResourceTypes)
 	result["resource_locations"] = flex.FlattenStringyValueList(policyDetails.ResourceLocations)
-	result["retain_interval"] = aws.ToInt32(policyDetails.RetainInterval)
 	result[names.AttrAction] = flattenActions(policyDetails.Actions)
 	result["event_source"] = flattenEventSource(policyDetails.EventSource)
 	result[names.AttrSchedule] = flattenSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenTags(policyDetails.TargetTags)
 	result["policy_type"] = string(policyDetails.PolicyType)
 	result["policy_language"] = string(policyDetails.PolicyLanguage)
+
+	if defaultPolicyValue {
+	}
+	result["copy_tags"] = aws.ToBool(policyDetails.CopyTags)
+	result["create_interval"] = aws.ToInt32(policyDetails.CreateInterval)
+	result["extend_deletion"] = aws.ToBool(policyDetails.ExtendDeletion)
+	result["resource_type"] = string(policyDetails.ResourceType)
+	result["retain_interval"] = aws.ToInt32(policyDetails.RetainInterval)
 
 	if policyDetails.Parameters != nil {
 		result[names.AttrParameters] = flattenParameters(policyDetails.Parameters)
