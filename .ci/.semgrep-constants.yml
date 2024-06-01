@@ -85,6 +85,20 @@ rules:
     severity: ERROR
     fix: "names.AttrAction"
 
+  - id: literal-actions-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrActions` for the string literal "actions"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"actions"'
+      - pattern-not-regex: '"actions":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrActions"
+
   - id: literal-address-string-constant
     languages: [go]
     message: Use the constant `names.AttrAddress` for the string literal "address"
@@ -1526,6 +1540,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrLaunchTemplate"
+
+  - id: literal-location-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLocation` for the string literal "location"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"location"'
+      - pattern-not-regex: '"location":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrLocation"
 
   - id: literal-log_group_name-string-constant
     languages: [go]
