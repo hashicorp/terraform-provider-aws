@@ -240,7 +240,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 							Type:          schema.TypeInt,
 							Optional:      true,
 							Default:       7,
-							ValidateFunc:  validation.IntBetween(1, 7),
+							ValidateFunc:  validation.IntBetween(2, 14),
 							ConflictsWith: []string{"policy_details.0.schedule"},
 							RequiredWith:  []string{"default_policy"},
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
