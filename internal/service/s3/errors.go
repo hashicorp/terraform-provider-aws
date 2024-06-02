@@ -40,8 +40,10 @@ const (
 	errCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
-	// errCodeXNotImplemented is returned from third-party S3 API implementations.
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645.
+	// errCodeXNotImplemented, errCodeUnsupportedOperation are returned from third-party S3 API implementations.
+	// References:
+	//   https://github.com/hashicorp/terraform-provider-aws/issues/14645.
+	//   https://github.com/hashicorp/terraform-provider-aws/pull/37801.
 	errCodeXNotImplemented      = "XNotImplemented"
 	errCodeUnsupportedOperation = "UnsupportedOperation"
 )
