@@ -209,7 +209,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceTypeValues](),
@@ -712,7 +712,7 @@ func expandPolicyDetails(cfg []interface{}, defaultPolicyValue string) *awstypes
 		if v, ok := m["extend_deletion"].(bool); ok {
 			policyDetails.ExtendDeletion = aws.Bool(v)
 		}
-		if v, ok := m["resource_type"].(string); ok {
+		if v, ok := m[names.AttrResourceType].(string); ok {
 			policyDetails.ResourceType = awstypes.ResourceTypeValues(v)
 		}
 		if v, ok := m["retain_interval"].(int); ok {
@@ -761,7 +761,7 @@ func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]in
 	result["retain_interval"] = aws.ToInt32(policyDetails.RetainInterval)
 	result["copy_tags"] = aws.ToBool(policyDetails.CopyTags)
 	result["extend_deletion"] = aws.ToBool(policyDetails.ExtendDeletion)
-	result["resource_type"] = string(policyDetails.ResourceType)
+	result[names.AttrResourceType] = string(policyDetails.ResourceType)
 
 	if policyDetails.Parameters != nil {
 		result[names.AttrParameters] = flattenParameters(policyDetails.Parameters)
