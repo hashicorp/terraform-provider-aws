@@ -151,6 +151,14 @@ func resourceLifecyclePolicy() *schema.Resource {
 							ValidateFunc:  validation.IntBetween(1, 7),
 							ConflictsWith: []string{"policy_details.0.schedule"},
 							RequiredWith:  []string{"default_policy"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("default_policy").(string) == "" {
+									if old == "0" && new == "1" {
+										return true
+									}
+								}
+								return false
+							},
 						},
 						"extend_deletion": {
 							Type:          schema.TypeBool,
@@ -235,6 +243,14 @@ func resourceLifecyclePolicy() *schema.Resource {
 							ValidateFunc:  validation.IntBetween(1, 7),
 							ConflictsWith: []string{"policy_details.0.schedule"},
 							RequiredWith:  []string{"default_policy"},
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("default_policy").(string) == "" {
+									if old == "0" && new == "7" {
+										return true
+									}
+								}
+								return false
+							},
 						},
 						names.AttrParameters: {
 							Type:     schema.TypeList,
@@ -590,7 +606,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	if aws.ToBool(out.Policy.DefaultPolicy) {
 		d.Set("default_policy", d.Get("default_policy"))
 	}
-	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails, aws.ToBool(out.Policy.DefaultPolicy))); err != nil {
+	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
 	}
 
@@ -731,7 +747,7 @@ func expandPolicyDetails(cfg []interface{}, defaultPolicyValue string) *awstypes
 	return policyDetails
 }
 
-func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails, defaultPolicyValue bool) []map[string]interface{} {
+func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["resource_types"] = flex.FlattenStringyValueList(policyDetails.ResourceTypes)
 	result["resource_locations"] = flex.FlattenStringyValueList(policyDetails.ResourceLocations)
@@ -741,14 +757,8 @@ func flattenPolicyDetails(policyDetails *awstypes.PolicyDetails, defaultPolicyVa
 	result["target_tags"] = flattenTags(policyDetails.TargetTags)
 	result["policy_type"] = string(policyDetails.PolicyType)
 	result["policy_language"] = string(policyDetails.PolicyLanguage)
-
-	if defaultPolicyValue {
-		result["create_interval"] = aws.ToInt32(policyDetails.CreateInterval)
-		result["retain_interval"] = aws.ToInt32(policyDetails.RetainInterval)
-	} else {
-		result["create_interval"] = 0
-		result["retain_interval"] = 0
-	}
+	result["create_interval"] = aws.ToInt32(policyDetails.CreateInterval)
+	result["retain_interval"] = aws.ToInt32(policyDetails.RetainInterval)
 	result["copy_tags"] = aws.ToBool(policyDetails.CopyTags)
 	result["extend_deletion"] = aws.ToBool(policyDetails.ExtendDeletion)
 	result["resource_type"] = string(policyDetails.ResourceType)
