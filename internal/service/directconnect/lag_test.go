@@ -38,7 +38,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
-					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrConnectionID),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
@@ -55,7 +55,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
-					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrConnectionID),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
@@ -119,7 +119,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", connectionResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, connectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
@@ -135,7 +135,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"connection_id", names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrConnectionID, names.AttrForceDestroy},
 			},
 		},
 	})
@@ -158,7 +158,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
-					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrConnectionID),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),

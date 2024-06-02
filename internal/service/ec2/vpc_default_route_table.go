@@ -71,7 +71,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 						///
 						// Destinations.
 						///
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,

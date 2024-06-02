@@ -398,12 +398,12 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 						"transition.#":          acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
-						"days":          "30",
-						"storage_class": string(types.StorageClassStandardIa),
+						"days":                 "30",
+						names.AttrStorageClass: string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
-						"days":          "60",
-						"storage_class": string(types.StorageClassGlacier),
+						"days":                 "60",
+						names.AttrStorageClass: string(types.StorageClassGlacier),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:        "tmp",
@@ -505,12 +505,12 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 						"noncurrent_version_transition.#": acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
-						"noncurrent_days": "30",
-						"storage_class":   string(types.StorageClassStandardIa),
+						"noncurrent_days":      "30",
+						names.AttrStorageClass: string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
-						"noncurrent_days": "60",
-						"storage_class":   string(types.StorageClassGlacier),
+						"noncurrent_days":      "60",
+						names.AttrStorageClass: string(types.StorageClassGlacier),
 					}),
 				),
 			},
@@ -805,9 +805,9 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.0.transition.*", map[string]string{
-						"days":          acctest.Ct0,
-						"date":          "",
-						"storage_class": string(types.StorageClassIntelligentTiering),
+						"days":                 acctest.Ct0,
+						"date":                 "",
+						names.AttrStorageClass: string(types.StorageClassIntelligentTiering),
 					}),
 				),
 			},

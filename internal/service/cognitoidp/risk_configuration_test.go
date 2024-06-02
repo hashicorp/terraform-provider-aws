@@ -34,7 +34,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct0),
@@ -53,7 +53,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskExceptionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct0),
@@ -84,7 +84,7 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskExceptionClient(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClientID, "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct0),
@@ -118,7 +118,7 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_compromised(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.#", acctest.Ct1),

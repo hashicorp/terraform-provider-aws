@@ -427,7 +427,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMapping_virtualName(t *testing.T)
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"virtual_name": "ephemeral0",
+						names.AttrVirtualName: "ephemeral0",
 					}),
 				),
 			},

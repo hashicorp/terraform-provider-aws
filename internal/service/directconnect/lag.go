@@ -39,7 +39,7 @@ func ResourceLag() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -103,7 +103,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	var connectionIDSpecified bool
-	if v, ok := d.GetOk("connection_id"); ok {
+	if v, ok := d.GetOk(names.AttrConnectionID); ok {
 		connectionIDSpecified = true
 		input.ConnectionId = aws.String(v.(string))
 		input.NumberOfConnections = aws.Int64(1)
@@ -206,7 +206,7 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
-	} else if v, ok := d.GetOk("connection_id"); ok {
+	} else if v, ok := d.GetOk(names.AttrConnectionID); ok {
 		if err := deleteConnectionLAGAssociation(ctx, conn, v.(string), d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

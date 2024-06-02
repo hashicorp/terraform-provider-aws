@@ -34,6 +34,7 @@ const cevMutexKey = `aws_rds_custom_engine_version`
 
 // @SDKResource("aws_rds_custom_db_engine_version", name="Custom DB Engine Version")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceCustomDBEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomDBEngineVersionCreate,

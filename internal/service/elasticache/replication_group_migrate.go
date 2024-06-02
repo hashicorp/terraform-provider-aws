@@ -321,7 +321,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

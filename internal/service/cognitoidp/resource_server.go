@@ -65,7 +65,7 @@ func resourceResourceServer() *schema.Resource {
 					},
 				},
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -86,7 +86,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	identifier := d.Get(names.AttrIdentifier).(string)
-	userPoolID := d.Get("user_pool_id").(string)
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
 
 	params := &cognitoidentityprovider.CreateResourceServerInput{
 		Identifier: aws.String(identifier),
@@ -152,7 +152,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set(names.AttrIdentifier, resp.ResourceServer.Identifier)
 	d.Set(names.AttrName, resp.ResourceServer.Name)
-	d.Set("user_pool_id", resp.ResourceServer.UserPoolId)
+	d.Set(names.AttrUserPoolID, resp.ResourceServer.UserPoolId)
 
 	scopes := flattenServerScope(resp.ResourceServer.Scopes)
 	if err := d.Set(names.AttrScope, scopes); err != nil {
