@@ -42,7 +42,8 @@ const (
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
 	// errCodeXNotImplemented is returned from third-party S3 API implementations.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645.
-	errCodeXNotImplemented = "XNotImplemented"
+	errCodeXNotImplemented      = "XNotImplemented"
+	errCodeUnsupportedOperation = "UnsupportedOperation"
 )
 
 func errDirectoryBucket(err error) error {
