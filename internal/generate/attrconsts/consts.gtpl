@@ -4,28 +4,8 @@
 
 package names
 
-import (
-    "fmt"
-)
-
 const (
 {{- range .Constants }}
 	Attr{{ .Constant }} = "{{ .Literal }}"
 {{- end }}
 )
-
-// ConstOrQuote returns the constant name for the given attribute if it exists.
-// Otherwise, it returns the attribute quoted. This is intended for use in
-// generated code and templates.
-func ConstOrQuote(constant string) string {
-    allConstants := map[string]string{
-    {{- range .Constants }}
-        "{{ .Literal }}": "Attr{{ .Constant }}",
-    {{- end }}
-    }
-
-	if v, ok := allConstants[constant]; ok {
-		return fmt.Sprintf("names.%s", v)
-	}
-	return fmt.Sprintf("%q", constant)
-}

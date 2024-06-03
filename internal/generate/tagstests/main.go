@@ -26,8 +26,8 @@ import (
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 func main() {
@@ -411,7 +411,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ImportIgnore = strings.Split(attr, ";")
 
 					for i, val := range d.ImportIgnore {
-						d.ImportIgnore[i] = names.ConstOrQuote(val)
+						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
 					}
 				}
 				if attr, ok := args.Keyword["importStateId"]; ok {
