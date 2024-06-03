@@ -59,7 +59,7 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_bgpAsnExtended(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
-	rBgpAsn := sdkacctest.RandIntRange(2147483648, 4294967295)
+	rBgpAsnExtended := sdkacctest.RandIntRange(2147483648, 4294967295)
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -69,11 +69,11 @@ func TestAccSiteVPNCustomerGateway_bgpAsnExtended(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_bgpAsnExtended(rBgpAsn),
+				Config: testAccSiteVPNCustomerGatewayConfig_bgpAsnExtended(rBgpAsnExtended),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bgp_asn_extended", rBgpAsn),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn_extended", rBgpAsnExtended),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "172.0.0.1"),
@@ -332,14 +332,14 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_bgpAsnExtended(rBgpAsn int) string {
+func testAccSiteVPNCustomerGatewayConfig_bgpAsnExtended(rBgpAsnExtended int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn_extended = %[1]d
   ip_address       = "172.0.0.1"
   type             = "ipsec.1"
 }
-`, rBgpAsn)
+`, rBgpAsnExtended)
 }
 
 func testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn int, tagKey1, tagValue1 string) string {
