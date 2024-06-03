@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 {{ define "tags" }}
-{{ if eq . "tags" }}
+{{ if or (eq . "tags") (eq . "tags_ignore") }}
   tags = var.resource_tags
 {{- else if eq . "tagsComputed1" }}
   tags = {
@@ -20,6 +20,16 @@
 provider "aws" {
   default_tags {
     tags = var.provider_tags
+  }
+}
+
+{{ else if eq .Tags "tags_ignore" -}}
+provider "aws" {
+  default_tags {
+    tags = var.provider_tags
+  }
+  ignore_tags {
+    keys = var.ignore_tag_keys
   }
 }
 
@@ -59,7 +69,7 @@ variable "{{ . }}" {
 }
 
 {{ end -}}
-{{ if eq .Tags "tags" -}}
+{{ if or (eq .Tags "tags") (eq .Tags "tags_ignore") -}}
 variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"
   # Not setting a default, so that this must explicitly be set to `null` to specify no tags
@@ -90,6 +100,17 @@ variable "knownTagValue" {
 {{ if .WithDefaultTags }}
 variable "provider_tags" {
   type     = map(string)
+  nullable = false
+}
+{{ else if eq .Tags "tags_ignore" }}
+variable "provider_tags" {
+  type     = map(string)
+  nullable = true
+  default  = null
+}
+
+variable "ignore_tag_keys" {
+  type     = set(string)
   nullable = false
 }
 {{ end -}}

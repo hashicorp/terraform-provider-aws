@@ -153,6 +153,7 @@ func main() {
 			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tags_ignore", false, configTmplFile, configTmpl, common)
 		}
 	}
 
