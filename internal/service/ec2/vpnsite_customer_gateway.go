@@ -115,7 +115,8 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.BgpAsnExtended = aws.Int64(int64(v.(int)))
+
+		input.BgpAsnExtended = aws.Int64(int64(v))
 	}
 
 	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
