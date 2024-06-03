@@ -36,7 +36,7 @@ type TemplateData struct {
 func main() {
 	const (
 		constsFilename        = "../../../internal/acctest/consts_gen.go"
-		constsOrQuoteFilename = "../../../internal/acctest/const/consts_or_quote_gen.go"
+		constsOrQuoteFilename = "../../../internal/acctest/generate/consts_or_quote_gen.go"
 		semgrepFilename       = "../../../.ci/.semgrep-test-constants.yml"
 		constantDataFile      = "../../../internal/acctest/consts.csv"
 	)

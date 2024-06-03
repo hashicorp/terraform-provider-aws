@@ -23,7 +23,7 @@ import (
 	"text/template"
 
 	"github.com/dlclark/regexp2"
-	acctestconsts "github.com/hashicorp/terraform-provider-aws/internal/acctest/const"
+	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -244,7 +244,7 @@ type ResourceDatum struct {
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
-		return acctestconsts.ConstOrQuote(k)
+		return acctestgen.ConstOrQuote(k)
 	})
 }
 
