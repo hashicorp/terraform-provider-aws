@@ -37,9 +37,9 @@ func TestAccGluePartitionIndex_basic(t *testing.T) {
 					testAccCheckPartitionIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTableName, "aws_glue_catalog_table.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, "aws_glue_catalog_database.test", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "partition_index.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "partition_index.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "partition_index.0.keys.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "partition_index.0.keys.#", acctest.Ct2),
 				),
 			},
 			{

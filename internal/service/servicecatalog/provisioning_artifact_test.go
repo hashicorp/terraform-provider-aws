@@ -40,9 +40,9 @@ func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisioningArtifactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
@@ -109,7 +109,7 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisioningArtifactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
@@ -119,7 +119,7 @@ func TestAccServiceCatalogProvisioningArtifact_update(t *testing.T) {
 				Config: testAccProvisioningArtifactConfig_update(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "accept_language", "jp"),
-					resource.TestCheckResourceAttr(resourceName, "active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, fmt.Sprintf("%s-3", rName)),
 					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDeprecated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-3", rName)),
@@ -157,9 +157,9 @@ func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisioningArtifactExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_template_validation", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),

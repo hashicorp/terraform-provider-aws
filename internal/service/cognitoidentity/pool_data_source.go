@@ -47,7 +47,7 @@ func dataSourcePool() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"provider_name": {
+						names.AttrProviderName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

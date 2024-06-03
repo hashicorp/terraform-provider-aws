@@ -57,7 +57,7 @@ func resourceGroupV0() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

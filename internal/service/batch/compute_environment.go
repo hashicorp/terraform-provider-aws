@@ -226,7 +226,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -245,7 +245,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -289,7 +289,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	computeEnvironmentType := d.Get(names.AttrType).(string)
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
-		ServiceRole:            aws.String(d.Get("service_role").(string)),
+		ServiceRole:            aws.String(d.Get(names.AttrServiceRole).(string)),
 		Tags:                   getTagsIn(ctx),
 		Type:                   aws.String(computeEnvironmentType),
 	}
@@ -374,10 +374,10 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("eks_configuration", nil)
 	}
-	d.Set("service_role", computeEnvironment.ServiceRole)
+	d.Set(names.AttrServiceRole, computeEnvironment.ServiceRole)
 	d.Set(names.AttrState, computeEnvironment.State)
 	d.Set(names.AttrStatus, computeEnvironment.Status)
-	d.Set("status_reason", computeEnvironment.StatusReason)
+	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironmentType)
 
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
@@ -398,8 +398,8 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 			ComputeEnvironment: aws.String(d.Id()),
 		}
 
-		if d.HasChange("service_role") {
-			input.ServiceRole = aws.String(d.Get("service_role").(string))
+		if d.HasChange(names.AttrServiceRole) {
+			input.ServiceRole = aws.String(d.Get(names.AttrServiceRole).(string))
 		}
 
 		if d.HasChange(names.AttrState) {
@@ -833,13 +833,13 @@ func isUpdatableComputeEnvironment(diff *schema.ResourceDiff) bool {
 
 func isServiceLinkedRoleDiff(diff *schema.ResourceDiff) bool {
 	var before, after string
-	if diff.HasChange("service_role") {
-		beforeRaw, afterRaw := diff.GetChange("service_role")
+	if diff.HasChange(names.AttrServiceRole) {
+		beforeRaw, afterRaw := diff.GetChange(names.AttrServiceRole)
 		before, _ = beforeRaw.(string)
 		after, _ := afterRaw.(string)
 		return isServiceLinkedRole(before) && isServiceLinkedRole(after)
 	}
-	afterRaw, _ := diff.GetOk("service_role")
+	afterRaw, _ := diff.GetOk(names.AttrServiceRole)
 	after, _ = afterRaw.(string)
 	return isServiceLinkedRole(after)
 }

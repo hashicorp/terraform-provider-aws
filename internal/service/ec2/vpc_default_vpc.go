@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -59,7 +60,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"ipv6_ipam_pool_id"},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

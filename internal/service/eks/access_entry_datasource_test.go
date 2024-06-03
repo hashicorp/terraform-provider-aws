@@ -32,7 +32,7 @@ func TestAccEKSAccessEntryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedAt, dataSourceResourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_groups.#", dataSourceResourceName, "kubernetes_groups.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", dataSourceResourceName, "principal_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceResourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, dataSourceResourceName, names.AttrUserName),
 				),

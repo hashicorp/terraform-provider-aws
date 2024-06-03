@@ -88,13 +88,13 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -143,7 +143,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -253,7 +253,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -558,11 +558,11 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
@@ -588,7 +588,7 @@ func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{
 		apiObject.NoDevice = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
@@ -612,7 +612,7 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
@@ -681,7 +681,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 			}
 
 			if v := v.Throughput; v != nil {
-				tfMap["throughput"] = aws.ToInt32(v)
+				tfMap[names.AttrThroughput] = aws.ToInt32(v)
 			}
 
 			if v := v.VolumeSize; v != nil {
@@ -704,7 +704,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 		}
 
 		if v := apiObject.VirtualName; v != nil {
-			tfMap["virtual_name"] = aws.ToString(v)
+			tfMap[names.AttrVirtualName] = aws.ToString(v)
 
 			tfListEphemeralBlockDevice = append(tfListEphemeralBlockDevice, tfMap)
 
@@ -717,7 +717,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 
 		if v := apiObject.Ebs; v != nil {
 			if v := v.SnapshotId; v != nil {
-				tfMap["snapshot_id"] = aws.ToString(v)
+				tfMap[names.AttrSnapshotID] = aws.ToString(v)
 			}
 		}
 

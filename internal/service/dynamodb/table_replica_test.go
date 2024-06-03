@@ -38,7 +38,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 				Config: testAccTableReplicaConfig_pitr(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Config: testAccTableReplicaConfig_pitrKMS(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Config: testAccTableReplicaConfig_pitrKMS(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
 			},
@@ -143,7 +143,7 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 				Config: testAccTableReplicaConfig_pitrKMS(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.alternate", names.AttrARN),
 				),
 			},
@@ -175,24 +175,24 @@ func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
 				Config: testAccTableReplicaConfig_pitrDefault(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
 			},
 			{
 				Config: testAccTableReplicaConfig_pitrDefault(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
 			},
 			{
 				Config: testAccTableReplicaConfig_pitrDefault(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
 			},
 			{
@@ -223,7 +223,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.tape", "Valladolid"),
 				),
 			},
@@ -236,7 +236,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.arise", "Melandru"),
 					resource.TestCheckResourceAttr(resourceName, "tags.brightest", "Lights"),
 					resource.TestCheckResourceAttr(resourceName, "tags.shooting", "Stars"),
@@ -253,7 +253,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},

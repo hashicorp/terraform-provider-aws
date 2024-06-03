@@ -72,7 +72,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	})
 
 	if err != nil {
-		return diag.Errorf("creating WAF Regional WebACL Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Regional WebACL Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -86,7 +86,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 	_, resourceARN, err := webACLAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
@@ -94,11 +94,11 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Regional WebACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF Regional WebACL Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional WebACL Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrResourceARN, resourceARN)
@@ -113,7 +113,7 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 
 	_, resourceARN, err := webACLAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DisassociateWebACL(ctx, &wafregional.DisassociateWebACLInput{
@@ -156,20 +156,20 @@ func findWebACLByResourceARN(ctx context.Context, conn *wafregional.Client, arn 
 	return output.WebACLSummary, nil
 }
 
-const webACLAssociationIDSeparator = ":"
+const webACLAssociationResourceIDSeparator = ":"
 
 func webACLAssociationCreateResourceID(webACLID, resourceARN string) string {
 	parts := []string{webACLID, resourceARN}
-	id := strings.Join(parts, webACLAssociationIDSeparator)
+	id := strings.Join(parts, webACLAssociationResourceIDSeparator)
 
 	return id
 }
 
 func webACLAssociationParseResourceID(id string) (string, string, error) { //nolint:unparam
-	parts := strings.SplitN(id, webACLAssociationIDSeparator, 2)
+	parts := strings.SplitN(id, webACLAssociationResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected WEB-ACL-ID[2]sRESOURCE-ARN", id, webACLAssociationIDSeparator)
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected WEB-ACL-ID%[2]sRESOURCE-ARN", id, webACLAssociationResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil

@@ -10,7 +10,7 @@ import (
 
 const (
 {{- range .Constants }}
-	Ct{{ .Constant }} = "{{ .ConstantLower }}"
+	Ct{{ .Constant }} = "{{ .Literal }}"
 {{- end }}
 )
 
@@ -20,7 +20,7 @@ const (
 func ConstOrQuote(constant string) string {
     allConstants := map[string]string{
     {{- range .Constants }}
-        "{{ .ConstantLower }}": "Ct{{ .Constant }}",
+        "{{ .Literal }}": "Ct{{ .Constant }}",
     {{- end }}
     }
 

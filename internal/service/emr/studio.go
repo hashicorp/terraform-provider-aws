@@ -78,7 +78,7 @@ func resourceStudio() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -126,7 +126,7 @@ func resourceStudioCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		DefaultS3Location:        aws.String(d.Get("default_s3_location").(string)),
 		EngineSecurityGroupId:    aws.String(d.Get("engine_security_group_id").(string)),
 		Name:                     aws.String(d.Get(names.AttrName).(string)),
-		ServiceRole:              aws.String(d.Get("service_role").(string)),
+		ServiceRole:              aws.String(d.Get(names.AttrServiceRole).(string)),
 		SubnetIds:                flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                     getTagsIn(ctx),
 		VpcId:                    aws.String(d.Get(names.AttrVPCID).(string)),
@@ -235,7 +235,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("idp_auth_url", studio.IdpAuthUrl)
 	d.Set("idp_relay_state_parameter_name", studio.IdpRelayStateParameterName)
 	d.Set(names.AttrName, studio.Name)
-	d.Set("service_role", studio.ServiceRole)
+	d.Set(names.AttrServiceRole, studio.ServiceRole)
 	d.Set(names.AttrURL, studio.Url)
 	d.Set("user_role", studio.UserRole)
 	d.Set(names.AttrVPCID, studio.VpcId)

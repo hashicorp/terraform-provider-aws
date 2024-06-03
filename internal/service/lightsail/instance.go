@@ -28,7 +28,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_instance", name="Instance")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Instance")
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceCreate,

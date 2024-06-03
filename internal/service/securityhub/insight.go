@@ -45,7 +45,7 @@ func resourceInsight() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"aws_account_id":                              stringFilterSchema(),
+						names.AttrAWSAccountID:                        stringFilterSchema(),
 						"company_name":                                stringFilterSchema(),
 						"compliance_status":                           stringFilterSchema(),
 						"confidence":                                  numberFilterSchema(),
@@ -117,7 +117,7 @@ func resourceInsight() *schema.Resource {
 						names.AttrResourceID:                                 stringFilterSchema(),
 						"resource_partition":                                 stringFilterSchema(),
 						"resource_region":                                    stringFilterSchema(),
-						"resource_tags":                                      mapFilterSchema(),
+						names.AttrResourceTags:                               mapFilterSchema(),
 						names.AttrResourceType:                               stringFilterSchema(),
 						"severity_label":                                     stringFilterSchema(),
 						"source_url":                                         stringFilterSchema(),
@@ -506,7 +506,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 
 	filters := &types.AwsSecurityFindingFilters{}
 
-	if v, ok := tfMap["aws_account_id"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrAWSAccountID].(*schema.Set); ok && v.Len() > 0 {
 		filters.AwsAccountId = expandStringFilters(v.List())
 	}
 
@@ -794,7 +794,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceRegion = expandStringFilters(v.List())
 	}
 
-	if v, ok := tfMap["resource_tags"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResourceTags].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceTags = expandMapFilters(v.List())
 	}
 
@@ -1138,7 +1138,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 	}
 
 	m := map[string]interface{}{
-		"aws_account_id":                              flattenStringFilters(filters.AwsAccountId),
+		names.AttrAWSAccountID:                        flattenStringFilters(filters.AwsAccountId),
 		"company_name":                                flattenStringFilters(filters.CompanyName),
 		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
 		"confidence":                                  flattenNumberFilters(filters.Confidence),
@@ -1210,7 +1210,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		names.AttrResourceID:                                 flattenStringFilters(filters.ResourceId),
 		"resource_partition":                                 flattenStringFilters(filters.ResourcePartition),
 		"resource_region":                                    flattenStringFilters(filters.ResourceRegion),
-		"resource_tags":                                      flattenMapFilters(filters.ResourceTags),
+		names.AttrResourceTags:                               flattenMapFilters(filters.ResourceTags),
 		names.AttrResourceType:                               flattenStringFilters(filters.ResourceType),
 		"severity_label":                                     flattenStringFilters(filters.SeverityLabel),
 		"source_url":                                         flattenStringFilters(filters.ThreatIntelIndicatorSourceUrl),

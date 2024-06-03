@@ -76,7 +76,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -85,7 +85,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},
@@ -108,7 +108,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "role_mapping.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "roles.authenticated"),
 				),
 			},

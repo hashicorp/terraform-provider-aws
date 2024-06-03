@@ -36,17 +36,17 @@ func TestAccKMSReplicaExternalKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "expiration_model", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "key_material_base64"),
 					resource.TestCheckResourceAttr(resourceName, "key_state", "PendingImport"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_key_arn", primaryKeyResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "valid_to", ""),
 				),
 			},
@@ -87,7 +87,7 @@ func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -113,7 +113,7 @@ func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName4),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
@@ -141,7 +141,7 @@ func TestAccKMSReplicaExternalKey_policy(t *testing.T) {
 				Config: testAccReplicaExternalKeyConfig_policy(rName, policy1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 					testAccCheckKeyHasPolicy(ctx, resourceName, policy1),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccKMSReplicaExternalKey_policy(t *testing.T) {
 				Config: testAccReplicaExternalKeyConfig_policy(rName, policy2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 					testAccCheckExternalKeyHasPolicy(ctx, resourceName, policy2),
 				),
 			},
@@ -183,11 +183,11 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicaExternalKeyConfig_tags1(rName, "key1", "value1"),
+				Config: testAccReplicaExternalKeyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -201,27 +201,27 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccReplicaExternalKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccReplicaExternalKeyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccReplicaExternalKeyConfig_tags1(rName, "key2", "value2"),
+				Config: testAccReplicaExternalKeyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccReplicaExternalKeyConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{

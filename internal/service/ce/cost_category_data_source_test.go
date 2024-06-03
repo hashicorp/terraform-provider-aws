@@ -34,7 +34,7 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule_version", resourceName, "rule_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule.%", resourceName, "rule.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

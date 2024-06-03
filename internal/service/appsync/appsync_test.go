@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppSync_serial(t *testing.T) {
@@ -16,17 +15,17 @@ func TestAccAppSync_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"APIKey": {
-			"basic":               testAccAPIKey_basic,
-			names.AttrDescription: testAccAPIKey_description,
-			"expires":             testAccAPIKey_expires,
+			acctest.CtBasic: testAccAPIKey_basic,
+			"description":   testAccAPIKey_description,
+			"expires":       testAccAPIKey_expires,
 		},
 		"DataSource": {
-			"basic":                         testAccDataSource_basic,
-			names.AttrDescription:           testAccDataSource_description,
+			acctest.CtBasic:                 testAccDataSource_basic,
+			"description":                   testAccDataSource_description,
 			"DynamoDB_region":               testAccDataSource_DynamoDB_region,
 			"DynamoDB_useCallerCredentials": testAccDataSource_DynamoDB_useCallerCredentials,
 			"HTTP_endpoint":                 testAccDataSource_HTTP_endpoint,
-			names.AttrType:                  testAccDataSource_type,
+			"type":                          testAccDataSource_type,
 			"Type_dynamoDB":                 testAccDataSource_Type_dynamoDB,
 			"Type_http":                     testAccDataSource_Type_http,
 			"Type_http_auth":                testAccDataSource_Type_httpAuth,
@@ -37,10 +36,10 @@ func TestAccAppSync_serial(t *testing.T) {
 			"Type_eventBridge":              testAccDataSource_Type_eventBridge,
 		},
 		"GraphQLAPI": {
-			"basic":                     testAccGraphQLAPI_basic,
-			"disappears":                testAccGraphQLAPI_disappears,
-			names.AttrTags:              testAccGraphQLAPI_tags,
-			names.AttrSchema:            testAccGraphQLAPI_schema,
+			acctest.CtBasic:             testAccGraphQLAPI_basic,
+			acctest.CtDisappears:        testAccGraphQLAPI_disappears,
+			"tags":                      testAccGraphQLAPI_tags,
+			"schema":                    testAccGraphQLAPI_schema,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
 			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
 			"AuthenticationType_awsIAM": testAccGraphQLAPI_AuthenticationType_iam,
@@ -54,7 +53,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"OpenIDConnect_clientID":                              testAccGraphQLAPI_OpenIDConnect_clientID,
 			"OpenIDConnect_iatTTL":                                testAccGraphQLAPI_OpenIDConnect_iatTTL,
 			"OpenIDConnect_issuer":                                testAccGraphQLAPI_OpenIDConnect_issuer,
-			names.AttrName:                                        testAccGraphQLAPI_name,
+			acctest.CtName:                                        testAccGraphQLAPI_name,
 			"UserPool_awsRegion":                                  testAccGraphQLAPI_UserPool_region,
 			"UserPool_defaultAction":                              testAccGraphQLAPI_UserPool_defaultAction,
 			"LambdaAuthorizerConfig_authorizerUri":                testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI,
@@ -73,42 +72,42 @@ func TestAccAppSync_serial(t *testing.T) {
 			"resolverCountLimit":                                  testAccGraphQLAPI_resolverCountLimit,
 		},
 		"Function": {
-			"basic":                   testAccFunction_basic,
+			acctest.CtBasic:           testAccFunction_basic,
 			"code":                    testAccFunction_code,
-			"disappears":              testAccFunction_disappears,
-			names.AttrDescription:     testAccFunction_description,
+			acctest.CtDisappears:      testAccFunction_disappears,
+			"description":             testAccFunction_description,
 			"responseMappingTemplate": testAccFunction_responseMappingTemplate,
 			"sync":                    testAccFunction_syncConfig,
 		},
 		"Resolver": {
-			"basic":             testAccResolver_basic,
-			"code":              testAccResolver_code,
-			"disappears":        testAccResolver_disappears,
-			"dataSource":        testAccResolver_dataSource,
-			"DataSource_lambda": testAccResolver_DataSource_lambda,
-			"requestTemplate":   testAccResolver_requestTemplate,
-			"responseTemplate":  testAccResolver_responseTemplate,
-			"multipleResolvers": testAccResolver_multipleResolvers,
-			"pipeline":          testAccResolver_pipeline,
-			"caching":           testAccResolver_caching,
-			"sync":              testAccResolver_syncConfig,
+			acctest.CtBasic:      testAccResolver_basic,
+			"code":               testAccResolver_code,
+			acctest.CtDisappears: testAccResolver_disappears,
+			"dataSource":         testAccResolver_dataSource,
+			"DataSource_lambda":  testAccResolver_DataSource_lambda,
+			"requestTemplate":    testAccResolver_requestTemplate,
+			"responseTemplate":   testAccResolver_responseTemplate,
+			"multipleResolvers":  testAccResolver_multipleResolvers,
+			"pipeline":           testAccResolver_pipeline,
+			"caching":            testAccResolver_caching,
+			"sync":               testAccResolver_syncConfig,
 		},
 		"ApiCache": {
-			"basic":      testAccAPICache_basic,
-			"disappears": testAccAPICache_disappears,
+			acctest.CtBasic:      testAccAPICache_basic,
+			acctest.CtDisappears: testAccAPICache_disappears,
 		},
 		"Type": {
-			"basic":      testAccType_basic,
-			"disappears": testAccType_disappears,
+			acctest.CtBasic:      testAccType_basic,
+			acctest.CtDisappears: testAccType_disappears,
 		},
 		"DomainName": {
-			"basic":               testAccDomainName_basic,
-			"disappears":          testAccDomainName_disappears,
-			names.AttrDescription: testAccDomainName_description,
+			acctest.CtBasic:      testAccDomainName_basic,
+			acctest.CtDisappears: testAccDomainName_disappears,
+			"description":        testAccDomainName_description,
 		},
 		"DomainNameAssociation": {
-			"basic":      testAccDomainNameAPIAssociation_basic,
-			"disappears": testAccDomainNameAPIAssociation_disappears,
+			acctest.CtBasic:      testAccDomainNameAPIAssociation_basic,
+			acctest.CtDisappears: testAccDomainNameAPIAssociation_disappears,
 		},
 	}
 

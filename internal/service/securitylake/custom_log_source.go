@@ -151,7 +151,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"external_id": schema.StringAttribute{
+									names.AttrExternalID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),

@@ -49,7 +49,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"application_id": {
+						names.AttrApplicationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -57,7 +57,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"external_id": {
+						names.AttrExternalID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -168,7 +168,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 					},
 				},
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -190,13 +190,13 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	clientId := d.Get(names.AttrClientID).(string)
 	d.SetId(clientId)
 
-	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
+	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get(names.AttrUserPoolID).(string), d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientId, err)
 	}
 
-	d.Set("user_pool_id", userPoolClient.UserPoolId)
+	d.Set(names.AttrUserPoolID, userPoolClient.UserPoolId)
 	d.Set(names.AttrName, userPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
 	d.Set("read_attributes", flex.FlattenStringSet(userPoolClient.ReadAttributes))
@@ -237,7 +237,7 @@ func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovid
 	}
 
 	if analyticsConfig.ExternalId != nil {
-		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
+		m[names.AttrExternalID] = aws.StringValue(analyticsConfig.ExternalId)
 	}
 
 	if analyticsConfig.RoleArn != nil {
@@ -245,7 +245,7 @@ func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovid
 	}
 
 	if analyticsConfig.ApplicationId != nil {
-		m["application_id"] = aws.StringValue(analyticsConfig.ApplicationId)
+		m[names.AttrApplicationID] = aws.StringValue(analyticsConfig.ApplicationId)
 	}
 
 	if analyticsConfig.ApplicationArn != nil {

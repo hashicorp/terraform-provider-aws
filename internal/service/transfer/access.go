@@ -34,7 +34,7 @@ func ResourceAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"external_id": {
+			names.AttrExternalID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -130,7 +130,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	externalID := d.Get("external_id").(string)
+	externalID := d.Get(names.AttrExternalID).(string)
 	serverID := d.Get("server_id").(string)
 	id := AccessCreateResourceID(serverID, externalID)
 	input := &transfer.CreateAccessInput{
@@ -201,7 +201,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set("external_id", access.ExternalId)
+	d.Set(names.AttrExternalID, access.ExternalId)
 	d.Set("home_directory", access.HomeDirectory)
 	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)

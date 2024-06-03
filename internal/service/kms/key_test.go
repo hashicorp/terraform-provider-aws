@@ -40,8 +40,8 @@ func TestAccKMSKey_basic(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func TestAccKMSKey_multiRegion(t *testing.T) {
 				Config: testAccKeyConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtTrue),
 				),
 			},
 			{
@@ -218,7 +218,7 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 			{
@@ -247,14 +247,14 @@ func TestAccKMSKey_Policy_bypassUpdate(t *testing.T) {
 				Config: testAccKeyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 		},
@@ -428,8 +428,8 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 			{
@@ -442,16 +442,16 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Config: testAccKeyConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 		},
@@ -474,8 +474,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 			{
@@ -488,8 +488,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotationPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
 				),
 			},
@@ -497,8 +497,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
 				),
 			},
@@ -519,11 +519,11 @@ func TestAccKMSKey_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyConfig_tags1(rName, "key1", "value1"),
+				Config: testAccKeyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -533,27 +533,27 @@ func TestAccKMSKey_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"deletion_window_in_days", "bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccKeyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKeyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccKeyConfig_tags1(rName, "key2", "value2"),
+				Config: testAccKeyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccKeyConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -580,27 +580,27 @@ func TestAccKMSKey_ignoreTags(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccKeyConfig_ignoreTags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			// Add an ignored tag.
 			{
-				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccKeyConfig_ignoreTags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyAddTag(ctx, &key, "ignkey1", "ignvalue1"),
 				),
 			},
 			{
-				Config: testAccKeyConfig_ignoreTags(rName, "key1", "value1updated", "key3", "value3"),
+				Config: testAccKeyConfig_ignoreTags(rName, acctest.CtKey1, acctest.CtValue1Updated, "key3", "value3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags.key3", "value3"),
 				),
 			},
@@ -622,21 +622,21 @@ func TestAccKMSKey_updateTagsEmptyValue(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccKeyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccKeyConfig_tags2(rName, "key1", "value1", "key2", ""),
+				Config: testAccKeyConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 		},
@@ -712,7 +712,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *awstypes.KeyMe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
-		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.KMSPropagationTimeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 		})
 

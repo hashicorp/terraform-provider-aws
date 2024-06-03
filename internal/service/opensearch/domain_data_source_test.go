@@ -31,7 +31,7 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 			{
 				Config: testAccDomainDataSourceConfig_basic(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "processing", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEngineVersion, resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.desired_state", resourceName, "auto_tune_options.0.desired_state"),

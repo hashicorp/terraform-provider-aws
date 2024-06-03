@@ -40,7 +40,7 @@ func testAccAccess_s3_basic(t *testing.T) {
 				Config: testAccAccessConfig_s3Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
@@ -56,7 +56,7 @@ func testAccAccess_s3_basic(t *testing.T) {
 				Config: testAccAccessConfig_s3Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/test"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 				),
@@ -86,7 +86,7 @@ func testAccAccess_efs_basic(t *testing.T) {
 				Config: testAccAccessConfig_efsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
@@ -102,7 +102,7 @@ func testAccAccess_efs_basic(t *testing.T) {
 				Config: testAccAccessConfig_efsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),

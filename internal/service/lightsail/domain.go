@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -79,6 +81,10 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	_, err := conn.DeleteDomain(ctx, &lightsail.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Domain (%s):%s", d.Id(), err)

@@ -37,7 +37,7 @@ func isDirectoryBucket(bucket string) bool {
 	return bucketNameTypeFor(bucket) == bucketNameTypeDirectoryBucket
 }
 
-// @FrameworkResource(name="Directory Bucket")
+// @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 

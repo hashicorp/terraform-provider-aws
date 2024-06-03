@@ -180,7 +180,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"external_id": schema.StringAttribute{
+						names.AttrExternalID: schema.StringAttribute{
 							Required: true,
 						},
 						names.AttrPrincipal: schema.StringAttribute{

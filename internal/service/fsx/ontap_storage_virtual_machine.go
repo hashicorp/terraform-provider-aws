@@ -135,7 +135,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"ip_addresses": {
+									names.AttrIPAddresses: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -152,7 +152,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"ip_addresses": {
+									names.AttrIPAddresses: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -169,7 +169,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"ip_addresses": {
+									names.AttrIPAddresses: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -186,7 +186,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"ip_addresses": {
+									names.AttrIPAddresses: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -567,7 +567,7 @@ func flattenSvmEndpoint(rs *fsx.SvmEndpoint) []interface{} {
 		m[names.AttrDNSName] = aws.StringValue(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
-		m["ip_addresses"] = flex.FlattenStringSet(rs.IpAddresses)
+		m[names.AttrIPAddresses] = flex.FlattenStringSet(rs.IpAddresses)
 	}
 
 	return []interface{}{m}

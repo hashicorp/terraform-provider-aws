@@ -282,7 +282,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"propagate_tags": {
+						names.AttrPropagateTags: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -1343,7 +1343,7 @@ func updateReplicaTags(ctx context.Context, conn *dynamodb.Client, rn string, re
 			continue
 		}
 
-		if v, ok := tfMap["propagate_tags"].(bool); ok && v {
+		if v, ok := tfMap[names.AttrPropagateTags].(bool); ok && v {
 			optFn := func(o *dynamodb.Options) {
 				o.Region = region
 			}
@@ -1850,12 +1850,12 @@ func addReplicaTagPropagates(configReplicas *schema.Set, replicas []interface{})
 				continue
 			}
 
-			if v, ok := configReplica["propagate_tags"].(bool); ok && v {
+			if v, ok := configReplica[names.AttrPropagateTags].(bool); ok && v {
 				prop = true
 				break
 			}
 		}
-		replica["propagate_tags"] = prop
+		replica[names.AttrPropagateTags] = prop
 		replicas[i] = replica
 	}
 

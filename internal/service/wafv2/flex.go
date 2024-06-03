@@ -4,6 +4,8 @@
 package wafv2
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/aws-sdk-go/service/wafv2"
@@ -115,11 +117,14 @@ func expandAssociationConfig(l []interface{}) *awstypes.AssociationConfig {
 		m = inner[0].(map[string]interface{})
 		if len(m) > 0 {
 			configuration.RequestBody = make(map[string]awstypes.RequestBodyAssociatedResourceTypeConfig)
-		}
-
-		if v, ok := m["cloudfront"]; ok {
-			inner = v.([]interface{})
-			configuration.RequestBody[wafv2.AssociatedResourceTypeCloudfront] = expandRequestBodyConfigItem(inner)
+			for _, resourceType := range wafv2.AssociatedResourceType_Values() {
+				if v, ok := m[strings.ToLower(resourceType)]; ok {
+					m := v.([]interface{})
+					if len(m) > 0 {
+						configuration.RequestBody[resourceType] = expandRequestBodyConfigItem(m)
+					}
+				}
+			}
 		}
 	}
 
@@ -1378,7 +1383,7 @@ func expandResponseInspection(tfList []interface{}) *awstypes.ResponseInspection
 	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
 		out.Json = expandResponseInspectionJSON(v)
 	}
-	if v, ok := m["status_code"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrStatusCode].([]interface{}); ok && len(v) > 0 {
 		out.StatusCode = expandStatusCode(v)
 	}
 
@@ -1765,13 +1770,18 @@ func flattenAssociationConfig(config *awstypes.AssociationConfig) interface{} {
 		return associationConfig
 	}
 
-	cloudfrontRequestBodyConfig := config.RequestBody[wafv2.AssociatedResourceTypeCloudfront]
+	requestBodyConfig := map[string]interface{}{}
+	for _, resourceType := range wafv2.AssociatedResourceType_Values() {
+		if requestBodyAssociatedResourceTypeConfig, ok := config.RequestBody[resourceType]; ok {
+			requestBodyConfig[strings.ToLower(resourceType)] = []map[string]interface{}{{
+				"default_size_inspection_limit": string(requestBodyAssociatedResourceTypeConfig.DefaultSizeInspectionLimit),
+			}}
+		}
+	}
 	associationConfig = append(associationConfig, map[string]interface{}{
-		"request_body": []map[string]interface{}{{
-			"cloudfront": []map[string]interface{}{{
-				"default_size_inspection_limit": string(cloudfrontRequestBodyConfig.DefaultSizeInspectionLimit),
-			}},
-		}},
+		"request_body": []map[string]interface{}{
+			requestBodyConfig,
+		},
 	})
 
 	return associationConfig
@@ -2774,7 +2784,7 @@ func flattenResponseInspection(apiObject *awstypes.ResponseInspection) []interfa
 		m[names.AttrJSON] = flattenResponseInspectionJSON(apiObject.Json)
 	}
 	if apiObject.StatusCode != nil {
-		m["status_code"] = flattenStatusCode(apiObject.StatusCode)
+		m[names.AttrStatusCode] = flattenStatusCode(apiObject.StatusCode)
 	}
 
 	return []interface{}{m}

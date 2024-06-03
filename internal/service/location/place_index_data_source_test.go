@@ -35,7 +35,7 @@ func TestAccLocationPlaceIndexDataSource_indexName(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "index_arn", resourceName, "index_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "index_name", resourceName, "index_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "update_time", resourceName, "update_time"),
 				),
 			},

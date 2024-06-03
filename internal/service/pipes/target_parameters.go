@@ -209,7 +209,7 @@ func targetParametersSchema() *schema.Schema {
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"capacity_provider_strategy": {
+							names.AttrCapacityProviderStrategy: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 6,
@@ -479,7 +479,7 @@ func targetParametersSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"propagate_tags": {
+							names.AttrPropagateTags: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[types.PropagateTags](),
@@ -1121,7 +1121,7 @@ func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.Pipe
 
 	apiObject := &types.PipeTargetEcsTaskParameters{}
 
-	if v, ok := tfMap["capacity_provider_strategy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCapacityProviderStrategy].([]interface{}); ok && len(v) > 0 {
 		apiObject.CapacityProviderStrategy = expandCapacityProviderStrategyItems(v)
 	}
 
@@ -1161,7 +1161,7 @@ func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.Pipe
 		apiObject.PlatformVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 		apiObject.PropagateTags = types.PropagateTags(v)
 	}
 
@@ -2121,7 +2121,7 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 	}
 
 	if v := apiObject.CapacityProviderStrategy; v != nil {
-		tfMap["capacity_provider_strategy"] = flattenCapacityProviderStrategyItems(v)
+		tfMap[names.AttrCapacityProviderStrategy] = flattenCapacityProviderStrategyItems(v)
 	}
 
 	if v := apiObject.Group; v != nil {
@@ -2153,7 +2153,7 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 	}
 
 	if v := apiObject.PropagateTags; v != "" {
-		tfMap["propagate_tags"] = v
+		tfMap[names.AttrPropagateTags] = v
 	}
 
 	if v := apiObject.ReferenceId; v != nil {

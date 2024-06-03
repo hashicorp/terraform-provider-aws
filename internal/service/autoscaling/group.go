@@ -110,7 +110,7 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -1664,7 +1664,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// No warm pool exists in new config. Delete it.
 		if len(w) == 0 || w[0] == nil {
-			forceDeleteWarmPool := d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool)
+			forceDeleteWarmPool := d.Get(names.AttrForceDelete).(bool) || d.Get("force_delete_warm_pool").(bool)
 
 			if err := deleteWarmPool(ctx, conn, d.Id(), forceDeleteWarmPool, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -1792,7 +1792,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	forceDeleteGroup := d.Get("force_delete").(bool)
+	forceDeleteGroup := d.Get(names.AttrForceDelete).(bool)
 	forceDeleteWarmPool := forceDeleteGroup || d.Get("force_delete_warm_pool").(bool)
 
 	group, err := findGroupByName(ctx, conn, d.Id())

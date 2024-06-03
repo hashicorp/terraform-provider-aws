@@ -27,12 +27,13 @@ const (
 
 // @SDKResource("aws_default_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceDefaultNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultNetworkACLCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRead,
 		UpdateWithoutTimeout: resourceDefaultNetworkACLUpdate,
-		DeleteWithoutTimeout: resourceDefaultNetworkACLDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -157,8 +158,4 @@ func resourceDefaultNetworkACLUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	return append(diags, resourceNetworkACLRead(ctx, d, meta)...)
-}
-
-func resourceDefaultNetworkACLDelete(_ context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	return sdkdiag.AppendWarningf(diags, "EC2 Default Network ACL (%s) not deleted, removing from state", d.Id())
 }

@@ -38,7 +38,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, dataSourceName, names.AttrServiceRole),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, dataSourceName, names.AttrServiceRole),
 				),
 			},
 		},

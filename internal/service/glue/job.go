@@ -113,7 +113,7 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"max_capacity": {
+			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
@@ -154,7 +154,7 @@ func ResourceJob() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.IntAtLeast(1),
 			},
 			names.AttrRoleARN: {
@@ -178,7 +178,7 @@ func ResourceJob() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 			},
 		},
@@ -223,7 +223,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.GlueVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("max_capacity"); ok {
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
@@ -303,7 +303,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
-	d.Set("max_capacity", job.MaxCapacity)
+	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
 	d.Set(names.AttrName, job.Name)
 	d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments))
@@ -370,7 +370,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		if v, ok := d.GetOk("number_of_workers"); ok {
 			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
 		} else {
-			if v, ok := d.GetOk("max_capacity"); ok {
+			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
 			}
 		}

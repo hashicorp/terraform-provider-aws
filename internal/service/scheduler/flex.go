@@ -85,7 +85,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 
 	a := &types.EcsParameters{}
 
-	if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrCapacityProviderStrategy].(*schema.Set); ok && v.Len() > 0 {
 		for _, s := range v.List() {
 			a.CapacityProviderStrategy = append(a.CapacityProviderStrategy, expandCapacityProviderStrategyItem(s.(map[string]interface{})))
 		}
@@ -127,7 +127,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.PlatformVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 		a.PropagateTags = types.PropagateTags(v)
 	}
 
@@ -171,7 +171,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 			set.Add(flattenCapacityProviderStrategyItem(p))
 		}
 
-		m["capacity_provider_strategy"] = set
+		m[names.AttrCapacityProviderStrategy] = set
 	}
 
 	if v := apiObject.EnableECSManagedTags; v != nil {
@@ -219,7 +219,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 	}
 
 	if v := string(apiObject.PropagateTags); v != "" {
-		m["propagate_tags"] = v
+		m[names.AttrPropagateTags] = v
 	}
 
 	if v := apiObject.ReferenceId; v != nil {

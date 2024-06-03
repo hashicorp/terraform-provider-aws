@@ -39,7 +39,7 @@ func TestAccVPCNetworkInsightsAnalysisDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "start_date", resourceName, "start_date"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatusMessage, resourceName, names.AttrStatusMessage),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "warning_message", resourceName, "warning_message"),
 				),
 			},

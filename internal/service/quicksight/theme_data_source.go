@@ -29,7 +29,7 @@ func DataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -233,7 +233,7 @@ func DataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -284,7 +284,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	themeId := d.Get("theme_id").(string)
@@ -299,10 +299,10 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("theme_id", out.ThemeId)

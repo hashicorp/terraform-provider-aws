@@ -43,7 +43,7 @@ func TestAccImageBuilderContainerRecipeDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwner, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(dataSourceName, "parent_image", resourceName, "parent_image"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform", resourceName, "platform"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "target_repository.#", resourceName, "target_repository.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "target_repository.0.repository_name", resourceName, "target_repository.0.repository_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "target_repository.0.service", resourceName, "target_repository.0.service"),

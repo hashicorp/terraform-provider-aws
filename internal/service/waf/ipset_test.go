@@ -140,7 +140,7 @@ func TestAccWAFIPSet_changeDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
 						names.AttrType:  "IPV4",
 						names.AttrValue: "192.0.7.0/24",
@@ -157,7 +157,7 @@ func TestAccWAFIPSet_changeDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ip_set_descriptors.*", map[string]string{
 						names.AttrType:  "IPV4",
 						names.AttrValue: "192.0.8.0/24",
@@ -185,7 +185,7 @@ func TestAccWAFIPSet_noDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", acctest.Ct0),
 				),
 			},
 			{

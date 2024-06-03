@@ -65,7 +65,7 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", tfevents.DefaultEventBusName),
@@ -110,7 +110,7 @@ func TestAccEventsPermission_eventBusName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
@@ -184,7 +184,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-1234567890"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-1234567890"),
@@ -194,7 +194,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-0123456789"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-0123456789"),

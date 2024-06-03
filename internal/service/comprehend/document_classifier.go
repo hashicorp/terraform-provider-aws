@@ -139,7 +139,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 					},
 				},
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
@@ -311,7 +311,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set(names.AttrARN, out.DocumentClassifierArn)
 	d.Set("data_access_role_arn", out.DataAccessRoleArn)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 	d.Set(names.AttrMode, out.Mode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
@@ -470,7 +470,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	in := &comprehend.CreateDocumentClassifierInput{
 		DataAccessRoleArn:      aws.String(d.Get("data_access_role_arn").(string)),
 		InputDataConfig:        expandDocumentClassifierInputDataConfig(d),
-		LanguageCode:           types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:           types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		DocumentClassifierName: aws.String(d.Get(names.AttrName).(string)),
 		Mode:                   types.DocumentClassifierMode(d.Get(names.AttrMode).(string)),
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),

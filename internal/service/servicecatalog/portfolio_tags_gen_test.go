@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,23 +32,37 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -56,26 +72,42 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -85,23 +117,37 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -111,19 +157,29 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// SDK behavior
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -148,22 +204,32 @@ func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: nil,
 					}),
 				},
 				ResourceName:      resourceName,
@@ -173,8 +239,8 @@ func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -198,34 +264,58 @@ func TestAccServiceCatalogPortfolio_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -253,23 +343,36 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -279,19 +382,29 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// SDK behavior
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -318,40 +431,68 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
-						"key2": config.StringVariable(""),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(""),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+							acctest.CtKey2: knownvalue.StringExact(""),
+						})),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
-						"key2": config.StringVariable(""),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(""),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -361,23 +502,37 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -405,37 +560,64 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -461,28 +643,40 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -492,31 +686,45 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// SDK behavior
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -526,28 +734,41 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// SDK behavior
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -557,21 +778,31 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// SDK behavior
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -596,33 +827,49 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -633,37 +880,55 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable("resourcevalue2"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey2", "resourcevalue2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable("resourcevalue2"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -674,21 +939,31 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// SDK behavior
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -713,32 +988,47 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -749,38 +1039,55 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
-						"overlapkey2": config.StringVariable("providervalue2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
-						"overlapkey2": config.StringVariable("resourcevalue2"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", "resourcevalue2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
-						"overlapkey2": config.StringVariable("providervalue2"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
-						"overlapkey2": config.StringVariable("resourcevalue2"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -791,32 +1098,47 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue2"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue2"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -842,45 +1164,73 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						// SDK behavior
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -905,43 +1255,70 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToResourceOnly(t *tes
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -969,33 +1346,106 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyResourceTag(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
 					}),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccServiceCatalogPortfolio_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+	t.Skip("Resource Portfolio does not support empty tags")
+
+	ctx := acctest.Context(t)
+	var v servicecatalog.DescribePortfolioOutput
+	resourceName := "aws_servicecatalog_portfolio.test"
+	rName := sdkacctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
+					}),
+					acctest.CtResourceTags: nil,
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPortfolioExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
+					}),
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1020,31 +1470,43 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullOverlappingResourceTag(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: nil,
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1070,31 +1532,43 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nullNonOverlappingResourceT
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: nil,
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1120,18 +1594,21 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1145,7 +1622,7 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:      resourceName,
@@ -1171,36 +1648,55 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Add(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable("key1"),
-					"knownTagValue": config.StringVariable("value1"),
+					"knownTagKey":   config.StringVariable(acctest.CtKey1),
+					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapPartial(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1214,10 +1710,10 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Add(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable("key1"),
-					"knownTagValue": config.StringVariable("value1"),
+					"knownTagKey":   config.StringVariable(acctest.CtKey1),
+					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1242,33 +1738,50 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Replace(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("key1"),
+					acctest.CtRName: config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1282,8 +1795,8 @@ func TestAccServiceCatalogPortfolio_tags_ComputedTag_OnUpdate_Replace(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("key1"),
+					acctest.CtRName: config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

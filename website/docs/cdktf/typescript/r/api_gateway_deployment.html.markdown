@@ -165,12 +165,19 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `restApiId` - (Required) REST API identifier.
+* `canarySettings` - (Optional) Input configuration for the canary deployment when the deployment is a canary release deployment. See [`canary_settings](#canary_settings-argument-reference) below.
 * `description` - (Optional) Description of the deployment
-* `stageName` - (Optional) Name of the stage to create with this deployment. If the specified stage already exists, it will be updated to point to the new deployment. We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead to manage stages.
+* `restApiId` - (Required) REST API identifier.
 * `stageDescription` - (Optional) Description to set on the stage managed by the `stageName` argument.
+* `stageName` - (Optional) Name of the stage to create with this deployment. If the specified stage already exists, it will be updated to point to the new deployment. We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead to manage stages.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`-replace` option](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address) with `terraform plan` or `terraform apply`.
 * `variables` - (Optional) Map to set on the stage managed by the `stageName` argument.
+
+### `canarySettings` Argument Reference
+
+* `percentTraffic` - Percentage (0.0-100.0) of traffic routed to the canary deployment.
+* `stageVariableOverrides` - Stage variable overrides used for the canary release deployment. They can override existing stage variables or add new stage variables for the canary release deployment. These stage variables are represented as a string-to-string map between stage variable names and their values.
+* `useStageCache` - Boolean flag to indicate whether the canary release deployment uses the stage cache or not.
 
 ## Attribute Reference
 
@@ -220,4 +227,4 @@ The `stageName`, `stageDescription`, and `variables` arguments cannot be importe
 
 The `triggers` argument cannot be imported.
 
-<!-- cache-key: cdktf-0.20.1 input-a6bba7a5df573767f5e0da500df7a421964740e00b416a999a065c5b3ab27982 -->
+<!-- cache-key: cdktf-0.20.1 input-92dd189cfb2765ae990c14fa34ce56b35e22131b86c766eccbcc7a8a333a3785 -->

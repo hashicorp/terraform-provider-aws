@@ -28,12 +28,13 @@ import (
 
 // @SDKResource("aws_storagegateway_cached_iscsi_volume", name="Cached iSCSI Volume")
 // @Tags(identifierAttribute="arn")
-func ResourceCachediSCSIVolume() *schema.Resource {
+func resourceCachediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCachediSCSIVolumeCreate,
 		ReadWithoutTimeout:   resourceCachediSCSIVolumeRead,
 		UpdateWithoutTimeout: resourceCachediSCSIVolumeUpdate,
 		DeleteWithoutTimeout: resourceCachediSCSIVolumeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -67,7 +68,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -133,7 +134,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("snapshot_id"); ok {
+	if v, ok := d.GetOk(names.AttrSnapshotID); ok {
 		input.SnapshotId = aws.String(v.(string))
 	}
 
@@ -190,7 +191,7 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 
 	arn := aws.StringValue(volume.VolumeARN)
 	d.Set(names.AttrARN, arn)
-	d.Set("snapshot_id", volume.SourceSnapshotId)
+	d.Set(names.AttrSnapshotID, volume.SourceSnapshotId)
 	d.Set("volume_arn", arn)
 	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)

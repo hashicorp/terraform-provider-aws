@@ -40,7 +40,7 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "documentation_part_id"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProperties, properties),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
@@ -55,7 +55,7 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProperties, uProperties),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
@@ -84,7 +84,7 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 				Config: testAccDocumentationPartConfig_method(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "METHOD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.path", "/terraform-acc-test"),
@@ -101,7 +101,7 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 				Config: testAccDocumentationPartConfig_method(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "METHOD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.path", "/terraform-acc-test"),
@@ -132,7 +132,7 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 				Config: testAccDocumentationPartConfig_responseHeader(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "RESPONSE_HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.name", "tfacc"),
@@ -151,7 +151,7 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 				Config: testAccDocumentationPartConfig_responseHeader(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "RESPONSE_HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.name", "tfacc"),

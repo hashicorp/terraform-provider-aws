@@ -39,7 +39,7 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_uuid", resourceName, "cluster_uuid"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kafka_version", resourceName, "kafka_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "number_of_broker_nodes", resourceName, "number_of_broker_nodes"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zookeeper_connect_string", resourceName, "zookeeper_connect_string"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "zookeeper_connect_string_tls", resourceName, "zookeeper_connect_string_tls"),
 				),

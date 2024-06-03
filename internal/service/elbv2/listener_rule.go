@@ -198,7 +198,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
 
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
@@ -232,7 +232,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,

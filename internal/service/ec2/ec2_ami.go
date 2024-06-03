@@ -36,6 +36,7 @@ const (
 
 // @SDKResource("aws_ami", name="AMI")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICreate,
@@ -124,12 +125,12 @@ func ResourceAMI() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -154,7 +155,7 @@ func ResourceAMI() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -174,7 +175,7 @@ func ResourceAMI() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -184,7 +185,7 @@ func ResourceAMI() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -343,7 +344,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 			var snapshot string
 
-			if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 				snapshot = v
 			}
 
@@ -511,7 +512,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		req := &ec2.DeleteSnapshotInput{}
 		for _, ebsBlockDevI := range ebsBlockDevsSet.List() {
 			ebsBlockDev := ebsBlockDevI.(map[string]interface{})
-			snapshotId := ebsBlockDev["snapshot_id"].(string)
+			snapshotId := ebsBlockDev[names.AttrSnapshotID].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
 				_, err := conn.DeleteSnapshotWithContext(ctx, req)
@@ -623,13 +624,13 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 	}
 
 	// "Parameter encrypted is invalid. You cannot specify the encrypted flag if specifying a snapshot id in a block device mapping."
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
 	} else if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int64(int64(v))
 	}
 
@@ -702,11 +703,11 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.SnapshotId; v != nil {
-		tfMap["snapshot_id"] = aws.StringValue(v)
+		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.Throughput; v != nil {
-		tfMap["throughput"] = aws.Int64Value(v)
+		tfMap[names.AttrThroughput] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.VolumeSize; v != nil {
@@ -757,7 +758,7 @@ func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]interfa
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
@@ -802,7 +803,7 @@ func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject *ec2.BlockDev
 	}
 
 	if v := apiObject.VirtualName; v != nil {
-		tfMap["virtual_name"] = aws.StringValue(v)
+		tfMap[names.AttrVirtualName] = aws.StringValue(v)
 	}
 
 	return tfMap

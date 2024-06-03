@@ -44,7 +44,7 @@ func ResourceTaskSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"capacity_provider_strategy": {
+			names.AttrCapacityProviderStrategy: {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
@@ -76,13 +76,13 @@ func ResourceTaskSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"external_id": {
+			names.AttrExternalID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -92,7 +92,7 @@ func ResourceTaskSet() *schema.Resource {
 				ForceNew:      true,
 				Computed:      true,
 				ValidateFunc:  validation.StringInSlice(ecs.LaunchType_Values(), false),
-				ConflictsWith: []string{"capacity_provider_strategy"},
+				ConflictsWith: []string{names.AttrCapacityProviderStrategy},
 			},
 			// If you are using the CodeDeploy or an external deployment controller,
 			// multiple target groups are not supported.
@@ -285,11 +285,11 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 	}
 
-	if v, ok := d.GetOk("capacity_provider_strategy"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok && v.(*schema.Set).Len() > 0 {
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("external_id"); ok {
+	if v, ok := d.GetOk(names.AttrExternalID); ok {
 		input.ExternalId = aws.String(v.(string))
 	}
 
@@ -410,14 +410,14 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster", cluster)
 	d.Set("launch_type", taskSet.LaunchType)
 	d.Set("platform_version", taskSet.PlatformVersion)
-	d.Set("external_id", taskSet.ExternalId)
+	d.Set(names.AttrExternalID, taskSet.ExternalId)
 	d.Set("service", service)
 	d.Set(names.AttrStatus, taskSet.Status)
 	d.Set("stability_status", taskSet.StabilityStatus)
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
 
-	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
+	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
 
@@ -491,7 +491,7 @@ func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 		Cluster: aws.String(cluster),
 		Service: aws.String(service),
 		TaskSet: aws.String(taskSetId),
-		Force:   aws.Bool(d.Get("force_delete").(bool)),
+		Force:   aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	}
 
 	_, err = conn.DeleteTaskSetWithContext(ctx, input)

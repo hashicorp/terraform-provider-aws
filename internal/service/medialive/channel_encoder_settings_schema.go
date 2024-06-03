@@ -484,7 +484,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 									},
 								},
 							},
-							"language_code": {
+							names.AttrLanguageCode: {
 								Type:     schema.TypeString,
 								Optional: true,
 								Computed: true,
@@ -685,7 +685,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
-																"language_code": {
+																names.AttrLanguageCode: {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
@@ -2252,7 +2252,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 									},
 								},
 							},
-							"language_code": {
+							names.AttrLanguageCode: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -3138,7 +3138,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
 			a.CodecSettings = expandChannelEncoderSettingsAudioDescriptionsCodecSettings(v)
 		}
-		if v, ok := m["language_code"].(string); ok && v != "" {
+		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
 			a.LanguageCode = aws.String(v)
 		}
 		if v, ok := m["language_code_control"].(string); ok && v != "" {
@@ -4040,7 +4040,7 @@ func expandHSLGroupSettingsCaptionLanguageMappings(tfList []interface{}) []types
 		if v, ok := m["caption_channel"].(int); ok && v != 0 {
 			o.CaptionChannel = aws.Int32(int32(v))
 		}
-		if v, ok := m["language_code"].(string); ok && v != "" {
+		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
 			o.LanguageCode = aws.String(v)
 		}
 		if v, ok := m["language_description"].(string); ok && v != "" {
@@ -4970,7 +4970,7 @@ func expandChannelEncoderSettingsCaptionDescriptions(tfList []interface{}) []typ
 		if v, ok := m["destination_settings"].([]interface{}); ok && len(v) > 0 {
 			d.DestinationSettings = expandChannelEncoderSettingsCaptionDescriptionsDestinationSettings(v)
 		}
-		if v, ok := m["language_code"].(string); ok && v != "" {
+		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
 			d.LanguageCode = aws.String(v)
 		}
 		if v, ok := m["language_description"].(string); ok && v != "" {
@@ -5821,7 +5821,7 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 			"audio_type_control":           v.AudioTypeControl,
 			"audio_watermark_settings":     flattenAudioWatermarkSettings(v.AudioWatermarkingSettings),
 			"codec_settings":               flattenAudioDescriptionsCodecSettings(v.CodecSettings),
-			"language_code":                aws.ToString(v.LanguageCode),
+			names.AttrLanguageCode:         aws.ToString(v.LanguageCode),
 			"language_code_control":        string(v.LanguageCodeControl),
 			"remix_settings":               flattenAudioDescriptionsRemixSettings(v.RemixSettings),
 			"stream_name":                  aws.ToString(v.StreamName),
@@ -6376,7 +6376,7 @@ func flattenHLSCaptionLanguageMappings(in []types.CaptionLanguageMapping) []inte
 	for _, item := range in {
 		m := map[string]interface{}{
 			"caption_channel":      int(aws.ToInt32(item.CaptionChannel)),
-			"language_code":        aws.ToString(item.LanguageCode),
+			names.AttrLanguageCode: aws.ToString(item.LanguageCode),
 			"language_description": aws.ToString(item.LanguageDescription),
 		}
 
@@ -6695,7 +6695,7 @@ func flattenCaptionDescriptions(tfList []types.CaptionDescription) []interface{}
 			names.AttrName:          aws.ToString(item.Name),
 			"accessibility":         string(item.Accessibility),
 			"destination_settings":  flattenCaptionDescriptionsCaptionDestinationSettings(item.DestinationSettings),
-			"language_code":         aws.ToString(item.LanguageCode),
+			names.AttrLanguageCode:  aws.ToString(item.LanguageCode),
 			"language_description":  aws.ToString(item.LanguageDescription),
 		}
 

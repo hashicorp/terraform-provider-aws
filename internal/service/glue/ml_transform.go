@@ -116,7 +116,7 @@ func ResourceMLTransform() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"max_capacity": {
+			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
@@ -149,14 +149,14 @@ func ResourceMLTransform() *schema.Resource {
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 				RequiredWith:  []string{"number_of_workers"},
 			},
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.IntAtLeast(1),
 				RequiredWith:  []string{"worker_type"},
 			},
@@ -197,7 +197,7 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 		Parameters:        expandMLTransformParameters(d.Get(names.AttrParameters).([]interface{})),
 	}
 
-	if v, ok := d.GetOk("max_capacity"); ok {
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
@@ -270,7 +270,7 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("glue_version", output.GlueVersion)
-	d.Set("max_capacity", output.MaxCapacity)
+	d.Set(names.AttrMaxCapacity, output.MaxCapacity)
 	d.Set("max_retries", output.MaxRetries)
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrRoleARN, output.Role)
@@ -298,7 +298,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, "glue_version", "max_capacity", "max_retries", "number_of_workers",
+	if d.HasChanges(names.AttrDescription, "glue_version", names.AttrMaxCapacity, "max_retries", "number_of_workers",
 		names.AttrRoleARN, names.AttrTimeout, "worker_type", names.AttrParameters) {
 		input := &glue.UpdateMLTransformInput{
 			TransformId: aws.String(d.Id()),
@@ -321,7 +321,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("number_of_workers"); ok {
 			input.NumberOfWorkers = aws.Int64(int64(v.(int)))
 		} else {
-			if v, ok := d.GetOk("max_capacity"); ok {
+			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				input.MaxCapacity = aws.Float64(v.(float64))
 			}
 		}

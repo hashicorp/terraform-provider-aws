@@ -58,11 +58,11 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -81,7 +81,7 @@ func DataSourceImageRecipe() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

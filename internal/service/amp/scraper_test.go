@@ -43,13 +43,13 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -108,11 +108,11 @@ func TestAccAMPScraper_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_tags1(rName, "key1", "value1"),
+				Config: testAccScraperConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -121,20 +121,20 @@ func TestAccAMPScraper_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScraperConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccScraperConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccScraperConfig_tags1(rName, "key2", "value2"),
+				Config: testAccScraperConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -195,7 +195,7 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 				Config: testAccScraperConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{

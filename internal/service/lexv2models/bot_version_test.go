@@ -42,7 +42,7 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 				Config: testAccBotVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotVersionExists(ctx, resourceName, &botversion),
-					resource.TestCheckResourceAttr(resourceName, "locale_specification.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "locale_specification.%", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
 				),
 			},

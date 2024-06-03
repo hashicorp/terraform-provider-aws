@@ -68,6 +68,7 @@ var (
 	tagOp                      = flag.String("TagOp", "TagResource", "tagOp")
 	tagOpBatchSize             = flag.String("TagOpBatchSize", "", "tagOpBatchSize")
 	tagResTypeElem             = flag.String("TagResTypeElem", "", "tagResTypeElem")
+	tagResTypeElemType         = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
 	tagType                    = flag.String("TagType", "Tag", "tagType")
 	tagType2                   = flag.String("TagType2", "", "tagType")
 	tagTypeAddBoolElem         = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
@@ -192,6 +193,7 @@ type TemplateData struct {
 	TagOpBatchSize             string
 	TagPackage                 string
 	TagResTypeElem             string
+	TagResTypeElemType         string
 	TagType                    string
 	TagType2                   string
 	TagTypeAddBoolElem         string
@@ -356,6 +358,7 @@ func main() {
 		TagOpBatchSize:             *tagOpBatchSize,
 		TagPackage:                 tagPackage,
 		TagResTypeElem:             *tagResTypeElem,
+		TagResTypeElemType:         *tagResTypeElemType,
 		TagType:                    *tagType,
 		TagType2:                   *tagType2,
 		TagTypeAddBoolElem:         *tagTypeAddBoolElem,
