@@ -34,7 +34,7 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckSecurityConfig(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,8 +42,8 @@ func TestAccOpenSearchServerlessSecurityConfig_basic(t *testing.T) {
 				Config: testAccSecurityConfig_basic(rName, "test-fixtures/idp-metadata.xml"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
-					resource.TestCheckResourceAttr(resourceName, "type", "saml"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_options.session_timeout"),
 				),
 			},
@@ -68,28 +68,28 @@ func TestAccOpenSearchServerlessSecurityConfig_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckSecurityConfig(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecurityConfig_update(rName, "test-fixtures/idp-metadata.xml", "description", 60),
+				Config: testAccSecurityConfig_update(rName, "test-fixtures/idp-metadata.xml", names.AttrDescription, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
-					resource.TestCheckResourceAttr(resourceName, "type", "saml"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "60"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
 			{
 				Config: testAccSecurityConfig_update(rName, "test-fixtures/idp-metadata.xml", "description updated", 40),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigExists(ctx, resourceName, &securityconfig),
-					resource.TestCheckResourceAttr(resourceName, "type", "saml"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "saml"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.session_timeout", "40"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
 			},
 		},
@@ -108,7 +108,7 @@ func TestAccOpenSearchServerlessSecurityConfig_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckSecurityConfig(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityConfigDestroy(ctx),
 		Steps: []resource.TestStep{

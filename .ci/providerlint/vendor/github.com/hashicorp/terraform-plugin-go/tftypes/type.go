@@ -43,7 +43,7 @@ type Type interface {
 	// MarshalJSON returns a JSON representation of the Type's signature.
 	// It is modeled based on Terraform's requirements for type signature
 	// JSON representations, and may change over time to match Terraform's
-	// formatting.
+	// formatting. The error return should always be nil.
 	//
 	// Deprecated: this is not meant to be called by third-party code.
 	MarshalJSON() ([]byte, error)

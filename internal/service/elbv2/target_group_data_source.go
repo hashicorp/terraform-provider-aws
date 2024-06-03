@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_alb_target_group")
@@ -30,7 +32,7 @@ func DataSourceTargetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -47,12 +49,12 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"health_check": {
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -60,7 +62,7 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -68,19 +70,19 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -95,6 +97,11 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"load_balancing_algorithm_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -108,12 +115,12 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -121,7 +128,7 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,23 +157,23 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"target_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -178,13 +185,13 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elbv2.DescribeTargetGroupsInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.TargetGroupArns = aws.StringSlice([]string{v.(string)})
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -225,21 +232,25 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	targetGroup := results[0]
 	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
-	d.Set("arn", targetGroup.TargetGroupArn)
+	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
+	d.Set("load_balancer_arns", flex.FlattenStringSet(targetGroup.LoadBalancerArns))
+	d.Set(names.AttrName, targetGroup.TargetGroupName)
+	d.Set("target_type", targetGroup.TargetType)
+
+	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
-	d.Set("name", targetGroup.TargetGroupName)
+	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	targetType := aws.StringValue(targetGroup.TargetType)
 	d.Set("target_type", targetType)
 
 	var protocol string
 	if targetType != elbv2.TargetTypeEnumLambda {
-		d.Set("port", targetGroup.Port)
+		d.Set(names.AttrPort, targetGroup.Port)
 		protocol = aws.StringValue(targetGroup.Protocol)
-		d.Set("protocol", protocol)
-		d.Set("vpc_id", targetGroup.VpcId)
+		d.Set(names.AttrProtocol, protocol)
+		d.Set(names.AttrVPCID, targetGroup.VpcId)
 	}
 	switch protocol {
 	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
@@ -269,7 +280,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "listing tags for ELBv2 Target Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

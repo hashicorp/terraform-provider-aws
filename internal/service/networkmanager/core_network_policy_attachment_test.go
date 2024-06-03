@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,9 +37,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
 				),
 			},
 			{
@@ -51,9 +52,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
 				),
 			},
 		},
@@ -68,7 +69,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,9 +78,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`{"core-network-configuration":{"asn-ranges":\["65022-65534"\],"edge-locations":\[{"location":"%s"}\],"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["0.0.0.0/0"\],"destinations":\["attachment-.+"\],"segment":"segment"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":true}\],"version":"2021.12"}`, acctest.Region()))),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
 				),
 			},
 			{
@@ -92,9 +93,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachment(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), segmentValue)),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
 				),
 			},
 		},
@@ -111,7 +112,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,9 +123,9 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_vpcAttachmentMultiRegion(t
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile(fmt.Sprintf(`{"core-network-configuration":{"asn-ranges":\["65022-65534"\],"edge-locations":\[{"location":"%s"},{"location":"%s"}\],"vpn-ecmp-support":true},"segment-actions":\[{"action":"create-route","destination-cidr-blocks":\["10.0.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment"},{"action":"create-route","destination-cidr-blocks":\["10.1.0.0/16"\],"destinations":\["attachment-.+"\],"segment":"segment2"}\],"segments":\[{"isolate-attachments":false,"name":"segment","require-attachment-acceptance":true},{"isolate-attachments":false,"name":"segment2","require-attachment-acceptance":true}\],"version":"2021.12"}`, acctest.Region(), acctest.AlternateRegion()))),
 					// use test below if the order of locations is unordered
 					// resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"},{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"description\":\"base-policy\",\"isolate-attachments\":false,\"name\":\"segment\",\"require-attachment-acceptance\":false}],\"version\":\"2021.12\"}", acctest.AlternateRegion(), acctest.Region())),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, "aws_networkmanager_core_network.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
 				),
 			},
 			{
@@ -142,7 +143,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_expectPolicyErrorInvalidAS
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

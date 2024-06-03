@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessApp_basic(t *testing.T) {
@@ -35,9 +36,11 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeEnabled)),
 				),
 			},
 			{
@@ -65,7 +68,7 @@ func TestAccQBusinessApp_disappears(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceApplication(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,26 +89,21 @@ func TestAccQBusinessApp_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_tags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccAppConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAppConfig_tags(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
 				),
 			},
 		},
@@ -125,18 +123,10 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-				),
-			},
-			{
 				Config: testAccAppConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeEnabled)),
 				),
 			},
@@ -144,7 +134,7 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 				Config: testAccAppConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeDisabled)),
 				),
 			},
@@ -215,107 +205,77 @@ func testAccCheckAppExists(ctx context.Context, n string, v *qbusiness.GetApplic
 	}
 }
 
-func testAccAppConfig_basic(rName string) string {
+func testAccAppConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_iam_role" "test" {
   name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "qbusiness.${data.aws_partition.current.dns_suffix}"
+        }
+        Effect = "Allow"
+        Sid    = ""
+      }
+    ]
+  })
 }
-EOF
-}
-
 `, rName)
 }
 
-func testAccAppConfig_attachmentsConfiguration(rName, mode string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
+func testAccAppConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
+resource "aws_qbusiness_app" "test" {
+  display_name         = %[1]q
+  description          = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
 
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
+}
+`, rName))
+}
+
+func testAccAppConfig_attachmentsConfiguration(rName, mode string) string {
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 
   attachments_configuration {
     attachments_control_mode = %[2]q
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName, mode)
+`, rName, mode))
 }
 
 func testAccAppConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-  {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

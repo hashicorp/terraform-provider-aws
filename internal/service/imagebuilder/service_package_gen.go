@@ -32,6 +32,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceComponents,
 			TypeName: "aws_imagebuilder_components",
+			Name:     "Components",
 		},
 		{
 			Factory:  DataSourceContainerRecipe,
@@ -40,6 +41,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceContainerRecipes,
 			TypeName: "aws_imagebuilder_container_recipes",
+			Name:     "Container Recipes",
 		},
 		{
 			Factory:  DataSourceDistributionConfiguration,
@@ -68,6 +70,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceImageRecipes,
 			TypeName: "aws_imagebuilder_image_recipes",
+			Name:     "Image Recipes",
 		},
 		{
 			Factory:  DataSourceInfrastructureConfiguration,
@@ -87,7 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_component",
 			Name:     "Component",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -95,7 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_container_recipe",
 			Name:     "Container Recipe",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -103,7 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_distribution_configuration",
 			Name:     "Distribution Configuration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -111,7 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_image",
 			Name:     "Image",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -119,7 +122,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_image_pipeline",
 			Name:     "Image Pipeline",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -127,7 +130,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_image_recipe",
 			Name:     "Image Recipe",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -135,7 +138,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
 			Name:     "Infrastructure Configuration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
@@ -143,7 +146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_imagebuilder_workflow",
 			Name:     "Workflow",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
+				IdentifierAttribute: names.AttrID,
 			},
 		},
 	}
@@ -155,9 +158,9 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*imagebuilder_sdkv1.Imagebuilder, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return imagebuilder_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return imagebuilder_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

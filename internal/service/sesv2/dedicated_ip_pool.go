@@ -46,7 +46,7 @@ func ResourceDedicatedIPPool() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 	poolName := aws.ToString(out.DedicatedIpPool.PoolName)
 	d.Set("pool_name", poolName)
 	d.Set("scaling_mode", string(out.DedicatedIpPool.ScalingMode))
-	d.Set("arn", poolNameToARN(meta, poolName))
+	d.Set(names.AttrARN, poolNameToARN(meta, poolName))
 
 	return nil
 }

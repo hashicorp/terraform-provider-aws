@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,11 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool devicefarm.NetworkProfile
+	var pool awstypes.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_devicefarm_network_profile.test"
@@ -30,12 +31,12 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,13 +44,13 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
 			},
 			{
@@ -61,13 +62,13 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 				Config: testAccNetworkProfileConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
 			},
 		},
@@ -76,28 +77,28 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 
 func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool devicefarm.NetworkProfile
+	var pool awstypes.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_network_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkProfileConfig_tags1(rName, "key1", "value1"),
+				Config: testAccNetworkProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -106,20 +107,20 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNetworkProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccNetworkProfileConfig_tags1(rName, "key2", "value2"),
+				Config: testAccNetworkProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -128,19 +129,19 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 
 func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool devicefarm.NetworkProfile
+	var pool awstypes.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_network_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,19 +160,19 @@ func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
 
 func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool devicefarm.NetworkProfile
+	var pool awstypes.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_network_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,7 +189,7 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *devicefarm.NetworkProfile) resource.TestCheckFunc {
+func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *awstypes.NetworkProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -199,7 +200,7 @@ func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *devicefa
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
 		resp, err := tfdevicefarm.FindNetworkProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -216,7 +217,7 @@ func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *devicefa
 
 func testAccCheckNetworkProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_devicefarm_network_profile" {

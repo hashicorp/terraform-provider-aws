@@ -25,20 +25,20 @@ func TestAccVPCLatticeServiceDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, "custom_domain_name", dataSourceName, "custom_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_entry.#", dataSourceName, "dns_entry.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -57,21 +57,21 @@ func TestAccVPCLatticeServiceDataSource_byName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_byName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, "custom_domain_name", dataSourceName, "custom_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_entry.#", dataSourceName, "dns_entry.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "service_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -91,20 +91,20 @@ func TestAccVPCLatticeServiceDataSource_shared(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceDataSourceConfig_shared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, "custom_domain_name", dataSourceName, "custom_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_entry.#", dataSourceName, "dns_entry.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
-					resource.TestCheckNoResourceAttr(dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
+					resource.TestCheckNoResourceAttr(dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

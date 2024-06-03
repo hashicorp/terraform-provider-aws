@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_public_ipv4_pools")
@@ -21,13 +22,13 @@ func DataSourcePublicIPv4Pools() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"pool_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -38,12 +39,12 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 
 	input := &ec2.DescribePublicIpv4PoolsInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

@@ -133,4 +133,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the target table.
 * `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.20.0 input-75051df4e1baf806fc38ba02be8ffc0cd92b7709e612f9893478d1569cbd32dd -->
+<!-- cache-key: cdktf-0.20.1 input-75051df4e1baf806fc38ba02be8ffc0cd92b7709e612f9893478d1569cbd32dd -->

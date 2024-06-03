@@ -21,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_website_configuration")
-func ResourceBucketWebsiteConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_website_configuration", name="Bucket Website Configuration")
+func resourceBucketWebsiteConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketWebsiteConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketWebsiteConfigurationRead,
@@ -36,7 +37,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -48,14 +49,14 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -90,7 +91,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.Protocol](),
@@ -105,7 +106,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 				ConflictsWith: []string{"routing_rules"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"condition": {
+						names.AttrCondition: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -136,7 +137,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.Protocol](),
@@ -207,8 +208,8 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		websiteConfig.RoutingRules = unmarshalledRules
 	}
 
-	bucket := d.Get("bucket").(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
 		WebsiteConfiguration: websiteConfig,
@@ -262,11 +263,11 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 		return diag.Errorf("reading S3 Bucket Website Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if err := d.Set("error_document", flattenErrorDocument(output.ErrorDocument)); err != nil {
 		return diag.Errorf("setting error_document: %s", err)
 	}
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set("index_document", flattenIndexDocument(output.IndexDocument)); err != nil {
 		return diag.Errorf("setting index_document: %s", err)
 	}
@@ -465,7 +466,7 @@ func expandErrorDocument(l []interface{}) *types.ErrorDocument {
 
 	result := &types.ErrorDocument{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		result.Key = aws.String(v)
 	}
 
@@ -507,7 +508,7 @@ func expandRedirectAllRequestsTo(l []interface{}) *types.RedirectAllRequestsTo {
 		result.HostName = aws.String(v)
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		result.Protocol = types.Protocol(v)
 	}
 
@@ -525,7 +526,7 @@ func expandRoutingRules(l []interface{}) []types.RoutingRule {
 
 		rule := types.RoutingRule{}
 
-		if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrCondition].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Condition = expandCondition(v)
 		}
 
@@ -582,7 +583,7 @@ func expandRedirect(l []interface{}) *types.Redirect {
 		result.HttpRedirectCode = aws.String(v)
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		result.Protocol = types.Protocol(v)
 	}
 
@@ -619,7 +620,7 @@ func flattenErrorDocument(e *types.ErrorDocument) []interface{} {
 	m := make(map[string]interface{})
 
 	if e.Key != nil {
-		m["key"] = aws.ToString(e.Key)
+		m[names.AttrKey] = aws.ToString(e.Key)
 	}
 
 	return []interface{}{m}
@@ -631,7 +632,7 @@ func flattenRedirectAllRequestsTo(r *types.RedirectAllRequestsTo) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"protocol": string(r.Protocol),
+		names.AttrProtocol: string(r.Protocol),
 	}
 
 	if r.HostName != nil {
@@ -648,7 +649,7 @@ func flattenRoutingRules(rules []types.RoutingRule) []interface{} {
 		m := make(map[string]interface{})
 
 		if rule.Condition != nil {
-			m["condition"] = flattenCondition(rule.Condition)
+			m[names.AttrCondition] = flattenCondition(rule.Condition)
 		}
 
 		if rule.Redirect != nil {
@@ -685,7 +686,7 @@ func flattenRedirect(r *types.Redirect) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"protocol": string(r.Protocol),
+		names.AttrProtocol: string(r.Protocol),
 	}
 
 	if r.HostName != nil {

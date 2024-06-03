@@ -23,6 +23,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_mount_target", name="Mount Target")
@@ -51,7 +52,7 @@ func ResourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,12 +60,12 @@ func ResourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -75,21 +76,21 @@ func ResourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -106,14 +107,14 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	// to parallel requests if they both include the same AZ
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
-	subnetID := d.Get("subnet_id").(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), subnetID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", subnetID, err)
 	}
 
-	fsID := d.Get("file_system_id").(string)
+	fsID := d.Get(names.AttrFileSystemID).(string)
 	mtKey := "efs-mt-" + fsID + "-" + az
 	conns.GlobalMutexKV.Lock(mtKey)
 	defer conns.GlobalMutexKV.Unlock(mtKey)
@@ -123,11 +124,11 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		SubnetId:     aws.String(subnetID),
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		input.IpAddress = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -162,23 +163,24 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
+	fsID := aws.StringValue(mt.FileSystemId)
+	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(mt.FileSystemId)),
+		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
-	d.Set("file_system_arn", arn)
-	d.Set("file_system_id", mt.FileSystemId)
-	d.Set("ip_address", mt.IpAddress)
-	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
-	d.Set("network_interface_id", mt.NetworkInterfaceId)
-	d.Set("owner_id", mt.OwnerId)
-	d.Set("subnet_id", mt.SubnetId)
+	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
+	d.Set("file_system_arn", fsARN)
+	d.Set(names.AttrFileSystemID, fsID)
+	d.Set(names.AttrIPAddress, mt.IpAddress)
+	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
+	d.Set(names.AttrOwnerID, mt.OwnerId)
+	d.Set(names.AttrSubnetID, mt.SubnetId)
 
 	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
@@ -188,7 +190,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(output.SecurityGroups))
 
 	return diags
 }
@@ -197,10 +199,10 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &efs.ModifyMountTargetSecurityGroupsInput{
 			MountTargetId:  aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups: flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyMountTargetSecurityGroupsWithContext(ctx, input)

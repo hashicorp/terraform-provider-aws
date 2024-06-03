@@ -69,12 +69,27 @@ func (sr ServiceRecord) SkipClientGenerate() bool {
 	return sr[colSkipClientGenerate] != ""
 }
 
-func (sr ServiceRecord) ClientSDKV1() string {
-	return sr[colClientSDKV1]
+func (sr ServiceRecord) ClientSDKV1() bool {
+	return sr[colClientSDKV1] != ""
 }
 
-func (sr ServiceRecord) ClientSDKV2() string {
-	return sr[colClientSDKV2]
+func (sr ServiceRecord) ClientSDKV2() bool {
+	return sr[colClientSDKV2] != ""
+}
+
+// SDKVersion returns:
+// * "1" if only SDK v1 is implemented
+// * "2" if only SDK v2 is implemented
+// * "1,2" if both are implemented
+func (sr ServiceRecord) SDKVersion() string {
+	if sr.ClientSDKV1() && sr.ClientSDKV2() {
+		return "1,2"
+	} else if sr.ClientSDKV1() {
+		return "1"
+	} else if sr.ClientSDKV2() {
+		return "2"
+	}
+	return ""
 }
 
 func (sr ServiceRecord) ResourcePrefix() string {
@@ -132,8 +147,28 @@ func (sr ServiceRecord) DeprecatedEnvVar() string {
 	return sr[colDeprecatedEnvVar]
 }
 
-func (sr ServiceRecord) TfAwsEnvVar() string {
-	return sr[colTfAwsEnvVar]
+func (sr ServiceRecord) TFAWSEnvVar() string {
+	return sr[colTFAWSEnvVar]
+}
+
+func (sr ServiceRecord) SDKID() string {
+	return sr[colSDKID]
+}
+
+func (sr ServiceRecord) AWSServiceEnvVar() string {
+	return "AWS_ENDPOINT_URL_" + strings.ReplaceAll(strings.ToUpper(sr.SDKID()), " ", "_")
+}
+
+func (sr ServiceRecord) AWSConfigParameter() string {
+	return strings.ReplaceAll(strings.ToLower(sr.SDKID()), " ", "_")
+}
+
+func (sr ServiceRecord) EndpointAPICall() string {
+	return sr[colEndpointAPICall]
+}
+
+func (sr ServiceRecord) EndpointAPIParams() string {
+	return sr[colEndpointAPIParams]
 }
 
 func (sr ServiceRecord) Note() string {
@@ -191,7 +226,10 @@ const (
 	colNotImplemented // If set, the service will be included in, e.g. labels, but not have a service client
 	colEndpointOnly   // If set, the service is included in list of endpoints
 	colAllowedSubcategory
-	colDeprecatedEnvVar // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
-	colTfAwsEnvVar      // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
+	colDeprecatedEnvVar  // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
+	colTFAWSEnvVar       // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
+	colSDKID             // Service SDK ID from AWS SDK for Go v2
+	colEndpointAPICall   // API call to use for endpoint tests
+	colEndpointAPIParams // Any needed parameters for endpoint tests
 	colNote
 )

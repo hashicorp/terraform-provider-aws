@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationsAccess_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationsAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +35,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 				Config: testAccOrganizationsAccessConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationsAccessExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -87,11 +88,11 @@ func testAccCheckOrganizationsAccessExists(ctx context.Context, resourceName str
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): empty response", rs.Primary.ID)
 		}
 
-		if output != servicecatalog.AccessStatusEnabled && rs.Primary.Attributes["enabled"] == "true" {
+		if output != servicecatalog.AccessStatusEnabled && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtTrue {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 
-		if output == servicecatalog.AccessStatusEnabled && rs.Primary.Attributes["enabled"] == "false" {
+		if output == servicecatalog.AccessStatusEnabled && rs.Primary.Attributes[names.AttrEnabled] == acctest.CtFalse {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 

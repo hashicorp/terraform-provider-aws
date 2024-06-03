@@ -9,8 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -31,7 +30,7 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckGlobalTable(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -53,7 +52,7 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 					testAccCheckGlobalTableExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 				),
 			},
 			{
@@ -76,7 +75,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 			testAccPreCheckGlobalTable(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGlobalTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +85,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 					testAccCheckGlobalTableExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 				),
 			},
 			{
@@ -99,14 +98,14 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 				Config: testAccGlobalTableConfig_multipleRegions2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccGlobalTableConfig_multipleRegions1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 				),
 			},
 		},
@@ -115,7 +114,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 
 func testAccCheckGlobalTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_global_table" {
@@ -146,11 +145,7 @@ func testAccCheckGlobalTableExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DynamoDB Global Table ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
 		_, err := tfdynamodb.FindGlobalTableByName(ctx, conn, rs.Primary.ID)
 
@@ -161,25 +156,25 @@ func testAccCheckGlobalTableExists(ctx context.Context, n string) resource.TestC
 func testAccPreCheckGlobalTable(ctx context.Context, t *testing.T) {
 	// Region availability for Version 2017.11.29: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html
 	supportedRegions := []string{
-		endpoints.ApNortheast1RegionID,
-		endpoints.ApNortheast2RegionID,
-		endpoints.ApSoutheast1RegionID,
-		endpoints.ApSoutheast2RegionID,
-		endpoints.EuCentral1RegionID,
-		endpoints.EuWest1RegionID,
-		endpoints.EuWest2RegionID,
-		endpoints.UsEast1RegionID,
-		endpoints.UsEast2RegionID,
-		endpoints.UsWest1RegionID,
-		endpoints.UsWest2RegionID,
+		names.APNortheast1RegionID,
+		names.APNortheast2RegionID,
+		names.APSoutheast1RegionID,
+		names.APSoutheast2RegionID,
+		names.EUCentral1RegionID,
+		names.EUWest1RegionID,
+		names.EUWest2RegionID,
+		names.USEast1RegionID,
+		names.USEast2RegionID,
+		names.USWest1RegionID,
+		names.USWest2RegionID,
 	}
 	acctest.PreCheckRegion(t, supportedRegions...)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
 	input := &dynamodb.ListGlobalTablesInput{}
 
-	_, err := conn.ListGlobalTablesWithContext(ctx, input)
+	_, err := conn.ListGlobalTables(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

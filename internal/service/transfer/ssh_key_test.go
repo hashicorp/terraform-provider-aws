@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccSSHKey_basic(t *testing.T) {
@@ -33,7 +34,7 @@ func testAccSSHKey_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSSHKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,8 +42,8 @@ func testAccSSHKey_basic(t *testing.T) {
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_transfer_user.test", "user_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_transfer_user.test", names.AttrUserName),
 					resource.TestCheckResourceAttr(resourceName, "body", publicKey),
 				),
 			},
@@ -63,7 +64,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Ssh Public Key ID is set")
+			return fmt.Errorf("Transfer SSH Public Key ID not set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
@@ -88,7 +89,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 			}
 		}
 
-		return fmt.Errorf("Transfer Ssh Public Key doesn't exists.")
+		return fmt.Errorf("Transfer SSH Public Key does not exist")
 	}
 }
 

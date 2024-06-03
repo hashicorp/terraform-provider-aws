@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type queueAttributeHandler struct {
@@ -43,7 +44,9 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 		QueueUrl:   aws.String(url),
 	}
 
-	_, err = conn.SetQueueAttributes(ctx, input)
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetQueueAttributes(ctx, input)
+	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 
 	if err != nil {
 		return diag.Errorf("setting SQS Queue (%s) attribute (%s): %s", url, h.AttributeName, err)
@@ -80,8 +83,8 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	if h.SchemaKey == "policy" {
-		newValue, err = verify.PolicyToSet(d.Get("policy").(string), newValue)
+	if h.SchemaKey == names.AttrPolicy {
+		newValue, err = verify.PolicyToSet(d.Get(names.AttrPolicy).(string), newValue)
 		if err != nil {
 			return diag.FromErr(err)
 		}

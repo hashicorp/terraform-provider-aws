@@ -42,10 +42,6 @@ type Diagnostic struct {
 	// indicate that the problem is with a certain field in the resource,
 	// which helps users find the source of the problem.
 	Attribute *tftypes.AttributePath
-
-	// FunctionArgument is the positional function argument for aligning
-	// configuration source.
-	FunctionArgument *int64
 }
 
 // DiagnosticSeverity represents different classes of Diagnostic which affect

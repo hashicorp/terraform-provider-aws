@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
@@ -55,7 +56,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -63,22 +64,22 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_basic(rName, testcase.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-							acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
-							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
+							acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", acctest.Ct1),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
-							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, "arn"),
-							resource.TestCheckResourceAttrPair(resourceName, "core_network_id", coreNetworkResourceName, "id"),
+							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
+							resource.TestCheckResourceAttrPair(resourceName, "core_network_id", coreNetworkResourceName, names.AttrID),
 							resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
-							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
-							acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-							resource.TestCheckResourceAttrPair(resourceName, "resource_arn", vpcResourceName, "arn"),
+							resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
+							acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-							resource.TestCheckResourceAttr(resourceName, "state", testcase.expectedState),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-							resource.TestCheckResourceAttrPair(resourceName, "vpc_arn", vpcResourceName, "arn"),
+							resource.TestCheckResourceAttr(resourceName, names.AttrState, testcase.expectedState),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+							resource.TestCheckResourceAttrPair(resourceName, "vpc_arn", vpcResourceName, names.AttrARN),
 						),
 					},
 					{
@@ -123,7 +124,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -131,22 +132,22 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_Attached_basic(rName, testcase.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-							acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
-							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
+							acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", acctest.Ct1),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
-							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, "arn"),
-							resource.TestCheckResourceAttrPair(resourceName, "core_network_id", coreNetworkResourceName, "id"),
+							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
+							resource.TestCheckResourceAttrPair(resourceName, "core_network_id", coreNetworkResourceName, names.AttrID),
 							resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
-							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
-							acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-							resource.TestCheckResourceAttrPair(resourceName, "resource_arn", vpcResourceName, "arn"),
+							resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
+							acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-							resource.TestCheckResourceAttrSet(resourceName, "state"),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-							resource.TestCheckResourceAttrPair(resourceName, "vpc_arn", vpcResourceName, "arn"),
+							resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+							resource.TestCheckResourceAttrPair(resourceName, "vpc_arn", vpcResourceName, names.AttrARN),
 						),
 					},
 					{
@@ -189,7 +190,7 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -242,7 +243,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappears(t *testing.T) { // n
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -278,7 +279,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_disappearsAccepter(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -311,7 +312,7 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -319,7 +320,7 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 				Config: testAccVPCAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
@@ -327,7 +328,7 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 				Config: testAccVPCAttachmentConfig_tags2(rName, "segment", "shared", "Name", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
@@ -336,7 +337,7 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 				Config: testAccVPCAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
@@ -384,7 +385,7 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -392,9 +393,9 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_updates(rName, testcase.acceptanceRequired, 2, true, false),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v1),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "true"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtTrue),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
 						),
 					},
 					{
@@ -402,9 +403,9 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
 							testAccCheckVPCAttachmentRecreated(&v1, &v2, testcase.expectRecreation),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtTrue),
 						),
 					},
 					{
@@ -412,9 +413,9 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v3),
 							testAccCheckVPCAttachmentRecreated(&v2, &v3, testcase.expectRecreation),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
 						),
 					},
 					{
@@ -422,9 +423,9 @@ func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v4),
 							testAccCheckVPCAttachmentRecreated(&v3, &v4, testcase.expectRecreation),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtTrue),
 						),
 					},
 					{
@@ -470,7 +471,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckVPCAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -478,9 +479,9 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_Attached_updates(rName, testcase.acceptanceRequired, 2, true, false),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v1),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "true"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtTrue),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
 						),
 					},
 					{
@@ -488,9 +489,9 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v2),
 							testAccCheckVPCAttachmentRecreated(&v1, &v2, false),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtTrue),
 						),
 					},
 					{
@@ -498,9 +499,9 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v3),
 							testAccCheckVPCAttachmentRecreated(&v2, &v3, false),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
 						),
 					},
 					{
@@ -508,9 +509,9 @@ func TestAccNetworkManagerVPCAttachment_Attached_update(t *testing.T) {
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v4),
 							testAccCheckVPCAttachmentRecreated(&v3, &v4, false),
-							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", "false"),
-							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+							resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.Ct2),
+							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
+							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtTrue),
 						),
 					},
 					{

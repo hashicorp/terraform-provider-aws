@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpenSearchPackage_basic(t *testing.T) {
@@ -24,7 +24,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,7 +36,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "package_description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "package_id"),
 					resource.TestCheckResourceAttr(resourceName, "package_name", pkgName),
-					resource.TestCheckResourceAttr(resourceName, "package_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "package_source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "package_type", "TXT-DICTIONARY"),
 				),
 			},
@@ -59,7 +59,7 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPackageDestroy(ctx),
 		Steps: []resource.TestStep{

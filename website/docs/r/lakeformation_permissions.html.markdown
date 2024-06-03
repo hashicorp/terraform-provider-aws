@@ -102,7 +102,7 @@ If the `principal` is also a data lake administrator, AWS grants implicit permis
 ```terraform
 resource "aws_lakeformation_permissions" "example" {
   principal   = aws_iam_role.workflow_role.arn
-  permissions = ["ALL"]
+  permissions = ["DATA_LOCATION_ACCESS"]
 
   data_location {
     arn = aws_lakeformation_resource.example.arn
@@ -159,6 +159,7 @@ The following arguments are required:
 One of the following is required:
 
 * `catalog_resource` - (Optional) Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
+* `data_cells_filter` - (Optional) Configuration block for a data cells filter resource. Detailed below.
 * `data_location` - (Optional) Configuration block for a data location resource. Detailed below.
 * `database` - (Optional) Configuration block for a database resource. Detailed below.
 * `lf_tag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
@@ -170,6 +171,13 @@ The following arguments are optional:
 
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
 * `permissions_with_grant_option` - (Optional) Subset of `permissions` which the principal can pass.
+
+### data_cells_filter
+
+* `database_name` - (Required) The name of the database.
+* `name` - (Required) The name of the data cells filter.
+* `table_catalog_id` - (Required) The ID of the Data Catalog.
+* `table_name` - (Required) The name of the table.
 
 ### data_location
 

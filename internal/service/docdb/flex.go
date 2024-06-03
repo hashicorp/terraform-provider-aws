@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Takes the result of flatmap.Expand for an array of parameters and
@@ -24,8 +25,8 @@ func expandParameters(configured []interface{}) []*docdb.Parameter {
 
 		p := &docdb.Parameter{
 			ApplyMethod:    aws.String(data["apply_method"].(string)),
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
+			ParameterName:  aws.String(data[names.AttrName].(string)),
+			ParameterValue: aws.String(data[names.AttrValue].(string)),
 		}
 
 		parameters = append(parameters, p)
@@ -44,7 +45,7 @@ func flattenParameters(list []*docdb.Parameter, parameterList []interface{}) []m
 			// Check if any non-user parameters are specified in the configuration.
 			parameterFound := false
 			for _, configParameter := range parameterList {
-				if configParameter.(map[string]interface{})["name"] == name {
+				if configParameter.(map[string]interface{})[names.AttrName] == name {
 					parameterFound = true
 				}
 			}
@@ -55,9 +56,9 @@ func flattenParameters(list []*docdb.Parameter, parameterList []interface{}) []m
 			}
 
 			result = append(result, map[string]interface{}{
-				"apply_method": aws.StringValue(i.ApplyMethod),
-				"name":         aws.StringValue(i.ParameterName),
-				"value":        aws.StringValue(i.ParameterValue),
+				"apply_method":  aws.StringValue(i.ApplyMethod),
+				names.AttrName:  aws.StringValue(i.ParameterName),
+				names.AttrValue: aws.StringValue(i.ParameterValue),
 			})
 		}
 	}

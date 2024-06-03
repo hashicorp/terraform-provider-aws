@@ -5,41 +5,35 @@ package configservice_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfconfigservice "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConfigServiceOrganizationCustomPolicyRule_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccOrganizationCustomPolicyRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var rule configservice.OrganizationConfigRule
+	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, configservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ConfigServiceEndpointID)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,19 +41,19 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_basic(t *testing.T) {
 				Config: testAccOrganizationCustomPolicyRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomPolicyRuleExists(ctx, resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_text", "let var = 5"),
 					resource.TestCheckResourceAttr(resourceName, "policy_runtime", "guard-2.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "1")),
+					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", acctest.Ct1)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -70,23 +64,19 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceOrganizationCustomPolicyRule_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccOrganizationCustomPolicyRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var organizationcustompolicy configservice.OrganizationConfigRule
+	var organizationcustompolicy types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, configservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ConfigServiceEndpointID)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +84,7 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_disappears(t *testing.T) {
 				Config: testAccOrganizationCustomPolicyRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomPolicyRuleExists(ctx, resourceName, &organizationcustompolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfigservice.ResourceOrganizationCustomPolicyRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationCustomPolicyRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,23 +92,19 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var organizationcustompolicy configservice.OrganizationConfigRule
+	var organizationcustompolicy types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, configservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ConfigServiceEndpointID)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
 
@@ -146,50 +132,46 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 
 func testAccCheckOrganizationCustomPolicyRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_organization_custom_policy_rule" {
 				continue
 			}
 
-			_, err := tfconfigservice.FindOrganizationConfigRule(ctx, conn, rs.Primary.ID)
+			_, err := tfconfig.FindOrganizationCustomPolicyRuleByName(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
+			if tfresource.NotFound(err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
 				continue
 			}
 
-			if tfawserr.ErrCodeEquals(err, configservice.ErrCodeOrganizationAccessDeniedException) {
-				continue
+			if err != nil {
+				return err
 			}
 
-			return create.Error(names.ConfigService, create.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomPolicyRule, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("ConfigService Organization Custom Policy Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckOrganizationCustomPolicyRuleExists(ctx context.Context, name string, ocr *configservice.OrganizationConfigRule) resource.TestCheckFunc {
+func testAccCheckOrganizationCustomPolicyRuleExists(ctx context.Context, n string, v *types.OrganizationConfigRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomPolicyRule, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomPolicyRule, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
-
-		resp, err := tfconfigservice.FindOrganizationConfigRule(ctx, conn, rs.Primary.ID)
+		output, err := tfconfig.FindOrganizationCustomPolicyRuleByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomPolicyRule, rs.Primary.ID, err)
+			return err
 		}
 
-		*ocr = *resp
+		*v = *output
 
 		return nil
 	}

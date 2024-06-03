@@ -67,11 +67,11 @@ The `sub_domain` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the domain association.
-* `certificate_verification_dns_record` - The DNS record for certificate verification.
+* `certificate_verification_dns_record` - DNS records for certificate verification in a space-delimited format (`<record> CNAME <target>`).
 
 The `sub_domain` configuration block exports the following attributes:
 
-* `dns_record` - DNS record for the subdomain.
+* `dns_record` - DNS record for the subdomain in a space-prefixed and space-delimited format (` CNAME <target>`).
 * `verified` - Verified status of the subdomain.
 
 ## Import

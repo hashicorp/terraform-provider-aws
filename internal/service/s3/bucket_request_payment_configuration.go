@@ -19,10 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_request_payment_configuration")
-func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_request_payment_configuration", name="Bucket Request Payment Configuration")
+func resourceBucketRequestPaymentConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketRequestPaymentConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketRequestPaymentConfigurationRead,
@@ -34,13 +35,13 @@ func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -58,8 +59,8 @@ func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
 func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketRequestPaymentInput{
 		Bucket: aws.String(bucket),
 		RequestPaymentConfiguration: &types.RequestPaymentConfiguration{
@@ -115,8 +116,8 @@ func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schem
 		return diag.Errorf("reading S3 Bucket Request Payment Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrBucket, bucket)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	d.Set("payer", output.Payer)
 
 	return nil

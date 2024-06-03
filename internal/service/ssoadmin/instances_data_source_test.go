@@ -18,14 +18,14 @@ func TestAccSSOAdminInstancesDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "identity_store_ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "identity_store_ids.#", acctest.Ct1),
 					acctest.MatchResourceAttrGlobalARNNoAccount(dataSourceName, "arns.0", "sso", regexache.MustCompile("instance/(sso)?ins-[0-9A-Za-z.-]{16}")),
 					resource.TestMatchResourceAttr(dataSourceName, "identity_store_ids.0", regexache.MustCompile("^[0-9A-Za-z-]*")),
 				),

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53recoverycontrolconfig "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccSafetyRule_assertionRule(t *testing.T) {
@@ -25,7 +26,7 @@ func testAccSafetyRule_assertionRule(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, r53rcc.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,11 +34,11 @@ func testAccSafetyRule_assertionRule(t *testing.T) {
 				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "asserted_controls.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "asserted_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
 				),
 			},
 			{
@@ -56,7 +57,7 @@ func testAccSafetyRule_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, r53rcc.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +80,7 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, r53rcc.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,12 +88,12 @@ func testAccSafetyRule_gatingRule(t *testing.T) {
 				Config: testAccSafetyRuleConfig_routingControlGating(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "target_controls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "gating_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
 				),
 			},
 			{

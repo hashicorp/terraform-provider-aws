@@ -86,4 +86,5 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of this DB snapshot.
 * `storage_type` - Storage type associated with DB snapshot.
 * `vpc_id` - ID of the VPC associated with the DB snapshot.
-* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
+* `original_snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.

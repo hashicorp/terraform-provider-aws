@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorFilter(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,10 +39,10 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`traffic-mirror-filter/tmf-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-filter/tmf-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			// Test Disable DNS service
@@ -49,7 +50,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_noDNS(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_services.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.Ct0),
 				),
 			},
 			// Test Enable DNS service
@@ -57,8 +58,8 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_basic(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.Ct1),
 				),
 			},
 			{
@@ -80,16 +81,16 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorFilter(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key1", "value1"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -98,20 +99,20 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCTrafficMirrorFilterConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key2", "value2"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -129,7 +130,7 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorFilter(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy(ctx),
 		Steps: []resource.TestStep{

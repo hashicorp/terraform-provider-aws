@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -38,11 +39,11 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -53,17 +54,17 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 				ForceNew: true,
 				ExactlyOneOf: []string{
 					"gateway_load_balancer_endpoint_id",
-					"network_interface_id",
+					names.AttrNetworkInterfaceID,
 					"network_load_balancer_arn",
 				},
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				ExactlyOneOf: []string{
 					"gateway_load_balancer_endpoint_id",
-					"network_interface_id",
+					names.AttrNetworkInterfaceID,
 					"network_load_balancer_arn",
 				},
 			},
@@ -73,12 +74,12 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 				ForceNew: true,
 				ExactlyOneOf: []string{
 					"gateway_load_balancer_endpoint_id",
-					"network_interface_id",
+					names.AttrNetworkInterfaceID,
 					"network_load_balancer_arn",
 				},
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,10 +94,11 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTrafficMirrorTargetInput{
+		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorTarget),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -104,7 +106,7 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 		input.GatewayLoadBalancerEndpointId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("network_interface_id"); ok {
+	if v, ok := d.GetOk(names.AttrNetworkInterfaceID); ok {
 		input.NetworkInterfaceId = aws.String(v.(string))
 	}
 
@@ -147,12 +149,12 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", target.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, target.Description)
 	d.Set("gateway_load_balancer_endpoint_id", target.GatewayLoadBalancerEndpointId)
-	d.Set("network_interface_id", target.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, target.NetworkInterfaceId)
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrOwnerID, ownerID)
 
 	setTagsOut(ctx, target.Tags)
 

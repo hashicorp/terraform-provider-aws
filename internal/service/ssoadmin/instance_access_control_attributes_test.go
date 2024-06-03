@@ -22,10 +22,10 @@ func TestAccSSOAdmin_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"InstanceAccessControlAttributes": {
-			"basic":      testAccInstanceAccessControlAttributes_basic,
-			"disappears": testAccInstanceAccessControlAttributes_disappears,
-			"multiple":   testAccInstanceAccessControlAttributes_multiple,
-			"update":     testAccInstanceAccessControlAttributes_update,
+			acctest.CtBasic:      testAccInstanceAccessControlAttributes_basic,
+			acctest.CtDisappears: testAccInstanceAccessControlAttributes_disappears,
+			"multiple":           testAccInstanceAccessControlAttributes_multiple,
+			"update":             testAccInstanceAccessControlAttributes_update,
 		},
 	}
 
@@ -38,7 +38,7 @@ func testAccInstanceAccessControlAttributes_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,8 +46,8 @@ func testAccInstanceAccessControlAttributes_basic(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{
@@ -65,7 +65,7 @@ func testAccInstanceAccessControlAttributes_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func testAccInstanceAccessControlAttributes_multiple(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,8 +95,8 @@ func testAccInstanceAccessControlAttributes_multiple(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_multiple(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func testAccInstanceAccessControlAttributes_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceAccessControlAttributesDestroy(ctx),
 		Steps: []resource.TestStep{

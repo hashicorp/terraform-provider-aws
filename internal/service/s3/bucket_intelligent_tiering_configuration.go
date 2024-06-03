@@ -21,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_intelligent_tiering_configuration")
-func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_intelligent_tiering_configuration", name="Bucket Intelligent-Tiering Configuration")
+func resourceBucketIntelligentTieringConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketIntelligentTieringConfigurationPut,
 		ReadWithoutTimeout:   resourceBucketIntelligentTieringConfigurationRead,
@@ -36,23 +37,23 @@ func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
-						"tags": {
+						names.AttrTags: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							Elem:         &schema.Schema{Type: schema.TypeString},
@@ -61,12 +62,12 @@ func ResourceBucketIntelligentTieringConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          types.IntelligentTieringStatusEnabled,
@@ -98,13 +99,13 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	intelligentTieringConfiguration := &types.IntelligentTieringConfiguration{
 		Id:     aws.String(name),
-		Status: types.IntelligentTieringStatus(d.Get("status").(string)),
+		Status: types.IntelligentTieringStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		intelligentTieringConfiguration.Filter = expandIntelligentTieringFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -112,7 +113,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 		intelligentTieringConfiguration.Tierings = expandTierings(v.(*schema.Set).List())
 	}
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.PutBucketIntelligentTieringConfigurationInput{
 		Bucket:                          aws.String(bucket),
 		Id:                              aws.String(name),
@@ -167,16 +168,16 @@ func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *s
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Intelligent-Tiering Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if output.Filter != nil {
-		if err := d.Set("filter", []interface{}{flattenIntelligentTieringFilter(ctx, output.Filter)}); err != nil {
+		if err := d.Set(names.AttrFilter, []interface{}{flattenIntelligentTieringFilter(ctx, output.Filter)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 		}
 	} else {
-		d.Set("filter", nil)
+		d.Set(names.AttrFilter, nil)
 	}
-	d.Set("name", output.Id)
-	d.Set("status", output.Status)
+	d.Set(names.AttrName, output.Id)
+	d.Set(names.AttrStatus, output.Status)
 	if err := d.Set("tiering", flattenTierings(output.Tierings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tiering: %s", err)
 	}
@@ -270,13 +271,13 @@ func expandIntelligentTieringFilter(ctx context.Context, tfMap map[string]interf
 
 	var prefix string
 
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok {
 		prefix = v
 	}
 
 	var tags []types.Tag
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok {
 		tags = Tags(tftags.New(ctx, v))
 	}
 
@@ -361,21 +362,21 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 
 	if apiObject.And == nil {
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = keyValueTags(ctx, []types.Tag{*v}).Map()
+			tfMap[names.AttrTags] = keyValueTags(ctx, []types.Tag{*v}).Map()
 		}
 	} else {
 		apiObject := apiObject.And
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tags; v != nil {
-			tfMap["tags"] = keyValueTags(ctx, v).Map()
+			tfMap[names.AttrTags] = keyValueTags(ctx, v).Map()
 		}
 	}
 

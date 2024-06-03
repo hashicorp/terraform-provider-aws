@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCPeeringConnection_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccVPCPeeringConnection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +39,7 @@ func TestAccVPCPeeringConnection_basic(t *testing.T) {
 				Config: testAccVPCPeeringConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -61,7 +62,7 @@ func TestAccVPCPeeringConnection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,16 +86,16 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -106,20 +107,20 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVPCPeeringConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCPeeringConnectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCPeeringConnectionConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -148,7 +149,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,23 +163,23 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						"1",
+						acctest.Ct1,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_remote_vpc_dns_resolution",
-						"false",
+						acctest.CtFalse,
 					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						"1",
+						acctest.Ct1,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.0.allow_remote_vpc_dns_resolution",
-						"true",
+						acctest.CtTrue,
 					),
 					testAccepterChange,
 				),
@@ -202,23 +203,23 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						"1",
+						acctest.Ct1,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_remote_vpc_dns_resolution",
-						"false",
+						acctest.CtFalse,
 					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						"1",
+						acctest.Ct1,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.0.allow_remote_vpc_dns_resolution",
-						"true",
+						acctest.CtTrue,
 					),
 				),
 			},
@@ -232,7 +233,7 @@ func TestAccVPCPeeringConnection_failedState(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -253,7 +254,7 @@ func TestAccVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,7 +277,7 @@ func TestAccVPCPeeringConnection_region(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -306,7 +307,7 @@ func TestAccVPCPeeringConnection_accept(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -369,7 +370,7 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{

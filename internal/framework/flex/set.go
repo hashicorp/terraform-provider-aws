@@ -10,20 +10,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*string {
 	var output []*string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) Set[string] {
+func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) itypes.Set[string] {
 	var output []string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -39,7 +40,7 @@ func FlattenFrameworkStringSet(ctx context.Context, v []*string) types.Set {
 
 	var output types.Set
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -68,7 +69,7 @@ func FlattenFrameworkStringValueSet[T ~string](ctx context.Context, v []T) types
 
 	var output types.Set
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }

@@ -6,10 +6,10 @@ package emrcontainers_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
@@ -29,7 +29,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
@@ -37,18 +37,18 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVirtualClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.id", dataSourceResourceName, "container_provider.0.id"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.0.info.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.0.info.0.eks_info.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.0.info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "container_provider.0.info.0.eks_info.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.info.0.eks_info.0.namespace", dataSourceResourceName, "container_provider.0.info.0.eks_info.0.namespace"),
 					resource.TestCheckResourceAttrPair(resourceName, "container_provider.0.type", dataSourceResourceName, "container_provider.0.type"),
-					resource.TestCheckResourceAttrSet(dataSourceResourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
-					resource.TestCheckResourceAttrSet(dataSourceResourceName, "state"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
+					resource.TestCheckResourceAttrSet(dataSourceResourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceResourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(dataSourceResourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

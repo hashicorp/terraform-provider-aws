@@ -19,16 +19,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceApplicationLayerAutomaticResponse,
+			Factory: newApplicationLayerAutomaticResponseResource,
 			Name:    "Application Layer Automatic Response",
 		},
 		{
-			Factory: newResourceDRTAccessLogBucketAssociation,
-			Name:    "DRT Access Log Bucket Association",
+			Factory: newDRTAccessLogBucketAssociationResource,
+			Name:    "DRT Log Bucket Association",
 		},
 		{
-			Factory: newResourceDRTAccessRoleARNAssociation,
-			Name:    "DRT Access Role ARN Association",
+			Factory: newDRTAccessRoleARNAssociationResource,
+			Name:    "DRT Role ARN Association",
+		},
+		{
+			Factory: newProactiveEngagementResource,
+			Name:    "Proactive Engagement",
 		},
 	}
 }
@@ -40,11 +44,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceProtection,
+			Factory:  resourceProtection,
 			TypeName: "aws_shield_protection",
 			Name:     "Protection",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{

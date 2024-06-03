@@ -4,25 +4,34 @@ Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
 Terraform Providers, see the [SDKv2 documentation](https://www.terraform.io/plugin/sdkv2/testing).
 
+## In context
+
+To help place acceptance testing in context, here is an overview of the Terraform AWS Provider's three types of tests.
+
+1. **Acceptance tests** (_You are here!_) are end-to-end evaluations of interactions with AWS. They validate functionalities like creating, reading, and destroying resources within AWS.
+2. [**Unit tests**](unit-tests.md) focus on testing isolated units of code within the software, typically at the function level. They assess functionalities solely within the provider itself.
+3. [**Continuous integration tests**](continuous-integration.md) encompass a suite of automated tests that are executed on every pull request and include linting, compiling code, running unit tests, and performing static analysis.
+
 ## Acceptance Tests Often Cost Money to Run
 
-Our acceptance test suite creates real resources, and as a result they cost real money to run.
+Our acceptance test suite creates real resources, and as a result, they cost real money to run.
 Because the resources only exist for a short period of time, the total amount
-of money required is usually a relatively small amount. That said there are particular services
-which are very expensive to run and its important to be prepared for those costs.
+of money required is usually relatively small. That said there are particular services
+which are very expensive to run and it's important to be prepared for those costs.
 
-Some services which can be cost prohibitive include (among others):
+Some services which can be cost-prohibitive include (among others):
 
-- WorkSpaces
-- Glue
-- OpenSearch
-- RDS
 - ACM (Amazon Certificate Manager)
-- FSx
-- Kinesis Analytics
+- Bedrock
 - EC2
 - ElastiCache
+- FSx
+- Glue
+- Kinesis Analytics
+- OpenSearch
+- RDS
 - Storage Gateway
+- WorkSpaces
 
 We don't want financial limitations to be a barrier to contribution, so if you are unable to
 pay to run acceptance tests for your contribution, mention this in your
@@ -154,7 +163,7 @@ export AWS_THIRD_REGION=...
 
 Some tests have been manually marked as long-running (longer than 300 seconds) and can be skipped using the `-short` flag. However, we are adding long-running guards little by little and many services have no guarded tests.
 
-Where guards have been implemented, do not always skip long-running tests. However, for intermediate test runs during development, or to verify functionality unrelated to the specific long-running tests, skipping long-running tests makes work more efficient. We recommend that for the final test run before submitting a PR that you run affected tests without the `-short` flag.
+Where guards have been implemented, do not always skip long-running tests. However, for intermediate test runs during development, or to verify functionality unrelated to the specific long-running tests, skipping long-running tests makes work more efficient. We recommend that for the final test run before submitting a PR you run affected tests without the `-short` flag.
 
 If you want to run only short-running tests, you can use either one of these equivalent statements. Note the use of `-short`.
 
@@ -206,7 +215,7 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -226,7 +235,7 @@ When executing the test, the following steps are taken for each `TestStep`:
 
 1. The Terraform configuration required for the test is applied. This is
    responsible for configuring the resource under test, and any dependencies it
-   may have. For example, to test the `aws_cloudwatch_dashboard` resource, a valid configuration with the requisite fields is required. This results in configuration which looks like this:
+   may have. For example, to test the `aws_cloudwatch_dashboard` resource, a valid configuration with the requisite fields is required. This results in a configuration which looks like this:
 
     ```terraform
     resource "aws_cloudwatch_dashboard" "foobar" {
@@ -281,7 +290,7 @@ When executing the test, the following steps are taken for each `TestStep`:
    Notice that the only information used from the Terraform state is the ID of
    the resource. For computed properties, we instead assert that the value saved in the Terraform state was the
    expected value if possible. The testing framework provides helper functions
-   for several common types of check - for example:
+   for several common types of checks - for example:
 
    ```go
    resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
@@ -373,7 +382,7 @@ Please also note that the newline on the first line of the configuration (before
 
 #### Test Configuration Independence
 
-_Across the entire provider_, all test configurations should be as indepedent from each other as possible. For example, a common place this concept comes up is with the default VPC. Since we have tests that reconfigure the default VPC, if your configuration requires a VPC, it should not rely on the default VPC. Instead, include a VPC that will be created and destroyed as part of the test.
+_Across the entire provider_, all test configurations should be as independent of each other as possible. For example, a common place this concept comes up is with the default VPC. Since we have tests that reconfigure the default VPC, if your configuration requires a VPC, it should not rely on the default VPC. Instead, include a VPC that will be created and destroyed as part of the test.
 
 Make sure that your test configuration:
 
@@ -382,7 +391,7 @@ Make sure that your test configuration:
 
 #### Combining Test Configurations
 
-We include a helper function, `acctest.ConfigCompose()` for iteratively building and chaining test configurations together. It accepts any number of configurations to combine them. This simplifies a single resource's testing by allowing the creation of a "base" test configuration for all the other test configurations (if necessary) and also allows the maintainers to curate common configurations. Each of these is described in more detail in below sections.
+We include a helper function, `acctest.ConfigCompose()` for iteratively building and chaining test configurations together. It accepts any number of configurations to combine them. This simplifies a single resource's testing by allowing the creation of a "base" test configuration for all the other test configurations (if necessary) and also allows the maintainers to curate common configurations. Each of these is described in more detail in the below sections.
 
 Please note that we do discourage _excessive_ chaining of configurations such as implementing multiple layers of "base" configurations. Usually these configurations are harder for maintainers and other future readers to understand due to the multiple levels of indirection.
 
@@ -425,7 +434,7 @@ These test configurations are typical implementations we have found or allow tes
 
 #### Randomized Naming
 
-For AWS resources that require unique naming, the tests should implement a randomized name, typically coded as a `rName` variable in the test and passed as a parameter to creating the test configuration.
+For AWS resources that require unique naming, the tests should implement a randomized name, typically coded as a `rName` variable in the test and passed as a parameter to create the test configuration.
 
 For example:
 
@@ -533,7 +542,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -666,7 +675,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     // PreCheck
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),
     // ... additional checks follow ...
   })
 }
@@ -678,7 +687,7 @@ However, some services have special conditions that aren't caught by the common 
 
 To add a service-specific ErrorCheck, follow these steps:
 
-1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `acctest.RegisterServiceErrorCheckFunc(service.EndpointsID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add to the existing service-specific ErrorCheck.
+1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `acctest.RegisterServiceErrorCheckFunc(names.ExampleServiceID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add it to the existing service-specific ErrorCheck.
 2. Create the service-specific ErrorCheck in an `_test.go` file for the service. See the example below.
 3. Register the new service-specific ErrorCheck in the `init()` at the top of the `_test.go` file. See the example below.
 
@@ -687,7 +696,7 @@ An example of adding a service-specific ErrorCheck:
 ```go
 // just after the imports, create or add to the init() function
 func init() {
-  acctest.RegisterServiceErrorCheck(service.EndpointsID, testAccErrorCheckSkipService)
+  acctest.RegisterServiceErrorCheck(names.ExampleServiceID, testAccErrorCheckSkipService)
 }
 
 // ... additional code and tests ...
@@ -722,11 +731,11 @@ func TestAccExampleThing_longRunningTest(t *testing.T) {
 }
 ```
 
-When running acceptances tests, tests with these guards can be skipped using the Go `-short` flag. See [Running Only Short Tests](#running-only-short-tests) for examples.
+When running acceptance tests, tests with these guards can be skipped using the Go `-short` flag. See [Running Only Short Tests](#running-only-short-tests) for examples.
 
 #### Disappears Acceptance Tests
 
-This test is generally implemented second. It is straightforward to setup once the basic test is passing since it can reuse that test configuration. It prevents a common bug report with Terraform resources that error when they can not be found (e.g., deleted outside Terraform).
+This test is generally implemented second. It is straightforward to set up once the basic test is passing since it can reuse that test configuration. It prevents a common bug report with Terraform resources that error when they can not be found (e.g., deleted outside Terraform).
 
 These are typically named `TestAcc{SERVICE}{THING}_disappears`, e.g., `TestAccCloudWatchDashboard_disappears`
 
@@ -740,7 +749,7 @@ func TestAccExampleThing_disappears(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -784,7 +793,7 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -815,7 +824,7 @@ func TestAccExampleThing_Description(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -875,7 +884,7 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheck(ctx, t)
       acctest.PreCheckOrganizationsAccount(ctx, t)
     },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
     CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
@@ -897,7 +906,8 @@ func TestAccExample_basic(t *testing.T) {
 }
 
 func testAccExampleConfig() string {
-  return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+  return acctest.ConfigCompose(
+    acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 # Cross account resources should be handled by the cross account provider.
 # The standardized provider block to use is awsalternate as seen below.
 resource "aws_cross_account_example" "test" {
@@ -911,11 +921,11 @@ resource "aws_cross_account_example" "test" {
 resource "aws_example" "test" {
   # ... configuration ...
 }
-`)
+`, ...))
 }
 ```
 
-Searching for usage of `acctest.PreCheckOrganizationsAccount` in the codebase will yield real world examples of this setup in action.
+Searching for the usage of `acctest.PreCheckOrganizationsAccount` in the codebase will yield real-world examples of this setup in action.
 
 #### Cross-Region Acceptance Tests
 
@@ -939,7 +949,7 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheck(ctx, t)
       acctest.PreCheckMultipleRegion(t, 2)
     },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
     CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
@@ -961,7 +971,8 @@ func TestAccExample_basic(t *testing.T) {
 }
 
 func testAccExampleConfig() string {
-  return acctest.ConfigMultipleRegionProvider(2) + fmt.Sprintf(`
+  return acctest.ConfigCompose(
+    acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 # Cross region resources should be handled by the cross region provider.
 # The standardized provider is awsalternate as seen below.
 resource "aws_cross_region_example" "test" {
@@ -975,23 +986,23 @@ resource "aws_cross_region_example" "test" {
 resource "aws_example" "test" {
   # ... configuration ...
 }
-`)
+`, ...))
 }
 ```
 
-Searching for usage of `acctest.PreCheckMultipleRegion` in the codebase will yield real world examples of this setup in action.
+Searching for the usage of `acctest.PreCheckMultipleRegion` in the codebase will yield real-world examples of this setup in action.
 
 #### Acceptance Test Concurrency
 
 Certain AWS service APIs allow a limited number of a certain component, while the acceptance testing runs at a default concurrency of twenty tests at a time. For example as of this writing, the SageMaker service only allows one SageMaker Domain per AWS Region. Running the tests with the default concurrency will fail with API errors relating to the component quota being exceeded.
 
-When encountering these types of components, the acceptance testing can be setup to limit the available concurrency of that particular component. When limited to one component at a time, this may also be referred to as serializing the acceptance tests.
+When encountering these types of components, acceptance testing can be set up to limit the available concurrency of that particular component. When limited to one component at a time, this may also be referred to as serializing the acceptance tests.
 
 To convert to serialized (one test at a time) acceptance testing:
 
 - Convert all existing capital `T` test functions with the limited component to begin with a lowercase `t`, e.g., `TestAccSageMakerDomain_basic` becomes `testDomain_basic`. This will prevent the test framework from executing these tests directly as the prefix `Test` is required.
     - In each of these test functions, convert `resource.ParallelTest` to `resource.Test`
-- Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be setup like the following:
+- Create a capital `T` `TestAcc{Service}{Thing}_serial` test function that then references all the lowercase `t` test functions. If multiple test files are referenced, this new test be created in a new shared file such as `internal/service/{SERVICE}/{SERVICE}_test.go`. The contents of this test can be set like the following:
 
 ```go
 func TestAccExampleThing_serial(t *testing.T) {
@@ -1038,7 +1049,7 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -1072,7 +1083,7 @@ data "aws_example_thing" "test" {
 
 ## Acceptance Test Sweepers
 
-When running the acceptance tests, especially when developing or troubleshooting Terraform resources, its possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [SDKv2 documentation on test sweepers](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/sweepers) with Terraform AWS Provider specific details.
+When running the acceptance tests, especially when developing or troubleshooting Terraform resources, it's possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [SDKv2 documentation on test sweepers](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/sweepers) with Terraform AWS Provider specific details.
 
 ### Running Test Sweepers
 
@@ -1273,19 +1284,19 @@ These are basic principles to help guide the creation of acceptance tests.
 
 ### Test Implementation
 
-The below are required items that will be noted during submission review and prevent immediate merging:
+Below are the required items that will be noted during the submission review and prevent immediate merging:
 
 - __Implements CheckDestroy__: Resource testing should include a `CheckDestroy` function (typically named `testAccCheck{SERVICE}{RESOURCE}Destroy`) that calls the API to verify that the Terraform resource has been deleted or disassociated as appropriate. More information about `CheckDestroy` functions can be found in the [SDKv2 TestCase documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/testcase#checkdestroy).
 - __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Custom Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#custom-check-functions).
 - __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
-- __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
-- __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),`).
+- __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when run outside an expected environment.
+- __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),`).
 - __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
-- [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAcc{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
+- [ ] __Uses fmt.Sprintf()__: Test configurations preferably should be separated into their own functions (typically named `testAcc{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
 - __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.
 - __Prevents S3 Bucket Deletion Errors__: Test configurations that use `aws_s3_bucket` resources as a logging destination should include the `force_destroy = true` configuration. This is to prevent race conditions where logging objects may be written during the testing duration which will cause `BucketNotEmpty` errors during deletion.
 
-For resources that support import, the additional item below is required that will be noted during submission review and prevent immediate merging:
+For resources that support import, the additional item below is required that will be noted during the submission review and prevent immediate merging:
 
 - __Implements ImportState Testing__: Tests should include an additional `TestStep` configuration that verifies resource import via `ImportState: true` and `ImportStateVerify: true`. This `TestStep` should be added to all possible tests for the resource to ensure that all infrastructure configurations are properly imported into Terraform.
 
@@ -1370,7 +1381,7 @@ resource "aws_subnet" "test" {
 
 #### Hardcoded Database Versions
 
-- __Uses Database Version Data Sources__: Hardcoded database versions, e.g., RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over times and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
+- __Uses Database Version Data Sources__: Hardcoded database versions, e.g., RDS MySQL Engine Version `5.7.42`, should be removed (which means the AWS-defined default version will be used) or replaced with a list of preferred versions using a data source. Because versions change over time and version offerings vary from region to region and partition to partition, using the default version or providing a list of preferences ensures a version will be available. Depending on the situation, there are several data sources for versions, including:
     - [`aws_rds_engine_version` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/rds_engine_version),
     - [`aws_docdb_engine_version` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/docdb_engine_version), and
     - [`aws_neptune_engine_version` data source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/neptune_engine_version).
@@ -1495,10 +1506,10 @@ POLICY
     - `acctest.MatchResourceAttrRegionalARN()` verifies that an ARN matches the account ID and region of the test execution with a regular expression of the resource value
     - `acctest.CheckResourceAttrGlobalARN()` verifies that an ARN matches the account ID of the test execution with an exact resource value
     - `acctest.MatchResourceAttrGlobalARN()` verifies that an ARN matches the account ID of the test execution with a regular expression of the resource value
-    - `acctest.CheckResourceAttrRegionalARNNoAccount()` verifies than an ARN has no account ID and matches the current region of the test execution with an exact resource value
-    - `acctest.CheckResourceAttrGlobalARNNoAccount()` verifies than an ARN has no account ID and matches an exact resource value
-    - `acctest.CheckResourceAttrRegionalARNAccountID()` verifies than an ARN matches a specific account ID and the current region of the test execution with an exact resource value
-    - `acctest.CheckResourceAttrGlobalARNAccountID()` verifies than an ARN matches a specific account ID with an exact resource value
+    - `acctest.CheckResourceAttrRegionalARNNoAccount()` verifies that an ARN has no account ID and matches the current region of the test execution with an exact resource value
+    - `acctest.CheckResourceAttrGlobalARNNoAccount()` verifies that an ARN has no account ID and matches an exact resource value
+    - `acctest.CheckResourceAttrRegionalARNAccountID()` verifies that an ARN matches a specific account ID and the current region of the test execution with an exact resource value
+    - `acctest.CheckResourceAttrGlobalARNAccountID()` verifies that an ARN matches a specific account ID with an exact resource value
 
 Here's an example of using `aws_partition` and `data.aws_partition.current.partition`:
 

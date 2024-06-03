@@ -184,7 +184,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		{{- if .AWSGoSDKV2 }}
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		{{- else }}
 		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}
@@ -237,7 +237,7 @@ func TestAcc{{ .Service }}{{ .Resource }}_disappears(t *testing.T) {
 			testAccPreCheck(t)
 		},
 		{{- if .AWSGoSDKV2 }}
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		{{- else }}
 		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}

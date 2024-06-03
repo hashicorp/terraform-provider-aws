@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_batch_job_definition: Add update functions instead of ForceNew. Add `deregister_on_new_revision` to allow keeping prior versions ACTIVE when a new revision is published.
+```

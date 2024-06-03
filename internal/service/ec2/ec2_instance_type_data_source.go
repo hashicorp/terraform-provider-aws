@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_instance_type")
@@ -122,7 +123,7 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -150,7 +151,7 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -178,7 +179,7 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -194,11 +195,11 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -209,7 +210,7 @@ func DataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -222,6 +223,10 @@ func DataSourceInstanceType() *schema.Resource {
 				Computed: true,
 			},
 			"maximum_ipv6_addresses_per_interface": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"maximum_network_cards": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -296,7 +301,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	v, err := FindInstanceTypeByName(ctx, conn, d.Get("instance_type").(string))
+	v, err := FindInstanceTypeByName(ctx, conn, d.Get(names.AttrInstanceType).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
@@ -332,7 +337,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 				"count":        aws.Int64Value(fpg.Count),
 				"manufacturer": aws.StringValue(fpg.Manufacturer),
 				"memory_size":  aws.Int64Value(fpg.MemoryInfo.SizeInMiB),
-				"name":         aws.StringValue(fpg.Name),
+				names.AttrName: aws.StringValue(fpg.Name),
 			}
 			fpgaList[i] = fpga
 		}
@@ -347,7 +352,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 				"count":        aws.Int64Value(gp.Count),
 				"manufacturer": aws.StringValue(gp.Manufacturer),
 				"memory_size":  aws.Int64Value(gp.MemoryInfo.SizeInMiB),
-				"name":         aws.StringValue(gp.Name),
+				names.AttrName: aws.StringValue(gp.Name),
 			}
 			gpuList[i] = gpu
 		}
@@ -362,7 +367,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 			accelerator := map[string]interface{}{
 				"count":        aws.Int64Value(accl.Count),
 				"manufacturer": aws.StringValue(accl.Manufacturer),
-				"name":         aws.StringValue(accl.Name),
+				names.AttrName: aws.StringValue(accl.Name),
 			}
 			acceleratorList[i] = accelerator
 		}
@@ -373,9 +378,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 			diskList := make([]interface{}, len(v.InstanceStorageInfo.Disks))
 			for i, dk := range v.InstanceStorageInfo.Disks {
 				disk := map[string]interface{}{
-					"count": aws.Int64Value(dk.Count),
-					"size":  aws.Int64Value(dk.SizeInGB),
-					"type":  aws.StringValue(dk.Type),
+					"count":        aws.Int64Value(dk.Count),
+					names.AttrSize: aws.Int64Value(dk.SizeInGB),
+					names.AttrType: aws.StringValue(dk.Type),
 				}
 				diskList[i] = disk
 			}
@@ -384,10 +389,11 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("total_instance_storage", v.InstanceStorageInfo.TotalSizeInGB)
 	}
 	d.Set("instance_storage_supported", v.InstanceStorageSupported)
-	d.Set("instance_type", v.InstanceType)
+	d.Set(names.AttrInstanceType, v.InstanceType)
 	d.Set("ipv6_supported", v.NetworkInfo.Ipv6Supported)
 	d.Set("maximum_ipv4_addresses_per_interface", v.NetworkInfo.Ipv4AddressesPerInterface)
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)
+	d.Set("maximum_network_cards", v.NetworkInfo.MaximumNetworkCards)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
 	d.Set("memory_size", v.MemoryInfo.SizeInMiB)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)

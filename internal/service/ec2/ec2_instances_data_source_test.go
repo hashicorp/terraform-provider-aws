@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2InstancesDataSource_basic(t *testing.T) {
@@ -19,15 +19,15 @@ func TestAccEC2InstancesDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_ids(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.Ct2),
 					// Public IP values are flakey for new EC2 instances due to eventual consistency
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
 				),
@@ -42,13 +42,13 @@ func TestAccEC2InstancesDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -61,13 +61,13 @@ func TestAccEC2InstancesDataSource_instanceStateNames(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_instanceStateNames(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -80,16 +80,16 @@ func TestAccEC2InstancesDataSource_empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", acctest.Ct0),
 				),
 			},
 		},
@@ -102,15 +102,15 @@ func TestAccEC2InstancesDataSource_timeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "ipv6_addresses.#"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
 				),
 			},

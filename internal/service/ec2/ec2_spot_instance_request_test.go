@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,7 +41,7 @@ func TestAccEC2SpotInstanceRequest_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "terminate"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -61,7 +62,7 @@ func TestAccEC2SpotInstanceRequest_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,16 +86,16 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSpotInstanceRequestConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -104,22 +105,22 @@ func TestAccEC2SpotInstanceRequest_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "wait_for_fulfillment"},
 			},
 			{
-				Config: testAccSpotInstanceRequestConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSpotInstanceRequestConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir2),
 					testAccCheckSpotInstanceRequestIDsEqual(&sir2, &sir1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSpotInstanceRequestConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSpotInstanceRequestConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir3),
 					testAccCheckSpotInstanceRequestIDsEqual(&sir3, &sir2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -140,7 +141,7 @@ func TestAccEC2SpotInstanceRequest_keyName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,7 +170,7 @@ func TestAccEC2SpotInstanceRequest_withLaunchGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -201,7 +202,7 @@ func TestAccEC2SpotInstanceRequest_withBlockDuration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -233,7 +234,7 @@ func TestAccEC2SpotInstanceRequest_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -266,7 +267,7 @@ func TestAccEC2SpotInstanceRequest_validUntil(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -298,7 +299,7 @@ func TestAccEC2SpotInstanceRequest_withoutSpotPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -329,7 +330,7 @@ func TestAccEC2SpotInstanceRequest_subnetAndSGAndPublicIPAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -338,7 +339,7 @@ func TestAccEC2SpotInstanceRequest_subnetAndSGAndPublicIPAddress(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					testAccCheckSpotInstanceRequest_InstanceAttributes(ctx, &sir, rName),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 				),
 			},
 			{
@@ -359,7 +360,7 @@ func TestAccEC2SpotInstanceRequest_networkInterfaceAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -369,7 +370,7 @@ func TestAccEC2SpotInstanceRequest_networkInterfaceAttributes(t *testing.T) {
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					testAccCheckSpotInstanceRequest_InstanceAttributes(ctx, &sir, rName),
 					testAccCheckSpotInstanceRequest_NetworkInterfaceAttributes(&sir),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 				),
 			},
 			{
@@ -395,7 +396,7 @@ func TestAccEC2SpotInstanceRequest_getPasswordData(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -424,7 +425,7 @@ func TestAccEC2SpotInstanceRequest_interruptStop(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -455,7 +456,7 @@ func TestAccEC2SpotInstanceRequest_interruptHibernate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -486,7 +487,7 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -517,7 +518,7 @@ func TestAccEC2SpotInstanceRequest_withInstanceProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{

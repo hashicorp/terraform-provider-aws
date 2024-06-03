@@ -36,6 +36,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourcePrimaryContact,
 			TypeName: "aws_account_primary_contact",
 		},
+		{
+			Factory:  resourceRegion,
+			TypeName: "aws_account_region",
+			Name:     "Region",
+		},
 	}
 }
 
@@ -48,7 +53,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return account_sdkv2.NewFromConfig(cfg, func(o *account_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

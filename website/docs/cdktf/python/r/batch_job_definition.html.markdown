@@ -129,33 +129,26 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         BatchJobDefinition(self, "test",
-            eks_properties=[{
-                "pod_properties": [{
-                    "containers": [{
-                        "command": ["sleep", "60"],
-                        "image": "public.ecr.aws/amazonlinux/amazonlinux:1",
-                        "resources": [{
-                            "limits": [{
+            eks_properties=BatchJobDefinitionEksProperties(
+                pod_properties=BatchJobDefinitionEksPropertiesPodProperties(
+                    containers=BatchJobDefinitionEksPropertiesPodPropertiesContainers(
+                        command=["sleep", "60"],
+                        image="public.ecr.aws/amazonlinux/amazonlinux:1",
+                        resources=BatchJobDefinitionEksPropertiesPodPropertiesContainersResources(
+                            limits={
                                 "cpu": "1",
                                 "memory": "1024Mi"
                             }
-                            ]
-                        }
-                        ]
-                    }
-                    ],
-                    "host_network": True,
-                    "metadata": [{
-                        "labels": [{
+                        )
+                    ),
+                    host_network=True,
+                    metadata=BatchJobDefinitionEksPropertiesPodPropertiesMetadata(
+                        labels={
                             "environment": "test"
                         }
-                        ]
-                    }
-                    ]
-                }
-                ]
-            }
-            ],
+                    )
+                )
+            ),
             name=" tf_test_batch_job_definition_eks",
             type="container"
         )
@@ -231,16 +224,14 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `container_properties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
-    provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
-* `node_properties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
-    provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
+* `container_properties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
+* `deregister_on_new_revision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
+* `node_properties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `eks_properties` - (Optional) A valid [eks properties](#eks_properties). This parameter is only valid if the `type` parameter is `container`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `platform_capabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the job definition to the corresponding Amazon ECS task. Default is `false`.
-* `retry_strategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
-    Maximum number of `retry_strategy` is `1`.  Defined below.
+* `retry_strategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition. Maximum number of `retry_strategy` is `1`.  Defined below.
 * `scheduling_priority` - (Optional) The scheduling priority of the job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority. Allowed values `0` through `9999`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
@@ -296,7 +287,7 @@ The following arguments are optional:
 
 #### `evaluate_on_exit`
 
-* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `RETRY`, `EXIT`.
+* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `retry`, `exit`.
 * `on_exit_code` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
 * `on_reason` - (Optional) A glob pattern to match against the reason returned for a job.
 * `on_status_reason` - (Optional) A glob pattern to match against the status reason returned for a job.
@@ -322,9 +313,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.batch_job_definition import BatchJobDefinition
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        BatchJobDefinition.generate_config_for_import(self, "test", "arn:aws:batch:us-east-1:123456789012:job-definition/sample")
 ```
 
 Using `terraform import`, import Batch Job Definition using the `arn`. For example:
@@ -333,4 +330,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.0 input-d04d679249d07878059f9a3f9cce22a396419b2a09d3b75a5ac88f8fd3961fb1 -->
+<!-- cache-key: cdktf-0.20.1 input-a601dba3c095da075f0b1e61565a10ccc796a5a15ab0385930fcb09cf34abb8c -->

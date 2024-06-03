@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSchemasDiscoverer_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccSchemasDiscoverer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,9 +35,9 @@ func TestAccSchemasDiscoverer_basic(t *testing.T) {
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("discoverer/events-event-bus-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "schemas", fmt.Sprintf("discoverer/events-event-bus-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -56,7 +57,7 @@ func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 				Config: testAccDiscovererConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -100,14 +101,14 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 				Config: testAccDiscovererConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -122,16 +123,16 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDiscovererConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDiscovererConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -140,20 +141,20 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDiscovererConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDiscovererConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDiscovererConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDiscovererConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

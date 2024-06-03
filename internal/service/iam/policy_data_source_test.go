@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMPolicyDataSource_arn(t *testing.T) {
@@ -22,19 +22,20 @@ func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_arn(policyName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -49,19 +50,20 @@ func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_arnTags(policyName, "/"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.key", resourceName, "tags.key"),
 				),
 			},
@@ -77,19 +79,20 @@ func TestAccIAMPolicyDataSource_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_name(policyName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -104,19 +107,20 @@ func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_nameTags(policyName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.key", resourceName, "tags.key"),
 				),
 			},
@@ -134,19 +138,20 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_pathPrefix(policyName, policyPath),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -163,19 +168,20 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyDataSourceConfig_pathPrefixTags(policyName, policyPath),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.key", resourceName, "tags.key"),
 				),
 			},
@@ -190,7 +196,7 @@ func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

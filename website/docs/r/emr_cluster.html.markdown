@@ -663,6 +663,7 @@ EOF
 * `step_concurrency_level` - (Optional) Number of steps that can be executed concurrently. You can specify a maximum of 256 steps. Only valid for EMR clusters with `release_label` 5.28.0 or greater (default is 1).
 * `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
+* `unhealthy_node_replacement` - (Optional) Whether whether Amazon EMR should gracefully replace core nodes that have degraded within the cluster. Default value is `false`.
 * `visible_to_all_users` - (Optional) Whether the job flow is visible to all IAM users of the AWS account associated with the job flow. Default value is `true`.
 
 ### bootstrap_action

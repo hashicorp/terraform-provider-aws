@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,20 +39,20 @@ func ResourceTrafficMirrorSession() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,13 +90,14 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
-		NetworkInterfaceId:    aws.String(d.Get("network_interface_id").(string)),
+		ClientToken:           aws.String(id.UniqueId()),
+		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 		TrafficMirrorTargetId: aws.String(d.Get("traffic_mirror_target_id").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -146,10 +148,10 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("traffic-mirror-session/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", session.Description)
-	d.Set("network_interface_id", session.NetworkInterfaceId)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, session.Description)
+	d.Set(names.AttrNetworkInterfaceID, session.NetworkInterfaceId)
+	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("packet_length", session.PacketLength)
 	d.Set("session_number", session.SessionNumber)
 	d.Set("traffic_mirror_filter_id", session.TrafficMirrorFilterId)
@@ -165,7 +167,7 @@ func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyTrafficMirrorSessionInput{
 			TrafficMirrorSessionId: aws.String(d.Id()),
 		}
@@ -184,8 +186,8 @@ func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceD
 
 		var removeFields []string
 
-		if d.HasChange("description") {
-			if v := d.Get("description").(string); v != "" {
+		if d.HasChange(names.AttrDescription) {
+			if v := d.Get(names.AttrDescription).(string); v != "" {
 				input.Description = aws.String(v)
 			} else {
 				removeFields = append(removeFields, ec2.TrafficMirrorSessionFieldDescription)

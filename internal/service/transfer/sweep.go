@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -45,10 +46,10 @@ func sweepServers(region string) error {
 		}
 
 		for _, server := range page.Servers {
-			r := ResourceServer()
+			r := resourceServer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(server.ServerId))
-			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
+			d.Set(names.AttrForceDestroy, true) // In lieu of an aws_transfer_user sweeper.
 			d.Set("identity_provider_type", server.IdentityProviderType)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

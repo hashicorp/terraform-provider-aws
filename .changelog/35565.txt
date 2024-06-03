@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route53_record: Add `geoproximity_routing_policy` configuration block to support [geoproximity routing](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geoproximity.html)
+```

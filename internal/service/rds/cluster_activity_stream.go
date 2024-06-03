@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_cluster_activity_stream")
@@ -41,18 +42,18 @@ func ResourceClusterActivityStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"mode": {
+			names.AttrMode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(rds.ActivityStreamMode_Values(), false),
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -65,12 +66,12 @@ func ResourceClusterActivityStream() *schema.Resource {
 func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	arn := d.Get("resource_arn").(string)
+	arn := d.Get(names.AttrResourceARN).(string)
 	input := &rds.StartActivityStreamInput{
 		ApplyImmediately:                aws.Bool(true),
 		EngineNativeAuditFieldsIncluded: aws.Bool(d.Get("engine_native_audit_fields_included").(bool)),
-		KmsKeyId:                        aws.String(d.Get("kms_key_id").(string)),
-		Mode:                            aws.String(d.Get("mode").(string)),
+		KmsKeyId:                        aws.String(d.Get(names.AttrKMSKeyID).(string)),
+		Mode:                            aws.String(d.Get(names.AttrMode).(string)),
 		ResourceArn:                     aws.String(arn),
 	}
 
@@ -104,9 +105,9 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("kinesis_stream_name", output.ActivityStreamKinesisStreamName)
-	d.Set("kms_key_id", output.ActivityStreamKmsKeyId)
-	d.Set("mode", output.ActivityStreamMode)
-	d.Set("resource_arn", output.DBClusterArn)
+	d.Set(names.AttrKMSKeyID, output.ActivityStreamKmsKeyId)
+	d.Set(names.AttrMode, output.ActivityStreamMode)
+	d.Set(names.AttrResourceARN, output.DBClusterArn)
 
 	return nil
 }

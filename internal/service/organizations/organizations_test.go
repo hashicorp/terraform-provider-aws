@@ -6,13 +6,13 @@ package organizations_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(organizations.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.OrganizationsServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -26,8 +26,8 @@ func TestAccOrganizations_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
-			"basic":                             testAccOrganization_basic,
-			"disappears":                        testAccOrganization_disappears,
+			acctest.CtBasic:                     testAccOrganization_basic,
+			acctest.CtDisappears:                testAccOrganization_disappears,
 			"AwsServiceAccessPrincipals":        testAccOrganization_serviceAccessPrincipals,
 			"EnabledPolicyTypes":                testAccOrganization_EnabledPolicyTypes,
 			"FeatureSet_Basic":                  testAccOrganization_FeatureSet,
@@ -38,15 +38,15 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
 		},
 		"Account": {
-			"basic":           testAccAccount_basic,
+			acctest.CtBasic:   testAccAccount_basic,
 			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
 			"ParentId":        testAccAccount_ParentID,
 			"Tags":            testAccAccount_Tags,
 			"GovCloud":        testAccAccount_govCloud,
 		},
 		"OrganizationalUnit": {
-			"basic":                              testAccOrganizationalUnit_basic,
-			"disappears":                         testAccOrganizationalUnit_disappears,
+			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
+			acctest.CtDisappears:                 testAccOrganizationalUnit_disappears,
 			"update":                             testAccOrganizationalUnit_update,
 			"tags":                               testAccOrganizationalUnit_tags,
 			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
@@ -55,12 +55,12 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"PluralDataSource_basic":             testAccOrganizationalUnitsDataSource_basic,
 		},
 		"Policy": {
-			"basic":                  testAccPolicy_basic,
+			acctest.CtBasic:          testAccPolicy_basic,
 			"concurrent":             testAccPolicy_concurrent,
 			"Description":            testAccPolicy_description,
 			"Tags":                   testAccPolicy_tags,
 			"SkipDestroy":            testAccPolicy_skipDestroy,
-			"disappears":             testAccPolicy_disappears,
+			acctest.CtDisappears:     testAccPolicy_disappears,
 			"Type_AI_OPT_OUT":        testAccPolicy_type_AI_OPT_OUT,
 			"Type_Backup":            testAccPolicy_type_Backup,
 			"Type_SCP":               testAccPolicy_type_SCP,
@@ -72,29 +72,29 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"OrganizationalUnit": testAccPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccPolicyAttachment_Root,
 			"SkipDestroy":        testAccPolicyAttachment_skipDestroy,
-			"disappears":         testAccPolicyAttachment_disappears,
+			acctest.CtDisappears: testAccPolicyAttachment_disappears,
 		},
 		"PolicyDataSource": {
 			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
 		},
 		"ResourcePolicy": {
-			"basic":      testAccResourcePolicy_basic,
-			"disappears": testAccResourcePolicy_disappears,
-			"tags":       testAccResourcePolicy_tags,
+			acctest.CtBasic:      testAccResourcePolicy_basic,
+			acctest.CtDisappears: testAccResourcePolicy_disappears,
+			"tags":               testAccResourcePolicy_tags,
 		},
 		"DelegatedAdministrator": {
-			"basic":      testAccDelegatedAdministrator_basic,
-			"disappears": testAccDelegatedAdministrator_disappears,
+			acctest.CtBasic:      testAccDelegatedAdministrator_basic,
+			acctest.CtDisappears: testAccDelegatedAdministrator_disappears,
 		},
 		"DelegatedAdministrators": {
-			"basic": testAccDelegatedAdministratorsDataSource_basic,
+			acctest.CtBasic: testAccDelegatedAdministratorsDataSource_basic,
 		},
 		"DelegatedServices": {
-			"basic":    testAccDelegatedServicesDataSource_basic,
-			"multiple": testAccDelegatedServicesDataSource_multiple,
+			acctest.CtBasic: testAccDelegatedServicesDataSource_basic,
+			"multiple":      testAccDelegatedServicesDataSource_multiple,
 		},
 		"ResourceTags": {
-			"basic": testAccResourceTagsDataSource_basic,
+			acctest.CtBasic: testAccResourceTagsDataSource_basic,
 		},
 	}
 

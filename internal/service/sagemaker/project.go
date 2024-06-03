@@ -36,7 +36,7 @@ func ResourceProject() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,11 +85,11 @@ func ResourceProject() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -155,7 +155,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	arn := aws.StringValue(project.ProjectArn)
 	d.Set("project_name", project.ProjectName)
 	d.Set("project_id", project.ProjectId)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("project_description", project.ProjectDescription)
 
 	if err := d.Set("service_catalog_provisioning_details", flattenProjectServiceCatalogProvisioningDetails(project.ServiceCatalogProvisioningDetails)); err != nil {
@@ -169,7 +169,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateProjectInput{
 			ProjectName: aws.String(d.Id()),
 		}
@@ -278,10 +278,10 @@ func expandProjectProvisioningParameters(l []interface{}) []*sagemaker.Provision
 		data := lRaw.(map[string]interface{})
 
 		scpd := &sagemaker.ProvisioningParameter{
-			Key: aws.String(data["key"].(string)),
+			Key: aws.String(data[names.AttrKey].(string)),
 		}
 
-		if v, ok := data["value"].(string); ok && v != "" {
+		if v, ok := data[names.AttrValue].(string); ok && v != "" {
 			scpd.Value = aws.String(v)
 		}
 
@@ -320,10 +320,10 @@ func flattenProjectProvisioningParameters(scpd []*sagemaker.ProvisioningParamete
 
 	for _, lRaw := range scpd {
 		param := make(map[string]interface{})
-		param["key"] = aws.StringValue(lRaw.Key)
+		param[names.AttrKey] = aws.StringValue(lRaw.Key)
 
 		if lRaw.Value != nil {
-			param["value"] = lRaw.Value
+			param[names.AttrValue] = lRaw.Value
 		}
 
 		params = append(params, param)

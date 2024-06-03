@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 * `latest_revision` - an ID of the latest successfully created revision of the custom plugin.
 * `state` - the state of the custom plugin.
 
-<!-- cache-key: cdktf-0.20.0 input-69d528a4e92608d40820215e21637edad56d0cf8bd42eb304519e5181a028a94 -->
+<!-- cache-key: cdktf-0.20.1 input-69d528a4e92608d40820215e21637edad56d0cf8bd42eb304519e5181a028a94 -->

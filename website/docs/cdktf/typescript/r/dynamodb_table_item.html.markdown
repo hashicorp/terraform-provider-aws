@@ -77,4 +77,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import DynamoDB table items.
 
-<!-- cache-key: cdktf-0.20.0 input-6a024662e07162f55823fe5a6848f74b793eff6585ccc516e75fcbdfe573f734 -->
+<!-- cache-key: cdktf-0.20.1 input-6a024662e07162f55823fe5a6848f74b793eff6585ccc516e75fcbdfe573f734 -->

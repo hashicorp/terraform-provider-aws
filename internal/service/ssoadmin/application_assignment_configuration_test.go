@@ -33,7 +33,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +42,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "application_arn", applicationResourceName, "application_arn"),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_disappears_Application(t 
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationAssignmentConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_update(t *testing.T) {
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
 			},
 			{
@@ -113,14 +113,14 @@ func TestAccSSOAdminApplicationAssignmentConfiguration_update(t *testing.T) {
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccApplicationAssignmentConfigurationConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAssignmentConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "assignment_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assignment_required", acctest.CtTrue),
 				),
 			},
 		},
