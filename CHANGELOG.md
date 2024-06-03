@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_lb: Add support for IPv6-only Application Load Balancers ([#37700](https://github.com/hashicorp/terraform-provider-aws/issues/37700))
+* resource/aws_pipes_pipe: Add `log_configuration` argument ([#37135](https://github.com/hashicorp/terraform-provider-aws/issues/37135))
 
 ## 5.52.0 (May 30, 2024)
 
