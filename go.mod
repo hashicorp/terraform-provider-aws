@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.53.13
+	github.com/aws/aws-sdk-go v1.53.14
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.16
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.16
@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.27.4
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.22.8
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.25.8
@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.8
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.11
 	github.com/aws/aws-sdk-go-v2/service/eks v1.42.5
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.5
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.8
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.9
@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.4
-	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.8
+	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.8
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.8
