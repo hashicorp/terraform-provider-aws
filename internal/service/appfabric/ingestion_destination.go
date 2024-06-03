@@ -36,12 +36,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Ingestion Destination")
+// @Tags(identifierAttribute="arn")
 func newResourceIngestionDestination(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingestionDestinationResource{}
 
@@ -83,6 +85,8 @@ func (r *ingestionDestinationResource) Schema(ctx context.Context, req resource.
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"destination_configuration": schema.ListNestedBlock{
@@ -226,6 +230,8 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, req resource.
 
 	in.DestinationConfiguration = destinationConfiguration
 	in.ProcessingConfiguration = processingConfiguration
+
+	in.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateIngestionDestination(ctx, in)
 	if err != nil {
@@ -384,6 +390,10 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, req resource.
 		return
 	}
 
+}
+
+func (r *ingestionDestinationResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
 }
 
 func (r *ingestionDestinationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -781,6 +791,8 @@ type resourceIngestionDestinationModel struct {
 	IngestionDestinationArn  types.String                                                  `tfsdk:"arn"`
 	IngestionIdentifier      types.String                                                  `tfsdk:"ingestion_identifier"`
 	ProcessingConfiguration  fwtypes.ListNestedObjectValueOf[processingConfigurationModel] `tfsdk:"processing_configuration"`
+	Tags                     types.Map                                                     `tfsdk:"tags"`
+	TagsAll                  types.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
 }
 

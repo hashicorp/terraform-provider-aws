@@ -46,7 +46,7 @@ func TestAccAppFabricIngestionDestination_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", "appfabric-test-audit-logs-658465413021"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", "s3-bucket-name"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix", "AuditLog"),
 				),
 			},
@@ -85,7 +85,7 @@ func TestAccAppFabricIngestionDestination_firehose(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name", "KDS-HTP-uMu4o"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name", "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func TestAccAppFabricIngestionDestination_destinationUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", "appfabric-test-audit-logs-658465413021"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", "s3-bucket-name"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix", "AuditLog"),
 				),
 			},
@@ -145,7 +145,7 @@ func TestAccAppFabricIngestionDestination_destinationUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name", "KDS-HTP-uMu4o"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name", "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"),
 				),
 			},
 			{
@@ -237,8 +237,8 @@ func testAccCheckIngestionDestinationExists(ctx context.Context, name string, in
 func testAccIngestionDestinationConfig_basic() string {
 	return `
 resource "aws_appfabric_ingestion_destination" "test" {
-  app_bundle_identifier             = "arn:aws:appfabric:us-east-1:825402724285:appbundle/04a7c9f5-14e1-4697-8b43-551186ff0a6e"
-  ingestion_identifier              = "arn:aws:appfabric:us-east-1:825402724285:appbundle/04a7c9f5-14e1-4697-8b43-551186ff0a6e/ingestion/0379c487-af21-4419-80c2-92968007de1c"
+  app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
+  ingestion_identifier  = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633/ingestion/8b7895cf-171a-494c-9abb-7170eaed13b5"
   processing_configuration {
 	audit_log {
 		format = "json"
@@ -249,11 +249,14 @@ resource "aws_appfabric_ingestion_destination" "test" {
     audit_log {
 		destination {
 			s3_bucket {
-				bucket_name = "appfabric-test-audit-logs-658465413021"
+				bucket_name = "s3-bucket-name"
 				prefix = "AuditLog"
 			}
 		}
     }
+  }
+  tags = {
+    environment = "test"
   }
 }
 `
@@ -262,8 +265,8 @@ resource "aws_appfabric_ingestion_destination" "test" {
 func testAccIngestionDestinationConfig_firehose() string {
 	return `
 resource "aws_appfabric_ingestion_destination" "test" {
-  app_bundle_identifier             = "arn:aws:appfabric:us-east-1:825402724285:appbundle/04a7c9f5-14e1-4697-8b43-551186ff0a6e"
-  ingestion_identifier              = "arn:aws:appfabric:us-east-1:825402724285:appbundle/04a7c9f5-14e1-4697-8b43-551186ff0a6e/ingestion/63a391c6-2165-453d-94ba-d8da0c59c8be"
+  app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
+  ingestion_identifier  = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633/ingestion/8b7895cf-171a-494c-9abb-7170eaed13b5"
   processing_configuration {
 	audit_log {
 		format = "json"
@@ -274,10 +277,13 @@ resource "aws_appfabric_ingestion_destination" "test" {
     audit_log {
 		destination {
 			firehose_stream {
-				stream_name = "KDS-HTP-uMu4o"
+				stream_name = "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"
 			}
 		}
     }
+  }
+  tags = {
+    environment = "test"
   }
 }
 `
@@ -286,8 +292,8 @@ resource "aws_appfabric_ingestion_destination" "test" {
 func testAccIngestionDestinationConfig_destinationUpdate() string {
 	return `
 resource "aws_appfabric_ingestion_destination" "test" {
-	app_bundle_identifier             = "arn:aws:appfabric:us-east-1:825402724285:appbundle/04a7c9f5-14e1-4697-8b43-551186ff0a6e"
-	ingestion_identifier              = "arn:aws:appfabric:us-east-1:825402724285:appbundle/04a7c9f5-14e1-4697-8b43-551186ff0a6e/ingestion/0379c487-af21-4419-80c2-92968007de1c"
+	app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
+	ingestion_identifier  = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633/ingestion/8b7895cf-171a-494c-9abb-7170eaed13b5"
 	processing_configuration {
 	audit_log {
 		format = "json"
@@ -298,11 +304,14 @@ resource "aws_appfabric_ingestion_destination" "test" {
 	audit_log {
 		destination {
 			firehose_stream {
-				stream_name = "KDS-HTP-uMu4o"
+				stream_name = "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"
 			}
 		}
 	}
-	}
+  }
+  tags = {
+    environment = "test"
+  }
 }
 `
 }
