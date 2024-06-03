@@ -64,8 +64,8 @@ func (r *resourceKey) Metadata(_ context.Context, request resource.MetadataReque
 func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
 			"deletion_window_in_days": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -74,7 +74,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 					int64validator.Between(3, 180),
 				},
 			},
-			"enabled": schema.BoolAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
@@ -225,7 +225,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -416,7 +416,7 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 }
 
 func (r *resourceKey) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 func (r *resourceKey) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
