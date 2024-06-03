@@ -73,7 +73,7 @@ func TestAccSiteVPNCustomerGateway_bgpAsnExtended(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "bgp_asn_extended", rBgpAsnExtended),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn_extended", strconv.Itoa(rBgpAsnExtended)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "172.0.0.1"),
