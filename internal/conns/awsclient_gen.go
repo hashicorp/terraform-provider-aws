@@ -70,6 +70,7 @@ import (
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
+	drs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/drs"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -520,6 +521,10 @@ func (c *AWSClient) DLMClient(ctx context.Context) *dlm_sdkv2.Client {
 
 func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
 	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS, make(map[string]any)))
+}
+
+func (c *AWSClient) DRSClient(ctx context.Context) *drs_sdkv2.Client {
+	return errs.Must(client[*drs_sdkv2.Client](ctx, c, names.DRS, make(map[string]any)))
 }
 
 func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
