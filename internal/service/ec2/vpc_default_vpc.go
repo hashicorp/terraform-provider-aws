@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

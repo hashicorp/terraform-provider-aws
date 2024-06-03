@@ -20,7 +20,7 @@
 
 {{ define "TestCaseSetupNoProviders" -}}
 	PreCheck:     func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
-	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
+	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
 	CheckDestroy: testAccCheck{{ .Name }}Destroy(ctx),
 {{- end }}
 
@@ -42,7 +42,7 @@
 {{ end }}
 
 {{ define "testname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ProviderNameUpper }}{{ .Name }}
+{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
 {{- end }}
 
 {{ define "ExistsCheck" }}
@@ -225,7 +225,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					},
 				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{ if not .NoImport -}}
@@ -242,7 +242,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{- end }}
@@ -274,7 +274,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					},
 				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{ if not .NoImport -}}
@@ -289,7 +289,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{- end }}
@@ -947,7 +947,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					},
 				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{ if not .NoImport -}}
@@ -966,7 +966,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{- end }}
@@ -1000,7 +1000,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					},
 				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{ if not .NoImport -}}
@@ -1016,7 +1016,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{- end }}
@@ -1184,7 +1184,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					},
 				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{ if not .NoImport -}}
@@ -1200,7 +1200,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
 			{{- end }}
@@ -2099,7 +2099,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 	})
 }
 {{ if .NoRemoveTags }}
-func testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t *testing.T) func() (bool, error) {
+func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t *testing.T) func() (bool, error) {
 	return func() (bool, error) {
 		t.Log("Skipping step: Resource {{ .Name }} does not support removing tags")
 		return true, nil

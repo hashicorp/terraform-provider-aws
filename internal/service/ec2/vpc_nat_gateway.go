@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_nat_gateway", name="NAT Gateway")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceNATGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNATGatewayCreate,

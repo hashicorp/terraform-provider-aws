@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_route_table", name="Route Table")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultRouteTableCreate,
