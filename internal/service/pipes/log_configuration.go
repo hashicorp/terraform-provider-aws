@@ -54,7 +54,7 @@ func logConfigurationSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"bucket_name": {
+							names.AttrBucketName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -67,7 +67,7 @@ func logConfigurationSchema() *schema.Schema {
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[types.S3OutputFormat](),
 							},
-							"prefix": {
+							names.AttrPrefix: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -140,7 +140,7 @@ func expandS3LogDestinationParameters(tfMap map[string]interface{}) *types.S3Log
 
 	apiObject := &types.S3LogDestinationParameters{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -152,7 +152,7 @@ func expandS3LogDestinationParameters(tfMap map[string]interface{}) *types.S3Log
 		apiObject.OutputFormat = types.S3OutputFormat(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -221,7 +221,7 @@ func flattenS3LogDestination(apiObject *types.S3LogDestination) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrBucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.BucketOwner; v != nil {
@@ -233,7 +233,7 @@ func flattenS3LogDestination(apiObject *types.S3LogDestination) map[string]inter
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return tfMap
