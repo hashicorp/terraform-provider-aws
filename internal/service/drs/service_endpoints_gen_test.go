@@ -236,7 +236,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 
 	client := meta.DRSClient(ctx)
 
-	_, err := client.GetReplicationConfiguration(ctx, &drs_sdkv2.GetReplicationConfigurationInput{},
+	_, err := client.DescribeJobs(ctx, &drs_sdkv2.DescribeJobsInput{},
 		func(opts *drs_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &endpoint),
