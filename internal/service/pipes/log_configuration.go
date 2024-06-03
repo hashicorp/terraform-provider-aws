@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func logConfigurationSchema() *schema.Schema {
