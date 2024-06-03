@@ -222,6 +222,7 @@ Signer
 Storage Gateway
 Systems Manager for SAP
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
@@ -240,4 +241,5 @@ Web Services Budgets
 Well-Architected Tool
 WorkLink
 WorkSpaces
+WorkSpaces Web
 X-Ray

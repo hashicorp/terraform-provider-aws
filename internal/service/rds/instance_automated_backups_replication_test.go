@@ -40,7 +40,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_basic(t *testing.T) {
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_retentionPeriod(t *testing.T)
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_retentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "14"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "14"),
 				),
 			},
 			{
@@ -138,7 +138,7 @@ func TestAccRDSInstanceAutomatedBackupsReplication_kmsEncrypted(t *testing.T) {
 				Config: testAccInstanceAutomatedBackupsReplicationConfig_kmsEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAutomatedBackupsReplicationExist(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
 				),
 			},
 			{

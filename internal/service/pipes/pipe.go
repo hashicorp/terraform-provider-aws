@@ -51,11 +51,11 @@ func resourcePipe() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
@@ -73,34 +73,34 @@ func resourcePipe() *schema.Resource {
 			},
 			"enrichment_parameters": enrichmentParametersSchema(),
 			"log_configuration":     logConfigurationSchema(),
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
 				),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -110,7 +110,7 @@ func resourcePipe() *schema.Resource {
 				),
 			},
 			"source_parameters": sourceParametersSchema(),
-			"target": {
+			names.AttrTarget: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -129,17 +129,17 @@ const (
 func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &pipes.CreatePipeInput{
 		DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 		Name:         aws.String(name),
-		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Source:       aws.String(d.Get("source").(string)),
+		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+		Source:       aws.String(d.Get(names.AttrSource).(string)),
 		Tags:         getTagsIn(ctx),
-		Target:       aws.String(d.Get("target").(string)),
+		Target:       aws.String(d.Get(names.AttrTarget).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -193,8 +193,8 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.DiagError(names.Pipes, create.ErrActionReading, ResNamePipe, d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("desired_state", output.DesiredState)
 	d.Set("enrichment", output.Enrichment)
 	if v := output.EnrichmentParameters; !types.IsZero(v) {
@@ -211,10 +211,10 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set("log_configuration", nil)
 	}
-	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
-	d.Set("role_arn", output.RoleArn)
-	d.Set("source", output.Source)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrSource, output.Source)
 	if v := output.SourceParameters; !types.IsZero(v) {
 		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
 			return diag.Errorf("setting source_parameters: %s", err)
@@ -222,7 +222,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set("source_parameters", nil)
 	}
-	d.Set("target", output.Target)
+	d.Set(names.AttrTarget, output.Target)
 	if v := output.TargetParameters; !types.IsZero(v) {
 		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
 			return diag.Errorf("setting target_parameters: %s", err)
@@ -237,13 +237,13 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).PipesClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &pipes.UpdatePipeInput{
-			Description:  aws.String(d.Get("description").(string)),
+			Description:  aws.String(d.Get(names.AttrDescription).(string)),
 			DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 			Name:         aws.String(d.Id()),
-			RoleArn:      aws.String(d.Get("role_arn").(string)),
-			Target:       aws.String(d.Get("target").(string)),
+			RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+			Target:       aws.String(d.Get(names.AttrTarget).(string)),
 			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
 			TargetParameters: &awstypes.PipeTargetParameters{
 				InputTemplate: aws.String(""),

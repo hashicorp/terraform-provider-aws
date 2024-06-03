@@ -14,8 +14,8 @@ func TestAccAppMesh_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"GatewayRoute": {
-			"basic":                        testAccGatewayRoute_basic,
-			"disappears":                   testAccGatewayRoute_disappears,
+			acctest.CtBasic:                testAccGatewayRoute_basic,
+			acctest.CtDisappears:           testAccGatewayRoute_disappears,
 			"grpcRoute":                    testAccGatewayRoute_grpcRoute,
 			"grpcRouteTargetPort":          testAccGatewayRoute_grpcRouteTargetPort,
 			"grpcRouteWithPort":            testAccGatewayRoute_grpcRouteWithPort,
@@ -31,8 +31,8 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceBasic":              testAccGatewayRouteDataSource_basic,
 		},
 		"Mesh": {
-			"basic":                    testAccMesh_basic,
-			"disappears":               testAccMesh_disappears,
+			acctest.CtBasic:            testAccMesh_basic,
+			acctest.CtDisappears:       testAccMesh_disappears,
 			"egressFilter":             testAccMesh_egressFilter,
 			"serviceDiscovery":         testAccMesh_serviceDiscovery,
 			"tags":                     testAccMesh_tags,
@@ -42,7 +42,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceShared":         testAccMeshDataSource_shared,
 		},
 		"Route": {
-			"disappears":                       testAccRoute_disappears,
+			acctest.CtDisappears:               testAccRoute_disappears,
 			"grpcRoute":                        testAccRoute_grpcRoute,
 			"grpcRouteWithPortMatch":           testAccRoute_grpcRouteWithPortMatch,
 			"grpcRouteEmptyMatch":              testAccRoute_grpcRouteEmptyMatch,
@@ -68,8 +68,8 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceTCPRoute":               testAccRouteDataSource_tcpRoute,
 		},
 		"VirtualGateway": {
-			"basic":                      testAccVirtualGateway_basic,
-			"disappears":                 testAccVirtualGateway_disappears,
+			acctest.CtBasic:              testAccVirtualGateway_basic,
+			acctest.CtDisappears:         testAccVirtualGateway_disappears,
 			"backendDefaults":            testAccVirtualGateway_BackendDefaults,
 			"backendDefaultsCertificate": testAccVirtualGateway_BackendDefaultsCertificate,
 			"listenerConnectionPool":     testAccVirtualGateway_ListenerConnectionPool,
@@ -82,8 +82,8 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceBasic":            testAccVirtualGatewayDataSource_basic,
 		},
 		"VirtualNode": {
-			"basic":                      testAccVirtualNode_basic,
-			"disappears":                 testAccVirtualNode_disappears,
+			acctest.CtBasic:              testAccVirtualNode_basic,
+			acctest.CtDisappears:         testAccVirtualNode_disappears,
 			"backendClientPolicyAcm":     testAccVirtualNode_backendClientPolicyACM,
 			"backendClientPolicyFile":    testAccVirtualNode_backendClientPolicyFile,
 			"backendDefaults":            testAccVirtualNode_backendDefaults,
@@ -101,14 +101,14 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"dataSourceBasic":            testAccVirtualNodeDataSource_basic,
 		},
 		"VirtualRouter": {
-			"basic":           testAccVirtualRouter_basic,
-			"disappears":      testAccVirtualRouter_disappears,
-			"multiListener":   testAccVirtualRouter_multiListener,
-			"tags":            testAccVirtualRouter_tags,
-			"dataSourceBasic": testAccVirtualRouterDataSource_basic,
+			acctest.CtBasic:      testAccVirtualRouter_basic,
+			acctest.CtDisappears: testAccVirtualRouter_disappears,
+			"multiListener":      testAccVirtualRouter_multiListener,
+			"tags":               testAccVirtualRouter_tags,
+			"dataSourceBasic":    testAccVirtualRouterDataSource_basic,
 		},
 		"VirtualService": {
-			"disappears":              testAccVirtualService_disappears,
+			acctest.CtDisappears:      testAccVirtualService_disappears,
 			"virtualNode":             testAccVirtualService_virtualNode,
 			"virtualRouter":           testAccVirtualService_virtualRouter,
 			"tags":                    testAccVirtualService_tags,

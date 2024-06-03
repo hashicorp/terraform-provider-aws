@@ -43,17 +43,17 @@ func ResourceInternetGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -81,7 +81,7 @@ func resourceInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
 
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		if err := attachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
 		}
@@ -118,13 +118,13 @@ func resourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
 	if len(ig.Attachments) == 0 {
 		// Gateway exists but not attached to the VPC.
-		d.Set("vpc_id", "")
+		d.Set(names.AttrVPCID, "")
 	} else {
-		d.Set("vpc_id", ig.Attachments[0].VpcId)
+		d.Set(names.AttrVPCID, ig.Attachments[0].VpcId)
 	}
 
 	setTagsOut(ctx, ig.Tags)
@@ -136,8 +136,8 @@ func resourceInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChange("vpc_id") {
-		o, n := d.GetChange("vpc_id")
+	if d.HasChange(names.AttrVPCID) {
+		o, n := d.GetChange(names.AttrVPCID)
 
 		if v := o.(string); v != "" {
 			if err := detachInternetGateway(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -160,7 +160,7 @@ func resourceInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Detach if it is attached.
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		if err := detachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}

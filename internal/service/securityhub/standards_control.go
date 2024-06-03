@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_standards_control", name="Standards Control")
@@ -47,7 +48,7 @@ func resourceStandardsControl() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,7 +130,7 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("control_id", control.ControlId)
 	d.Set("control_status", control.ControlStatus)
 	d.Set("control_status_updated_at", control.ControlStatusUpdatedAt.Format(time.RFC3339))
-	d.Set("description", control.Description)
+	d.Set(names.AttrDescription, control.Description)
 	d.Set("disabled_reason", control.DisabledReason)
 	d.Set("related_requirements", control.RelatedRequirements)
 	d.Set("remediation_url", control.RemediationUrl)

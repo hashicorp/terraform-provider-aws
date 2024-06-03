@@ -44,7 +44,7 @@ func ResourceRoutingProfile() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,12 +52,12 @@ func ResourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -81,7 +81,7 @@ func ResourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 127),
@@ -102,7 +102,7 @@ func ResourceRoutingProfile() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(0, 9999),
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
@@ -137,11 +137,11 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
-	name := d.Get("name").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	name := d.Get(names.AttrName).(string)
 	input := &connect.CreateRoutingProfileInput{
 		DefaultOutboundQueueId: aws.String(d.Get("default_outbound_queue_id").(string)),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		InstanceId:             aws.String(instanceID),
 		MediaConcurrencies:     expandRoutingProfileMediaConcurrencies(d.Get("media_concurrencies").(*schema.Set).List()),
 		Name:                   aws.String(name),
@@ -214,11 +214,11 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", routingProfile.RoutingProfileArn)
+	d.Set(names.AttrARN, routingProfile.RoutingProfileArn)
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
-	d.Set("description", routingProfile.Description)
-	d.Set("instance_id", instanceID)
-	d.Set("name", routingProfile.Name)
+	d.Set(names.AttrDescription, routingProfile.Description)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, routingProfile.Name)
 
 	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
 
@@ -289,9 +289,9 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		RoutingProfileId: aws.String(routingProfileID),
 	}
 
-	if d.HasChanges("name", "description") {
-		inputNameDesc.Name = aws.String(d.Get("name").(string))
-		inputNameDesc.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrName, names.AttrDescription) {
+		inputNameDesc.Name = aws.String(d.Get(names.AttrName).(string))
+		inputNameDesc.Description = aws.String(d.Get(names.AttrDescription).(string))
 		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
@@ -445,7 +445,7 @@ func expandRoutingProfileQueueConfigs(queueConfigs []interface{}) []*connect.Rou
 		data := queueConfig.(map[string]interface{})
 		queueConfigExpanded := &connect.RoutingProfileQueueConfig{
 			Delay:    aws.Int64(int64(data["delay"].(int))),
-			Priority: aws.Int64(int64(data["priority"].(int))),
+			Priority: aws.Int64(int64(data[names.AttrPriority].(int))),
 		}
 
 		qr := connect.RoutingProfileQueueReference{
@@ -500,12 +500,12 @@ func getRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, i
 			}
 
 			values := map[string]interface{}{
-				"channel":    aws.StringValue(qc.Channel),
-				"delay":      aws.Int64Value(qc.Delay),
-				"priority":   aws.Int64Value(qc.Priority),
-				"queue_arn":  aws.StringValue(qc.QueueArn),
-				"queue_id":   aws.StringValue(qc.QueueId),
-				"queue_name": aws.StringValue(qc.QueueName),
+				"channel":          aws.StringValue(qc.Channel),
+				"delay":            aws.Int64Value(qc.Delay),
+				names.AttrPriority: aws.Int64Value(qc.Priority),
+				"queue_arn":        aws.StringValue(qc.QueueArn),
+				"queue_id":         aws.StringValue(qc.QueueId),
+				"queue_name":       aws.StringValue(qc.QueueName),
 			}
 
 			queueConfigsList = append(queueConfigsList, values)

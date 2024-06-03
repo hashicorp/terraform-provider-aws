@@ -229,6 +229,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -240,6 +241,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
@@ -467,6 +469,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		sts.ServicePackage(ctx),
 		swf.ServicePackage(ctx),
 		synthetics.ServicePackage(ctx),
+		timestreaminfluxdb.ServicePackage(ctx),
 		timestreamwrite.ServicePackage(ctx),
 		transcribe.ServicePackage(ctx),
 		transfer.ServicePackage(ctx),
@@ -478,6 +481,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		wellarchitected.ServicePackage(ctx),
 		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
+		workspacesweb.ServicePackage(ctx),
 		xray.ServicePackage(ctx),
 	}
 

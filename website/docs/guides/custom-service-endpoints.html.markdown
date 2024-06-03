@@ -291,6 +291,7 @@ provider "aws" {
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>
@@ -302,6 +303,7 @@ provider "aws" {
   <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
+  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>

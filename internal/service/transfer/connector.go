@@ -41,7 +41,7 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func ResourceConnector() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -151,7 +151,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &transfer.CreateConnectorInput{
 		AccessRole: aws.String(d.Get("access_role").(string)),
 		Tags:       getTagsIn(ctx),
-		Url:        aws.String(d.Get("url").(string)),
+		Url:        aws.String(d.Get(names.AttrURL).(string)),
 	}
 
 	if v, ok := d.GetOk("as2_config"); ok {
@@ -198,7 +198,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_role", output.AccessRole)
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
@@ -208,7 +208,7 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("sftp_config", flattenSftpConfig(output.SftpConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sftp_config: %s", err)
 	}
-	d.Set("url", output.Url)
+	d.Set(names.AttrURL, output.Url)
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -218,7 +218,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &transfer.UpdateConnectorInput{
 			ConnectorId: aws.String(d.Id()),
 		}
@@ -243,8 +243,8 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.SftpConfig = expandSftpConfig(d.Get("sftp_config").([]interface{}))
 		}
 
-		if d.HasChange("url") {
-			input.Url = aws.String(d.Get("url").(string))
+		if d.HasChange(names.AttrURL) {
+			input.Url = aws.String(d.Get(names.AttrURL).(string))
 		}
 
 		_, err := conn.UpdateConnectorWithContext(ctx, input)

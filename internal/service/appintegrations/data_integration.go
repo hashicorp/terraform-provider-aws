@@ -37,21 +37,21 @@ func ResourceDataIntegration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,7 +82,7 @@ func ResourceDataIntegration() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 							),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -113,17 +113,17 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateDataIntegrationInput{
 		ClientToken:    aws.String(id.UniqueId()),
-		KmsKey:         aws.String(d.Get("kms_key").(string)),
+		KmsKey:         aws.String(d.Get(names.AttrKMSKey).(string)),
 		Name:           aws.String(name),
 		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
 		SourceURI:      aws.String(d.Get("source_uri").(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -157,10 +157,10 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading AppIntegrations Data Integration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("description", output.Description)
-	d.Set("kms_key", output.KmsKey)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrKMSKey, output.KmsKey)
+	d.Set(names.AttrName, output.Name)
 	if err := d.Set("schedule_config", flattenScheduleConfig(output.ScheduleConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "schedule_config tags: %s", err)
 	}
@@ -176,11 +176,11 @@ func resourceDataIntegrationUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).AppIntegrationsClient(ctx)
 
-	if d.HasChanges("description", "name") {
+	if d.HasChanges(names.AttrDescription, names.AttrName) {
 		_, err := conn.UpdateDataIntegration(ctx, &appintegrations.UpdateDataIntegrationInput{
-			Description: aws.String(d.Get("description").(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			Identifier:  aws.String(d.Id()),
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		})
 
 		if err != nil {
@@ -220,7 +220,7 @@ func expandScheduleConfig(scheduleConfig []interface{}) *awstypes.ScheduleConfig
 	result := &awstypes.ScheduleConfiguration{
 		FirstExecutionFrom: aws.String(tfMap["first_execution_from"].(string)),
 		Object:             aws.String(tfMap["object"].(string)),
-		ScheduleExpression: aws.String(tfMap["schedule_expression"].(string)),
+		ScheduleExpression: aws.String(tfMap[names.AttrScheduleExpression].(string)),
 	}
 
 	return result
@@ -232,9 +232,9 @@ func flattenScheduleConfig(scheduleConfig *awstypes.ScheduleConfiguration) []int
 	}
 
 	values := map[string]interface{}{
-		"first_execution_from": aws.ToString(scheduleConfig.FirstExecutionFrom),
-		"object":               aws.ToString(scheduleConfig.Object),
-		"schedule_expression":  aws.ToString(scheduleConfig.ScheduleExpression),
+		"first_execution_from":       aws.ToString(scheduleConfig.FirstExecutionFrom),
+		"object":                     aws.ToString(scheduleConfig.Object),
+		names.AttrScheduleExpression: aws.ToString(scheduleConfig.ScheduleExpression),
 	}
 
 	return []interface{}{values}

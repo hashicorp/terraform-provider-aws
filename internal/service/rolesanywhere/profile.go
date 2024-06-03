@@ -33,7 +33,7 @@ func ResourceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +42,7 @@ func ResourceProfile() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -53,7 +53,7 @@ func ResourceProfile() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -82,7 +82,7 @@ func ResourceProfile() *schema.Resource {
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
 		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
@@ -93,7 +93,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DurationSeconds = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("enabled"); ok {
+	if v, ok := d.GetOk(names.AttrEnabled); ok {
 		input.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -136,11 +136,11 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading RolesAnywhere Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", profile.ProfileArn)
+	d.Set(names.AttrARN, profile.ProfileArn)
 	d.Set("duration_seconds", profile.DurationSeconds)
-	d.Set("enabled", profile.Enabled)
+	d.Set(names.AttrEnabled, profile.Enabled)
 	d.Set("managed_policy_arns", profile.ManagedPolicyArns)
-	d.Set("name", profile.Name)
+	d.Set(names.AttrName, profile.Name)
 	d.Set("require_instance_properties", profile.RequireInstanceProperties)
 	d.Set("role_arns", profile.RoleArns)
 	d.Set("session_policy", profile.SessionPolicy)
@@ -151,7 +151,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept("enabled", "tags_all") {
+	if d.HasChangesExcept(names.AttrEnabled, names.AttrTagsAll) {
 		input := &rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}
@@ -164,8 +164,8 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ManagedPolicyArns = expandStringList(d.Get("managed_policy_arns").(*schema.Set).List())
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("role_arns") {
@@ -183,8 +183,8 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("enabled") {
-		_, n := d.GetChange("enabled")
+	if d.HasChange(names.AttrEnabled) {
+		_, n := d.GetChange(names.AttrEnabled)
 		if n == true {
 			err := enableProfile(ctx, d.Id(), meta)
 			if err != nil {

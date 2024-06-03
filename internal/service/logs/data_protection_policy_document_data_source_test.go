@@ -29,7 +29,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_basic(t *testing.T) {
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_basic(logGroupName, targetName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(
-						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_basic_expectedJSON(targetName)),
 				),
 			},
@@ -51,7 +51,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_empty(t *testing.T) {
 				Config: testAccDataProtectionPolicyDocumentDataSourceConfig_empty(logGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(
-						"data.aws_cloudwatch_log_data_protection_policy_document.test", "json",
+						"data.aws_cloudwatch_log_data_protection_policy_document.test", names.AttrJSON,
 						testAccDataProtectionPolicyDocumentDataSourceConfig_empty_expectedJSON),
 				),
 			},

@@ -59,14 +59,14 @@ func (r *resourceAccessPolicy) Metadata(_ context.Context, request resource.Meta
 func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
@@ -75,7 +75,7 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: jsontypes.NormalizedType{},
 				Required:   true,
 				Validators: []validator.String{
@@ -88,7 +88,7 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AccessPolicyType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
