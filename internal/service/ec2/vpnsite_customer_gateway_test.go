@@ -56,7 +56,7 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccSiteVPNCustomerGateway_bgpAsnExtended(t *testing.T) {
+func TestAccSiteVPNCustomerGateway_bgpASNExtended(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway awstypes.CustomerGateway
 	rBgpAsnExtended := sdkacctest.RandIntRange(2147483648, 4294967295)
@@ -69,7 +69,7 @@ func TestAccSiteVPNCustomerGateway_bgpAsnExtended(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_bgpAsnExtended(rBgpAsnExtended),
+				Config: testAccSiteVPNCustomerGatewayConfig_bgpASNExtended(rBgpAsnExtended),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
@@ -332,7 +332,7 @@ resource "aws_customer_gateway" "test" {
 `, rBgpAsn)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_bgpAsnExtended(rBgpAsnExtended int) string {
+func testAccSiteVPNCustomerGatewayConfig_bgpASNExtended(rBgpAsnExtended int) string {
 	return fmt.Sprintf(`
 resource "aws_customer_gateway" "test" {
   bgp_asn_extended = %[1]d
