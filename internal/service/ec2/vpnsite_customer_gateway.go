@@ -52,10 +52,10 @@ func resourceCustomerGateway() *schema.Resource {
 				ConflictsWith: []string{"bgp_asn_extended"},
 			},
 			"bgp_asn_extended": {
-				Type:          schema.TypeInt,
+				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(2147483648, 4294967295),
+				ValidateFunc:  verify.Valid4ByteASN,
 				ConflictsWith: []string{"bgp_asn"},
 			},
 			names.AttrCertificateARN: {
@@ -110,6 +110,11 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("bgp_asn_extended"); ok {
+		v, err := strconv.ParseInt(v.(string), 10, 64)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 		input.BgpAsnExtended = aws.Int64(int64(v.(int)))
 	}
 
