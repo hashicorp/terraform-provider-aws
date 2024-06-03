@@ -1,4 +1,13 @@
 ## 5.53.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_paymentcryptography_key` ([#37017](https://github.com/hashicorp/terraform-provider-aws/issues/37017))
+
+ENHANCEMENTS:
+
+* resource/aws_lb: Add support for IPv6-only Application Load Balancers ([#37700](https://github.com/hashicorp/terraform-provider-aws/issues/37700))
+
 ## 5.52.0 (May 30, 2024)
 
 ENHANCEMENTS:
