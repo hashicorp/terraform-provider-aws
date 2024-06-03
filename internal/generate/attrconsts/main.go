@@ -18,7 +18,7 @@ import (
 // that it is generated first. This is accomplished by using generate.go in this
 // directory rather names/generate.go.
 
-//go:embed file.tmpl
+//go:embed consts.gtpl
 var tmpl string
 
 //go:embed semgrep.tmpl
