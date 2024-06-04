@@ -162,8 +162,8 @@ github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.9 h1:SYaxmq1dcInwtai
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.9/go.mod h1:bQ7ZqU8EP0wYiGdAwMBQGB4YnVL6OhmEON4qj2sd1ss=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.38.3 h1:22ofAvnuh7pqMC19Be7qqiczJXebTLlaLgd7feo6n2M=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.38.3/go.mod h1:Wp0BHCccttxO3F3yPUtqvyGLuppjglXOIakUdzeKXCY=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.8.4 h1:IbBQebbyGS5vdbp0ufmv8T+nD+Wnsl4CCt1rzpjod5o=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.8.4/go.mod h1:AAuQwuiAbp55xmy8CzNvEZ69ml96fLCkvuM5VBgcP/Q=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.8.5 h1:sqMn+Tbxvt/d3HactmeKPCeADOI99DkrBXjA/KbwfXk=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.8.5/go.mod h1:1Q+n8iJiRNtXYkECjZ7MKTDn5w9xg1eQkjPginSfxBc=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.8 h1:1GkeoksWGk3S0kXFpxCHrpEgdtd6XSiBIWiXBLDqX2o=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.8/go.mod h1:Cql4Zl5opg19gFu3h9ELOt0zjG3eW9pXXuibX+UekRg=
 github.com/aws/aws-sdk-go-v2/service/devicefarm v1.22.8 h1:7iay5bHVm4j6hRzb3OhYFZHhS1exthoy0I2xwbmUwVE=
