@@ -20,7 +20,6 @@ import (
 )
 
 // @FrameworkDataSource(name="Capacity Block Offering")
-// @Testing(tagsTest=false)
 func newDataSourceCapacityBlockOffering(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceCapacityBlockOffering{}
 
