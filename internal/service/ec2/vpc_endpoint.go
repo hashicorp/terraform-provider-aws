@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for VPC Endpoint creation
+	// Maximum amount of time to wait for VPC Endpoint creation.
 	VPCEndpointCreationTimeout = 10 * time.Minute
 )
 
@@ -203,6 +203,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
+		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		ServiceName:       aws.String(serviceName),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
@@ -231,12 +232,6 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		input.PolicyDocument = aws.String(policy)
-	}
-
-	if v, ok := d.GetOk("private_dns_enabled"); ok {
-		input.PrivateDnsEnabled = aws.Bool(v.(bool))
-	} else {
-		input.PrivateDnsEnabled = aws.Bool(false)
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok && v.(*schema.Set).Len() > 0 {
