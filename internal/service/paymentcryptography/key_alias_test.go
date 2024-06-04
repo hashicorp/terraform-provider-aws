@@ -28,7 +28,7 @@ func TestAccPaymentCryptographyKeyAlias_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
+			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -60,7 +60,7 @@ func TestAccPaymentCryptographyKeyAlias_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
+			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -87,7 +87,7 @@ func TestAccPaymentCryptographyKeyAlias_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
+			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -128,7 +128,7 @@ func TestAccPaymentCryptographyKeyAlias_updateName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
+			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID) // Causing a false negative
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

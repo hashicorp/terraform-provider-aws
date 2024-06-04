@@ -28,7 +28,7 @@ import (
 )
 
 // @FrameworkResource("aws_paymentcryptography_key_alias",name="Key Alias")
-func newKeyAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
+func newResourceKeyAlias(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &keyAliasResource{}
 
 	return r, nil
