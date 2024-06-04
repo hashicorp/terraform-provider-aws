@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_ec2_network_insights_analysis", name="Network Insights Analysis")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceNetworkInsightsAnalysis() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInsightsAnalysisCreate,

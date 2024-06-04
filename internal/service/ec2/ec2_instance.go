@@ -43,6 +43,8 @@ import (
 
 // @SDKResource("aws_instance", name="Instance")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
+// @Testing(importIgnore="user_data_replace_on_change")
 func ResourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -270,7 +272,7 @@ func ResourceInstance() *schema.Resource {
 						},
 						names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
 						names.AttrTagsAll: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -341,7 +343,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -351,7 +353,7 @@ func ResourceInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					if v, ok := m["no_device"].(bool); ok && v {
 						buf.WriteString(fmt.Sprintf("%t-", v))
 					}
@@ -724,7 +726,7 @@ func ResourceInstance() *schema.Resource {
 						},
 						names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
 						names.AttrTagsAll: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -2344,7 +2346,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd[names.AttrKMSKeyID] = aws.ToString(vol.KmsKeyId)
 		}
 		if vol.Throughput != nil {
-			bd["throughput"] = aws.ToInt32(vol.Throughput)
+			bd[names.AttrThroughput] = aws.ToInt32(vol.Throughput)
 		}
 		if instanceBd.DeviceName != nil {
 			bd[names.AttrDeviceName] = aws.ToString(instanceBd.DeviceName)
@@ -2582,7 +2584,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						return nil, fmt.Errorf("creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
-				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				if throughput, ok := bd[names.AttrThroughput].(int); ok && throughput > 0 {
 					// `throughput` is only valid for gp3
 					if awstypes.VolumeTypeGp3 == ebs.VolumeType {
 						ebs.Throughput = aws.Int32(int32(throughput))
@@ -2605,7 +2607,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			bd := v.(map[string]interface{})
 			bdm := awstypes.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			}
 			if v, ok := bd["no_device"].(bool); ok && v {
 				bdm.NoDevice = aws.String("")
@@ -2657,7 +2659,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						return nil, fmt.Errorf("creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
-				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				if throughput, ok := bd[names.AttrThroughput].(int); ok && throughput > 0 {
 					// throughput is only valid for gp3
 					if awstypes.VolumeTypeGp3 == ebs.VolumeType {
 						ebs.Throughput = aws.Int32(int32(throughput))

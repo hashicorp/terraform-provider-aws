@@ -72,6 +72,7 @@ func resourcePipe() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"enrichment_parameters": enrichmentParametersSchema(),
+			"log_configuration":     logConfigurationSchema(),
 			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -158,6 +159,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	output, err := conn.CreatePipe(ctx, input)
 
 	if err != nil {
@@ -198,6 +203,13 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 	} else {
 		d.Set("enrichment_parameters", nil)
+	}
+	if v := output.LogConfiguration; !types.IsZero(v) {
+		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfiguration(v)}); err != nil {
+			return diag.Errorf("setting log_configuration: %s", err)
+		}
+	} else {
+		d.Set("log_configuration", nil)
 	}
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
@@ -245,6 +257,12 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if d.HasChange("enrichment_parameters") {
 			if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("log_configuration") {
+			if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 

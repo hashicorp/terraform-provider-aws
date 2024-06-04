@@ -60,7 +60,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct0),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct0),
 				),
 			},
@@ -1087,7 +1087,7 @@ func testAccUserPoolClientImportStateIDFunc(ctx context.Context, resourceName st
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
-		userPoolId := rs.Primary.Attributes["user_pool_id"]
+		userPoolId := rs.Primary.Attributes[names.AttrUserPoolID]
 		clientId := rs.Primary.ID
 
 		_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, userPoolId, clientId)
@@ -1109,7 +1109,7 @@ func testAccCheckUserPoolClientDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
+			_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -1136,7 +1136,7 @@ func testAccCheckUserPoolClientExists(ctx context.Context, name string, client *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		resp, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
+		resp, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.ID)
 		if err != nil {
 			return err
 		}

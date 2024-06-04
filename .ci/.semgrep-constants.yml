@@ -29,6 +29,20 @@ rules:
     severity: ERROR
     fix: "names.AttrARNs"
 
+  - id: literal-aws_account_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAWSAccountID` for the string literal "aws_account_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"aws_account_id"'
+      - pattern-not-regex: '"aws_account_id":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrAWSAccountID"
+
   - id: literal-access_key-string-constant
     languages: [go]
     message: Use the constant `names.AttrAccessKey` for the string literal "access_key"
@@ -99,6 +113,48 @@ rules:
     severity: ERROR
     fix: "names.AttrAlias"
 
+  - id: literal-allocated_storage-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAllocatedStorage` for the string literal "allocated_storage"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"allocated_storage"'
+      - pattern-not-regex: '"allocated_storage":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrAllocatedStorage"
+
+  - id: literal-allow_major_version_upgrade-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAllowMajorVersionUpgrade` for the string literal "allow_major_version_upgrade"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"allow_major_version_upgrade"'
+      - pattern-not-regex: '"allow_major_version_upgrade":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrAllowMajorVersionUpgrade"
+
+  - id: literal-application_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrApplicationID` for the string literal "application_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"application_id"'
+      - pattern-not-regex: '"application_id":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrApplicationID"
+
   - id: literal-apply_immediately-string-constant
     languages: [go]
     message: Use the constant `names.AttrApplyImmediately` for the string literal "apply_immediately"
@@ -112,6 +168,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrApplyImmediately"
+
+  - id: literal-association_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAssociationID` for the string literal "association_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"association_id"'
+      - pattern-not-regex: '"association_id":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrAssociationID"
 
   - id: literal-attributes-string-constant
     languages: [go]
@@ -211,6 +281,34 @@ rules:
     severity: ERROR
     fix: "names.AttrBucketPrefix"
 
+  - id: literal-cidr_block-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCIDRBlock` for the string literal "cidr_block"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cidr_block"'
+      - pattern-not-regex: '"cidr_block":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrCIDRBlock"
+
+  - id: literal-capacity_provider_strategy-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCapacityProviderStrategy` for the string literal "capacity_provider_strategy"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"capacity_provider_strategy"'
+      - pattern-not-regex: '"capacity_provider_strategy":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrCapacityProviderStrategy"
+
   - id: literal-catalog_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrCatalogID` for the string literal "catalog_id"
@@ -295,6 +393,34 @@ rules:
     severity: ERROR
     fix: "names.AttrClientSecret"
 
+  - id: literal-cloudwatch_log_group_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCloudWatchLogGroupARN` for the string literal "cloudwatch_log_group_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cloudwatch_log_group_arn"'
+      - pattern-not-regex: '"cloudwatch_log_group_arn":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrCloudWatchLogGroupARN"
+
+  - id: literal-cloudwatch_logs-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCloudWatchLogs` for the string literal "cloudwatch_logs"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cloudwatch_logs"'
+      - pattern-not-regex: '"cloudwatch_logs":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrCloudWatchLogs"
+
   - id: literal-cluster_identifier-string-constant
     languages: [go]
     message: Use the constant `names.AttrClusterIdentifier` for the string literal "cluster_identifier"
@@ -364,6 +490,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrConfiguration"
+
+  - id: literal-connection_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrConnectionID` for the string literal "connection_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"connection_id"'
+      - pattern-not-regex: '"connection_id":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrConnectionID"
 
   - id: literal-content-string-constant
     languages: [go]
@@ -560,6 +700,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrDeleteOnTermination"
+
+  - id: literal-deletion_protection-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDeletionProtection` for the string literal "deletion_protection"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"deletion_protection"'
+      - pattern-not-regex: '"deletion_protection":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrDeletionProtection"
 
   - id: literal-description-string-constant
     languages: [go]
@@ -771,6 +925,20 @@ rules:
     severity: ERROR
     fix: "names.AttrEndpoints"
 
+  - id: literal-engine-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEngine` for the string literal "engine"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"engine"'
+      - pattern-not-regex: '"engine":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrEngine"
+
   - id: literal-engine_version-string-constant
     languages: [go]
     message: Use the constant `names.AttrEngineVersion` for the string literal "engine_version"
@@ -812,6 +980,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrExecutionRoleARN"
+
+  - id: literal-expected_bucket_owner-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrExpectedBucketOwner` for the string literal "expected_bucket_owner"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"expected_bucket_owner"'
+      - pattern-not-regex: '"expected_bucket_owner":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrExpectedBucketOwner"
 
   - id: literal-expression-string-constant
     languages: [go]
@@ -896,6 +1078,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrFilter"
+
+  - id: literal-final_snapshot_identifier-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrFinalSnapshotIdentifier` for the string literal "final_snapshot_identifier"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"final_snapshot_identifier"'
+      - pattern-not-regex: '"final_snapshot_identifier":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrFinalSnapshotIdentifier"
 
   - id: literal-force_delete-string-constant
     languages: [go]
@@ -1093,6 +1289,20 @@ rules:
     severity: ERROR
     fix: "names.AttrIPAddressType"
 
+  - id: literal-ip_addresses-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrIPAddresses` for the string literal "ip_addresses"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"ip_addresses"'
+      - pattern-not-regex: '"ip_addresses":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrIPAddresses"
+
   - id: literal-identifier-string-constant
     languages: [go]
     message: Use the constant `names.AttrIdentifier` for the string literal "identifier"
@@ -1288,6 +1498,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrLastUpdatedDate"
+
+  - id: literal-last_updated_time-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLastUpdatedTime` for the string literal "last_updated_time"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"last_updated_time"'
+      - pattern-not-regex: '"last_updated_time":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrLastUpdatedTime"
 
   - id: literal-launch_template-string-constant
     languages: [go]
@@ -1527,6 +1751,20 @@ rules:
     severity: ERROR
     fix: "names.AttrOwner"
 
+  - id: literal-owner_account_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrOwnerAccountID` for the string literal "owner_account_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"owner_account_id"'
+      - pattern-not-regex: '"owner_account_id":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrOwnerAccountID"
+
   - id: literal-owner_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrOwnerID` for the string literal "owner_id"
@@ -1554,6 +1792,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrParameter"
+
+  - id: literal-parameter_group_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrParameterGroupName` for the string literal "parameter_group_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"parameter_group_name"'
+      - pattern-not-regex: '"parameter_group_name":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrParameterGroupName"
 
   - id: literal-parameters-string-constant
     languages: [go]
@@ -1862,6 +2114,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrResourceID"
+
+  - id: literal-resource_owner-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrResourceOwner` for the string literal "resource_owner"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"resource_owner"'
+      - pattern-not-regex: '"resource_owner":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrResourceOwner"
 
   - id: literal-resource_tags-string-constant
     languages: [go]
@@ -2381,6 +2647,34 @@ rules:
     severity: ERROR
     fix: "names.AttrStatusReason"
 
+  - id: literal-storage_class-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStorageClass` for the string literal "storage_class"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"storage_class"'
+      - pattern-not-regex: '"storage_class":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrStorageClass"
+
+  - id: literal-storage_encrypted-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStorageEncrypted` for the string literal "storage_encrypted"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"storage_encrypted"'
+      - pattern-not-regex: '"storage_encrypted":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrStorageEncrypted"
+
   - id: literal-storage_type-string-constant
     languages: [go]
     message: Use the constant `names.AttrStorageType` for the string literal "storage_type"
@@ -2520,6 +2814,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrTargetARN"
+
+  - id: literal-throughput-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrThroughput` for the string literal "throughput"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"throughput"'
+      - pattern-not-regex: '"throughput":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrThroughput"
 
   - id: literal-timeout-string-constant
     languages: [go]
@@ -2675,6 +2983,20 @@ rules:
     severity: ERROR
     fix: "names.AttrUserName"
 
+  - id: literal-user_pool_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrUserPoolID` for the string literal "user_pool_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"user_pool_id"'
+      - pattern-not-regex: '"user_pool_id":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrUserPoolID"
+
   - id: literal-username-string-constant
     languages: [go]
     message: Use the constant `names.AttrUsername` for the string literal "username"
@@ -2800,6 +3122,20 @@ rules:
           config.Variables{ ... }
     severity: ERROR
     fix: "names.AttrVersion"
+
+  - id: literal-virtual_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrVirtualName` for the string literal "virtual_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"virtual_name"'
+      - pattern-not-regex: '"virtual_name":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
+    severity: ERROR
+    fix: "names.AttrVirtualName"
 
   - id: literal-volume_size-string-constant
     languages: [go]

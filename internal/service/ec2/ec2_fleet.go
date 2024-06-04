@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_ec2_fleet", name="Fleet")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFleetCreate,

@@ -178,8 +178,8 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						names.AttrDeviceName: "/dev/sde",
-						"virtual_name":       "ephemeral0",
+						names.AttrDeviceName:  "/dev/sde",
+						names.AttrVirtualName: "ephemeral0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
@@ -377,7 +377,7 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
 						names.AttrEncrypted:  acctest.CtTrue,
-						"throughput":         "150",
+						names.AttrThroughput: "150",
 						names.AttrVolumeSize: "9",
 						names.AttrVolumeType: "gp3",
 					}),

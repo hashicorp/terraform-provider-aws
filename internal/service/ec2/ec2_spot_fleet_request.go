@@ -33,6 +33,7 @@ import (
 
 // @SDKResource("aws_spot_fleet_request", name="Spot Fleet Request")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceSpotFleetRequest() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -174,7 +175,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
@@ -213,7 +214,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"virtual_name": {
+									names.AttrVirtualName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -298,7 +299,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
@@ -1373,7 +1374,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Iops = aws.Int32(int32(v))
 			}
 
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrThroughput].(int); ok && v > 0 {
 				ebs.Throughput = aws.Int32(int32(v))
 			}
 
@@ -1390,7 +1391,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, awstypes.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			})
 		}
 	}
@@ -1426,7 +1427,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Iops = aws.Int32(int32(v))
 			}
 
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrThroughput].(int); ok && v > 0 {
 				ebs.Throughput = aws.Int32(int32(v))
 			}
 
@@ -1989,7 +1990,7 @@ func ebsBlockDevicesToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 			}
 
 			if ebs.Throughput != nil {
-				m["throughput"] = aws.ToInt32(ebs.Throughput)
+				m[names.AttrThroughput] = aws.ToInt32(ebs.Throughput)
 			}
 
 			set.Add(m)
@@ -2005,7 +2006,7 @@ func ephemeralBlockDevicesToSet(bdm []awstypes.BlockDeviceMapping) *schema.Set {
 	for _, val := range bdm {
 		if val.VirtualName != nil {
 			m := make(map[string]interface{})
-			m["virtual_name"] = aws.ToString(val.VirtualName)
+			m[names.AttrVirtualName] = aws.ToString(val.VirtualName)
 
 			if val.DeviceName != nil {
 				m[names.AttrDeviceName] = aws.ToString(val.DeviceName)
@@ -2050,7 +2051,7 @@ func rootBlockDeviceToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 				}
 
 				if val.Ebs.Throughput != nil {
-					m["throughput"] = aws.ToInt32(val.Ebs.Throughput)
+					m[names.AttrThroughput] = aws.ToInt32(val.Ebs.Throughput)
 				}
 
 				set.Add(m)
@@ -2065,7 +2066,7 @@ func hashEphemeralBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 	return create.StringHashcode(buf.String())
 }
 

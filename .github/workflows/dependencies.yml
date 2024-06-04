@@ -7,6 +7,12 @@ on:
       - 'release/**'
   pull_request_target:
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   community_check:
     if: github.event_name == 'pull_request_target'

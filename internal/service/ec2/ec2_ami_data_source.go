@@ -64,7 +64,7 @@ func DataSourceAMI() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -356,8 +356,8 @@ func flattenAMIBlockDeviceMappings(m []awstypes.BlockDeviceMapping) *schema.Set 
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			names.AttrDeviceName: aws.ToString(v.DeviceName),
-			"virtual_name":       aws.ToString(v.VirtualName),
+			names.AttrDeviceName:  aws.ToString(v.DeviceName),
+			names.AttrVirtualName: aws.ToString(v.VirtualName),
 		}
 
 		if v.Ebs != nil {
@@ -365,7 +365,7 @@ func flattenAMIBlockDeviceMappings(m []awstypes.BlockDeviceMapping) *schema.Set 
 				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.ToBool(v.Ebs.DeleteOnTermination)),
 				names.AttrEncrypted:           fmt.Sprintf("%t", aws.ToBool(v.Ebs.Encrypted)),
 				names.AttrIOPS:                fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Iops)),
-				"throughput":                  fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Throughput)),
+				names.AttrThroughput:          fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Throughput)),
 				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.ToInt32(v.Ebs.VolumeSize)),
 				names.AttrSnapshotID:          aws.ToString(v.Ebs.SnapshotId),
 				names.AttrVolumeType:          v.Ebs.VolumeType,
@@ -440,7 +440,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	if d, ok := m["no_device"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
-	if d, ok := m["virtual_name"]; ok {
+	if d, ok := m[names.AttrVirtualName]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 	if d, ok := m[names.AttrSnapshotID]; ok {

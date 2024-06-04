@@ -34,6 +34,7 @@ import (
 
 // @SDKResource("aws_launch_template", name="Launch Template")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
@@ -91,7 +92,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
@@ -115,7 +116,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1331,7 +1332,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 		apiObject.NoDevice = aws.String(v)
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
@@ -1385,7 +1386,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *aw
 		apiObject.SnapshotId = aws.String(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Throughput = aws.Int32(int32(v))
 	}
 
@@ -2301,7 +2302,7 @@ func flattenLaunchTemplateBlockDeviceMapping(apiObject awstypes.LaunchTemplateBl
 	}
 
 	if v := apiObject.VirtualName; v != nil {
-		tfMap["virtual_name"] = aws.ToString(v)
+		tfMap[names.AttrVirtualName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -2349,7 +2350,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *awstypes.LaunchTemplateEbsBl
 	}
 
 	if v := apiObject.Throughput; v != nil {
-		tfMap["throughput"] = aws.ToInt32(v)
+		tfMap[names.AttrThroughput] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {

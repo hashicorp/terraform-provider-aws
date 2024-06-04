@@ -31,7 +31,7 @@ func TestAccDocDBEngineVersionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_basic(engine, version),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
 					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
@@ -75,7 +75,7 @@ func TestAccDocDBEngineVersionDataSource_defaultOnly(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", "docdb"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, "docdb"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVersion),
 				),
 			},

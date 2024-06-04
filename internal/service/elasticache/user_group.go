@@ -47,7 +47,7 @@ func resourceUserGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -78,7 +78,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	userGroupID := d.Get("user_group_id").(string)
 	input := &elasticache.CreateUserGroupInput{
-		Engine:      aws.String(d.Get("engine").(string)),
+		Engine:      aws.String(d.Get(names.AttrEngine).(string)),
 		Tags:        getTagsIn(ctx),
 		UserGroupId: aws.String(userGroupID),
 	}
@@ -140,7 +140,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set(names.AttrARN, userGroup.ARN)
-	d.Set("engine", userGroup.Engine)
+	d.Set(names.AttrEngine, userGroup.Engine)
 	d.Set("user_ids", aws.StringValueSlice(userGroup.UserIds))
 	d.Set("user_group_id", userGroup.UserGroupId)
 
