@@ -1,22 +1,74 @@
-name: "Regressions Slack Notifier"
+name: Handle Regressions
+
 on:
   issues:
     types:
       - labeled
+
   pull_request_target:
     types:
       - labeled
+
+env:
+  EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+
+# Completely restrict the unused, generated GITHUB_TOKEN
+permissions: {}
+
 jobs:
-  slack-notification:
-    name: Slack Notifier
+  prioritize:
+    name: Set Prioritization Indicators
     if: github.event.label.name == 'regression'
     runs-on: ubuntu-latest
+
     steps:
-      - name: Send Slack Notification
+      - name: Generate GitHub Auth Token
+        id: token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{ secrets.APP_PEM }}
+
+      - name: Add prioritized Label
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+          GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
+        run: |
+          gh $GH_CLI_SUBCOMMAND edit "$EVENT_URL" --add-label prioritized
+
+      - name: Move to the Top of Team Working Board
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add 196 --owner "hashicorp" --url "$EVENT_URL" --format json --jq '.id')
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "PVT_kwDOAAuecM4AF-7h" \
+            --field-id "PVTSSF_lADOAAuecM4AF-7hzgMRB34" \
+            --single-select-option-id "${{ vars.team_project_view_working_board }}"
+
+          gh api graphql \
+            -F itemId="$PROJECT_ITEM_ID" \
+            -F projectId="PVT_kwDOAAuecM4AF-7h" \
+            -f query='mutation($itemId:ID!, $projectId:ID!) {
+                        updateProjectV2ItemPosition(input:{itemId:$itemId, projectId:$projectId}) {
+                          clientMutationId
+                        }
+                      }'
+
+  slack-notification:
+    name: Slack Notification
+    if: github.event.label.name == 'regression'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Notification
         uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
           EVENT_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL }}
