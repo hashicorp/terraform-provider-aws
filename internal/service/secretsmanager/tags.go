@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
-func listSecretTags(ctx context.Context, conn *secretsmanager.Client, identifier string, optFns ...func(*secretsmanager.Options)) (tftags.KeyValueTags, error) {
+func listSecretTags(ctx context.Context, conn *secretsmanager.Client, identifier string) (tftags.KeyValueTags, error) {
 	output, err := findSecretByID(ctx, conn, identifier)
 
 	if err != nil {
