@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newKeyAliasResource,
+			Factory: newResourceKeyAlias,
 			Name:    "Key Alias",
 		},
 	}
