@@ -115,7 +115,7 @@ jobs:
       VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
       ITEM_URL: ${{ github.event.pull_request.html_url }}
     steps:
-      - name: "Generate Token"
+      - name: 'Generate Token'
         id: token
         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
