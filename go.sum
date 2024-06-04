@@ -390,8 +390,8 @@ github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.4 h1:5yPsNHtcI318
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.4/go.mod h1:pZyatQ35/jfUHq/41SfoKSaMkgAeePqNq1uezJMMSTI=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.8.4 h1:EZJYKV3ryDGZ/s9HZq0xYIcfuhLZlyl9tt6Uv6BdiM8=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.8.4/go.mod h1:2ow7cCSfYs1y759REZl7zlwbGpGKfo5B4DyAMIBjlyI=
-github.com/aws/aws-sdk-go-v2/service/waf v1.20.8 h1:TETy9FPQfEgliV1vUlDnd8X2ajS42ieqlYM8cleYyXg=
-github.com/aws/aws-sdk-go-v2/service/waf v1.20.8/go.mod h1:O3NVGmZe6ciQaYDu5ZF38GO+cIa9djg/oSd3SYPgjGc=
+github.com/aws/aws-sdk-go-v2/service/waf v1.20.9 h1:5Y2yPlzL6GqM9gjY0EMi+lORXC+PHQvCibyGsPflHwU=
+github.com/aws/aws-sdk-go-v2/service/waf v1.20.9/go.mod h1:k/V6ngGarlLnH14pLvkWM/7YGJQXrAHSxbYh9FD53kI=
 github.com/aws/aws-sdk-go-v2/service/wafregional v1.21.8 h1:fFtRplrsRimZKCOAh8hZsi5Lz3QnaU3XBZsxxucY1PE=
 github.com/aws/aws-sdk-go-v2/service/wafregional v1.21.8/go.mod h1:2onmI0XNjh+tqPcHPZ7wmPewEbqa1ZUAfqC8i0DNOgg=
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.49.1 h1:IWTVTNSfjtLNkS1N+cdCujkjIcU79PuVqcKixqtb0r8=
