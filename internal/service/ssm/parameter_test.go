@@ -131,6 +131,14 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
+			// Test import with version.
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           name + ":1",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
 		},
 	})
 }
