@@ -78,6 +78,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.8
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.24.8
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.7
+	github.com/aws/aws-sdk-go-v2/service/drs v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.162.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.28.3
@@ -242,7 +243,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/drs v1.26.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.8 // indirect
