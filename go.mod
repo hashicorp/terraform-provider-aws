@@ -112,7 +112,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kms v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.5
-	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.0
+	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.8
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.8
