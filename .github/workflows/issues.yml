@@ -1,4 +1,4 @@
-name: "Process issues Events"
+name: 'Process issues Events'
 
 on:
   issues:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   community_check:
-    name: "Community Check"
+    name: 'Community Check'
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
     with:
@@ -21,13 +21,13 @@ jobs:
       username: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.issue.user.login }}
 
   automation_labeler:
-    name: "Automation Labeler"
+    name: 'Automation Labeler'
     needs: community_check
     runs-on: ubuntu-latest
     env:
       ISSUE_URL: ${{ github.event.issue.html_url }}
     steps:
-      - name: "Generate Token"
+      - name: 'Generate Token'
         id: token
         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
@@ -36,36 +36,36 @@ jobs:
           installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
 
-      - name: "Add needs-triage for non-maintainer"
+      - name: 'Add needs-triage for non-maintainer'
         if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'false'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: gh issue edit ${{ env.ISSUE_URL }} --add-label needs-triage
 
-      - name: "Add prioritized when assigned to maintainers"
+      - name: 'Add prioritized when assigned to maintainers'
         if: github.event.action == 'assigned' && needs.community_check.outputs.maintainer == 'true'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
 
-      - name: "Add prioritized to regressions"
+      - name: 'Add prioritized to regressions'
         if: github.event.label.name == 'regression'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: gh issue edit ${{ env.ISSUE_URL }} --add-label prioritized
 
-      - name: "Remove unnecessary labels on closure"
+      - name: 'Remove unnecessary labels on closure'
         if: github.event.action == 'closed'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: gh issue edit ${{ env.ISSUE_URL }} --remove-label needs-triage,waiting-response
 
   service_labeler:
-    name: "Service Labeler"
+    name: 'Service Labeler'
     if: contains(fromJSON('["opened", "edited"]'), github.event.action)
     runs-on: ubuntu-latest
     steps:
-      - name: "Apply Labels"
+      - name: 'Apply Labels'
         uses: github/issue-labeler@c1b0f9f52a63158c4adc09425e858e87b32e9685 # v3.4
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -74,11 +74,11 @@ jobs:
           include-title: 1
 
   community_note:
-    name: "Add Community Note"
+    name: 'Add Community Note'
     if: github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: "Add community note to new Issues"
+      - name: 'Add community note to new Issues'
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
@@ -97,11 +97,11 @@ jobs:
             * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
 
   closed_issue_comment:
-    name: "Closed Issue Comment"
+    name: 'Closed Issue Comment'
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
-      - name: "Add comment on closed issues"
+      - name: 'Add comment on closed issues'
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.issue.number }}
