@@ -116,7 +116,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.9
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.9
-	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.4
+	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.52.4
