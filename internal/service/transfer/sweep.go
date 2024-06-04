@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -39,7 +38,6 @@ func sweepServers(region string) error {
 	}
 	conn := client.TransferClient(ctx)
 	input := &transfer.ListServersInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := transfer.NewListServersPaginator(conn, input)
@@ -52,8 +50,7 @@ func sweepServers(region string) error {
 		}
 
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Transfer Servers (%s): %w", region, err))
-			break
+			return fmt.Errorf("error listing Transfer Servers (%s): %w", region, err)
 		}
 
 		for _, server := range page.Servers {
@@ -70,10 +67,10 @@ func sweepServers(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err))
+		return fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepWorkflows(region string) error {
@@ -84,7 +81,6 @@ func sweepWorkflows(region string) error {
 	}
 	conn := client.TransferClient(ctx)
 	input := &transfer.ListWorkflowsInput{}
-	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := transfer.NewListWorkflowsPaginator(conn, input)
@@ -97,8 +93,7 @@ func sweepWorkflows(region string) error {
 		}
 
 		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Transfer Workflows (%s): %w", region, err))
-			break
+			return fmt.Errorf("error listing Transfer Workflows (%s): %w", region, err)
 		}
 
 		for _, server := range page.Workflows {
@@ -113,8 +108,8 @@ func sweepWorkflows(region string) error {
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Transfer Workflows (%s): %w", region, err))
+		return fmt.Errorf("error sweeping Transfer Workflows (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
