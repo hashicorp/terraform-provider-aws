@@ -174,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.9
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.0.7
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.9
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.10
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.3
