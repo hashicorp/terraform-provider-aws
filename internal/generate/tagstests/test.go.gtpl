@@ -23,7 +23,7 @@
 {{ define "TestCaseSetupNoProviders" -}}
 	PreCheck:     func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
-	CheckDestroy: testAccCheck{{ .Name }}Destroy(ctx),
+	CheckDestroy: testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}),
 {{- end }}
 
 {{ define "TagsKnownValueForNull" -}}
@@ -68,7 +68,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{- end }}
 
 {{ define "ExistsCheck" }}
-	testAccCheck{{ .Name }}Exists(ctx, resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
+	testAccCheck{{ .Name }}Exists(ctx, {{ if .ExistsTakesT }}t,{{ end }} resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
 {{ end }}
 
 {{ define "AdditionalTfVars" -}}
