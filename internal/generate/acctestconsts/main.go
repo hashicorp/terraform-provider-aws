@@ -64,7 +64,7 @@ func main() {
 		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
-	// ConstsOrQuotes helper
+	// ConstOrQuote helper
 	g.Infof("Generating %s", strings.TrimPrefix(constOrQuoteFilename, "../../../"))
 
 	d = g.NewGoFileDestination(constOrQuoteFilename)

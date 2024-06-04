@@ -144,14 +144,16 @@ func main() {
 			testDirPath := path.Join("testdata", resource.Name)
 
 			common := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				WithRName:        (resource.Generator != ""),
+				AdditionalTfVars:        additionalTfVars,
+				WithRName:               (resource.Generator != ""),
+				AlternateRegionProvider: resource.AlternateRegionProvider,
 			}
 
 			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tags_ignore", false, configTmplFile, configTmpl, common)
 		}
 	}
 
@@ -240,6 +242,7 @@ type ResourceDatum struct {
 	GenerateConfig            bool
 	InitCodeBlocks            []codeBlock
 	additionalTfVars          map[string]string
+	AlternateRegionProvider   bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -258,8 +261,9 @@ type codeBlock struct {
 }
 
 type commonConfig struct {
-	AdditionalTfVars []string
-	WithRName        bool
+	AdditionalTfVars        []string
+	WithRName               bool
+	AlternateRegionProvider bool
 }
 
 type ConfigDatum struct {
@@ -382,6 +386,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["altRegionProvider"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid altRegionProvider value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.AlternateRegionProvider = b
+					}
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -430,7 +442,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.NoImport = b
 					}
-
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
