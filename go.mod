@@ -143,7 +143,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.5
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.9
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.6
-	github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.4
+	github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.9
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.8
