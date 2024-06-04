@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.9
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.5
-	github.com/aws/aws-sdk-go-v2/service/dax v1.19.8
+	github.com/aws/aws-sdk-go-v2/service/dax v1.19.9
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.22.8
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.8
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.8
