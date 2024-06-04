@@ -8,11 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/managedgrafana"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/grafana"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -107,7 +110,7 @@ func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 
 func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
+	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
 	d.SetId(d.Get("workspace_id").(string))
 	workspace, err := FindWorkspaceByID(ctx, conn, d.Id())
@@ -117,37 +120,37 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 	}
 
 	authenticationProviders := workspace.Authentication.Providers
-	roleValues := &managedgrafana.RoleValues{
-		Editor: flex.ExpandStringList(d.Get("editor_role_values").([]interface{})),
+	roleValues := &awstypes.RoleValues{
+		Editor: flex.ExpandStringValueList(d.Get("editor_role_values").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("admin_role_values"); ok {
-		roleValues.Admin = flex.ExpandStringList(v.([]interface{}))
+		roleValues.Admin = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	samlConfiguration := &managedgrafana.SamlConfiguration{
+	samlConfiguration := &awstypes.SamlConfiguration{
 		RoleValues: roleValues,
 	}
 
 	if v, ok := d.GetOk("allowed_organizations"); ok {
-		samlConfiguration.AllowedOrganizations = flex.ExpandStringList(v.([]interface{}))
+		samlConfiguration.AllowedOrganizations = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("login_validity_duration"); ok {
-		samlConfiguration.LoginValidityDuration = aws.Int64(int64(v.(int)))
+		samlConfiguration.LoginValidityDuration = int32(v.(int))
 	}
 
-	var assertionAttributes *managedgrafana.AssertionAttributes
+	var assertionAttributes *awstypes.AssertionAttributes
 
 	if v, ok := d.GetOk("email_assertion"); ok {
-		assertionAttributes = &managedgrafana.AssertionAttributes{
+		assertionAttributes = &awstypes.AssertionAttributes{
 			Email: aws.String(v.(string)),
 		}
 	}
 
 	if v, ok := d.GetOk("groups_assertion"); ok {
 		if assertionAttributes == nil {
-			assertionAttributes = &managedgrafana.AssertionAttributes{}
+			assertionAttributes = &awstypes.AssertionAttributes{}
 		}
 
 		assertionAttributes.Groups = aws.String(v.(string))
@@ -155,7 +158,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk("login_assertion"); ok {
 		if assertionAttributes == nil {
-			assertionAttributes = &managedgrafana.AssertionAttributes{}
+			assertionAttributes = &awstypes.AssertionAttributes{}
 		}
 
 		assertionAttributes.Login = aws.String(v.(string))
@@ -163,7 +166,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk("name_assertion"); ok {
 		if assertionAttributes == nil {
-			assertionAttributes = &managedgrafana.AssertionAttributes{}
+			assertionAttributes = &awstypes.AssertionAttributes{}
 		}
 
 		assertionAttributes.Name = aws.String(v.(string))
@@ -171,7 +174,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk("org_assertion"); ok {
 		if assertionAttributes == nil {
-			assertionAttributes = &managedgrafana.AssertionAttributes{}
+			assertionAttributes = &awstypes.AssertionAttributes{}
 		}
 
 		assertionAttributes.Org = aws.String(v.(string))
@@ -179,7 +182,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 	if v, ok := d.GetOk("role_assertion"); ok {
 		if assertionAttributes == nil {
-			assertionAttributes = &managedgrafana.AssertionAttributes{}
+			assertionAttributes = &awstypes.AssertionAttributes{}
 		}
 
 		assertionAttributes.Role = aws.String(v.(string))
@@ -189,29 +192,29 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 		samlConfiguration.AssertionAttributes = assertionAttributes
 	}
 
-	var idpMetadata *managedgrafana.IdpMetadata
+	var idpMetadata awstypes.IdpMetadata
 
 	if v, ok := d.GetOk("idp_metadata_url"); ok {
-		idpMetadata = &managedgrafana.IdpMetadata{
-			Url: aws.String(v.(string)),
+		idpMetadata = &awstypes.IdpMetadataMemberUrl{
+			Value: v.(string),
 		}
 	}
 
 	if v, ok := d.GetOk("idp_metadata_xml"); ok {
-		idpMetadata = &managedgrafana.IdpMetadata{
-			Xml: aws.String(v.(string)),
+		idpMetadata = &awstypes.IdpMetadataMemberXml{
+			Value: v.(string),
 		}
 	}
 
 	samlConfiguration.IdpMetadata = idpMetadata
 
-	input := &managedgrafana.UpdateWorkspaceAuthenticationInput{
+	input := &grafana.UpdateWorkspaceAuthenticationInput{
 		AuthenticationProviders: authenticationProviders,
 		SamlConfiguration:       samlConfiguration,
 		WorkspaceId:             aws.String(d.Id()),
 	}
 
-	_, err = conn.UpdateWorkspaceAuthenticationWithContext(ctx, input)
+	_, err = conn.UpdateWorkspaceAuthentication(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Grafana Saml Configuration: %s", err)
@@ -226,7 +229,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
+	conn := meta.(*conns.AWSClient).GrafanaClient(ctx)
 
 	saml, err := FindSamlConfigurationByID(ctx, conn, d.Id())
 
@@ -245,8 +248,12 @@ func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set("editor_role_values", saml.Configuration.RoleValues.Editor)
 	d.Set("email_assertion", saml.Configuration.AssertionAttributes.Email)
 	d.Set("groups_assertion", saml.Configuration.AssertionAttributes.Groups)
-	d.Set("idp_metadata_url", saml.Configuration.IdpMetadata.Url)
-	d.Set("idp_metadata_xml", saml.Configuration.IdpMetadata.Xml)
+	switch v := saml.Configuration.IdpMetadata.(type) {
+	case *awstypes.IdpMetadataMemberUrl:
+		d.Set("idp_metadata_url", v.Value)
+	case *awstypes.IdpMetadataMemberXml:
+		d.Set("idp_metadata_xml", v.Value)
+	}
 	d.Set("login_assertion", saml.Configuration.AssertionAttributes.Login)
 	d.Set("login_validity_duration", saml.Configuration.LoginValidityDuration)
 	d.Set("name_assertion", saml.Configuration.AssertionAttributes.Name)
@@ -255,4 +262,21 @@ func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrStatus, saml.Status)
 
 	return diags
+}
+
+func waitWorkspaceSAMLConfigurationCreated(ctx context.Context, conn *grafana.Client, id string, timeout time.Duration) (*awstypes.SamlAuthentication, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SamlConfigurationStatusNotConfigured),
+		Target:  enum.Slice(awstypes.SamlConfigurationStatusConfigured),
+		Refresh: statusWorkspaceSAMLConfiguration(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SamlAuthentication); ok {
+		return output, err
+	}
+
+	return nil, err
 }
