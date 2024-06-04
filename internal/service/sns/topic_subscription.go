@@ -27,11 +27,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var (
 	subscriptionSchema = map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -55,7 +56,7 @@ var (
 				return json
 			},
 		},
-		"endpoint": {
+		names.AttrEndpoint: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -82,7 +83,7 @@ var (
 			Computed:     true, // When filter_policy is set, this defaults to MessageAttributes.
 			ValidateFunc: validation.StringInSlice(subscriptionFilterPolicyScope_Values(), false),
 		},
-		"owner_id": {
+		names.AttrOwnerID: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -90,7 +91,7 @@ var (
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"protocol": {
+		names.AttrProtocol: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -128,7 +129,7 @@ var (
 			Optional:     true,
 			ValidateFunc: verify.ValidARN,
 		},
-		"topic_arn": {
+		names.AttrTopicARN: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -137,20 +138,20 @@ var (
 	}
 
 	subscriptionAttributeMap = attrmap.New(map[string]string{
-		"arn":                            subscriptionAttributeNameSubscriptionARN,
+		names.AttrARN:                    subscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": subscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                subscriptionAttributeNameDeliveryPolicy,
-		"endpoint":                       subscriptionAttributeNameEndpoint,
+		names.AttrEndpoint:               subscriptionAttributeNameEndpoint,
 		"filter_policy":                  subscriptionAttributeNameFilterPolicy,
 		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
-		"owner_id":                       subscriptionAttributeNameOwner,
+		names.AttrOwnerID:                subscriptionAttributeNameOwner,
 		"pending_confirmation":           subscriptionAttributeNamePendingConfirmation,
-		"protocol":                       subscriptionAttributeNameProtocol,
+		names.AttrProtocol:               subscriptionAttributeNameProtocol,
 		"raw_message_delivery":           subscriptionAttributeNameRawMessageDelivery,
 		"redrive_policy":                 subscriptionAttributeNameRedrivePolicy,
 		"replay_policy":                  subscriptionAttributeNameReplayPolicy,
 		"subscription_role_arn":          subscriptionAttributeNameSubscriptionRoleARN,
-		"topic_arn":                      subscriptionAttributeNameTopicARN,
+		names.AttrTopicARN:               subscriptionAttributeNameTopicARN,
 	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
@@ -185,13 +186,13 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	delete(attributes, subscriptionAttributeNameProtocol)
 	delete(attributes, subscriptionAttributeNameTopicARN)
 
-	protocol := d.Get("protocol").(string)
+	protocol := d.Get(names.AttrProtocol).(string)
 	input := &sns.SubscribeInput{
 		Attributes:            attributes,
-		Endpoint:              aws.String(d.Get("endpoint").(string)),
+		Endpoint:              aws.String(d.Get(names.AttrEndpoint).(string)),
 		Protocol:              aws.String(protocol),
 		ReturnSubscriptionArn: true, // even if not confirmed, will get ARN
-		TopicArn:              aws.String(d.Get("topic_arn").(string)),
+		TopicArn:              aws.String(d.Get(names.AttrTopicARN).(string)),
 	}
 
 	output, err := conn.Subscribe(ctx, input)
@@ -208,7 +209,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		waitForConfirmation = false
 	}
 
-	if strings.Contains(protocol, "email") {
+	if strings.Contains(protocol, names.AttrEmail) {
 		waitForConfirmation = false
 	}
 

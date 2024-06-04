@@ -101,7 +101,7 @@ func ResourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func ResourceAppMonitor() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      cloudwatchrum.CustomEventsStatusDisabled,
@@ -130,12 +130,12 @@ func ResourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 253),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -151,11 +151,11 @@ func ResourceAppMonitor() *schema.Resource {
 func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchrum.CreateAppMonitorInput{
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
-		Domain:       aws.String(d.Get("domain").(string)),
+		Domain:       aws.String(d.Get(names.AttrDomain).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -209,11 +209,11 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("appmonitor/%s", aws.StringValue(appMon.Name)),
 		Service:   "rum",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
-	d.Set("domain", appMon.Domain)
-	d.Set("name", appMon.Name)
+	d.Set(names.AttrDomain, appMon.Domain)
+	d.Set(names.AttrName, appMon.Name)
 
 	setTagsOut(ctx, appMon.Tags)
 
@@ -223,7 +223,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudwatchrum.UpdateAppMonitorInput{
 			Name: aws.String(d.Id()),
 		}
@@ -240,8 +240,8 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.CwLogEnabled = aws.Bool(d.Get("cw_log_enabled").(bool))
 		}
 
-		if d.HasChange("domain") {
-			input.Domain = aws.String(d.Get("domain").(string))
+		if d.HasChange(names.AttrDomain) {
+			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
 		}
 
 		_, err := conn.UpdateAppMonitorWithContext(ctx, input)
@@ -397,7 +397,7 @@ func expandCustomEvents(tfMap map[string]interface{}) *cloudwatchrum.CustomEvent
 
 	config := &cloudwatchrum.CustomEvents{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -412,7 +412,7 @@ func flattenCustomEvents(apiObject *cloudwatchrum.CustomEvents) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
+		tfMap[names.AttrStatus] = aws.StringValue(v)
 	}
 
 	return tfMap

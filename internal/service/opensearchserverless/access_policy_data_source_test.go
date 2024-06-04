@@ -36,9 +36,9 @@ func TestAccOpenSearchServerlessAccessPolicyDataSource_basic(t *testing.T) {
 				Config: testAccAccessPolicyDataSourceConfig_basic(rName, "data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, dataSourceName, &accesspolicy),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "policy", resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(dataSourceName, "policy_version", resourceName, "policy_version"),
 				),
 			},

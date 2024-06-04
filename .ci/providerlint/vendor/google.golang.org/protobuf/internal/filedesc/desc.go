@@ -7,6 +7,7 @@ package filedesc
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -68,7 +69,7 @@ type (
 		Extensions Extensions
 		Services   Services
 
-		EditionFeatures FileEditionFeatures
+		EditionFeatures EditionFeatures
 	}
 	FileL2 struct {
 		Options   func() protoreflect.ProtoMessage
@@ -76,10 +77,13 @@ type (
 		Locations SourceLocations
 	}
 
-	FileEditionFeatures struct {
+	EditionFeatures struct {
 		// IsFieldPresence is true if field_presence is EXPLICIT
 		// https://protobuf.dev/editions/features/#field_presence
 		IsFieldPresence bool
+		// IsFieldPresence is true if field_presence is LEGACY_REQUIRED
+		// https://protobuf.dev/editions/features/#field_presence
+		IsLegacyRequired bool
 		// IsOpenEnum is true if enum_type is OPEN
 		// https://protobuf.dev/editions/features/#enum_type
 		IsOpenEnum bool
@@ -95,6 +99,9 @@ type (
 		// IsJSONCompliant is true if json_format is ALLOW
 		// https://protobuf.dev/editions/features/#json_format
 		IsJSONCompliant bool
+		// GenerateLegacyUnmarshalJSON determines if the plugin generates the
+		// UnmarshalJSON([]byte) error method for enums.
+		GenerateLegacyUnmarshalJSON bool
 	}
 )
 
@@ -102,9 +109,12 @@ func (fd *File) ParentFile() protoreflect.FileDescriptor { return fd }
 func (fd *File) Parent() protoreflect.Descriptor         { return nil }
 func (fd *File) Index() int                              { return 0 }
 func (fd *File) Syntax() protoreflect.Syntax             { return fd.L1.Syntax }
-func (fd *File) Name() protoreflect.Name                 { return fd.L1.Package.Name() }
-func (fd *File) FullName() protoreflect.FullName         { return fd.L1.Package }
-func (fd *File) IsPlaceholder() bool                     { return false }
+
+// Not exported and just used to reconstruct the original FileDescriptor proto
+func (fd *File) Edition() int32                  { return int32(fd.L1.Edition) }
+func (fd *File) Name() protoreflect.Name         { return fd.L1.Package.Name() }
+func (fd *File) FullName() protoreflect.FullName { return fd.L1.Package }
+func (fd *File) IsPlaceholder() bool             { return false }
 func (fd *File) Options() protoreflect.ProtoMessage {
 	if f := fd.lazyInit().Options; f != nil {
 		return f()
@@ -156,6 +166,8 @@ type (
 	}
 	EnumL1 struct {
 		eagerValues bool // controls whether EnumL2.Values is already populated
+
+		EditionFeatures EditionFeatures
 	}
 	EnumL2 struct {
 		Options        func() protoreflect.ProtoMessage
@@ -194,6 +206,9 @@ func (ed *Enum) lazyInit() *EnumL2 {
 	ed.L0.ParentFile.lazyInit() // implicitly initializes L2
 	return ed.L2
 }
+func (ed *Enum) IsClosed() bool {
+	return !ed.L1.EditionFeatures.IsOpenEnum
+}
 
 func (ed *EnumValue) Options() protoreflect.ProtoMessage {
 	if f := ed.L1.Options; f != nil {
@@ -217,6 +232,8 @@ type (
 		Extensions   Extensions
 		IsMapEntry   bool // promoted from google.protobuf.MessageOptions
 		IsMessageSet bool // promoted from google.protobuf.MessageOptions
+
+		EditionFeatures EditionFeatures
 	}
 	MessageL2 struct {
 		Options               func() protoreflect.ProtoMessage
@@ -241,17 +258,12 @@ type (
 		StringName       stringName
 		IsProto3Optional bool // promoted from google.protobuf.FieldDescriptorProto
 		IsWeak           bool // promoted from google.protobuf.FieldOptions
-		HasPacked        bool // promoted from google.protobuf.FieldOptions
-		IsPacked         bool // promoted from google.protobuf.FieldOptions
-		HasEnforceUTF8   bool // promoted from google.protobuf.FieldOptions
-		EnforceUTF8      bool // promoted from google.protobuf.FieldOptions
 		Default          defaultValue
 		ContainingOneof  protoreflect.OneofDescriptor // must be consistent with Message.Oneofs.Fields
 		Enum             protoreflect.EnumDescriptor
 		Message          protoreflect.MessageDescriptor
 
-		// Edition features.
-		Presence bool
+		EditionFeatures EditionFeatures
 	}
 
 	Oneof struct {
@@ -261,6 +273,8 @@ type (
 	OneofL1 struct {
 		Options func() protoreflect.ProtoMessage
 		Fields  OneofFields // must be consistent with Message.Fields.ContainingOneof
+
+		EditionFeatures EditionFeatures
 	}
 )
 
@@ -310,28 +324,30 @@ func (fd *Field) Options() protoreflect.ProtoMessage {
 }
 func (fd *Field) Number() protoreflect.FieldNumber      { return fd.L1.Number }
 func (fd *Field) Cardinality() protoreflect.Cardinality { return fd.L1.Cardinality }
-func (fd *Field) Kind() protoreflect.Kind               { return fd.L1.Kind }
-func (fd *Field) HasJSONName() bool                     { return fd.L1.StringName.hasJSON }
-func (fd *Field) JSONName() string                      { return fd.L1.StringName.getJSON(fd) }
-func (fd *Field) TextName() string                      { return fd.L1.StringName.getText(fd) }
+func (fd *Field) Kind() protoreflect.Kind {
+	return fd.L1.Kind
+}
+func (fd *Field) HasJSONName() bool { return fd.L1.StringName.hasJSON }
+func (fd *Field) JSONName() string  { return fd.L1.StringName.getJSON(fd) }
+func (fd *Field) TextName() string  { return fd.L1.StringName.getText(fd) }
 func (fd *Field) HasPresence() bool {
-	if fd.L0.ParentFile.L1.Syntax == protoreflect.Editions {
-		return fd.L1.Presence || fd.L1.Message != nil || fd.L1.ContainingOneof != nil
+	if fd.L1.Cardinality == protoreflect.Repeated {
+		return false
 	}
-	return fd.L1.Cardinality != protoreflect.Repeated && (fd.L0.ParentFile.L1.Syntax == protoreflect.Proto2 || fd.L1.Message != nil || fd.L1.ContainingOneof != nil)
+	return fd.IsExtension() || fd.L1.EditionFeatures.IsFieldPresence || fd.L1.Message != nil || fd.L1.ContainingOneof != nil
 }
 func (fd *Field) HasOptionalKeyword() bool {
 	return (fd.L0.ParentFile.L1.Syntax == protoreflect.Proto2 && fd.L1.Cardinality == protoreflect.Optional && fd.L1.ContainingOneof == nil) || fd.L1.IsProto3Optional
 }
 func (fd *Field) IsPacked() bool {
-	if !fd.L1.HasPacked && fd.L0.ParentFile.L1.Syntax != protoreflect.Proto2 && fd.L1.Cardinality == protoreflect.Repeated {
-		switch fd.L1.Kind {
-		case protoreflect.StringKind, protoreflect.BytesKind, protoreflect.MessageKind, protoreflect.GroupKind:
-		default:
-			return true
-		}
+	if fd.L1.Cardinality != protoreflect.Repeated {
+		return false
 	}
-	return fd.L1.IsPacked
+	switch fd.L1.Kind {
+	case protoreflect.StringKind, protoreflect.BytesKind, protoreflect.MessageKind, protoreflect.GroupKind:
+		return false
+	}
+	return fd.L1.EditionFeatures.IsPacked
 }
 func (fd *Field) IsExtension() bool { return false }
 func (fd *Field) IsWeak() bool      { return fd.L1.IsWeak }
@@ -378,10 +394,7 @@ func (fd *Field) ProtoType(protoreflect.FieldDescriptor) {}
 // WARNING: This method is exempt from the compatibility promise and may be
 // removed in the future without warning.
 func (fd *Field) EnforceUTF8() bool {
-	if fd.L1.HasEnforceUTF8 {
-		return fd.L1.EnforceUTF8
-	}
-	return fd.L0.ParentFile.L1.Syntax == protoreflect.Proto3
+	return fd.L1.EditionFeatures.IsUTF8Validated
 }
 
 func (od *Oneof) IsSynthetic() bool {
@@ -404,16 +417,16 @@ type (
 		L2 *ExtensionL2 // protected by fileDesc.once
 	}
 	ExtensionL1 struct {
-		Number      protoreflect.FieldNumber
-		Extendee    protoreflect.MessageDescriptor
-		Cardinality protoreflect.Cardinality
-		Kind        protoreflect.Kind
+		Number          protoreflect.FieldNumber
+		Extendee        protoreflect.MessageDescriptor
+		Cardinality     protoreflect.Cardinality
+		Kind            protoreflect.Kind
+		EditionFeatures EditionFeatures
 	}
 	ExtensionL2 struct {
 		Options          func() protoreflect.ProtoMessage
 		StringName       stringName
 		IsProto3Optional bool // promoted from google.protobuf.FieldDescriptorProto
-		IsPacked         bool // promoted from google.protobuf.FieldOptions
 		Default          defaultValue
 		Enum             protoreflect.EnumDescriptor
 		Message          protoreflect.MessageDescriptor
@@ -436,7 +449,16 @@ func (xd *Extension) HasPresence() bool                     { return xd.L1.Cardi
 func (xd *Extension) HasOptionalKeyword() bool {
 	return (xd.L0.ParentFile.L1.Syntax == protoreflect.Proto2 && xd.L1.Cardinality == protoreflect.Optional) || xd.lazyInit().IsProto3Optional
 }
-func (xd *Extension) IsPacked() bool                         { return xd.lazyInit().IsPacked }
+func (xd *Extension) IsPacked() bool {
+	if xd.L1.Cardinality != protoreflect.Repeated {
+		return false
+	}
+	switch xd.L1.Kind {
+	case protoreflect.StringKind, protoreflect.BytesKind, protoreflect.MessageKind, protoreflect.GroupKind:
+		return false
+	}
+	return xd.L1.EditionFeatures.IsPacked
+}
 func (xd *Extension) IsExtension() bool                      { return true }
 func (xd *Extension) IsWeak() bool                           { return false }
 func (xd *Extension) IsList() bool                           { return xd.Cardinality() == protoreflect.Repeated }
@@ -517,8 +539,9 @@ func (md *Method) ProtoInternal(pragma.DoNotImplement)     {}
 // Surrogate files are can be used to create standalone descriptors
 // where the syntax is only information derived from the parent file.
 var (
-	SurrogateProto2 = &File{L1: FileL1{Syntax: protoreflect.Proto2}, L2: &FileL2{}}
-	SurrogateProto3 = &File{L1: FileL1{Syntax: protoreflect.Proto3}, L2: &FileL2{}}
+	SurrogateProto2      = &File{L1: FileL1{Syntax: protoreflect.Proto2}, L2: &FileL2{}}
+	SurrogateProto3      = &File{L1: FileL1{Syntax: protoreflect.Proto3}, L2: &FileL2{}}
+	SurrogateEdition2023 = &File{L1: FileL1{Syntax: protoreflect.Editions, Edition: Edition2023}, L2: &FileL2{}}
 )
 
 type (
@@ -560,6 +583,34 @@ func (s *stringName) InitJSON(name string) {
 	s.nameJSON = name
 }
 
+// Returns true if this field is structured like the synthetic field of a proto2
+// group. This allows us to expand our treatment of delimited fields without
+// breaking proto2 files that have been upgraded to editions.
+func isGroupLike(fd protoreflect.FieldDescriptor) bool {
+	// Groups are always group types.
+	if fd.Kind() != protoreflect.GroupKind {
+		return false
+	}
+
+	// Group fields are always the lowercase type name.
+	if strings.ToLower(string(fd.Message().Name())) != string(fd.Name()) {
+		return false
+	}
+
+	// Groups could only be defined in the same file they're used.
+	if fd.Message().ParentFile() != fd.ParentFile() {
+		return false
+	}
+
+	// Group messages are always defined in the same scope as the field.  File
+	// level extensions will compare NULL == NULL here, which is why the file
+	// comparison above is necessary to ensure both come from the same file.
+	if fd.IsExtension() {
+		return fd.Parent() == fd.Message().Parent()
+	}
+	return fd.ContainingMessage() == fd.Message().Parent()
+}
+
 func (s *stringName) lazyInit(fd protoreflect.FieldDescriptor) *stringName {
 	s.once.Do(func() {
 		if fd.IsExtension() {
@@ -580,7 +631,7 @@ func (s *stringName) lazyInit(fd protoreflect.FieldDescriptor) *stringName {
 
 			// Format the text name.
 			s.nameText = string(fd.Name())
-			if fd.Kind() == protoreflect.GroupKind {
+			if isGroupLike(fd) {
 				s.nameText = string(fd.Message().Name())
 			}
 		}

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_s3_bucket_policy", name="Bucket Policy")
@@ -18,11 +19,11 @@ func dataSourceBucketPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBucketPolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +34,7 @@ func dataSourceBucketPolicy() *schema.Resource {
 func dataSourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get("bucket").(string)
+	name := d.Get(names.AttrBucket).(string)
 
 	policy, err := findBucketPolicy(ctx, conn, name)
 
@@ -47,7 +48,7 @@ func dataSourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(name)
-	d.Set("policy", policy)
+	d.Set(names.AttrPolicy, policy)
 
 	return nil
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mattbaird/jsonpatch"
 )
 
@@ -49,15 +50,15 @@ func resourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Computed:  true,
@@ -78,7 +79,7 @@ func resourceResource() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceResourceCustomizeDiffGetSchema,
 			resourceResourceCustomizeDiffSchemaDiff,
-			customdiff.ComputedIf("properties", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrProperties, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("desired_state")
 			}),
 		),
@@ -97,7 +98,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		TypeName:     aws.String(typeName),
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -138,7 +139,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Id(),
 		typeName,
 		d.Get("type_version_id").(string),
-		d.Get("role_arn").(string),
+		d.Get(names.AttrRoleARN).(string),
 	)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -151,7 +152,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 	}
 
-	d.Set("properties", resourceDescription.Properties)
+	d.Set(names.AttrProperties, resourceDescription.Properties)
 
 	return diags
 }
@@ -178,7 +179,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			TypeName:      aws.String(typeName),
 		}
 
-		if v, ok := d.GetOk("role_arn"); ok {
+		if v, ok := d.GetOk(names.AttrRoleARN); ok {
 			input.RoleArn = aws.String(v.(string))
 		}
 
@@ -212,7 +213,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		TypeName:    aws.String(typeName),
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -241,9 +242,9 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	resourceSchema := diff.Get("schema").(string)
+	resourceSchema := diff.Get(names.AttrSchema).(string)
 
 	if resourceSchema != "" {
 		return nil
@@ -257,7 +258,7 @@ func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.Re
 		return fmt.Errorf("reading CloudFormation Type (%s): %w", typeName, err)
 	}
 
-	if err := diff.SetNew("schema", output.Schema); err != nil {
+	if err := diff.SetNew(names.AttrSchema, output.Schema); err != nil {
 		return fmt.Errorf("setting schema New: %w", err)
 	}
 
@@ -266,7 +267,7 @@ func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.Re
 
 func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	oldDesiredStateRaw, newDesiredStateRaw := diff.GetChange("desired_state")
-	newSchema := diff.Get("schema").(string)
+	newSchema := diff.Get(names.AttrSchema).(string)
 
 	newDesiredState, ok := newDesiredStateRaw.(string)
 

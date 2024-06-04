@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -36,7 +37,9 @@ func main() {
 		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",        // Bearer auth token needs special handling
 			"mwaa",                // Resolver modifies URL
+			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography", // Resolver modifies URL
+			"route53profiles",     // Resolver modifies URL
 			"s3control",           // Resolver modifies URL
 			"timestreamwrite":     // Uses endpoint discovery
 			continue
@@ -58,10 +61,10 @@ func main() {
 			Region:            "us-west-2",
 			APICall:           l.EndpointAPICall(),
 			APICallParams:     l.EndpointAPIParams(),
-			AwsEnvVar:         l.AwsServiceEnvVar(),
-			ConfigParameter:   l.AwsConfigParameter(),
+			AwsEnvVar:         l.AWSServiceEnvVar(),
+			ConfigParameter:   names.ConstOrQuote(l.AWSConfigParameter()),
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
-			TfAwsEnvVar:       l.TfAwsEnvVar(),
+			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),
 		}
 		if l.ClientSDKV1() {
@@ -122,7 +125,7 @@ type TemplateData struct {
 	AwsEnvVar                         string
 	ConfigParameter                   string
 	DeprecatedEnvVar                  string
-	TfAwsEnvVar                       string
+	TFAWSEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
 	V1AlternateInputPackage           string
 	Aliases                           []string

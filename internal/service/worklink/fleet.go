@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_worklink_fleet")
@@ -36,11 +37,11 @@ func ResourceFleet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -49,7 +50,7 @@ func ResourceFleet() *schema.Resource {
 					validation.StringLenBetween(1, 48),
 				),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -65,17 +66,17 @@ func ResourceFleet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -101,7 +102,7 @@ func ResourceFleet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -117,11 +118,11 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,11 +140,11 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.CreateFleetInput{
-		FleetName:                  aws.String(d.Get("name").(string)),
+		FleetName:                  aws.String(d.Get(names.AttrName).(string)),
 		OptimizeForEndUserLocation: aws.Bool(d.Get("optimize_for_end_user_location").(bool)),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -189,14 +190,14 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "describing WorkLink Fleet (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("name", resp.FleetName)
-	d.Set("display_name", resp.DisplayName)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrName, resp.FleetName)
+	d.Set(names.AttrDisplayName, resp.DisplayName)
 	d.Set("optimize_for_end_user_location", resp.OptimizeForEndUserLocation)
 	d.Set("company_code", resp.CompanyCode)
-	d.Set("created_time", resp.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, resp.CreatedTime.Format(time.RFC3339))
 	if resp.LastUpdatedTime != nil {
-		d.Set("last_updated_time", resp.LastUpdatedTime.Format(time.RFC3339))
+		d.Set(names.AttrLastUpdatedTime, resp.LastUpdatedTime.Format(time.RFC3339))
 	}
 	auditStreamConfigurationResp, err := conn.DescribeAuditStreamConfigurationWithContext(ctx, &worklink.DescribeAuditStreamConfigurationInput{
 		FleetArn: aws.String(d.Id()),
@@ -246,11 +247,11 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		OptimizeForEndUserLocation: aws.Bool(d.Get("optimize_for_end_user_location").(bool)),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	if d.HasChanges("display_name", "optimize_for_end_user_location") {
+	if d.HasChanges(names.AttrDisplayName, "optimize_for_end_user_location") {
 		_, err := conn.UpdateFleetMetadataWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkLink Fleet (%s): %s", d.Id(), err)
@@ -361,9 +362,9 @@ func updateCompanyNetworkConfiguration(ctx context.Context, conn *worklink.WorkL
 		config := v.([]interface{})[0].(map[string]interface{})
 		input := &worklink.UpdateCompanyNetworkConfigurationInput{
 			FleetArn:         aws.String(d.Id()),
-			SecurityGroupIds: flex.ExpandStringSet(config["security_group_ids"].(*schema.Set)),
-			SubnetIds:        flex.ExpandStringSet(config["subnet_ids"].(*schema.Set)),
-			VpcId:            aws.String(config["vpc_id"].(string)),
+			SecurityGroupIds: flex.ExpandStringSet(config[names.AttrSecurityGroupIDs].(*schema.Set)),
+			SubnetIds:        flex.ExpandStringSet(config[names.AttrSubnetIDs].(*schema.Set)),
+			VpcId:            aws.String(config[names.AttrVPCID].(string)),
 		}
 		if _, err := conn.UpdateCompanyNetworkConfigurationWithContext(ctx, input); err != nil {
 			return fmt.Errorf("updating Company Network Configuration: %w", err)
@@ -400,7 +401,7 @@ func updateIdentityProviderConfiguration(ctx context.Context, conn *worklink.Wor
 		config := v.([]interface{})[0].(map[string]interface{})
 		input := &worklink.UpdateIdentityProviderConfigurationInput{
 			FleetArn:                     aws.String(d.Id()),
-			IdentityProviderType:         aws.String(config["type"].(string)),
+			IdentityProviderType:         aws.String(config[names.AttrType].(string)),
 			IdentityProviderSamlMetadata: aws.String(config["saml_metadata"].(string)),
 		}
 		if _, err := conn.UpdateIdentityProviderConfigurationWithContext(ctx, input); err != nil {

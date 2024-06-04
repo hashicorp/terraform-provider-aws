@@ -36,11 +36,11 @@ func ResourceActivity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -57,7 +57,7 @@ func ResourceActivity() *schema.Resource {
 func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &sfn.CreateActivityInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -89,8 +89,8 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("reading Step Functions Activity (%s): %s", d.Id(), err)
 	}
 
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("name", output.Name)
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrName, output.Name)
 
 	return nil
 }

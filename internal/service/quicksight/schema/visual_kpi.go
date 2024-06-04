@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func kpiVisualSchema() *schema.Schema {
@@ -36,9 +37,9 @@ func kpiVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"target_values": measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-										"trend_groups":  dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-										"values":        measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+										"target_values":  measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+										"trend_groups":   dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+										names.AttrValues: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 									},
 								},
 							},
@@ -84,7 +85,7 @@ func kpiVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 													"tooltip_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
-													"type":               stringSchema(true, validation.StringInSlice(quicksight.KPISparklineType_Values(), false)),
+													names.AttrType:       stringSchema(true, validation.StringInSlice(quicksight.KPISparklineType_Values(), false)),
 													"visibility":         stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 												},
 											},
@@ -114,7 +115,7 @@ func kpiVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"type": stringSchema(true, validation.StringInSlice(quicksight.KPIVisualStandardLayoutType_Values(), false)),
+																names.AttrType: stringSchema(true, validation.StringInSlice(quicksight.KPIVisualStandardLayoutType_Values(), false)),
 															},
 														},
 													},
@@ -294,7 +295,7 @@ func expandKPIFieldWells(tfList []interface{}) *quicksight.KPIFieldWells {
 	if v, ok := tfMap["target_values"].([]interface{}); ok && len(v) > 0 {
 		config.TargetValues = expandMeasureFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 	return config
@@ -399,7 +400,7 @@ func expandKPISparklineOptions(tfList []interface{}) *quicksight.KPISparklineOpt
 	if v, ok := tfMap["tooltip_visibility"].(string); ok && v != "" {
 		options.TooltipVisibility = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		options.Type = aws.String(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
@@ -459,7 +460,7 @@ func expandKPIVisualStandardLayout(tfList []interface{}) *quicksight.KPIVisualSt
 
 	options := &quicksight.KPIVisualStandardLayout{}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		options.Type = aws.String(v)
 	}
 
@@ -697,7 +698,7 @@ func flattenKPIFieldWells(apiObject *quicksight.KPIFieldWells) []interface{} {
 		tfMap["trend_groups"] = flattenDimensionFields(apiObject.TrendGroups)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -779,7 +780,7 @@ func flattenKPISparklineOptions(apiObject *quicksight.KPISparklineOptions) []int
 		tfMap["tooltip_visibility"] = aws.StringValue(apiObject.TooltipVisibility)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 	if apiObject.Visibility != nil {
 		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
@@ -821,7 +822,7 @@ func flattenKPIVisualStandardLayout(apiObject *quicksight.KPIVisualStandardLayou
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 
 	return []interface{}{tfMap}

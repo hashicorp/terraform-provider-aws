@@ -33,7 +33,7 @@ func dataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,34 +46,34 @@ func dataSourceService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "service_identifier"},
+				ExactlyOneOf: []string{names.AttrName, "service_identifier"},
 			},
 			"service_identifier": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "service_identifier"},
+				ExactlyOneOf: []string{names.AttrName, "service_identifier"},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -92,7 +92,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		out = service
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		filter := func(x types.ServiceSummary) bool {
 			return aws.ToString(x.Name) == v.(string)
 		}
@@ -113,20 +113,20 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(out.Id))
 	serviceARN := aws.ToString(out.Arn)
-	d.Set("arn", serviceARN)
+	d.Set(names.AttrARN, serviceARN)
 	d.Set("auth_type", out.AuthType)
-	d.Set("certificate_arn", out.CertificateArn)
+	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
 		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
-			return diag.Errorf("setting dns_entry: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
 		d.Set("dns_entry", nil)
 	}
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("service_identifier", out.Id)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 
 	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
 	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
@@ -146,5 +146,5 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		setTagsOut(ctx, Tags(tags))
 	}
 
-	return nil
+	return diags
 }

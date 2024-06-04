@@ -16,8 +16,8 @@ func TestAccAmplify_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			"basic":                    testAccApp_basic,
-			"disappears":               testAccApp_disappears,
+			acctest.CtBasic:            testAccApp_basic,
+			acctest.CtDisappears:       testAccApp_disappears,
 			"tags":                     testAccApp_tags,
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
@@ -30,27 +30,27 @@ func TestAccAmplify_serial(t *testing.T) {
 			"Repository":               testAccApp_Repository,
 		},
 		"BackendEnvironment": {
-			"basic":                         testAccBackendEnvironment_basic,
-			"disappears":                    testAccBackendEnvironment_disappears,
+			acctest.CtBasic:                 testAccBackendEnvironment_basic,
+			acctest.CtDisappears:            testAccBackendEnvironment_disappears,
 			"DeploymentArtifacts_StackName": testAccBackendEnvironment_DeploymentArtifacts_StackName,
 		},
 		"Branch": {
-			"basic":                testAccBranch_basic,
-			"disappears":           testAccBranch_disappears,
+			acctest.CtBasic:        testAccBranch_basic,
+			acctest.CtDisappears:   testAccBranch_disappears,
 			"tags":                 testAccBranch_tags,
 			"BasicAuthCredentials": testAccBranch_BasicAuthCredentials,
 			"EnvironmentVariables": testAccBranch_EnvironmentVariables,
 			"OptionalArguments":    testAccBranch_OptionalArguments,
 		},
 		"DomainAssociation": {
-			"basic":      testAccDomainAssociation_basic,
-			"disappears": testAccDomainAssociation_disappears,
-			"update":     testAccDomainAssociation_update,
+			acctest.CtBasic:      testAccDomainAssociation_basic,
+			acctest.CtDisappears: testAccDomainAssociation_disappears,
+			"update":             testAccDomainAssociation_update,
 		},
 		"Webhook": {
-			"basic":      testAccWebhook_basic,
-			"disappears": testAccWebhook_disappears,
-			"update":     testAccWebhook_update,
+			acctest.CtBasic:      testAccWebhook_basic,
+			acctest.CtDisappears: testAccWebhook_disappears,
+			"update":             testAccWebhook_update,
 		},
 	}
 
