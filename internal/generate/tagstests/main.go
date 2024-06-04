@@ -23,11 +23,11 @@ import (
 	"text/template"
 
 	"github.com/dlclark/regexp2"
-	acctestconsts "github.com/hashicorp/terraform-provider-aws/internal/acctest/const"
+	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 func main() {
@@ -247,7 +247,7 @@ type ResourceDatum struct {
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
-		return acctestconsts.ConstOrQuote(k)
+		return acctestgen.ConstOrQuote(k)
 	})
 }
 
@@ -423,7 +423,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ImportIgnore = strings.Split(attr, ";")
 
 					for i, val := range d.ImportIgnore {
-						d.ImportIgnore[i] = names.ConstOrQuote(val)
+						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
 					}
 				}
 				if attr, ok := args.Keyword["importStateId"]; ok {

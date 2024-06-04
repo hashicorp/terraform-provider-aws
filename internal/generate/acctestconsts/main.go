@@ -17,8 +17,8 @@ import (
 //go:embed consts.tmpl
 var constsTmpl string
 
-//go:embed constsOrQuote.gtpl
-var constsOrQuoteTmpl string
+//go:embed constOrQuote.gtpl
+var constOrQuoteTmpl string
 
 //go:embed semgrep.tmpl
 var semgrepTmpl string
@@ -35,10 +35,10 @@ type TemplateData struct {
 
 func main() {
 	const (
-		constsFilename        = "../../../internal/acctest/consts_gen.go"
-		constsOrQuoteFilename = "../../../internal/acctest/const/consts_or_quote_gen.go"
-		semgrepFilename       = "../../../.ci/.semgrep-test-constants.yml"
-		constantDataFile      = "../../../internal/acctest/consts.csv"
+		constsFilename       = "../../../internal/acctest/consts_gen.go"
+		constOrQuoteFilename = "../../../internal/acctest/generate/const_or_quote_gen.go"
+		semgrepFilename      = "../../../.ci/.semgrep-test-constants.yml"
+		constantDataFile     = "../../../internal/acctest/consts.csv"
 	)
 	g := common.NewGenerator()
 
@@ -64,17 +64,17 @@ func main() {
 		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
-	// ConstsOrQuotes helper
-	g.Infof("Generating %s", strings.TrimPrefix(constsOrQuoteFilename, "../../../"))
+	// ConstOrQuote helper
+	g.Infof("Generating %s", strings.TrimPrefix(constOrQuoteFilename, "../../../"))
 
-	d = g.NewGoFileDestination(constsOrQuoteFilename)
+	d = g.NewGoFileDestination(constOrQuoteFilename)
 
-	if err := d.WriteTemplate("constsOrQuote", constsOrQuoteTmpl, td); err != nil {
-		g.Fatalf("generating file (%s): %s", constsOrQuoteFilename, err)
+	if err := d.WriteTemplate("constsOrQuote", constOrQuoteTmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", constOrQuoteFilename, err)
 	}
 
 	if err := d.Write(); err != nil {
-		g.Fatalf("generating file (%s): %s", constsOrQuoteFilename, err)
+		g.Fatalf("generating file (%s): %s", constOrQuoteFilename, err)
 	}
 
 	// Semgrep
