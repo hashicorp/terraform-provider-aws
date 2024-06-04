@@ -532,7 +532,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"defkey1": config.StringVariable("defvalue1"),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
@@ -551,14 +551,14 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-						"defkey1":      knownvalue.StringExact("defvalue1"),
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-						"defkey1":      knownvalue.StringExact("defvalue1"),
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -569,9 +569,9 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-							"defkey1":      knownvalue.StringExact("defvalue1"),
+							acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+							acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
@@ -592,7 +592,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"defkey1": config.StringVariable("defvalue1"),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
@@ -608,15 +608,15 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-						"defkey1":      knownvalue.StringExact("defvalue1"),
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
-						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
-						"defkey1":      knownvalue.StringExact("defvalue1"),
-						"ignkey1":      knownvalue.StringExact("ignvalue1"),
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2:         knownvalue.StringExact(acctest.CtValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						"ignkey1":              knownvalue.StringExact("ignvalue1"),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -638,7 +638,7 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"defkey1": config.StringVariable("defvalue1"),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
@@ -657,15 +657,15 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 						"key3":         knownvalue.StringExact("value3"),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						"key3":         knownvalue.StringExact("value3"),
-						"defkey1":      knownvalue.StringExact("defvalue1"),
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
+						"key3":                 knownvalue.StringExact("value3"),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-						"key3":         knownvalue.StringExact("value3"),
-						"defkey1":      knownvalue.StringExact("defvalue1"),
-						"ignkey1":      knownvalue.StringExact("ignvalue1"),
+						acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
+						"key3":                 knownvalue.StringExact("value3"),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						"ignkey1":              knownvalue.StringExact("ignvalue1"),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -676,9 +676,9 @@ func TestAccKMSKey_tags_IgnoreTags_ModifyOutOfBand(t *testing.T) {
 							"key3":         knownvalue.StringExact("value3"),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
-							"key3":         knownvalue.StringExact("value3"),
-							"defkey1":      knownvalue.StringExact("defvalue1"),
+							acctest.CtKey1:         knownvalue.StringExact(acctest.CtValue1Updated),
+							"key3":                 knownvalue.StringExact("value3"),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						})),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
