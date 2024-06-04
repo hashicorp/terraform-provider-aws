@@ -160,6 +160,7 @@ clean-make-tests: ## Clean up artifacts from make tests
 clean-tidy: prereq-go ## Clean up tidy
 	@echo "make: Tidying Go mods..."
 	@gover="$(GO_VER)" ; \
+	echo "make: tidying with $$gover" ; \
 	if [ "$$gover" = "go" ] ; then \
 		gover=go`cat .go-version | xargs` ; \
 		echo "make: WARNING: no version provided so tidying with $$gover" ; \
