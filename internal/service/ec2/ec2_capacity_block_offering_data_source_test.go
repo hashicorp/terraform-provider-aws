@@ -30,10 +30,10 @@ func TestAccEC2CapacityBlockOffering_basic(t *testing.T) {
 			{
 				Config: testAccCapacityBlockOfferingConfig_basic(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(dataSourceName, "capacity_duration_hours", "24"),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_count", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_type", "p4d.24xlarge"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceCount, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "p4d.24xlarge"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "capacity_block_offering_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "tenancy", "default"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "upfront_fee"),

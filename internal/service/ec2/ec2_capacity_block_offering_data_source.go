@@ -37,7 +37,7 @@ func (d *dataSourceCapacityBlockOffering) Metadata(_ context.Context, _ datasour
 func (d *dataSourceCapacityBlockOffering) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed: true,
 			},
 			"capacity_block_offering_id": framework.IDAttribute(),
@@ -52,10 +52,10 @@ func (d *dataSourceCapacityBlockOffering) Schema(_ context.Context, _ datasource
 				Optional:   true,
 				Computed:   true,
 			},
-			"instance_count": schema.Int64Attribute{
+			names.AttrInstanceCount: schema.Int64Attribute{
 				Required: true,
 			},
-			"instance_type": schema.StringAttribute{
+			names.AttrInstanceType: schema.StringAttribute{
 				Required: true,
 			},
 			"start_date_range": schema.StringAttribute{

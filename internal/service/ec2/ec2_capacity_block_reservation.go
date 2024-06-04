@@ -32,11 +32,11 @@ func ResourceCapacityBlockReservation() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func ResourceCapacityBlockReservation() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"instance_count": {
+			names.AttrInstanceCount: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func ResourceCapacityBlockReservation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.CapacityReservationInstancePlatform_Values(), false),
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func ResourceCapacityBlockReservation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
