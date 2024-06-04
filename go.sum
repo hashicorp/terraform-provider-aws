@@ -288,8 +288,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.12 h1:IAD9XLvs0v
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.12/go.mod h1:c2ke55hcLmZildKwNeRQcRnyNKHXxq04UkhVQld6egg=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.27.8 h1:ssPBOuPEFRf0wtlmscVbbNYYa7MP05XqaCCpoL9FLxo=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.27.8/go.mod h1:OdGdDqdyX44kQ4P0c3YnUBIaXbGU8ErpgGUIHqra4YY=
-github.com/aws/aws-sdk-go-v2/service/osis v1.9.1 h1:wCOoF3Pa7f5AI42uvPXiG+IljFRqJg99/2folOgJofU=
-github.com/aws/aws-sdk-go-v2/service/osis v1.9.1/go.mod h1:72Q5W83xkoetWnyCTjP0poyBoeiUoxRtJ8oW942l2TU=
+github.com/aws/aws-sdk-go-v2/service/osis v1.9.2 h1:3MPPpp5Ig2cyLwliuweCe7+uUJaeeoxNopXRhIeSsck=
+github.com/aws/aws-sdk-go-v2/service/osis v1.9.2/go.mod h1:6pPuxTa+1aXsMthB/+MkkFqQigD4k0Fs1kt7zO40tSc=
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.4 h1:U5IqT/hb02oPnbgXqG9Hx2cj2U+shXSeuEzVkC7J60I=
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.4/go.mod h1:RdcIoeJRNes5Rd6ruYOLYCpBso64meyBw4WUpFHTRxI=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.8 h1:RB8kgFOIqXhSKqLBgd/4HKnQdJCUalCwWgyTmRHLWKA=
