@@ -1,0 +1,139 @@
+name: GitHub Projects Automations
+
+on:
+  issues:
+    types:
+      - assigned
+      - labeled
+
+  pull_request_target:
+    types:
+      - assigned
+      - labeled
+      - opened
+
+env:
+  ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+
+# Any automation with Projects will need a token from the GitHub App,
+# so restrict the permissions of the automated token.
+permissions: {}
+
+jobs:
+  community_check:
+    name: Community Check
+    runs-on: ubuntu-latest
+
+    outputs:
+      author_is_maintainer: ${{ steps.check.outputs.author_is_maintainer }}
+      assignee_is_maintainer: ${{ steps.check.outputs.assignee_is_maintainer }}
+
+    steps:
+      - name: Compare Logins to Lists
+        id: check
+        env:
+          ASSIGNEE_LOGIN: ${{ github.event.assignee.login }}
+          AUTHOR_LOGIN: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
+        run: |
+          echo "author_is_maintainer=$(echo ${{ secrets.MAINTAINERS }} | base64 --decode | jq --arg u $AUTHOR_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
+
+          # If the environment variable is unset, passing it as a jq arg throws an error
+          if [ -n "$ASSIGNEE_LOGIN" ]; then
+            echo "assignee_is_maintainer=$(echo ${{ secrets.MAINTAINERS }} | base64 --decode | jq --arg u $ASSIGNEE_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
+          fi
+
+  team_board:
+    name: Provider Team Project
+    needs: community_check
+    runs-on: ubuntu-latest
+
+    env:
+      AUTHOR_IS_MAINTAINER: ${{ needs.community_check.outputs.author_is_maintainer }}
+      ASSIGNEE_IS_MAINTAINER: ${{ needs.community_check.outputs.assignee_is_maintainer }}
+      PROJECT_ID: PVT_kwDOAAuecM4AF-7h
+      PROJECT_NUMBER: 196
+      STATUS_FIELD_ID: PVTSSF_lADOAAuecM4AF-7hzgDcsQA
+      STATUS_IN_PROGRESS: ${{ vars.team_project_status_in_progress }}
+      VIEW_FIELD_ID: PVTSSF_lADOAAuecM4AF-7hzgMRB34
+      VIEW_ENGINEERING_INITIATIVE: ${{ vars.team_project_view_engineering_initiative }}
+      VIEW_MAINTAINER_PR: ${{ vars.team_project_status_maintainer_pr }}
+      VIEW_WORKING_BOARD: ${{ vars.team_project_view_working_board }}
+
+    steps:
+      - name: Generate GitHub Auth Token
+        id: token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{ secrets.APP_PEM }}
+
+      - name: Maintainer Pull Requests
+        if: |
+          github.event.name == 'pull_request_target'
+          && github.event.action == 'opened'
+          $$ fromJSON(env.AUTHOR_IS_MAINTAINER)
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add $PROJECT_NUMBER --owner "hashicorp" --url "$ISSUE_URL" --format json --jq '.id')
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$STATUS_FIELD_ID" \
+            --single-select-option-id "$VIEW_MAINTAINER_PR"
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$VIEW_FIELD_ID" \
+            --single-select-option-id "$VIEW_WORKING_BOARD"
+
+      - name: Maintainer Assignments
+        if: |
+          github.event.action == 'assigned'
+          && fromJSON(env.ASSIGNEE_IS_MAINTAINER)
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add $PROJECT_NUMBER --owner "hashicorp" --url "$ISSUE_URL" --format json --jq '.id')
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$STATUS_FIELD_ID" \
+            --single-select-option-id "$STATUS_IN_PROGRESS"
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$VIEW_FIELD_ID" \
+            --single-select-option-id "$VIEW_WORKING_BOARD"
+
+      - name: Prioritized to Working Board
+        if: github.event.label.name == 'prioritized'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add $PROJECT_NUMBER --owner "hashicorp" --url "$ISSUE_URL" --format json --jq '.id')
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$VIEW_FIELD_ID" \
+            --single-select-option-id "$VIEW_WORKING_BOARD"
+
+      - name: Engineering Initiatives to View
+        if: github.event.label.name == 'engineering-initiative'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add $PROJECT_NUMBER --owner "hashicorp" --url "$ISSUE_URL" --format json --jq '.id')
+
+          gh project item-edit \
+            --id "$PROJECT_ITEM_ID" \
+            --project-id "$PROJECT_ID" \
+            --field-id "$VIEW_FIELD_ID" \
+            --single-select-option-id "$VIEW_ENGINEERING_INITIATIVE"
