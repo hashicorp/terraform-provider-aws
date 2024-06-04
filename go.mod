@@ -156,7 +156,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.9
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.1
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.7
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.8
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.8
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.8
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.29.4
