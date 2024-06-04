@@ -13,4 +13,5 @@ var (
 	NewCustomFilterListFrameworkV2                                   = newCustomFilterListFrameworkV2
 	NewFilter                                                        = newFilter
 	NewFilterV2                                                      = newFilterV2
+	VPCEndpointCreationTimeout                                       = vpcEndpointCreationTimeout
 )
