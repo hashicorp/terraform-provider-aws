@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.5
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.5
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.9
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.10
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.9
