@@ -30,7 +30,6 @@ func TestAccAppFabricIngestion_basic(t *testing.T) {
 	}
 
 	var ingestion appfabric.GetIngestionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_ingestion.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -101,7 +100,7 @@ func testAccCheckIngestionDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 			_, err := conn.GetIngestion(ctx, &appfabric.GetIngestionInput{
 				AppBundleIdentifier: aws.String(rs.Primary.Attributes["app_bundle_identifier"]),
-				IngestionIdentifier: aws.String(rs.Primary.Attributes["arn"]),
+				IngestionIdentifier: aws.String(rs.Primary.Attributes[names.AttrARN]),
 			})
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
@@ -130,7 +129,7 @@ func testAccCheckIngestionExists(ctx context.Context, name string, ingestion *ap
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 		resp, err := conn.GetIngestion(ctx, &appfabric.GetIngestionInput{
 			AppBundleIdentifier: aws.String(rs.Primary.Attributes["app_bundle_identifier"]),
-			IngestionIdentifier: aws.String(rs.Primary.Attributes["arn"]),
+			IngestionIdentifier: aws.String(rs.Primary.Attributes[names.AttrARN]),
 		})
 
 		if err != nil {
@@ -157,26 +156,16 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckIngestionNotRecreated(before, after *appfabric.GetIngestionOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Ingestion.Arn), aws.ToString(after.Ingestion.Arn); before != after {
-			return create.Error(names.AppFabric, create.ErrActionCheckingNotRecreated, tfappfabric.ResNameIngestion, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccIngestionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_ingestion" "test" {
-	app = "OKTA"
-	app_bundle_identifier = "app-bundle-arn"
-	tenant_id = "test-tenant-id"
-	ingestion_type = "auditLog"
-	tags = {
-		Name = "AppFabricTesting"
-	}
+  app                   = "OKTA"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  tenant_id             = "test-tenant-id"
+  ingestion_type        = "auditLog"
+  tags = {
+    Name = "AppFabricTesting"
+  }
 }
 `)
 }

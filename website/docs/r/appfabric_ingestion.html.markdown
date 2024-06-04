@@ -16,11 +16,11 @@ Terraform resource for managing an AWS AppFabric Ingestion.
 
 ```terraform
 resource "aws_appfabric_ingestion" "example" {
-	app = "OKTA"
-	app_bundle_identifier = "[App Bundle ARN]"
-	tenant_id = "example.okta.com"
-	ingestion_type = "auditLog"
-	tags = {
+  app                   = "OKTA"
+  app_bundle_identifier = "[App Bundle ARN]"
+  tenant_id             = "example.okta.com"
+  ingestion_type        = "auditLog"
+  tags = {
     Environment = "test"
   }
 }

@@ -77,7 +77,7 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
