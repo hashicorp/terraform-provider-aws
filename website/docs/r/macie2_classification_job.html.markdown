@@ -40,6 +40,8 @@ This resource supports the following arguments:
 * `description` -  (Optional) A custom description of the job. The description can contain as many as 200 characters.
 * `initial_run` -  (Optional) Specifies whether to analyze all existing, eligible objects immediately after the job is created.
 * `job_type` -  (Required) The schedule for running the job. Valid values are: `ONE_TIME` - Run the job only once. If you specify this value, don't specify a value for the `schedule_frequency` property. `SCHEDULED` - Run the job on a daily, weekly, or monthly basis. If you specify this value, use the `schedule_frequency` property to define the recurrence pattern for the job.
+* `managed_data_identifier_ids` -  (Optional) Array of unique identifiers, one for each managed data identifier for the job to include (use) or exclude (not use) when it analyzes data.
+* `managed_data_identifier_selector` -  (Optional) The selection type to apply when determining which managed data identifiers the job uses to analyze data. Valid values are `ALL` or `EXCLUDE` or `INCLUDE` or `NONE` or `RECOMMENDED`.
 * `s3_job_definition` -  (Optional) The S3 buckets that contain the objects to analyze, and the scope of that analysis. (documented below)
 * `tags` -  (Optional) A map of key-value pairs that specifies the tags to associate with the job. A job can have a maximum of 50 tags. Each tag consists of a tag key and an associated tag value. The maximum length of a tag key is 128 characters. The maximum length of a tag value is 256 characters.
 * `job_status` -  (Optional) The status for the job. Valid values are: `CANCELLED`, `RUNNING` and `USER_PAUSED`
