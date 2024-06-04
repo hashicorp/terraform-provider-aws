@@ -114,7 +114,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.5
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.9
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.8
