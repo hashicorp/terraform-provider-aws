@@ -1,4 +1,5 @@
 name: GitHub Projects Automations
+permissions: {}
 
 on:
   issues:
@@ -11,13 +12,6 @@ on:
       - assigned
       - labeled
       - opened
-
-env:
-  ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
-
-# Any automation with Projects will need a token from the GitHub App,
-# so restrict the permissions of the automated token.
-permissions: {}
 
 jobs:
   community_check:
@@ -50,6 +44,7 @@ jobs:
     env:
       AUTHOR_IS_MAINTAINER: ${{ needs.community_check.outputs.author_is_maintainer }}
       ASSIGNEE_IS_MAINTAINER: ${{ needs.community_check.outputs.assignee_is_maintainer }}
+      ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
       PROJECT_ID: PVT_kwDOAAuecM4AF-7h
       PROJECT_NUMBER: 196
       STATUS_FIELD_ID: PVTSSF_lADOAAuecM4AF-7hzgDcsQA
@@ -68,12 +63,16 @@ jobs:
           installation_retrieval_mode: id
           installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
+          permissions: >-
+            {
+              "organization_projects": "write"
+            }
 
       - name: Maintainer Pull Requests
         if: |
           github.event.name == 'pull_request_target'
           && github.event.action == 'opened'
-          $$ fromJSON(env.AUTHOR_IS_MAINTAINER)
+          && fromJSON(env.AUTHOR_IS_MAINTAINER)
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
