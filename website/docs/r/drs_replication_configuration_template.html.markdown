@@ -27,9 +27,7 @@ resource "aws_drs_replication_configuration_template" "example" {
   replication_server_instance_type        = "string"
   replication_servers_security_groups_ids = ["string"]
   staging_area_subnet_id                  = "string"
-  staging_area_tags                       = {"string": "string"}
-  tags                                    = {"string": "string"}
-  use_dedicated_replication_server        = True or False
+  use_dedicated_replication_server        = false
 }
 ```
 
@@ -37,30 +35,61 @@ resource "aws_drs_replication_configuration_template" "example" {
 
 The following arguments are required:
 
-* `associate_default_security_group` - (Required)(boolean)  Whether to associate the default Elastic Disaster Recovery Security group with the Replication Configuration Template.
-* `bandwidth_throttling` - (Required)(integer) Configure bandwidth throttling for the outbound data transfer rate of the Source Server in Mbps.
-* `create_public_ip` (Required)(boolean) Whether to create a Public IP for the Recovery Instance by default.
-* `data_plane_routing` (Required)(string) The data plane routing mechanism that will be used for replication.
-* `default_large_staging_disk_type` (Required)(string) The Staging Disk EBS volume type to be used during replication.
-* `ebs_encryption` (Required)(string) The type of EBS encryption to be used during replication.
-* `ebs_encryption_key_arn` (Required)(string) The ARN of the EBS encryption key to be used during replication.
-* `pit_policy`(Required)(list) The Point in time (PIT) policy to manage snapshots taken during replication.
-* `replication_server_instance_type` (Required)(string) The instance type to be used for the replication server.
-* `replication_servers_security_groups_ids` (Required)(list) The security group IDs that will be used by the replication server.
-* `staging_area_subnet_id` (Required)(string) The subnet to be used by the replication staging area.
-* `staging_area_tags` (Required)(dict) A set of tags to be associated with all resources created in the replication staging area: EC2 replication server, EBS volumes, EBS snapshots, etc.
-* `use_dedicated_replication_server` (Required)(boolean) Whether to use a dedicated Replication Server in the replication staging area.
+* `associate_default_security_group` - (Required) Whether to associate the default Elastic Disaster Recovery Security group with the Replication Configuration Template.
+* `bandwidth_throttling` - (Required) Configure bandwidth throttling for the outbound data transfer rate of the Source Server in Mbps.
+* `create_public_ip` - (Required) Whether to create a Public IP for the Recovery Instance by default.
+* `data_plane_routing` - (Required) Data plane routing mechanism that will be used for replication.
+* `default_large_staging_disk_type` - (Required) Staging Disk EBS volume type to be used during replication.
+* `ebs_encryption` - (Required) Type of EBS encryption to be used during replication.
+* `ebs_encryption_key_arn` - (Required) ARN of the EBS encryption key to be used during replication.
+* `pit_policy` - (Required) Configuration block for Point in time (PIT) policy to manage snapshots taken during replication. [See below](#pit_policy).
+* `replication_server_instance_type` - (Required) Instance type to be used for the replication server.
+* `replication_servers_security_groups_ids` - (Required) Security group IDs that will be used by the replication server.
+* `staging_area_subnet_id` - (Required) Subnet to be used by the replication staging area.
+* `staging_area_tags` - (Required) Set of tags to be associated with all resources created in the replication staging area: EC2 replication server, EBS volumes, EBS snapshots, etc.
+* `use_dedicated_replication_server` - (Required) Whether to use a dedicated Replication Server in the replication staging area.
 
 The following arguments are optional:
 
-* `tags` (Optional)(dict) A set of tags to be associated with the Replication Configuration Template resource.
+* `auto_replicate_new_disks` - (Optional) Whether to allow the AWS replication agent to automatically replicate newly added disks.
+* `tags` - (Optional) A set of tags to be associated with the Replication Configuration Template resource.
+
+### `pit_policy`
+
+* `enabled` - (Optional) Whether this rule is enabled or not.
+* `interval` - (Required) How often, in the chosen units, a snapshot should be taken.
+* `retention_duration` - (Required) Duration to retain a snapshot for, in the chosen `units`.
+* `rule_id` - (Optional) ID of the rule. Valid values are integers.
+* `units` - (Required) Units used to measure the `interval` and `retention_duration`. Valid values are `MINUTE`, `HOUR`, and `DAY`.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Replication Configuration Template ARN.
-* `replication_configuration_template_id` - The Replication Configuration Template ID.
+* `arn` - Replication configuration template ARN.
+* `id` - Replication configuration template ID.
 
+## Timeouts
 
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
+- `create` - (Default `20m`)
+- `update` - (Default `20m`)
+- `delete` - (Default `20m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DRS Replication Configuration Template using the `id`. For example:
+
+```terraform
+import {
+  to = aws_drs_replication_configuration_template.example
+  id = "templateid"
+}
+```
+
+Using `terraform import`, import DRS Replication Configuration Template using the `id`. For example:
+
+```console
+% terraform import aws_drs_replication_configuration_template.example templateid
+```
