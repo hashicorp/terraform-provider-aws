@@ -34,13 +34,13 @@ import (
 
 const (
 	// Maximum amount of time to wait for VPC Endpoint creation.
-	VPCEndpointCreationTimeout = 10 * time.Minute
+	vpcEndpointCreationTimeout = 10 * time.Minute
 )
 
 // @SDKResource("aws_vpc_endpoint", name="VPC Endpoint")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVPCEndpoint() *schema.Resource {
+func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
@@ -186,7 +186,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(VPCEndpointCreationTimeout),
+			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},

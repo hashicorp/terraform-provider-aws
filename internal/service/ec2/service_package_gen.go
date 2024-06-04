@@ -1061,7 +1061,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_vpc_dhcp_options_association",
 		},
 		{
-			Factory:  ResourceVPCEndpoint,
+			Factory:  resourceVPCEndpoint,
 			TypeName: "aws_vpc_endpoint",
 			Name:     "VPC Endpoint",
 			Tags: &types.ServicePackageResourceTags{

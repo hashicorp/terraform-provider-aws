@@ -39,6 +39,7 @@ var (
 	ResourceSecurityGroupIngressRule         = newSecurityGroupIngressRuleResource
 	ResourceTag                              = resourceTag
 	ResourceTransitGatewayPeeringAttachment  = resourceTransitGatewayPeeringAttachment
+	ResourceVPCEndpoint                      = resourceVPCEndpoint
 	ResourceVPNConnection                    = resourceVPNConnection
 	ResourceVPNConnectionRoute               = resourceVPNConnectionRoute
 	ResourceVPNGateway                       = resourceVPNGateway
