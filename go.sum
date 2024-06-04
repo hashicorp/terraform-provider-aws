@@ -236,8 +236,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.10 h1:7kZqP7ak
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.10/go.mod h1:gYVF3nM1ApfTRDj9pvdhootBb8WbiIejuqn4w8ruMes=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.8 h1:iQNXVs1vtaq+y9M90M4ZIVNORje0qXTscqHLqoOnFS0=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.8/go.mod h1:yUQPRlWqGG0lfNsmjbRWKVwgilfBtZTOFSLEYALlAig=
-github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.4 h1:lMT8lhDbjnf+lB4POosrk2UskK7Y37t4HLUGXFPb+js=
-github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.4/go.mod h1:Y1IgnRxlZuTFnmdLmC3s6EXKBMsA+1PASjjXI60T6lE=
+github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.5 h1:85EfebIfxSPZ5RpB8I2+HPuFc/LzrBkpkRpM6Akpjnc=
+github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.5/go.mod h1:/n8kxUaFdybhn2PBat7H84g70rFFstTilsoqMEdE35I=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.9 h1:kw/qneL3eDel2DwQjrc7IxaaAuPjoA2i7lIbNqT99oQ=
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.9/go.mod h1:eLQ2RhI4uRQjlsGLUZIicFi8GUwa8LMBZCwOZbz+rfE=
 github.com/aws/aws-sdk-go-v2/service/kafka v1.33.0 h1:bSOh/miBU+4ObIJEq8PRYLaFhnfO8M4rAoCCQPv+BhA=
