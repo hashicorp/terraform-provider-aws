@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/batch v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.9
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.5
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.6
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.2.1
