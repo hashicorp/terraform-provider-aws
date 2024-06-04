@@ -70,7 +70,7 @@ func ResourceDashboard() *schema.Resource {
 				},
 				"dashboard_publish_options": quicksightschema.DashboardPublishOptionsSchema(),
 				"definition":                quicksightschema.DashboardDefinitionSchema(),
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -91,7 +91,7 @@ func ResourceDashboard() *schema.Resource {
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
@@ -219,7 +219,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)

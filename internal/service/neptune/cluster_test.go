@@ -28,9 +28,9 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportState:       true,
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
-			"allow_major_version_upgrade",
+			names.AttrAllowMajorVersionUpgrade,
 			names.AttrApplyImmediately,
-			"final_snapshot_identifier",
+			names.AttrFinalSnapshotIdentifier,
 			"neptune_instance_parameter_group_name",
 			"skip_final_snapshot",
 			"snapshot_identifier",
@@ -54,7 +54,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
@@ -64,12 +64,12 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_cloudwatch_logs_exports.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrFinalSnapshotIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", acctest.CtFalse),
@@ -596,7 +596,7 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -604,14 +604,14 @@ func TestAccNeptuneCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -745,7 +745,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
 			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, finalSnapshotID)
 
 			if err != nil {

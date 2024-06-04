@@ -133,52 +133,6 @@ func TestAccELBV2TrustStore_namePrefix(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TrustStore_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf elbv2.TrustStore
-	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTrustStoreConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: false,
-			},
-			{
-				Config: testAccTrustStoreConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccTrustStoreConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckTrustStoreExists(ctx context.Context, n string, v *elbv2.TrustStore) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -324,34 +278,4 @@ resource "aws_lb_trust_store" "test" {
   ca_certificates_bundle_s3_key    = aws_s3_object.test.key
 }
 `, namePrefix))
-}
-
-func testAccTrustStoreConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
-resource "aws_lb_trust_store" "test" {
-  name                             = %[1]q
-  ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
-  ca_certificates_bundle_s3_key    = aws_s3_object.test.key
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccTrustStoreConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
-resource "aws_lb_trust_store" "test" {
-  name                             = %[1]q
-  ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
-  ca_certificates_bundle_s3_key    = aws_s3_object.test.key
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

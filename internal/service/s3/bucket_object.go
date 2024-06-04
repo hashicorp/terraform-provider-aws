@@ -183,7 +183,7 @@ func resourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -249,9 +249,9 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("server_side_encryption", output.ServerSideEncryption)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
@@ -474,7 +474,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		input.ServerSideEncryption = types.ServerSideEncryption(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_class"); ok {
+	if v, ok := d.GetOk(names.AttrStorageClass); ok {
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
@@ -555,7 +555,7 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"server_side_encryption",
 		names.AttrSource,
 		"source_hash",
-		"storage_class",
+		names.AttrStorageClass,
 		"website_redirect",
 	} {
 		if d.HasChange(key) {

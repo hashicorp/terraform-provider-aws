@@ -39,6 +39,7 @@ const (
 
 // @SDKResource("aws_vpc_endpoint", name="VPC Endpoint")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,

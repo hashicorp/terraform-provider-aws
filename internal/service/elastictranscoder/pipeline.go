@@ -60,7 +60,7 @@ func ResourcePipeline() *schema.Resource {
 							// AWS may insert the bucket name here taken from output_bucket
 							Computed: true,
 						},
-						"storage_class": {
+						names.AttrStorageClass: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -184,7 +184,7 @@ func ResourcePipeline() *schema.Resource {
 							// AWS may insert the bucket name here taken from output_bucket
 							Computed: true,
 						},
-						"storage_class": {
+						names.AttrStorageClass: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -349,7 +349,7 @@ func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *elastictra
 
 	cfg := &elastictranscoder.PipelineOutputConfig{
 		Bucket:       aws.String(cc[names.AttrBucket].(string)),
-		StorageClass: aws.String(cc["storage_class"].(string)),
+		StorageClass: aws.String(cc[names.AttrStorageClass].(string)),
 	}
 
 	switch key {
@@ -368,8 +368,8 @@ func flattenETPipelineOutputConfig(cfg *elastictranscoder.PipelineOutputConfig) 
 	}
 
 	result := map[string]interface{}{
-		names.AttrBucket: aws.StringValue(cfg.Bucket),
-		"storage_class":  aws.StringValue(cfg.StorageClass),
+		names.AttrBucket:       aws.StringValue(cfg.Bucket),
+		names.AttrStorageClass: aws.StringValue(cfg.StorageClass),
 	}
 
 	return []map[string]interface{}{result}

@@ -228,7 +228,7 @@ func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrProviderName])
+			_, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrProviderName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -254,7 +254,7 @@ func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *cognit
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		output, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrProviderName])
+		output, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrProviderName])
 
 		if err != nil {
 			return err

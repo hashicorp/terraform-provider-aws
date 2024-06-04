@@ -58,7 +58,7 @@ func resourceUserGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -75,7 +75,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	name := d.Get(names.AttrName).(string)
 	input := &cognitoidentityprovider.CreateGroupInput{
 		GroupName:  aws.String(name),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -196,7 +196,7 @@ func resourceUserGroupImport(ctx context.Context, d *schema.ResourceData, meta i
 		return nil, errors.New("Error importing Cognito User Group. Must specify user_pool_id/group_name")
 	}
 
-	d.Set("user_pool_id", parts[0])
+	d.Set(names.AttrUserPoolID, parts[0])
 	d.Set(names.AttrName, parts[1])
 
 	return []*schema.ResourceData{d}, nil

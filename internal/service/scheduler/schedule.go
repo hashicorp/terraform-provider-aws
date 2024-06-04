@@ -167,7 +167,7 @@ func resourceSchedule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"capacity_provider_strategy": {
+									names.AttrCapacityProviderStrategy: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										MaxItems: 6,

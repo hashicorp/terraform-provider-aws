@@ -26,7 +26,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -161,7 +161,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)

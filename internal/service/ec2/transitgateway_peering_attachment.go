@@ -22,6 +22,7 @@ import (
 
 // @SDKResource("aws_ec2_transit_gateway_peering_attachment", name="Transit Gateway Peering Attachment")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringAttachmentCreate,
