@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-changelog v0.0.0-20240306190400-974418b4aaa3
 	github.com/katbyte/terrafmt v0.5.3
 	github.com/pavius/impi v0.0.3
-	github.com/rhysd/actionlint v1.7.0
+	github.com/rhysd/actionlint v1.7.1
 	github.com/terraform-linters/tflint v0.51.1
 	github.com/uber-go/gopatch v0.4.0
 	mvdan.cc/gofumpt v0.6.0
