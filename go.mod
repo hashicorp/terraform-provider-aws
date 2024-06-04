@@ -109,7 +109,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.6
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.9
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.9
-	github.com/aws/aws-sdk-go-v2/service/kms v1.32.1
+	github.com/aws/aws-sdk-go-v2/service/kms v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.4
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.0
