@@ -11,13 +11,15 @@ on:
     outputs:
       core_contributor:
         description: Whether or not the user is a core contributor
-        value: ${{ jobs.community_check.outputs.is_core_contributor }}
+        value: ${{ jobs.check.outputs.core_contributor }}
+
       maintainer:
         description: Whether or not the user is a maintainer
-        value: ${{ jobs.community_check.outputs.is_maintainer }}
+        value: ${{ jobs.check.outputs.maintainer }}
+
       partner:
         description: Whether or not the user is a partner
-        value: ${{ jobs.community_check.outputs.is_partner }}
+        value: ${{ jobs.check.outputs.partner }}
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -26,39 +28,30 @@ on:
 ##   - Makefile: ./GNUmakefile
 
 jobs:
-  community_check:
-    name: Check community lists for username
+  check:
+    name: Check Lists
     runs-on: ubuntu-latest
+
+    env:
+      USER_LOGIN: ${{ inputs.username }}
+
     outputs:
-      is_core_contributor: ${{ steps.determination.outputs.is_core_contributor }}
-      is_maintainer: ${{ steps.determination.outputs.is_maintainer }}
-      is_partner: ${{ steps.determination.outputs.is_partner }}
+      core_contributor: ${{ steps.core_contributor.outputs.in_list }}
+      maintainer: ${{ steps.maintainer.outputs.in_list }}
+      partner: ${{ steps.partner.outputs.in_list }}
+
     steps:
-      - name: Decode user lists from secrets
-        id: decode
-        env:
-          CORE_CONTRIBUTORS: ${{ secrets.CORE_CONTRIBUTORS }}
-          MAINTAINERS: ${{ secrets.MAINTAINERS }}
-          PARTNERS: ${{ secrets.PARTNERS }}
+      - name: Core Contributor Check
+        id: core_contributor
         run: |
-          # Create shell variables to hold decoded values
-          CORE_CONTRIBUTORS_DECODED=$(echo $CORE_CONTRIBUTORS | base64 -d | jq '. | tojson')
-          MAINTAINERS_DECODED=$(echo $MAINTAINERS | base64 -d | jq '. | tojson')
-          PARTNERS_DECODED=$(echo $PARTNERS | base64 -d | jq '. | tojson')
+          echo "in_list=$(echo ${{ secrets.CORE_CONTRIBUTORS }} | base64 --decode | jq --arg u $USER_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
 
-          # Mask the variables so the values aren't exposed
-          echo "::add-mask::$CORE_CONTRIBUTORS_DECODED"
-          echo "::add-mask::$MAINTAINERS_DECODED"
-          echo "::add-mask::$PARTNERS_DECODED"
-
-          # Set outputs
-          echo "core_contributors_list=$CORE_CONTRIBUTORS_DECODED" >> $GITHUB_OUTPUT
-          echo "maintainers_list=$MAINTAINERS_DECODED" >> $GITHUB_OUTPUT
-          echo "partners_list=$PARTNERS_DECODED" >> $GITHUB_OUTPUT
-
-      - name: Determine if user is in lists
-        id: determination
+      - name: Maintainer Check
+        id: maintainer
         run: |
-          echo "is_core_contributor="${{ contains(fromJSON(steps.decode.outputs.core_contributors_list), inputs.username) }} >> $GITHUB_OUTPUT
-          echo "is_maintainer="${{ contains(fromJSON(steps.decode.outputs.maintainers_list), inputs.username) }} >> $GITHUB_OUTPUT
-          echo "is_partner="${{ contains(fromJSON(steps.decode.outputs.partners_list), inputs.username) }} >> $GITHUB_OUTPUT
+          echo "in_list=$(echo ${{ secrets.MAINTAINERS }} | base64 --decode | jq --arg u $USER_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
+
+      - name: Partner Check
+        id: partner
+        run: |
+          echo "in_list=$(echo ${{ secrets.PARTNERS }} | base64 --decode | jq --arg u $USER_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
