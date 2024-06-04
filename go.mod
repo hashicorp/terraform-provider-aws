@@ -70,7 +70,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.38.5
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.9
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.9
-	github.com/aws/aws-sdk-go-v2/service/datasync v1.38.2
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.8
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.22.8
