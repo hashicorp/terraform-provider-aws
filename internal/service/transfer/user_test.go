@@ -307,7 +307,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.Described
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		output, err := tftransfer.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["user_name"])
+		output, err := tftransfer.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrUserName])
 
 		if err != nil {
 			return err
@@ -328,7 +328,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tftransfer.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["user_name"])
+			_, err := tftransfer.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrUserName])
 
 			if tfresource.NotFound(err) {
 				continue

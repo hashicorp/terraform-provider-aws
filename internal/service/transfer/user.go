@@ -174,7 +174,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandPosixProfile(v.([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(v.([]interface{}))
 	}
 
 	_, err := conn.CreateUser(ctx, input)
@@ -222,7 +222,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set(names.AttrPolicy, policyToSet)
 
-	if err := d.Set("posix_profile", flattenPosixProfile(user.PosixProfile)); err != nil {
+	if err := d.Set("posix_profile", flattenPOSIXProfile(user.PosixProfile)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
 	}
 	d.Set(names.AttrRole, user.Role)
@@ -271,7 +271,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("posix_profile") {
-			input.PosixProfile = expandPosixProfile(d.Get("posix_profile").([]interface{}))
+			input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]interface{}))
 		}
 
 		if d.HasChange(names.AttrRole) {
@@ -415,7 +415,7 @@ func flattenHomeDirectoryMapEntries(apiObjects []awstypes.HomeDirectoryMapEntry)
 	return tfList
 }
 
-func expandPosixProfile(tfList []interface{}) *awstypes.PosixProfile {
+func expandPOSIXProfile(tfList []interface{}) *awstypes.PosixProfile {
 	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
@@ -434,7 +434,7 @@ func expandPosixProfile(tfList []interface{}) *awstypes.PosixProfile {
 	return apiObject
 }
 
-func flattenPosixProfile(apiObject *awstypes.PosixProfile) []interface{} {
+func flattenPOSIXProfile(apiObject *awstypes.PosixProfile) []interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}

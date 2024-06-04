@@ -158,7 +158,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandPosixProfile(v.([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrRole); ok {
@@ -208,7 +208,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	d.Set(names.AttrPolicy, policyToSet)
-	if err := d.Set("posix_profile", flattenPosixProfile(access.PosixProfile)); err != nil {
+	if err := d.Set("posix_profile", flattenPOSIXProfile(access.PosixProfile)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
 	}
 	// Role is currently not returned via the API.
@@ -254,7 +254,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("posix_profile") {
-		input.PosixProfile = expandPosixProfile(d.Get("posix_profile").([]interface{}))
+		input.PosixProfile = expandPOSIXProfile(d.Get("posix_profile").([]interface{}))
 	}
 
 	if d.HasChange(names.AttrRole) {
