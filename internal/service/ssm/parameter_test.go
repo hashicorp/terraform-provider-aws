@@ -54,6 +54,16 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
+			// Test import with version.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/37812.
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateId:                        name + ":1",
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite"},
+			},
 		},
 	})
 }
@@ -128,14 +138,6 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"overwrite"},
-			},
-			// Test import with version.
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateId:           name + ":1",
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
