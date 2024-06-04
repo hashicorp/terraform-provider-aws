@@ -1,136 +1,143 @@
 package drs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/drs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/aws/aws-sdk-go-v2/service/drs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceReplicationConfigurationTemplate() *schema.Resource {
-	return &schema.Resource{
-		Create: resourceReplicationConfigurationTemplateCreate,
-		Read:   resourceReplicationConfigurationTemplateRead,
-		Update: resourceReplicationConfigurationTemplateUpdate,
-		Delete: resourceReplicationConfigurationTemplateDelete,
+// @FrameworkResource(name="Replication Configuration Template")
+func newResourceReplicationConfigurationTemplate(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceReplicationConfigurationTemplate{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
+const (
+	ResNameReplicationConfigurationTemplate = "ReplicationConfigurationTemplate"
+)
+
+type resourceReplicationConfigurationTemplate struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+	framework.WithTimeouts
+}
+
+func (r *resourceReplicationConfigurationTemplate) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_drs_replication_configuration_template"
+}
+
+func (r *resourceReplicationConfigurationTemplate) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
 			},
-			"associate_default_security_group": {
-				Type:     schema.TypeBool,
+			"associate_default_security_group": schema.BoolAttribute{
 				Required: true,
 			},
-			"bandwidth_throttling": {
-				Type:     schema.TypeInt,
+			"bandwidth_throttling": schema.Int64Attribute{
 				Required: true,
 			},
-			"create_public_ip": {
-				Type:     schema.TypeBool,
+			"create_public_ip": schema.BoolAttribute{
 				Required: true,
 			},
-			"data_plane_routing": {
-				Type:     schema.TypeString,
+			"data_plane_routing": schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.ReplicationConfigurationDataPlaneRouting](),
+			},
+			"default_large_staging_disk_type": schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.ReplicationConfigurationDefaultLargeStagingDiskType](),
+			},
+			"ebs_encryption": schema.StringAttribute{
+				Required:   true,
+				CustomType: fwtypes.StringEnumType[awstypes.ReplicationConfigurationEbsEncryption](),
+			},
+			"ebs_encryption_key_arn": schema.StringAttribute{
 				Required: true,
 			},
-			"default_large_staging_disk_type": {
-				Type:     schema.TypeString,
+			"replication_server_instance_type": schema.StringAttribute{
 				Required: true,
 			},
-			"ebs_encryption": {
-				Type:     schema.TypeString,
+			"replication_servers_security_groups_ids": schema.ListAttribute{
+				Required:    true,
+				ElementType: types.StringType,
+			},
+			"staging_area_subnet_id": schema.StringAttribute{
 				Required: true,
 			},
-			"ebs_encryption_key_arn": {
-				Type:     schema.TypeString,
+
+			"staging_area_tags": tftags.TagsAttribute(),
+			names.AttrTags:      tftags.TagsAttribute(),
+			names.AttrTagsAll:   tftags.TagsAttributeComputedOnly(),
+
+			"use_dedicated_replication_server": schema.BoolAttribute{
 				Required: true,
 			},
-			"pit_policy": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:     schema.TypeBool,
+		},
+		Blocks: map[string]schema.Block{
+			"pit_policy": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[pitPolicy](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"enabled": schema.BoolAttribute{
 							Optional: true,
 						},
-						"interval": {
-							Type:     schema.TypeInt,
+						"interval": schema.Int64Attribute{
 							Optional: true,
 						},
-						"retention_duration": {
-							Type:     schema.TypeInt,
+						"retention_duration": schema.Int64Attribute{
 							Required: true,
 						},
-						"rule_id": {
-							Type:     schema.TypeInt,
+						"rule_id": schema.Int64Attribute{
 							Optional: true,
 						},
-						"units": {
-							Type:     schema.TypeString,
+						"units": schema.StringAttribute{
 							Required: true,
 						},
 					},
 				},
-			},
-			"replication_server_instance_type": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"replication_servers_security_groups_ids": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(drs.ValidationExceptionReason_Values(), false),
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
 				},
-			},
-			"staging_area_subnet_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"staging_area_tags": tftags.TagsSchema(),
-			"tags":              tftags.TagsSchema(),
-			"use_dedicated_replication_server": {
-				Type:     schema.TypeBool,
-				Required: true,
 			},
 		},
 	}
 }
 
-func resourceReplicationConfigurationTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DRSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	staging_tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("staging_area_tags").(map[string]interface{})))
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	input := &drs.CreateReplicationConfigurationTemplateInput{
-		AssociateDefaultSecurityGroup:       aws.Bool(d.Get("associate_default_security_group").(bool)),
-		BandwidthThrottling:                 aws.Int64(d.Get("bandwidth_throttling").(int64)),
-		CreatePublicIP:                      aws.Bool(d.Get("create_public_ip").(bool)),
-		DataPlaneRouting:                    aws.String(d.Get("data_plane_routing").(string)),
-		DefaultLargeStagingDiskType:         aws.String(d.Get("default_large_staging_disk_type").(string)),
-		EbsEncryption:                       aws.String(d.Get("ebs_encryption").(string)),
-		EbsEncryptionKeyArn:                 aws.String(d.Get("ebs_encryption_key_arn").(string)),
-		PitPolicy:                           expandPitPolicy(d.Get("pit_policy").(*schema.Set).List()),
-		ReplicationServerInstanceType:       aws.String(d.Get("replication_server_instance_type").(string)),
-		ReplicationServersSecurityGroupsIDs: flex.ExpandStringList(d.Get("replication_servers_security_groups_ids").([]interface{})),
-		StagingAreaSubnetId:                 aws.String(d.Get("staging_area_subnet_id").(string)),
-		StagingAreaTags:                     Tags(tags.IgnoreAWS()),
-		Tags:                                Tags(staging_tags.IgnoreAWS()),
-		UseDedicatedReplicationServer:       aws.Bool(d.Get("use_dedicated_replication_server").(bool)),
+func (r *resourceReplicationConfigurationTemplate) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceReplicationConfigurationTemplateData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
+
+	conn := r.Meta().DRSClient(ctx)
+
+	input := &drs.CreateReplicationConfigurationTemplateInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input.Tags = getTags(ctx)
 
 	log.Printf("[DEBUG] Creating DRS Replication Configuration Template: %s", input)
 	output, err := conn.CreateReplicationConfigurationTemplate(input)
@@ -141,11 +148,11 @@ func resourceReplicationConfigurationTemplateCreate(d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(output.ReplicationConfigurationTemplateID))
 
-	return resourceReplicationConfigurationTemplateRead(d, meta)
+	return append(diags, resourceReplicationConfigurationTemplateRead(d, meta)...)
 }
 
-func resourceReplicationConfigurationTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DRSConn
+func resourceReplicationConfigurationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DRSClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -189,8 +196,8 @@ func resourceReplicationConfigurationTemplateRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceReplicationConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DRSConn
+func resourceReplicationConfigurationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DRSClient(ctx)
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	staging_tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("staging_area_tags").(map[string]interface{})))
@@ -261,15 +268,15 @@ func resourceReplicationConfigurationTemplateUpdate(d *schema.ResourceData, meta
 
 }
 
-func resourceReplicationConfigurationTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DRSConn
+func resourceReplicationConfigurationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DRSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Replication Configuration Template: %s", d.Id())
 	_, err := conn.DeleteReplicationConfigurationTemplate(&drs.DeleteReplicationConfigurationTemplateInput{
 		ReplicationConfigurationTemplateID: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, drs.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -280,16 +287,16 @@ func resourceReplicationConfigurationTemplateDelete(d *schema.ResourceData, meta
 	return nil
 }
 
-func expandPitPolicy(p []interface{}) []*drs.PITPolicyRule {
-	pitPolicyRules := make([]*drs.PITPolicyRule, len(p))
+func expandPitPolicy(p []interface{}) []*awstypes.PITPolicyRule {
+	pitPolicyRules := make([]*awstypes.PITPolicyRule, len(p))
 	for i, pitPolicy := range p {
 		pitPol := pitPolicy.(map[string]interface{})
-		pitPolicyRules[i] = &drs.PITPolicyRule{
+		pitPolicyRules[i] = &awstypes.PITPolicyRule{
 			Enabled:           aws.Bool(pitPol["enabled"].(bool)),
-			Interval:          aws.Int64(pitPol["interval"].(int64)),
-			RetentionDuration: aws.Int64(pitPol["retention_duration"].(int64)),
-			RuleID:            aws.Int64(pitPol["rule_id"].(int64)),
-			Units:             aws.String(pitPol["units"].(string)),
+			Interval:          aws.Int32(pitPol["interval"].(int32)),
+			RetentionDuration: aws.Int32(pitPol["retention_duration"].(int32)),
+			RuleID:            pitPol["rule_id"].(int64),
+			Units:             pitPol["units"].(string),
 		}
 	}
 	return pitPolicyRules
@@ -301,4 +308,29 @@ func Tags(tags tftags.KeyValueTags) map[string]*string {
 
 func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(tags)
+}
+
+type resourceReplicationConfigurationTemplateData struct {
+	AssociateDefaultSecurityGroup       types.Bool                                                                       `tfsdk:"associate_default_security_group"`
+	BandwidthThrottling                 types.Int                                                                        `tfsdk:"bandwidth_throttling"`
+	CreatePublicIP                      types.Bool                                                                       `tfsdk:"create_public_ip"`
+	DataPlaneRouting                    fwtypes.StringEnum[awstypes.ReplicationConfigurationDataPlaneRouting]            `tfsdk:"data_plane_routing"`
+	DefaultLargeStagingDiskType         fwtypes.StringEnum[awstypes.ReplicationConfigurationDefaultLargeStagingDiskType] `tfsdk:"default_large_staging_disk_type"`
+	EbsEncryption                       fwtypes.StringEnum[awstypes.ReplicationConfigurationEbsEncryption]               `tfsdk:"ebs_encryption"`
+	EbsEncryptionKeyARN                 types.String                                                                     `tfsdk:"ebs_encryption_key_arn"`
+	PitPolicy                           fwtypes.ListNestedObjectValueOf[pitPolicy]                                       `tfsdk:"pit_policy"`
+	ReplicationServerInstanceType       types.String                                                                     `tfsdk:"replication_server_instance_type"`
+	ReplicationServersSecurityGroupsIDs types.List                                                                       `tfsdk:"replication_servers_security_groups_ids"`
+	StagingAreaSubnetID                 types.String                                                                     `tfsdk:"staging_area_subnet_id"`
+	UseDedicatedReplicationServer       types.Bool                                                                       `tfsdk:"use_dedicated_replication_server"`
+	StagingAreaTags                     tftags.KeyValueTags                                                              `tfsdk:"staging_area_tags"`
+	Tags                                tftags.KeyValueTags                                                              `tfsdk:"tags"`
+}
+
+type pitPolicy struct {
+	Enabled           types.Bool   `tfsdk:"enabled"`
+	Interval          types.Int    `tfsdk:"interval"`
+	RetentionDuration types.Int    `tfsdk:"retention_duration"`
+	RuleID            types.Int    `tfsdk:"rule_id"`
+	Units             types.String `tfsdk:"units"`
 }
