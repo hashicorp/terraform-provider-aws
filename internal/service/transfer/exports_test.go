@@ -14,6 +14,7 @@ var (
 	ResourceSSHKey      = resourceSSHKey
 	ResourceTag         = resourceTag
 	ResourceUser        = resourceUser
+	ResourceWorkflow    = resourceWorkflow
 
 	FindAccessByTwoPartKey       = findAccessByTwoPartKey
 	FindAgreementByTwoPartKey    = findAgreementByTwoPartKey

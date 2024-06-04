@@ -98,7 +98,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWorkflow,
+			Factory:  resourceWorkflow,
 			TypeName: "aws_transfer_workflow",
 			Name:     "Workflow",
 			Tags: &types.ServicePackageResourceTags{

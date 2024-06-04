@@ -102,7 +102,7 @@ func sweepWorkflows(region string) error {
 		}
 
 		for _, server := range page.Workflows {
-			r := ResourceWorkflow()
+			r := resourceWorkflow()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(server.WorkflowId))
 

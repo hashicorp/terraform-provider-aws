@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -28,7 +27,7 @@ import (
 
 // @SDKResource("aws_transfer_workflow", name="Workflow")
 // @Tags(identifierAttribute="arn")
-func ResourceWorkflow() *schema.Resource {
+func resourceWorkflow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkflowCreate,
 		ReadWithoutTimeout:   resourceWorkflowRead,
@@ -39,9 +38,7 @@ func ResourceWorkflow() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -699,11 +696,11 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("on_exception_steps"); ok && len(v.([]interface{})) > 0 {
-		input.OnExceptionSteps = expandWorkflows(v.([]interface{}))
+		input.OnExceptionSteps = expandWorkflowSteps(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("steps"); ok && len(v.([]interface{})) > 0 {
-		input.Steps = expandWorkflows(v.([]interface{}))
+		input.Steps = expandWorkflowSteps(v.([]interface{}))
 	}
 
 	output, err := conn.CreateWorkflow(ctx, input)
@@ -720,6 +717,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
+
 	output, err := findWorkflowByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -734,10 +732,10 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrDescription, output.Description)
-	if err := d.Set("on_exception_steps", flattenWorkflows(output.OnExceptionSteps)); err != nil {
+	if err := d.Set("on_exception_steps", flattenWorkflowSteps(output.OnExceptionSteps)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting on_exception_steps: %s", err)
 	}
-	if err := d.Set("steps", flattenWorkflows(output.Steps)); err != nil {
+	if err := d.Set("steps", flattenWorkflowSteps(output.Steps)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting steps: %s", err)
 	}
 
@@ -799,7 +797,7 @@ func findWorkflowByID(ctx context.Context, conn *transfer.Client, id string) (*a
 	return output.Workflow, nil
 }
 
-func expandWorkflows(tfList []interface{}) []awstypes.WorkflowStep {
+func expandWorkflowSteps(tfList []interface{}) []awstypes.WorkflowStep {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -807,7 +805,10 @@ func expandWorkflows(tfList []interface{}) []awstypes.WorkflowStep {
 	var apiObjects []awstypes.WorkflowStep
 
 	for _, tfMapRaw := range tfList {
-		tfMap, _ := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
 		apiObject := awstypes.WorkflowStep{
 			Type: awstypes.WorkflowStepType(tfMap[names.AttrType].(string)),
@@ -839,7 +840,7 @@ func expandWorkflows(tfList []interface{}) []awstypes.WorkflowStep {
 	return apiObjects
 }
 
-func flattenWorkflows(apiObjects []awstypes.WorkflowStep) []interface{} {
+func flattenWorkflowSteps(apiObjects []awstypes.WorkflowStep) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -847,31 +848,31 @@ func flattenWorkflows(apiObjects []awstypes.WorkflowStep) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		flattenedObject := map[string]interface{}{
+		tfMap := map[string]interface{}{
 			names.AttrType: apiObject.Type,
 		}
 
 		if apiObject.CopyStepDetails != nil {
-			flattenedObject["copy_step_details"] = flattenCopyStepDetails(apiObject.CopyStepDetails)
+			tfMap["copy_step_details"] = flattenCopyStepDetails(apiObject.CopyStepDetails)
 		}
 
 		if apiObject.CustomStepDetails != nil {
-			flattenedObject["custom_step_details"] = flattenCustomStepDetails(apiObject.CustomStepDetails)
+			tfMap["custom_step_details"] = flattenCustomStepDetails(apiObject.CustomStepDetails)
 		}
 
 		if apiObject.DecryptStepDetails != nil {
-			flattenedObject["decrypt_step_details"] = flattenDecryptStepDetails(apiObject.DecryptStepDetails)
+			tfMap["decrypt_step_details"] = flattenDecryptStepDetails(apiObject.DecryptStepDetails)
 		}
 
 		if apiObject.DeleteStepDetails != nil {
-			flattenedObject["delete_step_details"] = flattenDeleteStepDetails(apiObject.DeleteStepDetails)
+			tfMap["delete_step_details"] = flattenDeleteStepDetails(apiObject.DeleteStepDetails)
 		}
 
 		if apiObject.TagStepDetails != nil {
-			flattenedObject["tag_step_details"] = flattenTagStepDetails(apiObject.TagStepDetails)
+			tfMap["tag_step_details"] = flattenTagStepDetails(apiObject.TagStepDetails)
 		}
 
-		tfList = append(tfList, flattenedObject)
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
@@ -887,7 +888,7 @@ func expandCopyStepDetails(tfMap []interface{}) *awstypes.CopyStepDetails {
 	apiObject := &awstypes.CopyStepDetails{}
 
 	if v, ok := tfMapRaw["destination_file_location"].([]interface{}); ok && len(v) > 0 {
-		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
+		apiObject.DestinationFileLocation = expandInputFileLocation(v)
 	}
 
 	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
@@ -915,7 +916,7 @@ func flattenCopyStepDetails(apiObject *awstypes.CopyStepDetails) []interface{} {
 	}
 
 	if v := apiObject.DestinationFileLocation; v != nil {
-		tfMap["destination_file_location"] = flattenDestinationFileLocation(v)
+		tfMap["destination_file_location"] = flattenInputFileLocation(v)
 	}
 
 	if v := apiObject.Name; v != nil {
@@ -993,7 +994,7 @@ func expandDecryptStepDetails(tfMap []interface{}) *awstypes.DecryptStepDetails 
 	apiObject := &awstypes.DecryptStepDetails{}
 
 	if v, ok := tfMapRaw["destination_file_location"].([]interface{}); ok && len(v) > 0 {
-		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
+		apiObject.DestinationFileLocation = expandInputFileLocation(v)
 	}
 
 	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
@@ -1026,7 +1027,7 @@ func flattenDecryptStepDetails(apiObject *awstypes.DecryptStepDetails) []interfa
 	}
 
 	if v := apiObject.DestinationFileLocation; v != nil {
-		tfMap["destination_file_location"] = flattenDestinationFileLocation(v)
+		tfMap["destination_file_location"] = flattenInputFileLocation(v)
 	}
 
 	if v := apiObject.Name; v != nil {
@@ -1124,7 +1125,7 @@ func flattenTagStepDetails(apiObject *awstypes.TagStepDetails) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func expandDestinationFileLocation(tfMap []interface{}) *awstypes.InputFileLocation {
+func expandInputFileLocation(tfMap []interface{}) *awstypes.InputFileLocation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1138,13 +1139,13 @@ func expandDestinationFileLocation(tfMap []interface{}) *awstypes.InputFileLocat
 	}
 
 	if v, ok := tfMapRaw["s3_file_location"].([]interface{}); ok && len(v) > 0 {
-		apiObject.S3FileLocation = expandS3FileLocation(v)
+		apiObject.S3FileLocation = expandS3InputFileLocation(v)
 	}
 
 	return apiObject
 }
 
-func flattenDestinationFileLocation(apiObject *awstypes.InputFileLocation) []interface{} {
+func flattenInputFileLocation(apiObject *awstypes.InputFileLocation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1156,7 +1157,7 @@ func flattenDestinationFileLocation(apiObject *awstypes.InputFileLocation) []int
 	}
 
 	if v := apiObject.S3FileLocation; v != nil {
-		tfMap["s3_file_location"] = flattenS3FileLocation(v)
+		tfMap["s3_file_location"] = flattenS3InputFileLocation(v)
 	}
 
 	return []interface{}{tfMap}
@@ -1200,7 +1201,7 @@ func flattenEFSFileLocation(apiObject *awstypes.EfsFileLocation) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func expandS3FileLocation(tfMap []interface{}) *awstypes.S3InputFileLocation {
+func expandS3InputFileLocation(tfMap []interface{}) *awstypes.S3InputFileLocation {
 	if tfMap == nil {
 		return nil
 	}
@@ -1220,7 +1221,7 @@ func expandS3FileLocation(tfMap []interface{}) *awstypes.S3InputFileLocation {
 	return apiObject
 }
 
-func flattenS3FileLocation(apiObject *awstypes.S3InputFileLocation) []interface{} {
+func flattenS3InputFileLocation(apiObject *awstypes.S3InputFileLocation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
