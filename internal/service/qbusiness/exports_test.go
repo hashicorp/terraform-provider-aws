@@ -4,9 +4,10 @@
 package qbusiness
 
 var (
-	ResourceApplication = newResourceApplication
-	ResourceIndex       = newResourceIndex
-	ResourceRetriever   = newResourceRetriever
-	ResourceDatasource  = newResourceDatasource
-	ResourcePlugin      = newResourcePlugin
+	ResourceApplication   = newResourceApplication
+	ResourceIndex         = newResourceIndex
+	ResourceRetriever     = newResourceRetriever
+	ResourceDatasource    = newResourceDatasource
+	ResourcePlugin        = newResourcePlugin
+	ResourceWebexperience = newResourceWebexperience
 )

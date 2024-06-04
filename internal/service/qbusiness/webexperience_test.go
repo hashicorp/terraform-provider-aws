@@ -64,7 +64,7 @@ func TestAccQBusinessWebexperience_disappears(t *testing.T) {
 				Config: testAccWebexperienceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceWebexperience(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceWebexperience, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,32 +105,6 @@ func TestAccQBusinessWebexperience_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccQBusinessWebexperience_authenticationConfiguration(t *testing.T) {
-	ctx := acctest.Context(t)
-	var webex qbusiness.GetWebExperienceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_qbusiness_webexperience.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWebexperience(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebexperienceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testWebexperienceConfig_authenticationConfiguration(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.saml_configuration.0.metadata_xml", "<xml/>"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.saml_configuration.0.user_id_attribute", "email"),
-					resource.TestCheckResourceAttrSet(resourceName, "authentication_configuration.0.saml_configuration.0.iam_role_arn"),
 				),
 			},
 		},
@@ -201,51 +175,17 @@ func testAccCheckWebexperienceExists(ctx context.Context, n string, v *qbusiness
 }
 
 func testAccWebexperienceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-}
-
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_webexperience" "test" {
   application_id               = aws_qbusiness_app.test.application_id
   sample_propmpts_control_mode = "DISABLED"
+  title                        = %[1]q
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName)
+`, rName))
 }
 
 func testAccWebexperienceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-}
-
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_webexperience" "test" {
   application_id               = aws_qbusiness_app.test.application_id
   sample_propmpts_control_mode = "DISABLED"
@@ -255,71 +195,5 @@ resource "aws_qbusiness_webexperience" "test" {
     %[4]q = %[5]q
   }
 }
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-  {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testWebexperienceConfig_authenticationConfiguration(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
-}
-
-resource "aws_qbusiness_webexperience" "test" {
-  application_id               = aws_qbusiness_app.test.application_id
-  sample_propmpts_control_mode = "DISABLED"
-
-  authentication_configuration {
-    saml_configuration {
-      metadata_xml = file("test-fixtures/saml_metadata.xml")
-      iam_role_arn = aws_iam_role.test.arn
-      user_id_attribute = "email"
-    }
-  }
-}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-"Version": "2012-10-17",
-"Statement": [
-    {
-    "Action": "sts:AssumeRole",
-    "Principal": {
-        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-    },
-    "Effect": "Allow",
-    "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

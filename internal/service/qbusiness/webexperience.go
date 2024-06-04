@@ -5,333 +5,308 @@ package qbusiness
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
-	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
-	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_qbusiness_webexperience", name="Webexperience")
+// @FrameworkResource("aws_qbusiness_webexperience", name="Webexperience")
 // @Tags(identifierAttribute="arn")
-func ResourceWebexperience() *schema.Resource {
-	return &schema.Resource{
+func newResourceWebexperience(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceApplication{}
 
-		CreateWithoutTimeout: resourceWebexperienceCreate,
-		ReadWithoutTimeout:   resourceWebexperienceRead,
-		UpdateWithoutTimeout: resourceWebexperienceUpdate,
-		DeleteWithoutTimeout: resourceWebexperienceDelete,
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		CustomizeDiff: verify.SetTagsDiff,
+const (
+	ResNameWebexperience = "Webexperience"
+)
 
-		Schema: map[string]*schema.Schema{
-			"application_id": {
-				Type:        schema.TypeString,
+type resourceWebexperience struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+	framework.WithTimeouts
+}
+
+func (r *resourceWebexperience) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrID:  framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"iam_service_role_arn": schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Description: "The Amazon Resource Name (ARN) of the service role attached to your web experience",
+				Optional:    true,
+			},
+			"sample_prompts_control_mode": schema.StringAttribute{
 				Required:    true,
-				Description: "The identifier of the Amazon Q application.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 36),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must start with a letter or number and contain only letters, numbers, and hyphens"),
-				),
-			},
-			"arn": {
-				Type:        schema.TypeString,
-				Description: "The Amazon Resource Name (ARN) of the Amazon Q application.",
-				Computed:    true,
-			},
-			"authentication_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"saml_configuration": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"metadata_xml": {
-										Type:         schema.TypeString,
-										Required:     true,
-										Description:  "The SAML metadata document provided by your identity provider (IdP).",
-										ValidateFunc: validation.StringLenBetween(1000, 1000000),
-									},
-									"iam_role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										Description:  "ARN of an IAM role assumed by users when they authenticate into their Amazon Q web experience, containing the relevant Amazon Q permissions for conversing with Amazon Q,",
-										ValidateFunc: verify.ValidARN,
-									},
-									"user_id_attribute": {
-										Type:         schema.TypeString,
-										Required:     true,
-										Description:  "The user attribute name in your IdP that maps to the user email.",
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									"user_group_attribute": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Description:  "The group attribute name in your IdP that maps to user groups.",
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-								},
-							},
-						},
-					},
+				Description: "Status information about whether file upload functionality is activated or deactivated for your end user.",
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.WebExperienceSamplePromptsControlMode](),
 				},
 			},
-			"sample_propmpts_control_mode": {
-				Type:             schema.TypeString,
-				Required:         true,
-				Description:      "Sample prompts control mode for Amazon Q web experience.",
-				ValidateDiagFunc: enum.Validate[types.WebExperienceSamplePromptsControlMode](),
-			},
-			"subtitle": {
-				Type:        schema.TypeString,
+			"subtitle": schema.StringAttribute{
+				Description: "The subtitle for your Amazon Q Business web experience.",
 				Optional:    true,
-				Description: "Subtitle for Amazon Q web experience.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 500),
-					validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
-				),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 500),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+				},
 			},
-			"title": {
-				Type:        schema.TypeString,
+			"title": schema.StringAttribute{
+				Description: "The title for your Amazon Q Business web experience.",
 				Optional:    true,
-				Description: "Title for Amazon Q web experience.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 500),
-					validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
-				),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 500),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+				},
 			},
-			"webexperience_id": {
-				Type:        schema.TypeString,
-				Description: "Identifier of the Amazon Q web experience",
-				Computed:    true,
-			},
-			"welcome_message": {
-				Type:        schema.TypeString,
+			"welcome_message": schema.StringAttribute{
+				Description: "The customized welcome message for end users of an Amazon Q Business web experience.",
 				Optional:    true,
-				Description: "Customized welcome message for end users of an Amazon Q web experience",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 300),
-					validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
-				),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 500),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
 
-func resourceWebexperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+type resourceWebexperienceData struct {
+	ApplicationId            types.String                                                       `json:"application_id"`
+	ID                       types.String                                                       `json:"id"`
+	RoleArn                  types.String                                                       `json:"iam_service_role_arn"`
+	SamplePromptsControlMode fwtypes.StringEnum[awstypes.WebExperienceSamplePromptsControlMode] `json:"sample_prompts_control_mode"`
+	Subtitle                 types.String                                                       `json:"subtitle"`
+	Tags                     types.Map                                                          `tfsdk:"tags"`
+	TagsAll                  types.Map                                                          `tfsdk:"tags_all"`
+	Timeouts                 timeouts.Value                                                     `tfsdk:"timeouts"`
+	Title                    types.String                                                       `json:"title"`
+	WebexperienceArn         types.String                                                       `json:"arn"`
+	WebexperienceId          types.String                                                       `json:"webexperience_id"`
+	WelcomeMessage           types.String                                                       `json:"welcome_message"`
+}
 
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	application_id := d.Get("application_id").(string)
-
-	input := &qbusiness.CreateWebExperienceInput{
-		ApplicationId:            aws.String(application_id),
-		SamplePromptsControlMode: types.WebExperienceSamplePromptsControlMode(d.Get("sample_propmpts_control_mode").(string)),
-		Tags:                     getTagsIn(ctx),
+func (r *resourceWebexperience) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data resourceWebexperienceData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("welcome_message"); ok {
-		input.WelcomeMessage = aws.String(v.(string))
+	conn := r.Meta().QBusinessClient(ctx)
+
+	input := &qbusiness.CreateWebExperienceInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("subtitle"); ok {
-		input.Subtitle = aws.String(v.(string))
+	input.Tags = getTagsIn(ctx)
+	input.ClientToken = aws.String(id.UniqueId())
+
+	out, err := conn.CreateWebExperience(ctx, input)
+	if err != nil {
+		resp.Diagnostics.AddError("failed to create Q Business webexperience", err.Error())
+		return
 	}
 
-	if v, ok := d.GetOk("title"); ok {
-		input.Title = aws.String(v.(string))
+	data.WebexperienceArn = fwflex.StringToFramework(ctx, out.WebExperienceArn)
+	data.ApplicationId = fwflex.StringToFramework(ctx, out.WebExperienceId)
+
+	data.setID()
+
+	if _, err := waitWebexperienceCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError("failed to wait for Amazon Q Webexperience creation", err.Error())
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *resourceWebexperience) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data resourceWebexperienceData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.CreateWebExperience(ctx, input)
+	conn := r.Meta().QBusinessClient(ctx)
+
+	out, err := FindWebexperienceByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating qbusiness webexperience: %s", err)
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve Q Business webexperience (%s)", data.ID.ValueString()), err.Error())
+		return
 	}
 
-	d.SetId(application_id + "/" + aws.ToString(output.WebExperienceId))
-
-	if _, err := waitWebexperienceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating qbusiness webexperience (%s): waiting for completion: %s", d.Id(), err)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]interface{})) > 0 {
-		input := &qbusiness.UpdateWebExperienceInput{
-			ApplicationId:               aws.String(application_id),
-			WebExperienceId:             output.WebExperienceId,
-			AuthenticationConfiguration: expandAuthenticationConfiguration(v.([]interface{})),
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *resourceWebexperience) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourceWebexperienceData
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := new.initFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
+	if !old.SamplePromptsControlMode.Equal(new.SamplePromptsControlMode) ||
+		!old.RoleArn.Equal(new.RoleArn) ||
+		!old.Subtitle.Equal(new.Subtitle) ||
+		!old.Title.Equal(new.Title) ||
+		!old.WelcomeMessage.Equal(new.WelcomeMessage) {
+
+		conn := r.Meta().QBusinessClient(ctx)
+
+		input := &qbusiness.UpdateWebExperienceInput{}
+
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
 		_, err := conn.UpdateWebExperience(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating qbusiness webexperience (%s): %s", d.Id(), err)
+			resp.Diagnostics.AddError("failed to update Amazon Q webexperience", err.Error())
+			return
 		}
 	}
-
-	return append(diags, resourceWebexperienceRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func resourceWebexperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceWebexperience) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data resourceWebexperienceData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
+	conn := r.Meta().QBusinessClient(ctx)
 
-	application_id, webexperience_id, err := parseWebexperienceID(d.Id())
+	if err := data.initFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
+	webexperienceId := data.WebexperienceId.ValueString()
+	appId := data.ApplicationId.ValueString()
+
+	input := &qbusiness.DeleteWebExperienceInput{
+		WebExperienceId: aws.String(webexperienceId),
+		ApplicationId:   aws.String(appId),
+	}
+
+	_, err := conn.DeleteWebExperience(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating qbusiness webexperience (%s): %s", d.Id(), err)
-	}
-
-	input := &qbusiness.UpdateWebExperienceInput{
-		ApplicationId:   aws.String(application_id),
-		WebExperienceId: aws.String(webexperience_id),
-	}
-
-	if d.HasChange("sample_propmpts_control_mode") {
-		input.SamplePromptsControlMode = types.WebExperienceSamplePromptsControlMode(d.Get("sample_propmpts_control_mode").(string))
-	}
-
-	if d.HasChange("welcome_message") {
-		input.WelcomeMessage = aws.String(d.Get("welcome_message").(string))
-	}
-
-	if d.HasChange("subtitle") {
-		input.Subtitle = aws.String(d.Get("subtitle").(string))
-	}
-
-	if d.HasChange("title") {
-		input.Title = aws.String(d.Get("title").(string))
-	}
-
-	if d.HasChange("authentication_configuration") {
-		input.AuthenticationConfiguration = expandAuthenticationConfiguration(d.Get("authentication_configuration").([]interface{}))
-	}
-
-	_, err = conn.UpdateWebExperience(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating qbusiness webexperience (%s): %s", d.Id(), err)
-	}
-
-	return append(diags, resourceWebexperienceRead(ctx, d, meta)...)
-}
-
-func resourceWebexperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	webex, err := FindWebexperienceByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] qbusiness webexperience (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading qbusiness webexperience: %s", err)
-	}
-
-	d.Set("arn", webex.WebExperienceArn)
-	d.Set("webexperience_id", webex.WebExperienceId)
-	d.Set("application_id", webex.ApplicationId)
-	d.Set("sample_propmpts_control_mode", webex.SamplePromptsControlMode)
-	d.Set("welcome_message", webex.WelcomeMessage)
-	d.Set("subtitle", webex.Subtitle)
-	d.Set("title", webex.Title)
-
-	if webex.AuthenticationConfiguration != nil {
-		if err := d.Set("authentication_configuration", flattenAuthenticationConfiguration(webex.AuthenticationConfiguration)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting qbusiness webexperience authentication_configuration: %s", err)
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to delete Q Business webexperience (%s)", data.WebexperienceId.ValueString()), err.Error())
+		return
 	}
-	return diags
+
+	if _, err := waitWebexperienceDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError("failed to wait for Q Business webexperience deletion", err.Error())
+		return
+	}
 }
 
-func resourceWebexperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceWebexperience) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
 
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
+func (r *resourceWebexperience) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_qbusiness_webexperience"
+}
 
-	application_id, webexperience_id, err := parseWebexperienceID(d.Id())
+const (
+	indexWebexperienceIDPartCount = 2
+)
 
+func (r *resourceWebexperienceData) setID() {
+	r.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{r.ApplicationId.ValueString(), r.WebexperienceId.ValueString()},
+		indexWebexperienceIDPartCount, false)))
+}
+
+func (r *resourceWebexperienceData) initFromID() error {
+	parts, err := flex.ExpandResourceId(r.ID.ValueString(), indexWebexperienceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting qbusiness webexperience (%s): %s", d.Id(), err)
+		return err
 	}
 
-	_, err = conn.DeleteWebExperience(ctx, &qbusiness.DeleteWebExperienceInput{
-		ApplicationId:   aws.String(application_id),
-		WebExperienceId: aws.String(webexperience_id),
-	})
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting qbusiness webexperience (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitWebexperienceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness webexperience (%s) delete: %s", d.Id(), err)
-	}
-
+	r.ApplicationId = types.StringValue(parts[0])
+	r.WebexperienceId = types.StringValue(parts[1])
 	return nil
 }
 
-func parseWebexperienceID(id string) (string, string, error) {
-	parts := strings.Split(id, "/")
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid webexperience ID: %s", id)
-	}
-
-	return parts[0], parts[1], nil
-}
-
 func FindWebexperienceByID(ctx context.Context, conn *qbusiness.Client, webexperience_id string) (*qbusiness.GetWebExperienceOutput, error) {
-	application_d, webex_id, err := parseWebexperienceID(webexperience_id)
+	parts, err := flex.ExpandResourceId(webexperience_id, indexWebexperienceIDPartCount, false)
 
 	if err != nil {
 		return nil, err
 	}
 
 	input := &qbusiness.GetWebExperienceInput{
-		ApplicationId:   aws.String(application_d),
-		WebExperienceId: aws.String(webex_id),
+		ApplicationId:   aws.String(parts[0]),
+		WebExperienceId: aws.String(parts[1]),
 	}
 
 	output, err := conn.GetWebExperience(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -343,68 +318,4 @@ func FindWebexperienceByID(ctx context.Context, conn *qbusiness.Client, webexper
 	}
 
 	return output, nil
-}
-
-func expandAuthenticationConfiguration(l []interface{}) types.WebExperienceAuthConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["saml_configuration"]; ok {
-		return expandSamlConfiguration(v.([]interface{}))
-	}
-
-	return nil
-}
-
-func expandSamlConfiguration(l []interface{}) *types.WebExperienceAuthConfigurationMemberSamlConfiguration {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-	m := l[0].(map[string]interface{})
-
-	saml_conf := types.SamlConfiguration{
-		MetadataXML:     aws.String(m["metadata_xml"].(string)),
-		RoleArn:         aws.String(m["iam_role_arn"].(string)),
-		UserIdAttribute: aws.String(m["user_id_attribute"].(string)),
-	}
-
-	if v, ok := m["user_group_attribute"].(string); ok && v != "" {
-		saml_conf.UserGroupAttribute = aws.String(v)
-	}
-
-	return &types.WebExperienceAuthConfigurationMemberSamlConfiguration{
-		Value: saml_conf,
-	}
-}
-
-func flattenAuthenticationConfiguration(authenticationConfiguration types.WebExperienceAuthConfiguration) []interface{} {
-	if authenticationConfiguration == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if v, ok := authenticationConfiguration.(*types.WebExperienceAuthConfigurationMemberSamlConfiguration); ok {
-		m["saml_configuration"] = flattenSamlConfiguration(v)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenSamlConfiguration(samlConfiguration *types.WebExperienceAuthConfigurationMemberSamlConfiguration) []interface{} {
-	if samlConfiguration == nil {
-		return []interface{}{}
-	}
-
-	return []interface{}{
-		map[string]interface{}{
-			"metadata_xml":         samlConfiguration.Value.MetadataXML,
-			"iam_role_arn":         samlConfiguration.Value.RoleArn,
-			"user_id_attribute":    samlConfiguration.Value.UserIdAttribute,
-			"user_group_attribute": samlConfiguration.Value.UserGroupAttribute,
-		},
-	}
 }
