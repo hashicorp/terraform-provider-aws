@@ -39,7 +39,7 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}`)),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -408,7 +408,7 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			appID := rs.Primary.Attributes["application_id"]
+			appID := rs.Primary.Attributes[names.AttrApplicationID]
 			envID := rs.Primary.Attributes["environment_id"]
 
 			input := &appconfig.GetEnvironmentInput{
@@ -446,7 +446,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		appID := rs.Primary.Attributes["application_id"]
+		appID := rs.Primary.Attributes[names.AttrApplicationID]
 		envID := rs.Primary.Attributes["environment_id"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)

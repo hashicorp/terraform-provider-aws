@@ -4,11 +4,11 @@
 {{ define "tags" }}
 {{ if eq . "tags" }}
   tags = var.resource_tags
-{{- else if eq . "tagsComputed1"}}
+{{- else if eq . "tagsComputed1" }}
   tags = {
     (var.unknownTagKey) = null_resource.test.id
   }
-{{- else if eq . "tagsComputed2"}}
+{{- else if eq . "tagsComputed2" }}
   tags = {
     (var.unknownTagKey) = null_resource.test.id
     (var.knownTagKey)   = var.knownTagValue
@@ -32,7 +32,7 @@ provider "null" {}
 
 {{- block "body" .Tags }}
 Missing block "body" in template
-{{ end }}
+{{- end }}
 {{ if or (eq .Tags "tagsComputed1") (eq .Tags "tagsComputed2") -}}
 resource "null_resource" "test" {}
 
@@ -43,13 +43,15 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-{{- end }}
-{{ range .AdditionalTfVars }}
+
+{{ end -}}
+{{ range .AdditionalTfVars -}}
 variable "{{ . }}" {
   type     = string
   nullable = false
 }
-{{ end }}
+
+{{ end -}}
 {{ if eq .Tags "tags" -}}
 variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"
@@ -83,4 +85,4 @@ variable "provider_tags" {
   type     = map(string)
   nullable = false
 }
-{{- end }}
+{{ end -}}

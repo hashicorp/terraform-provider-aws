@@ -71,7 +71,7 @@ func (r *resourceIAMPolicyAssignment) Schema(ctx context.Context, req resource.S
 					stringvalidator.OneOf(quicksight.AssignmentStatus_Values()...),
 				},
 			},
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

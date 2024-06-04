@@ -240,10 +240,7 @@ The following arguments are optional:
 * `certificateName` - (Optional) The name of the SSL/TLS certificate attached to the distribution, if any.
 * `ipAddressType` - (Optional) The IP address type of the distribution. Default: `dualstack`.
 * `isEnabled` - (Optional) Indicates whether the distribution is enabled. Default: `true`.
-* `tags` - (Optional) Map of tags for the Lightsail Distribution. If
-  configured with a provider
-  [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
-  present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags for the Lightsail Distribution. To create a key-only tag, use an empty string as the value. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### default_cache_behavior
 
@@ -347,4 +344,4 @@ Using `terraform import`, import Lightsail Distribution using the `id`. For exam
 % terraform import aws_lightsail_distribution.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d2b71cd407a3a46a175a6c04efcec65b5171112376e1f830fef8bdbe3ce78f5c -->
+<!-- cache-key: cdktf-0.20.1 input-079fa9f5c14e2177dea920793fcdd0e0faa5a3555a595860660d177f155b2df8 -->

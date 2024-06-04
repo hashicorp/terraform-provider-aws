@@ -41,15 +41,15 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "access_token_validity", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClientSecret, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
 					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
@@ -60,7 +60,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct0),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct0),
 				),
 			},
@@ -92,7 +92,7 @@ func TestAccCognitoIDPUserPoolClient_enableRevocation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
 				),
 			},
 			{
@@ -106,7 +106,7 @@ func TestAccCognitoIDPUserPoolClient_enableRevocation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtFalse),
 				),
 			},
 			{
@@ -567,7 +567,7 @@ func TestAccCognitoIDPUserPoolClient_allFields(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
-					resource.TestCheckResourceAttr(resourceName, "generate_secret", "true"),
+					resource.TestCheckResourceAttr(resourceName, "generate_secret", acctest.CtTrue),
 					resource.TestMatchResourceAttr(resourceName, names.AttrClientSecret, regexache.MustCompile(`\w+`)),
 					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "read_attributes.*", names.AttrEmail),
@@ -577,7 +577,7 @@ func TestAccCognitoIDPUserPoolClient_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "code"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "implicit"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "5"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "openid"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", names.AttrEmail),
@@ -630,7 +630,7 @@ func TestAccCognitoIDPUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
-					resource.TestCheckResourceAttr(resourceName, "generate_secret", "true"),
+					resource.TestCheckResourceAttr(resourceName, "generate_secret", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "read_attributes.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "read_attributes.*", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct1),
@@ -639,7 +639,7 @@ func TestAccCognitoIDPUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "code"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_flows.*", "implicit"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", "5"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", "openid"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_oauth_scopes.*", names.AttrEmail),
@@ -693,7 +693,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsApplicationID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.role_arn", "aws_iam_role.analytics", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_arn"),
 				),
 			},
@@ -710,7 +710,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsApplicationID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_id", pinpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.external_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtTrue),
 				),
 			},
 			{
@@ -760,7 +760,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, names.AttrARN),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "false"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.external_id"),
 				),
@@ -778,7 +778,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "analytics_configuration.0.application_arn", pinpointResourceName, names.AttrARN),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "analytics_configuration.0.role_arn", "iam", "role/aws-service-role/cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdp"),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", "true"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.0.user_data_shared", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.application_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "analytics_configuration.0.external_id"),
 				),
@@ -1087,7 +1087,7 @@ func testAccUserPoolClientImportStateIDFunc(ctx context.Context, resourceName st
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
-		userPoolId := rs.Primary.Attributes["user_pool_id"]
+		userPoolId := rs.Primary.Attributes[names.AttrUserPoolID]
 		clientId := rs.Primary.ID
 
 		_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, userPoolId, clientId)
@@ -1109,7 +1109,7 @@ func testAccCheckUserPoolClientDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
+			_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -1136,7 +1136,7 @@ func testAccCheckUserPoolClientExists(ctx context.Context, name string, client *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		resp, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
+		resp, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.ID)
 		if err != nil {
 			return err
 		}

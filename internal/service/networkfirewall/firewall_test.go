@@ -40,7 +40,7 @@ func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", acctest.Ct1),
@@ -89,7 +89,7 @@ func TestAccNetworkFirewallFirewall_dualstackSubnet(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", acctest.Ct1),
@@ -176,21 +176,21 @@ func TestAccNetworkFirewallFirewall_deleteProtection(t *testing.T) {
 				Config: testAccFirewallConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", acctest.CtFalse),
 				),
 			},
 			{

@@ -124,7 +124,7 @@ func TestAccSESV2ConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "reputation_options.0.reputation_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_options.0.reputation_metrics_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccSESV2ConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "reputation_options.0.reputation_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_options.0.reputation_metrics_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -160,7 +160,7 @@ func TestAccSESV2ConfigurationSet_sendingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sending_options.0.sending_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sending_options.0.sending_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccSESV2ConfigurationSet_sendingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sending_options.0.sending_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sending_options.0.sending_enabled", acctest.CtFalse),
 				),
 			},
 		},

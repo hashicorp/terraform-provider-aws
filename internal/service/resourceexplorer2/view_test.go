@@ -40,7 +40,7 @@ func testAccView_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -75,7 +75,7 @@ func testAccView_defaultView(t *testing.T) {
 				Config: testAccViewConfig_defaultView(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_view", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtTrue),
 				),
 			},
 			{
@@ -87,14 +87,14 @@ func testAccView_defaultView(t *testing.T) {
 				Config: testAccViewConfig_defaultView(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccViewConfig_defaultView(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_view", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtTrue),
 				),
 			},
 		},
@@ -148,7 +148,7 @@ func testAccView_filter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "resourcetype:ec2:instance"),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.Ct1),
@@ -167,7 +167,7 @@ func testAccView_filter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "region:global"),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.Ct1),

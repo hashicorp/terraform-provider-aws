@@ -56,7 +56,7 @@ func ResourceCloudFormationStack() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -158,7 +158,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 	var applicationID, semanticVersion string
 	if v, ok := tags[cloudFormationStackTagApplicationID]; ok {
 		applicationID = aws.StringValue(v.Value)
-		d.Set("application_id", applicationID)
+		d.Set(names.AttrApplicationID, applicationID)
 	} else {
 		return sdkdiag.AppendErrorf(diags, "describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagApplicationID)
 	}
@@ -303,7 +303,7 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 	stackName := d.Get(names.AttrName).(string)
 	changeSetRequest := serverlessrepo.CreateCloudFormationChangeSetRequest{
 		StackName:     aws.String(stackName),
-		ApplicationId: aws.String(d.Get("application_id").(string)),
+		ApplicationId: aws.String(d.Get(names.AttrApplicationID).(string)),
 		Capabilities:  flex.ExpandStringSet(d.Get("capabilities").(*schema.Set)),
 		Tags:          getTagsIn(ctx),
 	}

@@ -16,6 +16,12 @@ on:
       - .markdownlint.yml
       - website/docs/**
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
@@ -91,7 +97,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
-      - run: misspell -error -source text website/
+      - run: make website-misspell
 
   terrafmt:
     runs-on: ubuntu-latest

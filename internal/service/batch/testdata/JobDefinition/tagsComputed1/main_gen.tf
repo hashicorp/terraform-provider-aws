@@ -30,4 +30,3 @@ variable "unknownTagKey" {
   type     = string
   nullable = false
 }
-

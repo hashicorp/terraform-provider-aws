@@ -38,10 +38,10 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("healthcheck/.+")),
-					resource.TestCheckResourceAttr(resourceName, "measure_latency", "true"),
+					resource.TestCheckResourceAttr(resourceName, "measure_latency", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "failure_threshold", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -55,7 +55,7 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "5"),
-					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", acctest.CtFalse),
 				),
 			},
 		},
@@ -122,7 +122,7 @@ func TestAccRoute53HealthCheck_withSearchString(t *testing.T) {
 				Config: testAccHealthCheckConfig_searchString("OK", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "search_string", "OK"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccRoute53HealthCheck_withSearchString(t *testing.T) {
 				Config: testAccHealthCheckConfig_searchString("FAILED", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "search_string", "FAILED"),
 				),
 			},
@@ -303,7 +303,7 @@ func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 				Config: testAccHealthCheckConfig_noSNI,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sni", acctest.CtTrue),
 				),
 			},
 			{
@@ -315,14 +315,14 @@ func TestAccRoute53HealthCheck_withSNI(t *testing.T) {
 				Config: testAccHealthCheckConfig_sni(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "enable_sni", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sni", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccHealthCheckConfig_sni(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "enable_sni", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_sni", acctest.CtTrue),
 				),
 			},
 		},
@@ -344,7 +344,7 @@ func TestAccRoute53HealthCheck_disabled(t *testing.T) {
 				Config: testAccHealthCheckConfig_disabled(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -356,14 +356,14 @@ func TestAccRoute53HealthCheck_disabled(t *testing.T) {
 				Config: testAccHealthCheckConfig_disabled(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccHealthCheckConfig_disabled(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtTrue),
 				),
 			},
 		},

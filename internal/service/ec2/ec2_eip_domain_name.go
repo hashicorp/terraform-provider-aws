@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="EIP Domain Name")
+// @FrameworkResource("aws_eip_domain_name", name="EIP Domain Name")
 func newEIPDomainNameResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &eipDomainNameResource{}
 

@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_verifiedaccess_instance", name="Verified Access Instance")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVerifiedAccessInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceCreate,
@@ -49,7 +50,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,7 +137,7 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrCreationTime, output.CreationTime)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("fips_enabled", output.FipsEnabled)
-	d.Set("last_updated_time", output.LastUpdatedTime)
+	d.Set(names.AttrLastUpdatedTime, output.LastUpdatedTime)
 
 	if v := output.VerifiedAccessTrustProviders; v != nil {
 		if err := d.Set("verified_access_trust_providers", flattenVerifiedAccessTrustProviders(v)); err != nil {

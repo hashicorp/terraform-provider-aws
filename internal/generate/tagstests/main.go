@@ -16,12 +16,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 
-	"github.com/YakDriver/regexache"
+	"github.com/dlclark/regexp2"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -44,21 +46,34 @@ func main() {
 	g.Infof("Generating tagging tests for internal/service/%s", servicePackage)
 
 	var (
-		serviceRecord data.ServiceRecord
-		found         bool
+		svc   serviceRecords
+		found bool
 	)
 
 	for _, l := range serviceData {
 		// See internal/generate/namesconsts/main.go.
-		p := l.ProviderPackage()
+		if p := l.SplitPackageRealPackage(); p != "" {
+			if p != servicePackage {
+				continue
+			}
 
-		if p != servicePackage {
-			continue
+			ep := l.ProviderPackage()
+			if p == ep {
+				svc.primary = l
+				found = true
+			} else {
+				svc.additional = append(svc.additional, l)
+			}
+		} else {
+			p := l.ProviderPackage()
+
+			if p != servicePackage {
+				continue
+			}
+
+			svc.primary = l
+			found = true
 		}
-
-		serviceRecord = l
-		found = true
-		break
 	}
 
 	if !found {
@@ -81,8 +96,14 @@ func main() {
 		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
+		sourceName = strings.TrimSuffix(sourceName, "_")
 
-		resource.ProviderNameUpper = serviceRecord.ProviderNameUpper()
+		if name, err := svc.ProviderNameUpper(resource.TypeName); err != nil {
+			g.Fatalf("determining provider service name: %w", err)
+		} else {
+			resource.ResourceProviderNameUpper = name
+		}
+		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
 		resource.ProviderPackage = servicePackage
 
 		filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
@@ -139,6 +160,57 @@ func main() {
 	}
 }
 
+type serviceRecords struct {
+	primary    data.ServiceRecord
+	additional []data.ServiceRecord
+}
+
+func (sr serviceRecords) ProviderNameUpper(resource string) (string, error) {
+	if len(sr.additional) == 0 {
+		return sr.primary.ProviderNameUpper(), nil
+	}
+
+	var (
+		service data.ServiceRecord
+		found   bool
+	)
+	for _, svc := range sr.additional {
+		re, err := regexp2.Compile(svc.ResourcePrefix(), 0)
+		if err != nil {
+			return "", err
+		}
+		if match, err := re.MatchString(resource); err != nil {
+			return "", err
+		} else if match {
+			service = svc
+			found = true
+		}
+	}
+
+	if !found {
+		re, err := regexp2.Compile(sr.primary.ResourcePrefix(), 0)
+		if err != nil {
+			return "", err
+		}
+		if match, err := re.MatchString(resource); err != nil {
+			return "", err
+		} else if match {
+			service = sr.primary
+			found = true
+		}
+	}
+
+	if found {
+		return service.ProviderNameUpper(), nil
+	}
+
+	return "", fmt.Errorf("No match found for resource type %q", resource)
+}
+
+func (sr serviceRecords) PackageProviderNameUpper() string {
+	return sr.primary.ProviderNameUpper()
+}
+
 type implementation string
 
 const (
@@ -147,24 +219,27 @@ const (
 )
 
 type ResourceDatum struct {
-	ProviderPackage   string
-	ProviderNameUpper string
-	Name              string
-	TypeName          string
-	ExistsTypeName    string
-	FileName          string
-	Generator         string
-	ImportStateID     string
-	ImportIgnore      []string
-	Implementation    implementation
-	Serialize         bool
-	PreCheck          bool
-	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
-	NoRemoveTags      bool
-	GoImports         []goImport
-	GenerateConfig    bool
-	InitCodeBlocks    []codeBlock
-	AdditionalTfVars  map[string]string
+	ProviderPackage           string
+	ResourceProviderNameUpper string
+	PackageProviderNameUpper  string
+	Name                      string
+	TypeName                  string
+	ExistsTypeName            string
+	FileName                  string
+	Generator                 string
+	NoImport                  bool
+	ImportStateID             string
+	ImportStateIDFunc         string
+	ImportIgnore              []string
+	Implementation            implementation
+	Serialize                 bool
+	PreCheck                  bool
+	SkipEmptyTags             bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	NoRemoveTags              bool
+	GoImports                 []goImport
+	GenerateConfig            bool
+	InitCodeBlocks            []codeBlock
+	AdditionalTfVars          map[string][]string
 }
 
 type goImport struct {
@@ -196,7 +271,7 @@ var testTfTmpl string
 
 // Annotation processing.
 var (
-	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\((.*)\))?\s*$`)
+	annotation = regexp.MustCompile(`^//\s*@([0-9A-Za-z]+)(\((.*)\))?\s*$`) // nosemgrep:ci.calling-regexp.MustCompile-directly
 )
 
 type visitor struct {
@@ -252,11 +327,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		AdditionalTfVars: make(map[string]string),
+		AdditionalTfVars: make(map[string][]string),
 	}
+	dataSource := false
 	tagged := false
 	skip := false
 	generatorSeen := false
+	tlsKey := false
+	var tlsKeyCN string
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -272,7 +350,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				d.TypeName = args.Positional[0]
 				if attr, ok := args.Keyword["name"]; ok {
-					d.Name = strings.ReplaceAll(attr, " ", "")
+					attr = strings.ReplaceAll(attr, " ", "")
+					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
 
 			case "SDKResource":
@@ -284,8 +363,13 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				d.TypeName = args.Positional[0]
 				if attr, ok := args.Keyword["name"]; ok {
-					d.Name = strings.ReplaceAll(attr, " ", "")
+					attr = strings.ReplaceAll(attr, " ", "")
+					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
+
+			case "SDKDataSource":
+				dataSource = true
+				break
 
 			case "Tags":
 				tagged = true
@@ -327,8 +411,20 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["importStateId"]; ok {
 					d.ImportStateID = attr
 				}
+				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
+					d.ImportStateIDFunc = attr
+				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["noImport"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid noImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.NoImport = b
+					}
+
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -380,34 +476,48 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
-					} else if b {
-						d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
-							Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-							certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, "example.com")`,
-						})
-						d.AdditionalTfVars["certificate_pem"] = "certificatePEM"
-						d.AdditionalTfVars["private_key_pem"] = "privateKeyPEM"
+					} else {
+						tlsKey = b
 					}
+				}
+				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
+					tlsKeyCN = attr
 				}
 			}
 		}
 	}
 
-	if !generatorSeen {
-		d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
-		d.GoImports = append(d.GoImports,
-			goImport{
-				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-				Alias: "sdkacctest",
-			},
-			goImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-			},
-		)
+	if tlsKey {
+		if len(tlsKeyCN) == 0 {
+			tlsKeyCN = `"example.com"`
+		}
+		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
+		})
+		d.AdditionalTfVars["certificate_pem"] = []string{acctest.ConstOrQuote("certificate_pem"), "certificatePEM"}
+		d.AdditionalTfVars["private_key_pem"] = []string{acctest.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
+
 	}
 
-	if tagged && !skip {
-		v.taggedResources = append(v.taggedResources, d)
+	if tagged {
+		if dataSource {
+			v.g.Infof("Skipping tags test for %s.%s: Data Source", v.packageName, v.functionName)
+		} else if !skip {
+			if !generatorSeen {
+				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+				d.GoImports = append(d.GoImports,
+					goImport{
+						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+						Alias: "sdkacctest",
+					},
+					goImport{
+						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					},
+				)
+			}
+			v.taggedResources = append(v.taggedResources, d)
+		}
 	}
 
 	v.functionName = ""

@@ -47,6 +47,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
+			Factory: newResourceEndpointPrivateDNS,
+			Name:    "Endpoint Private DNS",
+		},
+		{
 			Factory: newResourceEndpointServicePrivateDNSVerification,
 			Name:    "Endpoint Service Private DNS Verification",
 		},
@@ -527,7 +531,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEBSSnapshotCopy,
 			TypeName: "aws_ebs_snapshot_copy",
-			Name:     "EBS Snapshot",
+			Name:     "EBS Snapshot Copy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
@@ -535,7 +539,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEBSSnapshotImport,
 			TypeName: "aws_ebs_snapshot_import",
-			Name:     "EBS Snapshot",
+			Name:     "EBS Snapshot Import",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
@@ -813,7 +817,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEgressOnlyInternetGateway,
 			TypeName: "aws_egress_only_internet_gateway",
-			Name:     "Egress-only Internet Gateway",
+			Name:     "Egress-Only Internet Gateway",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},

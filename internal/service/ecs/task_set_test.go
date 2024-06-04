@@ -249,7 +249,7 @@ func TestAccECSTaskSet_withLaunchTypeFargate(t *testing.T) {
 					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "platform_version"),
