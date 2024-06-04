@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -88,13 +89,6 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 					Optional:   true,
 				},
 			},
-			// Blocks: map[string]schema.Block{
-			// 	Attributes: map[string]schema.Attribute{
-			// 		"resource_type_list": schema.ListAttribute{
-			// 			Optional: true,
-			// 		},
-			// 	},
-			// },
 		},
 	}
 
@@ -106,11 +100,11 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"resource_set": resourceSetLNB,
-			// "timeouts": timeouts.Block(ctx, timeouts.Opts{
-			// 	Create: true,
-			// 	Update: true,
-			// 	Delete: true,
-			// }),
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -156,17 +150,17 @@ func (r *resourceResourceSet) Create(ctx context.Context, req resource.CreateReq
 
 	plan.ARN = flex.StringToFramework(ctx, out.ResourceSetArn)
 
-	// createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	// output, err := waitResourceSetCreated(ctx, conn, plan.ResourceSetArn.ValueString(), createTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForCreation, ResNameResourceSet, plan.ResourceSetArn.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	output, err := waitResourceSetCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForCreation, ResNameResourceSet, plan.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -236,15 +230,15 @@ func (r *resourceResourceSet) Update(ctx context.Context, req resource.UpdateReq
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	}
 
-	// updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	// _, err := waitResourceSetUpdated(ctx, conn, plan.ResourceSetArn.ValueString(), updateTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForUpdate, ResNameResourceSet, plan.ResourceSetArn.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	_, err := waitResourceSetUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForUpdate, ResNameResourceSet, plan.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -276,94 +270,87 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	// deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	// _, err = waitResourceSetDeleted(ctx, conn, state.ResourceSetArn.ValueString(), deleteTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForDeletion, ResNameResourceSet, state.ResourceSetArn.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitResourceSetDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForDeletion, ResNameResourceSet, state.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 }
 
 func (r *resourceResourceSet) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// const (
-// 	statusChangePending = "Pending"
-// 	statusDeleting      = "Deleting"
-// 	statusNormal        = "Normal"
-// 	statusUpdated       = "Updated"
-// )
+func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{string(awstypes.ResourceSetStatusActive)},
+		Refresh:                   statusResourceSet(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
 
-// func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*awstypes.ResourceSet, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{},
-// 		Target:                    []string{statusNormal},
-// 		Refresh:                   statusResourceSet(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*fms.GetResourceSetOutput); ok {
+		return out, err
+	}
 
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*fms.ResourceSet); ok {
-// 		return out, err
-// 	}
+	return nil, err
+}
 
-// 	return nil, err
-// }
+func waitResourceSetUpdated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{string(awstypes.ResourceSetStatusOutOfAdminScope)},
+		Target:                    []string{string(awstypes.ResourceSetStatusActive)},
+		Refresh:                   statusResourceSet(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
 
-// func waitResourceSetUpdated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*awstypes.ResourceSet, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{statusChangePending},
-// 		Target:                    []string{statusUpdated},
-// 		Refresh:                   statusResourceSet(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*fms.GetResourceSetOutput); ok {
+		return out, err
+	}
 
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*fms.ResourceSet); ok {
-// 		return out, err
-// 	}
+	return nil, err
+}
 
-// 	return nil, err
-// }
+func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{string(awstypes.ResourceSetStatusOutOfAdminScope)},
+		Target:  []string{},
+		Refresh: statusResourceSet(ctx, conn, id),
+		Timeout: timeout,
+	}
 
-// func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*awstypes.ResourceSet, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending: []string{statusDeleting, statusNormal},
-// 		Target:  []string{},
-// 		Refresh: statusResourceSet(ctx, conn, id),
-// 		Timeout: timeout,
-// 	}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*fms.GetResourceSetOutput); ok {
+		return out, err
+	}
 
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*fms.ResourceSet); ok {
-// 		return out, err
-// 	}
+	return nil, err
+}
 
-// 	return nil, err
-// }
+func statusResourceSet(ctx context.Context, conn *fms.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := findResourceSetByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
-// func statusResourceSet(ctx context.Context, conn *fms.Client, id string) retry.StateRefreshFunc {
-// 	return func() (interface{}, string, error) {
-// 		out, err := findResourceSetByID(ctx, conn, id)
-// 		if tfresource.NotFound(err) {
-// 			return nil, "", nil
-// 		}
+		if err != nil {
+			return nil, "", err
+		}
 
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-
-// 		return out, aws.ToString(out.Status), nil
-// 	}
-// }
+		return out, aws.ToString((*string)(&out.ResourceSet.ResourceSetStatus)), nil
+	}
+}
 
 func findResourceSetByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetResourceSetOutput, error) {
 	in := &fms.GetResourceSetInput{
@@ -395,7 +382,7 @@ type resourceResourceSetData struct {
 	ResourceSet fwtypes.ListNestedObjectValueOf[resourceSetData] `tfsdk:"resource_set"`
 	Tags        types.Map                                        `tfsdk:"tags"`
 	TagsAll     types.Map                                        `tfsdk:"tags_all"`
-	// Timeouts       timeouts.Value                                   `tfsdk:"timeouts"`
+	Timeouts    timeouts.Value                                   `tfsdk:"timeouts"`
 }
 
 type resourceSetData struct {

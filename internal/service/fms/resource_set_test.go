@@ -200,10 +200,17 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccResourceSetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+
 resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
   resource_set {
-    name = %[1]q
-    resource_type_list = ["testing"]
+    name                = %[1]q
+    resource_type_list  = ["testing"]
     resource_set_status = "ACTIVE"
   }
 }
@@ -212,10 +219,16 @@ resource "aws_fms_resource_set" "test" {
 
 func testAccResourceSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+
 resource "aws_fms_resource_set" "test" {
   resource_set {
-    name = %[1]q
-    resource_type_list = ["testing"]
+    name                = %[1]q
+    resource_type_list  = ["testing"]
     resource_set_status = "ACTIVE"
   }
 
@@ -228,10 +241,15 @@ resource "aws_fms_resource_set" "test" {
 
 func testAccResourceSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_fms_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
 resource "aws_fms_resource_set" "test" {
   resource_set {
-    name = %[1]q
-    resource_type_list = ["testing"]
+    name                = %[1]q
+    resource_type_list  = ["testing"]
     resource_set_status = "ACTIVE"
   }
 
