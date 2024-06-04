@@ -921,6 +921,93 @@ func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*aws
 	return output.Server, nil
 }
 
+func statusServer(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findServerByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitServerCreated(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateStarting),
+		Target:  enum.Slice(awstypes.StateOnline),
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServerDeleted(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedServer, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateOffline, awstypes.StateOnline, awstypes.StateStarting, awstypes.StateStopping, awstypes.StateStartFailed, awstypes.StateStopFailed),
+		Target:  []string{},
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServerStarted(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOffline, awstypes.StateStopping),
+		Target:  enum.Slice(awstypes.StateOnline),
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServerStopped(ctx context.Context, conn *transfer.Client, id string, timeout time.Duration) (*awstypes.DescribedServer, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.StateStarting, awstypes.StateOnline, awstypes.StateStopping),
+		Target:  enum.Slice(awstypes.StateOffline),
+		Refresh: statusServer(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribedServer); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func expandEndpointDetails(tfMap map[string]interface{}) *awstypes.EndpointDetails {
 	if tfMap == nil {
 		return nil
@@ -1060,23 +1147,23 @@ func flattenS3StorageOptions(apiObject *awstypes.S3StorageOptions) []interface{}
 	return []interface{}{tfMap}
 }
 
-func expandWorkflowDetails(tfMap []interface{}) *awstypes.WorkflowDetails {
+func expandWorkflowDetails(tfList []interface{}) *awstypes.WorkflowDetails {
 	apiObject := &awstypes.WorkflowDetails{
 		OnPartialUpload: []awstypes.WorkflowDetail{},
 		OnUpload:        []awstypes.WorkflowDetail{},
 	}
 
-	if len(tfMap) == 0 || tfMap[0] == nil {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return apiObject
 	}
 
-	tfMapRaw := tfMap[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMapRaw["on_upload"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["on_upload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.OnUpload = expandWorkflowDetail(v)
 	}
 
-	if v, ok := tfMapRaw["on_partial_upload"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["on_partial_upload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.OnPartialUpload = expandWorkflowDetail(v)
 	}
 
@@ -1109,7 +1196,10 @@ func expandWorkflowDetail(tfList []interface{}) []awstypes.WorkflowDetail {
 	var apiObjects []awstypes.WorkflowDetail
 
 	for _, tfMapRaw := range tfList {
-		tfMap, _ := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
 		apiObject := awstypes.WorkflowDetail{}
 
@@ -1135,16 +1225,17 @@ func flattenWorkflowDetail(apiObjects []awstypes.WorkflowDetail) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		flattenedObject := map[string]interface{}{}
+		tfMap := map[string]interface{}{}
+
 		if v := apiObject.ExecutionRole; v != nil {
-			flattenedObject["execution_role"] = aws.ToString(v)
+			tfMap["execution_role"] = aws.ToString(v)
 		}
 
 		if v := apiObject.WorkflowId; v != nil {
-			flattenedObject["workflow_id"] = aws.ToString(v)
+			tfMap["workflow_id"] = aws.ToString(v)
 		}
 
-		tfList = append(tfList, flattenedObject)
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
