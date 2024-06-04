@@ -552,6 +552,9 @@ In that case, use the annotation `@Testing(skipEmptyTags=true)`.
 Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
 Use the annotation `@Testing(checkDestroyNoop=true)`.
 
+For some resource types, tags cannot be modified without recreating the resource.
+Use the annotation `@Testing(tagsUpdateForceNew=true)`.
+
 At least one resource type, the Service Catalog Provisioned Product, does not support removing tags.
 This is likely an error on the AWS side.
 Add the annotation `@Testing(noRemoveTags=true)` as a workaround.

@@ -26,6 +26,26 @@
 	CheckDestroy: testAccCheck{{ .Name }}Destroy(ctx),
 {{- end }}
 
+{{ define "TagsKnownValueForNull" -}}
+{{ if eq .Implementation "framework" -}}
+knownvalue.Null()
+{{- else -}}
+	{{ if .TagsUpdateForceNew -}}
+	knownvalue.Null()
+	{{- else -}}
+	knownvalue.MapExact(map[string]knownvalue.Check{})
+	{{- end }}
+{{- end }}
+{{- end }}
+
+{{ define "TagsAllPlanCheckForNull" -}}
+{{ if .TagsUpdateForceNew -}}
+plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+{{- else -}}
+plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+{{- end }}
+{{- end }}
+
 {{ define "ImportBody" }}
 	ResourceName: resourceName,
 	ImportState:  true,
@@ -180,7 +200,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
@@ -231,7 +251,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 						})),
@@ -277,18 +297,13 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}{{ if .TagsUpdateForceNew }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}{{ end }}),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						{{- else -}}
-						// SDK behavior
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						{{- end }}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
 					},
 				},
 				{{ if .NoRemoveTags -}}
@@ -446,7 +461,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -552,18 +567,13 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}{{ if .TagsUpdateForceNew }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}{{ end }}),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						{{- else -}}
-						// SDK behavior
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						{{- end }}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
 					},
 				},
 			},
@@ -650,7 +660,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 							acctest.CtKey2: knownvalue.StringExact(""),
@@ -706,7 +716,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -799,7 +809,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(""),
 						})),
@@ -913,7 +923,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
@@ -921,13 +931,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						{{- else -}}
-						// SDK behavior
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						{{- end }}
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
@@ -974,20 +979,15 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						{{- else -}}
-						// SDK behavior
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						{{- end }}
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 						})),
@@ -1035,19 +1035,14 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						{{- else -}}
-						// SDK behavior
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						{{- end }}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
 					},
 				},
 				{{ if .NoRemoveTags -}}
@@ -1180,7 +1175,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
@@ -1231,19 +1226,14 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						{{- else -}}
-						// SDK behavior
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						{{- end }}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
 					},
 				},
 				{{ if .NoRemoveTags -}}
@@ -1374,7 +1364,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 							acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
@@ -1439,7 +1429,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
@@ -1536,20 +1526,15 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						{{ if eq .Implementation "framework" -}}
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						{{- else -}}
-						// SDK behavior
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						{{- end }}
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 						})),
@@ -2093,7 +2078,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags){{ if eq .Implementation "framework" }}.AtMapKey("computedkey1"){{ end}}),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
@@ -2188,7 +2173,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags){{ if eq .Implementation "framework" }}.AtMapKey(acctest.CtKey1){{ end}}),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},

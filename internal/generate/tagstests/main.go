@@ -243,6 +243,7 @@ type ResourceDatum struct {
 	InitCodeBlocks            []codeBlock
 	additionalTfVars          map[string]string
 	AlternateRegionProvider   bool
+	TagsUpdateForceNew        bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -471,6 +472,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
+					}
+				}
+				// TODO: should probably be a parameter on @Tags
+				if attr, ok := args.Keyword["tagsUpdateForceNew"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsUpdateForceNew value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.TagsUpdateForceNew = b
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
