@@ -90,13 +90,13 @@ data "aws_ec2_capacity_block_offering" "test" {
   instance_type     = "p4d.24xlarge"
   capacity_duration = 24
   instance_count    = 1
-  start_date  = %[1]q
-  end_date    = %[2]q
+  start_date        = %[1]q
+  end_date          = %[2]q
 }
 
 resource "aws_ec2_capacity_block_reservation" "test" {
   capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.id
-  instance_platform = "Linux/UNIX"
+  instance_platform          = "Linux/UNIX"
   tags = {
     "Environment" = "dev"
   }

@@ -5,131 +5,142 @@ package ec2
 
 import (
 	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"time"
-
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-const (
-	ResNameCapacityBlockOffering = "Capacity Block Offering"
-)
+// @FrameworkDataSource(name="Capacity Block Offering")
+// @Testing(tagsTest=false)
+func newDataSourceCapacityBlockOffering(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSourceCapacityBlockOffering{}
 
-// @SDKDataSource("aws_ec2_capacity_block_offering")
-func DataSourceCapacityBlockOffering() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceCapacityBlockOfferingRead,
-		Schema: map[string]*schema.Schema{
-			"availability_zone": {
-				Type:     schema.TypeString,
+	return d, nil
+}
+
+type dataSourceCapacityBlockOffering struct {
+	framework.DataSourceWithConfigure
+}
+
+func (d *dataSourceCapacityBlockOffering) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_ec2_capacity_block_offering"
+}
+
+func (d *dataSourceCapacityBlockOffering) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"availability_zone": schema.StringAttribute{
 				Computed: true,
 			},
-			"capacity_duration": {
-				Type:     schema.TypeInt,
+			"capacity_block_offering_id": framework.IDAttribute(),
+			"capacity_duration_hours": schema.Int64Attribute{
 				Required: true,
 			},
-			"currency_code": {
-				Type:     schema.TypeString,
+			"currency_code": schema.StringAttribute{
 				Computed: true,
 			},
-			"end_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
+			"end_date_range": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Optional:   true,
+				Computed:   true,
 			},
-			"instance_count": {
-				Type:     schema.TypeInt,
+			"instance_count": schema.Int64Attribute{
 				Required: true,
 			},
-			"instance_type": {
-				Type:     schema.TypeString,
+			"instance_type": schema.StringAttribute{
 				Required: true,
 			},
-			"start_date": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.IsRFC3339Time,
+			"start_date_range": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Optional:   true,
+				Computed:   true,
 			},
-			"tenancy": {
-				Type:     schema.TypeString,
+			"tenancy": schema.StringAttribute{
 				Computed: true,
 			},
-			"upfront_fee": {
-				Type:     schema.TypeString,
+			"upfront_fee": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceCapacityBlockOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+const (
+	DSNameCapacityBlockOffering = "Capacity Block Offering"
+)
 
-	input := &ec2.DescribeCapacityBlockOfferingsInput{
-		CapacityDurationHours: aws.Int64(int64(d.Get("capacity_duration").(int))),
-		InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
-		InstanceType:          aws.String(d.Get("instance_type").(string)),
+func (d *dataSourceCapacityBlockOffering) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	conn := d.Meta().EC2Client(ctx)
+	var data dataSourceCapacityBlockOfferingData
+
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("start_date"); ok {
-		v, _ := time.Parse(time.RFC3339, v.(string))
-		input.StartDateRange = aws.Time(v)
+	input := &ec2.DescribeCapacityBlockOfferingsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("end_date"); ok {
-		v, _ := time.Parse(time.RFC3339, v.(string))
-		input.EndDateRange = aws.Time(v)
-	}
-
-	output, err := conn.DescribeCapacityBlockOfferingsWithContext(ctx, input)
+	output, err := findCapacityBLockOffering(ctx, conn, input)
 
 	if err != nil {
-		return create.DiagError(names.EC2, create.ErrActionReading, ResNameCapacityBlockOffering, "unknown", err)
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameCapacityBlockOffering, data.InstanceType.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	if len(output.CapacityBlockOfferings) == 0 {
-		return diag.Errorf("no %s %s found matching criteria; try different search", names.EC2, ResNameCapacityBlockOffering)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type dataSourceCapacityBlockOfferingData struct {
+	AvailabilityZone        types.String      `tfsdk:"availability_zone"`
+	CapacityDurationHours   types.Int64       `tfsdk:"capacity_duration_hours"`
+	CurrencyCode            types.String      `tfsdk:"currency_code"`
+	EndDateRange            timetypes.RFC3339 `tfsdk:"end_date_range"`
+	CapacityBlockOfferingID types.String      `tfsdk:"capacity_block_offering_id"`
+	InstanceCount           types.Int64       `tfsdk:"instance_count"`
+	InstanceType            types.String      `tfsdk:"instance_type"`
+	StartDateRange          timetypes.RFC3339 `tfsdk:"start_date_range"`
+	Tenancy                 types.String      `tfsdk:"tenancy"`
+	UpfrontFee              types.String      `tfsdk:"upfront_fee"`
+}
+
+func findCapacityBLockOffering(ctx context.Context, conn *ec2.Client, in *ec2.DescribeCapacityBlockOfferingsInput) (*awstypes.CapacityBlockOffering, error) {
+	output, err := conn.DescribeCapacityBlockOfferings(ctx, in)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CapacityBlockOfferings) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
 	}
 
 	if len(output.CapacityBlockOfferings) > 1 {
-		return diag.Errorf("More than one %s %s found matching criteria; try different search", names.EC2, ResNameCapacityBlockOffering)
+		return nil, tfresource.NewTooManyResultsError(len(output.CapacityBlockOfferings), in)
 	}
 
-	if err != nil {
-
-		return sdkdiag.AppendErrorf(diags, "creating EC2 Capacity Reservation: %s", err)
-	}
-
-	cbo := output.CapacityBlockOfferings[0]
-	{
-		d.SetId(aws_sdkv2.ToString(cbo.CapacityBlockOfferingId))
-		d.Set("availability_zone", cbo.AvailabilityZone)
-		d.Set("capacity_duration", cbo.CapacityBlockDurationHours)
-		d.Set("currency_code", cbo.CurrencyCode)
-		if cbo.EndDate != nil {
-			d.Set("end_date", aws.TimeValue(cbo.EndDate).Format(time.RFC3339))
-		} else {
-			d.Set("end_date", nil)
-		}
-		d.Set("instance_count", cbo.InstanceCount)
-		d.Set("instance_type", cbo.InstanceType)
-		if cbo.StartDate != nil {
-			d.Set("start_date", aws.TimeValue(cbo.StartDate).Format(time.RFC3339))
-		} else {
-			d.Set("start_date", nil)
-		}
-		d.Set("tenancy", cbo.Tenancy)
-		d.Set("upfront_fee", cbo.UpfrontFee)
-	}
-
-	return nil
+	return tfresource.AssertSingleValueResult(output.CapacityBlockOfferings)
 }

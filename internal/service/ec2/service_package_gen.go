@@ -15,6 +15,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceCapacityBlockOffering,
+			Name:    "Capacity Block Offering",
+		},
+		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
 		},
@@ -555,6 +559,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAvailabilityZoneGroup,
 			TypeName: "aws_ec2_availability_zone_group",
+		},
+		{
+			Factory:  ResourceCapacityBlockReservation,
+			TypeName: "aws_ec2_capacity_block_reservation",
+			Name:     "Capacity Block Reservation",
 		},
 		{
 			Factory:  ResourceCapacityReservation,
