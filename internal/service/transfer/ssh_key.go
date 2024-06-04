@@ -84,7 +84,7 @@ func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(sshKeyCreateResourceID(serverID, userName, aws.ToString(output.SshPublicKeyId)))
 
-	return diags
+	return append(diags, resourceSSHKeyRead(ctx, d, meta)...)
 }
 
 func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
