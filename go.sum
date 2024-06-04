@@ -294,8 +294,8 @@ github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.5 h1:IiIuRxBHL2t8
 github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.5/go.mod h1:deugoEnpXhkVl4Ux59nK/b//W2SYUda8ljidwJJwhcc=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.9 h1:QPql+y5eUPyl1zwNzATM4TW6dbCu6WXRPZTwi3kJNJI=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.9/go.mod h1:o0HMAgq53gq6tTads00hLRkmMOGoKCLHFBso4h0tYgQ=
-github.com/aws/aws-sdk-go-v2/service/pipes v1.11.8 h1:yiyWvXbNV+PBDAJMf4n6XKmMSvLy8wJDKQ19FApzjFQ=
-github.com/aws/aws-sdk-go-v2/service/pipes v1.11.8/go.mod h1:PZtyjHqJzLPjTccpjn/Gw/q99exrkavv1WU6i1Ju2jw=
+github.com/aws/aws-sdk-go-v2/service/pipes v1.11.9 h1:ycYYoWyMNdMeLnsRu4T//ESfCnsyu1ZpkpptMHsUsPY=
+github.com/aws/aws-sdk-go-v2/service/pipes v1.11.9/go.mod h1:F1oziwLahHIwsEHNgfAyTyDUEk3dSZAwtROItYF57rI=
 github.com/aws/aws-sdk-go-v2/service/polly v1.40.3 h1:bXctzkJWZSaY0QZwO4Bw1qQlM0HZyh7HdnQbbE04UHY=
 github.com/aws/aws-sdk-go-v2/service/polly v1.40.3/go.mod h1:4M7UEi2T+lyOvebFVhz1wwKiJvP8ZNa7/wQpYCmBmMk=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.28.5 h1:JhaO8/S8Fe3AB9u19fX/uDLurkYyccaU5Lu/cDyrFjY=
