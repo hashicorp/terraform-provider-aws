@@ -39,11 +39,11 @@ resource "aws_paymentcryptography_key_alias" "test" {
 
 The following arguments are required:
 
-* `alias_name` - (Required) The name of the Key Alias.
+* `alias_name` - (Required) Name of the Key Alias.
 
 The following arguments are optional:
 
-* `key_arn` - (Optional) The Amazon Resource Name (ARN) of the key.
+* `key_arn` - (Optional) ARN of the key.
 
 ## Attribute Reference
 
