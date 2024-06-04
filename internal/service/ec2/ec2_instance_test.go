@@ -614,7 +614,7 @@ func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -685,7 +685,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -835,7 +835,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -2833,7 +2833,7 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -5588,7 +5588,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Insta
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindInstanceByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
