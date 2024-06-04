@@ -280,7 +280,7 @@ func testAccVPCEndpointPrivateDNSConfig_disabled(rName string) string {
 data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
   tags = {
     Name = %[1]q
