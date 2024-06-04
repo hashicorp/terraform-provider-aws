@@ -216,8 +216,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.22.9 h1:VEV/9IVykgeCD76wE+MRvSB8
 github.com/aws/aws-sdk-go-v2/service/glacier v1.22.9/go.mod h1:YhA4aSfqiqBGagXxuT6jf8zQ79Yb3abiZpdtRiIljpY=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.6 h1:/4Ha4fN6d/onv04rPmKVxShhJj3FVKFa3sfc5ZX3bCQ=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.6/go.mod h1:45UdEiD/JbcgBVwcLZZd752sAutrndMdvNop/3js2oI=
-github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.4 h1:g69GdsU6UvtS+T8C28iXoXb/WbMHDfcpYY/IcGEIKuw=
-github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.4/go.mod h1:HAClmwin3MTbLdiUJxhQUc7ZQFi8CQvucP2UzZf5tgw=
+github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.5 h1:mNgrkKH+6B1dtbkzSVA8qf9fR9lMg+mUEYUBNnWeWyU=
+github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.5/go.mod h1:a8x2abmJoP3bGTTsX2LYIIyj4tMKLG8ophLxHBF6utM=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.4 h1:yAlxjSKPdh/+XKzTXFEsPNnuMK581J9NJvivzeUTp4s=
 github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.4/go.mod h1:Ok564k/A73X9a02YbIkCxM70PuuILW6bYMr58o/Tdng=
 github.com/aws/aws-sdk-go-v2/service/iam v1.32.4 h1:SPnvgZQ0TXvzs/On+BBUYHVyadSV3WQDvsk+G99wjYA=
