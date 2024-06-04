@@ -23,7 +23,7 @@ import (
 	"text/template"
 
 	"github.com/dlclark/regexp2"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	acctestconsts "github.com/hashicorp/terraform-provider-aws/internal/acctest/const"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -139,19 +139,21 @@ func main() {
 		}
 
 		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars)
+			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
 			slices.Sort(additionalTfVars)
 			testDirPath := path.Join("testdata", resource.Name)
 
 			common := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				WithRName:        (resource.Generator != ""),
+				AdditionalTfVars:        additionalTfVars,
+				WithRName:               (resource.Generator != ""),
+				AlternateRegionProvider: resource.AlternateRegionProvider,
 			}
 
 			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tags_ignore", false, configTmplFile, configTmpl, common)
 		}
 	}
 
@@ -239,7 +241,14 @@ type ResourceDatum struct {
 	GoImports                 []goImport
 	GenerateConfig            bool
 	InitCodeBlocks            []codeBlock
-	AdditionalTfVars          map[string][]string
+	additionalTfVars          map[string]string
+	AlternateRegionProvider   bool
+}
+
+func (d ResourceDatum) AdditionalTfVars() map[string]string {
+	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
+		return acctestconsts.ConstOrQuote(k)
+	})
 }
 
 type goImport struct {
@@ -252,8 +261,9 @@ type codeBlock struct {
 }
 
 type commonConfig struct {
-	AdditionalTfVars []string
-	WithRName        bool
+	AdditionalTfVars        []string
+	WithRName               bool
+	AlternateRegionProvider bool
 }
 
 type ConfigDatum struct {
@@ -327,7 +337,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		AdditionalTfVars: make(map[string][]string),
+		additionalTfVars: make(map[string]string),
 	}
 	dataSource := false
 	tagged := false
@@ -376,6 +386,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["altRegionProvider"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid altRegionProvider value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.AlternateRegionProvider = b
+					}
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -424,7 +442,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.NoImport = b
 					}
-
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -495,8 +512,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.AdditionalTfVars["certificate_pem"] = []string{acctest.ConstOrQuote("certificate_pem"), "certificatePEM"}
-		d.AdditionalTfVars["private_key_pem"] = []string{acctest.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
+		d.additionalTfVars["certificate_pem"] = "certificatePEM"
+		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
 
 	}
 
