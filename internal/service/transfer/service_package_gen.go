@@ -90,7 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Transfer Resource Tag",
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_transfer_user",
 			Name:     "User",
 			Tags: &types.ServicePackageResourceTags{

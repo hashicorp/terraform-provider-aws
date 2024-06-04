@@ -163,7 +163,7 @@ func sshKeyParseResourceID(id string) (string, string, string, error) {
 }
 
 func findUserSSHKeyByThreePartKey(ctx context.Context, conn *transfer.Client, serverID, userName, sshKeyID string) (*awstypes.DescribedUser, *awstypes.SshPublicKey, error) {
-	user, err := FindUserByTwoPartKey(ctx, conn, serverID, userName)
+	user, err := findUserByTwoPartKey(ctx, conn, serverID, userName)
 
 	if err != nil {
 		return nil, nil, err

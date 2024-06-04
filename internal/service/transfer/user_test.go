@@ -305,19 +305,9 @@ func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.Described
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer User ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		serverID, userName, err := tftransfer.UserParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		output, err := tftransfer.FindUserByTwoPartKey(ctx, conn, serverID, userName)
+		output, err := tftransfer.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["user_name"])
 
 		if err != nil {
 			return err
@@ -338,13 +328,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			serverID, userName, err := tftransfer.UserParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tftransfer.FindUserByTwoPartKey(ctx, conn, serverID, userName)
+			_, err := tftransfer.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["user_name"])
 
 			if tfresource.NotFound(err) {
 				continue

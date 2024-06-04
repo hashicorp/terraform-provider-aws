@@ -13,6 +13,7 @@ var (
 	ResourceServer      = resourceServer
 	ResourceSSHKey      = resourceSSHKey
 	ResourceTag         = resourceTag
+	ResourceUser        = resourceUser
 
 	FindAccessByTwoPartKey       = findAccessByTwoPartKey
 	FindAgreementByTwoPartKey    = findAgreementByTwoPartKey
@@ -20,6 +21,7 @@ var (
 	FindConnectorByID            = findConnectorByID
 	FindProfileByID              = findProfileByID
 	FindServerByID               = findServerByID
+	FindUserByTwoPartKey         = findUserByTwoPartKey
 	FindUserSSHKeyByThreePartKey = findUserSSHKeyByThreePartKey
 	FindWorkflowByID             = findWorkflowByID
 )

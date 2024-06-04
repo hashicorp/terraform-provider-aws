@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -30,7 +31,7 @@ import (
 
 // @SDKResource("aws_transfer_user", name="User")
 // @Tags(identifierAttribute="arn")
-func ResourceUser() *schema.Resource {
+func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
@@ -143,7 +144,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	serverID := d.Get("server_id").(string)
 	userName := d.Get(names.AttrUserName).(string)
-	id := UserCreateResourceID(serverID, userName)
+	id := userCreateResourceID(serverID, userName)
 	input := &transfer.CreateUserInput{
 		Role:     aws.String(d.Get(names.AttrRole).(string)),
 		ServerId: aws.String(serverID),
@@ -156,7 +157,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("home_directory_mappings"); ok {
-		input.HomeDirectoryMappings = expandHomeDirectoryMappings(v.([]interface{}))
+		input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
@@ -173,7 +174,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("posix_profile"); ok {
-		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
+		input.PosixProfile = expandPosixProfile(v.([]interface{}))
 	}
 
 	_, err := conn.CreateUser(ctx, input)
@@ -191,13 +192,12 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, userName, err := UserParseResourceID(d.Id())
-
+	serverID, userName, err := userParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer User ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	user, err := FindUserByTwoPartKey(ctx, conn, serverID, userName)
+	user, err := findUserByTwoPartKey(ctx, conn, serverID, userName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer User (%s) not found, removing from state", d.Id())
@@ -211,7 +211,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set(names.AttrARN, user.Arn)
 	d.Set("home_directory", user.HomeDirectory)
-	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(user.HomeDirectoryMappings)); err != nil {
+	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMapEntries(user.HomeDirectoryMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)
 	}
 	d.Set("home_directory_type", user.HomeDirectoryType)
@@ -222,7 +222,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set(names.AttrPolicy, policyToSet)
 
-	if err := d.Set("posix_profile", flattenUserPOSIXUser(user.PosixProfile)); err != nil {
+	if err := d.Set("posix_profile", flattenPosixProfile(user.PosixProfile)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
 	}
 	d.Set(names.AttrRole, user.Role)
@@ -238,13 +238,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
+	serverID, userName, err := userParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		serverID, userName, err := UserParseResourceID(d.Id())
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "parsing Transfer User ID: %s", err)
-		}
-
 		input := &transfer.UpdateUserInput{
 			ServerId: aws.String(serverID),
 			UserName: aws.String(userName),
@@ -255,7 +254,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("home_directory_mappings") {
-			input.HomeDirectoryMappings = expandHomeDirectoryMappings(d.Get("home_directory_mappings").([]interface{}))
+			input.HomeDirectoryMappings = expandHomeDirectoryMapEntries(d.Get("home_directory_mappings").([]interface{}))
 		}
 
 		if d.HasChange("home_directory_type") {
@@ -272,7 +271,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("posix_profile") {
-			input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
+			input.PosixProfile = expandPosixProfile(d.Get("posix_profile").([]interface{}))
 		}
 
 		if d.HasChange(names.AttrRole) {
@@ -293,10 +292,9 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, userName, err := UserParseResourceID(d.Id())
-
+	serverID, userName, err := userParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer User ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := userDelete(ctx, conn, serverID, userName, d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -306,7 +304,26 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func FindUserByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, userName string) (*awstypes.DescribedUser, error) {
+const userResourceIDSeparator = "/"
+
+func userCreateResourceID(serverID, userName string) string {
+	parts := []string{serverID, userName}
+	id := strings.Join(parts, userResourceIDSeparator)
+
+	return id
+}
+
+func userParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, userResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SERVERID%[2]sUSERNAME", id, userResourceIDSeparator)
+}
+
+func findUserByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, userName string) (*awstypes.DescribedUser, error) {
 	input := &transfer.DescribeUserInput{
 		ServerId: aws.String(serverID),
 		UserName: aws.String(userName),
@@ -333,7 +350,7 @@ func FindUserByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, 
 }
 
 func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName string, timeout time.Duration) error {
-	id := UserCreateResourceID(serverID, userName)
+	id := userCreateResourceID(serverID, userName)
 	input := &transfer.DeleteUserInput{
 		ServerId: aws.String(serverID),
 		UserName: aws.String(userName),
@@ -351,7 +368,7 @@ func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName s
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
-		return FindUserByTwoPartKey(ctx, conn, serverID, userName)
+		return findUserByTwoPartKey(ctx, conn, serverID, userName)
 	})
 
 	if err != nil {
@@ -361,67 +378,72 @@ func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName s
 	return nil
 }
 
-func expandHomeDirectoryMappings(in []interface{}) []awstypes.HomeDirectoryMapEntry {
-	if len(in) == 0 {
+func expandHomeDirectoryMapEntries(tfList []interface{}) []awstypes.HomeDirectoryMapEntry {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	mappings := make([]awstypes.HomeDirectoryMapEntry, 0)
+	apiObjects := make([]awstypes.HomeDirectoryMapEntry, 0)
 
-	for _, tConfig := range in {
-		config := tConfig.(map[string]interface{})
-
-		m := awstypes.HomeDirectoryMapEntry{
-			Entry:  aws.String(config["entry"].(string)),
-			Target: aws.String(config[names.AttrTarget].(string)),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		mappings = append(mappings, m)
+		apiObject := awstypes.HomeDirectoryMapEntry{
+			Entry:  aws.String(tfMap["entry"].(string)),
+			Target: aws.String(tfMap[names.AttrTarget].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return mappings
+	return apiObjects
 }
 
-func flattenHomeDirectoryMappings(mappings []awstypes.HomeDirectoryMapEntry) []interface{} {
-	l := make([]interface{}, len(mappings))
-	for i, m := range mappings {
-		l[i] = map[string]interface{}{
-			"entry":          aws.ToString(m.Entry),
-			names.AttrTarget: aws.ToString(m.Target),
+func flattenHomeDirectoryMapEntries(apiObjects []awstypes.HomeDirectoryMapEntry) []interface{} {
+	tfList := make([]interface{}, len(apiObjects))
+
+	for i, apiObject := range apiObjects {
+		tfList[i] = map[string]interface{}{
+			"entry":          aws.ToString(apiObject.Entry),
+			names.AttrTarget: aws.ToString(apiObject.Target),
 		}
 	}
-	return l
+
+	return tfList
 }
 
-func expandUserPOSIXUser(pUser []interface{}) *awstypes.PosixProfile {
-	if len(pUser) < 1 || pUser[0] == nil {
+func expandPosixProfile(tfList []interface{}) *awstypes.PosixProfile {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	m := pUser[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	posixUser := &awstypes.PosixProfile{
-		Gid: aws.Int64(int64(m["gid"].(int))),
-		Uid: aws.Int64(int64(m["uid"].(int))),
+	apiObject := &awstypes.PosixProfile{
+		Gid: aws.Int64(int64(tfMap["gid"].(int))),
+		Uid: aws.Int64(int64(tfMap["uid"].(int))),
 	}
 
-	if v, ok := m["secondary_gids"].(*schema.Set); ok && len(v.List()) > 0 {
-		posixUser.SecondaryGids = flex.ExpandInt64ValueSet(v)
+	if v, ok := tfMap["secondary_gids"].(*schema.Set); ok && len(v.List()) > 0 {
+		apiObject.SecondaryGids = flex.ExpandInt64ValueSet(v)
 	}
 
-	return posixUser
+	return apiObject
 }
 
-func flattenUserPOSIXUser(posixUser *awstypes.PosixProfile) []interface{} {
-	if posixUser == nil {
+func flattenPosixProfile(apiObject *awstypes.PosixProfile) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"gid":            aws.ToInt64(posixUser.Gid),
-		"uid":            aws.ToInt64(posixUser.Uid),
-		"secondary_gids": posixUser.SecondaryGids,
+	tfMap := map[string]interface{}{
+		"gid":            aws.ToInt64(apiObject.Gid),
+		"secondary_gids": apiObject.SecondaryGids,
+		"uid":            aws.ToInt64(apiObject.Uid),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
