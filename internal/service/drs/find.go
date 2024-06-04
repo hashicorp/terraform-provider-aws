@@ -1,25 +1,27 @@
 package drs
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/drs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/service/drs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindReplicationConfigurationTemplateByID(conn *drs.Drs, id string) (*drs.ReplicationConfigurationTemplate, error) {
+func FindReplicationConfigurationTemplateByID(ctx context.Context, conn *drs.Client, id string) (*awstypes.ReplicationConfigurationTemplate, error) {
 	//make string list from id
-	templateIdList := []*string{}
-	templateIdList = append(templateIdList, aws.String(id))
+	templateIdList := []string{}
+	templateIdList = append(templateIdList, id)
 
-	input := &drs.DescribeReplicationConfigurationTemplatesInput{
+	input := &awstypes.DescribeReplicationConfigurationTemplatesInput{
 		ReplicationConfigurationTemplateIDs: templateIdList,
 	}
 
 	output, err := conn.DescribeReplicationConfigurationTemplates(input)
 
-	if tfawserr.ErrCodeEquals(err, drs.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
