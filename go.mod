@@ -8,9 +8,9 @@ require (
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.53.14
 	github.com/aws/aws-sdk-go-v2 v1.27.1
-	github.com/aws/aws-sdk-go-v2/config v1.27.16
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.16
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.3
+	github.com/aws/aws-sdk-go-v2/config v1.27.17
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.17
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.4
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.21
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.8
@@ -168,9 +168,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.22.8
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.30.8
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.13.3
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.9
+	github.com/aws/aws-sdk-go-v2/service/sso v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.9
-	github.com/aws/aws-sdk-go-v2/service/sts v1.28.10
+	github.com/aws/aws-sdk-go-v2/service/sts v1.28.11
 	github.com/aws/aws-sdk-go-v2/service/swf v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.8
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.0.6
@@ -246,9 +246,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.24.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.24.4 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
