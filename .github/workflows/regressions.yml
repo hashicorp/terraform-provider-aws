@@ -55,6 +55,12 @@ jobs:
           installation_retrieval_mode: id
           installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{ secrets.APP_PEM }}
+          permissions: >-
+            {
+              "issues":"write",
+              "organization_projects": "write",
+              "pull_requests": "write"
+            }
 
       - name: Add prioritized Label
         env:
