@@ -160,6 +160,7 @@ clean-make-tests: ## Clean up artifacts from make tests
 clean-tidy: prereq-go ## Clean up tidy
 	@echo "make: Tidying Go mods..."
 	@gover="$(GO_VER)" ; \
+	echo "make: tidying with $$gover" ; \
 	if [ "$$gover" = "go" ] ; then \
 		gover=go`cat .go-version | xargs` ; \
 		echo "make: WARNING: no version provided so tidying with $$gover" ; \
@@ -183,7 +184,7 @@ copyright: ## [CI] Copyright Checks / add headers check
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
 	@echo "make: Dependency Checks / go_mod..."
-	@git diff origin/$(BASE_REF) --exit-code -- go.mod go.sum || \
+	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
 docs: docs-link-check docs-markdown-lint docs-misspell ## [CI] Run all CI documentation checks

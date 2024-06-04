@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 var (
@@ -60,7 +61,7 @@ func main() {
 	resourceName := fmt.Sprintf("aws_%s_tag", servicePackage)
 
 	ian := *idAttribName
-	ian = names.ConstOrQuote(ian)
+	ian = namesgen.ConstOrQuote(ian)
 
 	templateData := TemplateData{
 		AWSServiceUpper:      u,

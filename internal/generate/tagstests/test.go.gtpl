@@ -14,8 +14,10 @@
 {{ end }}
 
 {{ define "TestCaseSetup" -}}
-{{ template "TestCaseSetupNoProviders" . }}
+{{ template "TestCaseSetupNoProviders" . -}}
+{{ if not .AlternateRegionProvider }}
 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+{{- end -}}
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
@@ -47,6 +49,15 @@
 
 {{ define "ExistsCheck" }}
 	testAccCheck{{ .Name }}Exists(ctx, resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
+{{ end }}
+
+{{ define "AdditionalTfVars" -}}
+	{{ range $name, $value := .AdditionalTfVars -}}
+	{{ $name }}: config.StringVariable({{ $value }}),
+	{{ end -}}
+	{{ if .AlternateRegionProvider -}}
+	"alt_region": config.StringVariable(acctest.AlternateRegion()),
+	{{ end }}
 {{ end }}
 
 package {{ .ProviderPackage }}_test
@@ -98,15 +109,16 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -130,20 +142,24 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -151,9 +167,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -180,6 +194,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -187,23 +204,22 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -230,15 +246,16 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -247,13 +264,14 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -279,13 +297,14 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -307,15 +326,16 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -338,27 +358,29 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -374,13 +396,14 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -402,15 +425,16 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -434,15 +458,16 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -461,15 +486,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -498,27 +524,29 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -541,13 +569,14 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -566,15 +595,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -597,6 +627,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -604,9 +637,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -638,6 +669,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -645,23 +679,22 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -685,15 +718,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -712,15 +746,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -743,15 +778,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -780,15 +816,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -804,7 +841,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -812,9 +853,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -837,7 +876,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -845,15 +888,17 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -862,9 +907,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -894,7 +937,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -903,15 +950,17 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -919,9 +968,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -952,7 +999,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -960,9 +1011,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -971,14 +1020,16 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1005,14 +1056,16 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -1031,7 +1084,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1041,9 +1098,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1072,7 +1127,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1082,15 +1141,17 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1101,9 +1162,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1136,7 +1195,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1147,22 +1210,22 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1189,14 +1252,16 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
@@ -1215,7 +1280,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1225,9 +1294,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1254,7 +1321,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1264,15 +1335,17 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1284,9 +1357,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1317,7 +1388,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1329,15 +1404,17 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
 			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1347,9 +1424,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1376,7 +1451,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1386,9 +1465,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1404,16 +1481,18 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1439,7 +1518,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1447,9 +1530,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1477,7 +1558,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1485,9 +1570,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1503,7 +1586,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1511,9 +1598,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1535,16 +1620,18 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1571,16 +1658,18 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1599,7 +1688,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1609,9 +1702,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1643,7 +1734,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1653,9 +1748,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1674,7 +1767,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1682,9 +1779,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1712,7 +1807,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1720,9 +1819,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 					acctest.CtResourceTags: nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1741,7 +1838,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1751,9 +1852,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1776,7 +1875,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1786,9 +1889,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1807,7 +1908,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1817,9 +1922,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1842,7 +1945,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -1852,9 +1959,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1870,14 +1975,16 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1902,14 +2009,16 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -1925,16 +2034,18 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1957,16 +2068,18 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1994,16 +2107,18 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
@@ -2019,16 +2134,18 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2051,14 +2168,16 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -2083,14 +2202,16 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 			},
 			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					{{ index $value 0 }}: config.StringVariable({{ index $value 1 }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
