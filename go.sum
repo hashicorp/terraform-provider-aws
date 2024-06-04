@@ -398,8 +398,8 @@ github.com/aws/aws-sdk-go-v2/service/wafv2 v1.49.2 h1:OkfutaNXrZW/NgP5Mpb/ai2PcF
 github.com/aws/aws-sdk-go-v2/service/wafv2 v1.49.2/go.mod h1:UL7uHqGYsdzd2T3CFWrr9VTKMf4Q7w7GJSN+X8xiANo=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.5 h1:9h5YMf0RnHyalThh1i/8SxA25Vs8YQCkWKW+ukotgkY=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.5/go.mod h1:R1wgNN7pdlT1Nsrf9a34cfAtUNPV2fe5K/Jdd/NfQXw=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.4 h1:YzaUKa/jO72m6E9PXLjnphOARpojDfe0pf1M0nGXhIw=
-github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.4/go.mod h1:2GHvmfD+AMwxReirm9HdlRIEpXwa9z+kyZTdwpHAdzc=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.5 h1:Xs+CTB6GgBtDBQm9rv7cUB9JvmukPxqj2F5UhsXeEeE=
+github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.5/go.mod h1:SKORr/eYPO0xBY736ZlXQGM14CYqbZwwHxEZRZ4f47w=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.18.4 h1:Rz3mOQWkmydmpj72MRfVVC6y1Gpoe3xIvB/1fHkei0c=
 github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.18.4/go.mod h1:SvcNg/Xs3WWN26+EvjmUDF8VNmJ4ENOjx2WzgNeezwE=
 github.com/aws/aws-sdk-go-v2/service/xray v1.25.8 h1:EPEc8bNAH9Acg2Cis+WfiW9YAyb73J/lOk3BGH1Fc2A=
