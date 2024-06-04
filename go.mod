@@ -124,7 +124,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.11.5
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.9
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.9
-	github.com/aws/aws-sdk-go-v2/service/mwaa v1.27.2
+	github.com/aws/aws-sdk-go-v2/service/mwaa v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.11
