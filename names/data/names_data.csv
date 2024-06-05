@@ -340,7 +340,7 @@ service-quotas,servicequotas,servicequotas,servicequotas,,servicequotas,,,Servic
 ses,ses,ses,ses,,ses,,,SES,SES,,1,,,aws_ses_,,ses_,SES (Simple Email),Amazon,,,,,,,SES,ListIdentities,,,
 sesv2,sesv2,sesv2,sesv2,,sesv2,,,SESV2,SESV2,,,2,,aws_sesv2_,,sesv2_,SESv2 (Simple Email V2),Amazon,,,,,,,SESv2,ListContactLists,,,
 stepfunctions,stepfunctions,sfn,sfn,,sfn,,stepfunctions,SFN,SFN,,1,,,aws_sfn_,,sfn_,SFN (Step Functions),AWS,,,,,,,SFN,ListActivities,,,
-shield,shield,shield,shield,,shield,,,Shield,Shield,x,,2,,aws_shield_,,shield_,Shield,AWS,,,,,,,Shield,ListProtectionGroups,,,
+shield,shield,shield,shield,,shield,,,Shield,Shield,x,,2,,aws_shield_,,shield_,Shield,AWS,,,,,,,Shield,ListProtectionGroups,,us-east-1,
 signer,signer,signer,signer,,signer,,,Signer,Signer,,,2,,aws_signer_,,signer_,Signer,AWS,,,,,,,signer,ListSigningJobs,,,
 sms,sms,sms,sms,,sms,,,SMS,SMS,,1,,,aws_sms_,,sms_,SMS (Server Migration),AWS,,x,,,,,SMS,,,,
 snow-device-management,snowdevicemanagement,snowdevicemanagement,snowdevicemanagement,,snowdevicemanagement,,,SnowDeviceManagement,SnowDeviceManagement,,1,,,aws_snowdevicemanagement_,,snowdevicemanagement_,Snow Device Management,AWS,,x,,,,,Snow Device Management,,,,

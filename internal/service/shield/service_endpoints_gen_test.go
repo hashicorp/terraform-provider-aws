@@ -334,7 +334,7 @@ func withUseFIPSInConfig(setup *caseSetup) {
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
@@ -347,35 +347,35 @@ func expectDefaultFIPSEndpoint(region string) caseExpectations {
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
