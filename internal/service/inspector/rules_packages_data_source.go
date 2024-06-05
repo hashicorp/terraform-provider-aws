@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_inspector_rules_packages")
@@ -21,7 +22,7 @@ func DataSourceRulesPackages() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRulesPackagesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -44,7 +45,7 @@ func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, me
 	sort.Strings(arns)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 
 	return diags
 }

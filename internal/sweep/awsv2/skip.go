@@ -41,6 +41,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
+	// Example (GovCloud): UnknownOperationException: Operation is disabled in this region
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
+		return true
+	}
 
 	return false
 }

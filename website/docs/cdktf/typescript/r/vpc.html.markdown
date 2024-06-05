@@ -138,6 +138,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of VPC
 * `id` - The ID of the VPC
 * `instanceTenancy` - Tenancy of instances spin up within VPC
+* `dhcpOptionsId` - DHCP options id of the desired VPC.
 * `enableDnsSupport` - Whether or not the VPC has DNS support
 * `enableNetworkAddressUsageMetrics` - Whether Network Address Usage metrics are enabled for the VPC
 * `enableDnsHostnames` - Whether or not the VPC has DNS hostname support
@@ -180,4 +181,4 @@ Using `terraform import`, import VPCs using the VPC `id`. For example:
 % terraform import aws_vpc.test_vpc vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ae6df6e7b2fd061f8aef4637ee76c64d6bc7f7657d175ee9d2e9140d0df3c94b -->
+<!-- cache-key: cdktf-0.20.1 input-f42924a8a7f3ae9ab39c563bf4fee125691c2563eee4b0f0f333fcc0877fdf19 -->

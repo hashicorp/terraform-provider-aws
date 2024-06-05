@@ -45,12 +45,12 @@ func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				// Name cannot be updated despite being present in the update API struct.
 				//
@@ -58,6 +58,10 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"application_tag": schema.MapAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
 		},
 	}
@@ -191,7 +195,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.GetApplicationOutput, error) {
@@ -219,8 +223,9 @@ func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Cl
 }
 
 type resourceApplicationData struct {
-	ARN         types.String `tfsdk:"arn"`
-	Description types.String `tfsdk:"description"`
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
+	ARN            types.String `tfsdk:"arn"`
+	Description    types.String `tfsdk:"description"`
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ApplicationTag types.Map    `tfsdk:"application_tag"`
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_grafana_role_association")
@@ -38,7 +39,7 @@ func ResourceRoleAssociation() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -60,7 +61,7 @@ func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
-	role := d.Get("role").(string)
+	role := d.Get(names.AttrRole).(string)
 	workspaceID := d.Get("workspace_id").(string)
 
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
@@ -118,7 +119,7 @@ func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
-	roleAssociations, err := FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, d.Get("role").(string), d.Get("workspace_id").(string))
+	roleAssociations, err := FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, d.Get(names.AttrRole).(string), d.Get("workspace_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Grafana Workspace Role Association %s not found, removing from state", d.Id())
@@ -143,12 +144,12 @@ func resourceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
 	if v, ok := d.GetOk("user_ids"); ok && v.(*schema.Set).Len() > 0 {
 		typeSsoUser := managedgrafana.UserTypeSsoUser
-		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(d.Get(names.AttrRole).(string), flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
 	}
 
 	if v, ok := d.GetOk("group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		typeSsoUser := managedgrafana.UserTypeSsoGroup
-		updateInstructions = populateUpdateInstructions(d.Get("role").(string), flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
+		updateInstructions = populateUpdateInstructions(d.Get(names.AttrRole).(string), flex.ExpandStringSet(v.(*schema.Set)), managedgrafana.UpdateActionRevoke, typeSsoUser, updateInstructions)
 	}
 
 	input := &managedgrafana.UpdatePermissionsInput{

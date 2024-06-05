@@ -40,8 +40,8 @@ func TestAccServiceCatalogAppRegistryApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/applications/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/applications/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -100,8 +100,8 @@ func TestAccServiceCatalogAppRegistryApplication_update(t *testing.T) {
 				Config: testAccApplicationConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{
@@ -113,16 +113,16 @@ func TestAccServiceCatalogAppRegistryApplication_update(t *testing.T) {
 				Config: testAccApplicationConfig_description(rName, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_description(rNameUpdated, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 		},
@@ -176,6 +176,13 @@ func testAccApplicationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalogappregistry_application" "test" {
   name = %[1]q
+}
+
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = "String"
+  value = "test"
+  tags  = aws_servicecatalogappregistry_application.test.application_tag
 }
 `, name)
 }

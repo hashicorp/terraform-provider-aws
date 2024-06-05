@@ -21,23 +21,23 @@ func DataSourceContact() *schema.Resource {
 		ReadWithoutTimeout: dataSourceContactRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -49,7 +49,7 @@ const (
 func dataSourceContactRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 
 	out, err := findContactByID(ctx, conn, arn)
 	if err != nil {
@@ -70,7 +70,7 @@ func dataSourceContactRead(ctx context.Context, d *schema.ResourceData, meta int
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.SSMContacts, create.ErrActionSetting, DSNameContact, d.Id(), err)
 	}
 

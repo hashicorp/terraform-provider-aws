@@ -39,14 +39,14 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 				Config: testAccOptionGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`og:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`og:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "engine_name", "mysql"),
 					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "8.0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "option_group_description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -97,8 +97,8 @@ func TestAccRDSOptionGroup_nameGenerated(t *testing.T) {
 				Config: testAccOptionGroupConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -125,8 +125,8 @@ func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 				Config: testAccOptionGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -151,11 +151,11 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccOptionGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -164,20 +164,20 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOptionGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccOptionGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccOptionGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -200,7 +200,7 @@ func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
 				Config: testAccOptionGroupConfig_timeoutBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -283,10 +283,10 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 				Config: testAccOptionGroupConfig_optionSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*.option_settings.*", map[string]string{
-						"value": "UTC",
+						names.AttrValue: "UTC",
 					}),
 				),
 			},
@@ -302,10 +302,10 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 				Config: testAccOptionGroupConfig_optionSettingsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*.option_settings.*", map[string]string{
-						"value": "US/Pacific",
+						names.AttrValue: "US/Pacific",
 					}),
 				),
 			},
@@ -334,8 +334,8 @@ func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
 				Config: testAccOptionGroupConfig_optionSettingsIAMRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 					testAccCheckOptionGroupOptionSettingsIAMRole(&v),
 				),
 			},
@@ -364,7 +364,7 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 				Config: testAccOptionGroupConfig_sqlServerEEOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -376,8 +376,8 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 				Config: testAccOptionGroupConfig_sqlServerEEOptionsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 				),
 			},
 		},
@@ -400,8 +400,8 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 				Config: testAccOptionGroupConfig_oracleEEOptionSettings(rName, "13.2.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 					testAccCheckOptionGroupOptionVersionAttribute(&v, "13.2.0.0.v2"),
 				),
 			},
@@ -416,8 +416,8 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 				Config: testAccOptionGroupConfig_oracleEEOptionSettings(rName, "13.3.0.0.v2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 					testAccCheckOptionGroupOptionVersionAttribute(&v, "13.3.0.0.v2"),
 				),
 			},
@@ -442,7 +442,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 				Config: testAccOptionGroupConfig_settingsMultiple(rName, "example1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 				),
 			},
 			{
@@ -454,7 +454,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 				Config: testAccOptionGroupConfig_settingsMultiple(rName, "example1,example2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
 				),
 			},
 		},
@@ -477,8 +477,8 @@ func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 				Config: testAccOptionGroupConfig_multipleOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct2),
 				),
 			},
 			{
@@ -504,12 +504,12 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckOptionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOptionGroupConfig_tagsOption1(rName, "key1", "value1"),
+				Config: testAccOptionGroupConfig_tagsOption1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -518,22 +518,22 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOptionGroupConfig_tagsOption2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOptionGroupConfig_tagsOption2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccOptionGroupConfig_tagsOption1(rName, "key2", "value2"),
+				Config: testAccOptionGroupConfig_tagsOption1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup3),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -558,7 +558,7 @@ func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"port": "3872",
+						names.AttrPort: "3872",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
 						"option_name": "SQLT",
@@ -577,15 +577,15 @@ func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"port": "3873",
+						names.AttrPort: "3873",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"option_name": "SQLT",
-						"version":     "2018-07-25.v1",
+						"option_name":     "SQLT",
+						names.AttrVersion: "2018-07-25.v1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
-						"option_name": "S3_INTEGRATION",
-						"version":     "1.0",
+						"option_name":     "S3_INTEGRATION",
+						names.AttrVersion: "1.0",
 					}),
 				),
 			},

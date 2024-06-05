@@ -5,9 +5,8 @@ package apigatewayv2
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	apigatewayv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,21 +25,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAPI,
+			Factory:  dataSourceAPI,
 			TypeName: "aws_apigatewayv2_api",
+			Name:     "API",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceAPIs,
+			Factory:  dataSourceAPIs,
 			TypeName: "aws_apigatewayv2_apis",
+			Name:     "APIs",
 		},
 		{
-			Factory:  DataSourceExport,
+			Factory:  dataSourceExport,
 			TypeName: "aws_apigatewayv2_export",
+			Name:     "Export",
 		},
 		{
-			Factory:  DataSourceVPCLink,
+			Factory:  dataSourceVPCLink,
 			TypeName: "aws_apigatewayv2_vpc_link",
-			Name:     "VPC Link Data Source",
+			Name:     "VPC Link",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -48,67 +52,75 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAPI,
+			Factory:  resourceAPI,
 			TypeName: "aws_apigatewayv2_api",
 			Name:     "API",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceAPIMapping,
+			Factory:  resourceAPIMapping,
 			TypeName: "aws_apigatewayv2_api_mapping",
+			Name:     "API Mapping",
 		},
 		{
-			Factory:  ResourceAuthorizer,
+			Factory:  resourceAuthorizer,
 			TypeName: "aws_apigatewayv2_authorizer",
+			Name:     "Authorizer",
 		},
 		{
-			Factory:  ResourceDeployment,
+			Factory:  resourceDeployment,
 			TypeName: "aws_apigatewayv2_deployment",
+			Name:     "Deployment",
 		},
 		{
-			Factory:  ResourceDomainName,
+			Factory:  resourceDomainName,
 			TypeName: "aws_apigatewayv2_domain_name",
 			Name:     "Domain Name",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceIntegration,
+			Factory:  resourceIntegration,
 			TypeName: "aws_apigatewayv2_integration",
+			Name:     "Integration",
 		},
 		{
-			Factory:  ResourceIntegrationResponse,
+			Factory:  resourceIntegrationResponse,
 			TypeName: "aws_apigatewayv2_integration_response",
+			Name:     "Integration Response",
 		},
 		{
-			Factory:  ResourceModel,
+			Factory:  resourceModel,
 			TypeName: "aws_apigatewayv2_model",
+			Name:     "Model",
 		},
 		{
-			Factory:  ResourceRoute,
+			Factory:  resourceRoute,
 			TypeName: "aws_apigatewayv2_route",
+			Name:     "Route",
 		},
 		{
-			Factory:  ResourceRouteResponse,
+			Factory:  resourceRouteResponse,
 			TypeName: "aws_apigatewayv2_route_response",
+			Name:     "Route Response",
 		},
 		{
-			Factory:  ResourceStage,
+			Factory:  resourceStage,
 			TypeName: "aws_apigatewayv2_stage",
 			Name:     "Stage",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceVPCLink,
+			Factory:  resourceVPCLink,
 			TypeName: "aws_apigatewayv2_vpc_link",
 			Name:     "VPC Link",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -118,11 +130,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.APIGatewayV2
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*apigatewayv2_sdkv1.ApiGatewayV2, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*apigatewayv2_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return apigatewayv2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return apigatewayv2_sdkv2.NewFromConfig(cfg, func(o *apigatewayv2_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

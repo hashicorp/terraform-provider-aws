@@ -44,7 +44,7 @@ func ResourceUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceUser() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -77,7 +77,7 @@ func ResourceUser() *schema.Resource {
 				Default:      transfer.HomeDirectoryTypePath,
 				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -110,7 +110,7 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -123,7 +123,7 @@ func ResourceUser() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrUserName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -140,10 +140,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID := d.Get("server_id").(string)
-	userName := d.Get("user_name").(string)
+	userName := d.Get(names.AttrUserName).(string)
 	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.CreateUserInput{
-		Role:     aws.String(d.Get("role").(string)),
+		Role:     aws.String(d.Get(names.AttrRole).(string)),
 		ServerId: aws.String(serverID),
 		Tags:     getTagsIn(ctx),
 		UserName: aws.String(userName),
@@ -161,7 +161,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.HomeDirectoryType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", v.(string), err)
@@ -207,25 +207,25 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Transfer User (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", user.Arn)
+	d.Set(names.AttrARN, user.Arn)
 	d.Set("home_directory", user.HomeDirectory)
 	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(user.HomeDirectoryMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)
 	}
 	d.Set("home_directory_type", user.HomeDirectoryType)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(user.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(user.Policy))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Transfer User (%s): %s", d.Id(), err)
 	}
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	if err := d.Set("posix_profile", flattenUserPOSIXUser(user.PosixProfile)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
 	}
-	d.Set("role", user.Role)
+	d.Set(names.AttrRole, user.Role)
 	d.Set("server_id", serverID)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 
 	setTagsOut(ctx, user.Tags)
 
@@ -236,7 +236,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		serverID, userName, err := UserParseResourceID(d.Id())
 
 		if err != nil {
@@ -260,10 +260,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
 		}
 
-		if d.HasChange("policy") {
-			policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+		if d.HasChange(names.AttrPolicy) {
+			policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+				return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 			}
 
 			input.Policy = aws.String(policy)
@@ -273,8 +273,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
 		}
 
-		if d.HasChange("role") {
-			input.Role = aws.String(d.Get("role").(string))
+		if d.HasChange(names.AttrRole) {
+			input.Role = aws.String(d.Get(names.AttrRole).(string))
 		}
 
 		_, err = conn.UpdateUserWithContext(ctx, input)
@@ -371,7 +371,7 @@ func expandHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapE
 
 		m := &transfer.HomeDirectoryMapEntry{
 			Entry:  aws.String(config["entry"].(string)),
-			Target: aws.String(config["target"].(string)),
+			Target: aws.String(config[names.AttrTarget].(string)),
 		}
 
 		mappings = append(mappings, m)
@@ -384,8 +384,8 @@ func flattenHomeDirectoryMappings(mappings []*transfer.HomeDirectoryMapEntry) []
 	l := make([]interface{}, len(mappings))
 	for i, m := range mappings {
 		l[i] = map[string]interface{}{
-			"entry":  aws.StringValue(m.Entry),
-			"target": aws.StringValue(m.Target),
+			"entry":          aws.StringValue(m.Entry),
+			names.AttrTarget: aws.StringValue(m.Target),
 		}
 	}
 	return l

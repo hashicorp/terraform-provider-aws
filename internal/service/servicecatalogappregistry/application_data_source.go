@@ -35,15 +35,19 @@ func (d *dataSourceApplication) Metadata(_ context.Context, req datasource.Metad
 func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
+			},
+			"application_tag": schema.MapAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
 		},
 	}
@@ -71,8 +75,9 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 }
 
 type dataSourceApplicationData struct {
-	ARN         types.String `tfsdk:"arn"`
-	Description types.String `tfsdk:"description"`
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
+	ARN            types.String `tfsdk:"arn"`
+	Description    types.String `tfsdk:"description"`
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ApplicationTag types.Map    `tfsdk:"application_tag"`
 }

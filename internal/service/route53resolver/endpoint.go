@@ -42,7 +42,7 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +56,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 2,
@@ -73,7 +73,7 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -81,7 +81,7 @@ func ResourceEndpoint() *schema.Resource {
 				},
 				Set: endpointHashIPAddress,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validResolverName,
@@ -92,7 +92,7 @@ func ResourceEndpoint() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.ResolverEndpointType_Values(), false),
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -131,12 +131,12 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        aws.String(d.Get("direction").(string)),
-		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
+		IpAddresses:      expandEndpointIPAddresses(d.Get(names.AttrIPAddress).(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -179,13 +179,13 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	arn := aws.StringValue(ep.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("direction", ep.Direction)
 	d.Set("host_vpc_id", ep.HostVPCId)
-	d.Set("name", ep.Name)
+	d.Set(names.AttrName, ep.Name)
 	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
 	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
-	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(ep.SecurityGroupIds))
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
@@ -193,7 +193,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
 
-	if err := d.Set("ip_address", schema.NewSet(endpointHashIPAddress, flattenEndpointIPAddresses(ipAddresses))); err != nil {
+	if err := d.Set(names.AttrIPAddress, schema.NewSet(endpointHashIPAddress, flattenEndpointIPAddresses(ipAddresses))); err != nil {
 		return diag.Errorf("setting ip_address: %s", err)
 	}
 
@@ -203,13 +203,13 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	if d.HasChanges("name", "protocols", "resolver_endpoint_type") {
+	if d.HasChanges(names.AttrName, "protocols", "resolver_endpoint_type") {
 		input := &route53resolver.UpdateResolverEndpointInput{
 			ResolverEndpointId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("protocols") {
@@ -231,8 +231,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("ip_address") {
-		oraw, nraw := d.GetChange("ip_address")
+	if d.HasChange(names.AttrIPAddress) {
+		oraw, nraw := d.GetChange(names.AttrIPAddress)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 		del := o.Difference(n).List()
@@ -430,7 +430,7 @@ func waitEndpointDeleted(ctx context.Context, conn *route53resolver.Route53Resol
 func endpointHashIPAddress(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-%s-", m["subnet_id"].(string), m["ip"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-%s-", m[names.AttrSubnetID].(string), m["ip"].(string)))
 	return create.StringHashcode(buf.String())
 }
 
@@ -439,7 +439,7 @@ func expandEndpointIPAddressUpdate(vIpAddress interface{}) *route53resolver.IpAd
 
 	mIpAddress := vIpAddress.(map[string]interface{})
 
-	if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+	if vSubnetId, ok := mIpAddress[names.AttrSubnetID].(string); ok && vSubnetId != "" {
 		ipAddressUpdate.SubnetId = aws.String(vSubnetId)
 	}
 	if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
@@ -460,7 +460,7 @@ func expandEndpointIPAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAd
 
 		mIpAddress := vIpAddress.(map[string]interface{})
 
-		if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+		if vSubnetId, ok := mIpAddress[names.AttrSubnetID].(string); ok && vSubnetId != "" {
 			ipAddressRequest.SubnetId = aws.String(vSubnetId)
 		}
 		if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
@@ -482,9 +482,9 @@ func flattenEndpointIPAddresses(ipAddresses []*route53resolver.IpAddressResponse
 
 	for _, ipAddress := range ipAddresses {
 		mIpAddress := map[string]interface{}{
-			"subnet_id": aws.StringValue(ipAddress.SubnetId),
-			"ip":        aws.StringValue(ipAddress.Ip),
-			"ip_id":     aws.StringValue(ipAddress.IpId),
+			names.AttrSubnetID: aws.StringValue(ipAddress.SubnetId),
+			"ip":               aws.StringValue(ipAddress.Ip),
+			"ip_id":            aws.StringValue(ipAddress.IpId),
 		}
 
 		vIpAddresses = append(vIpAddresses, mIpAddress)

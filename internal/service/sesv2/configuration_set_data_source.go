@@ -22,7 +22,7 @@ func DataSourceConfigurationSet() *schema.Resource {
 		ReadWithoutTimeout: dataSourceConfigurationSetRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func DataSourceConfigurationSet() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"tracking_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -155,7 +155,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(out.ConfigurationSetName))
 
-	d.Set("arn", configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
+	d.Set(names.AttrARN, configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
@@ -206,14 +206,14 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("vdm_options", nil)
 	}
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameConfigurationSet, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 	}
 

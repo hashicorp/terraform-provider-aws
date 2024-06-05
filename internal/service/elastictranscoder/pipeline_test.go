@@ -39,7 +39,7 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 				Config: testAccPipelineConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, names.AttrARN),
 				),
 			},
 			{

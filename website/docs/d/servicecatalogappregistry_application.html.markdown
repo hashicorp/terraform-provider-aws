@@ -30,6 +30,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `application_tag` - A map with a single tag key-value pair used to associate resources with the application.
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `description` - Description of the application.
 * `name` - Name of the application.

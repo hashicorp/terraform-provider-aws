@@ -74,7 +74,7 @@ func ResourceAccountSubscription() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					ForceNew: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -142,7 +142,7 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 

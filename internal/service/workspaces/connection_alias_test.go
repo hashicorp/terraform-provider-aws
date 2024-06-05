@@ -44,8 +44,8 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
 					resource.TestCheckResourceAttr(resourceName, "connection_string", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
 			},
 			{
@@ -104,11 +104,11 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionAliasDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionAliasConfig_tags1(rName, "key1", "value1"),
+				Config: testAccConnectionAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -117,20 +117,20 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionAliasConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccConnectionAliasConfig_tags1(rName, "key2", "value2"),
+				Config: testAccConnectionAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

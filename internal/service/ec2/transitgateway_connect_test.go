@@ -44,12 +44,12 @@ func testAccTransitGatewayConnect_basic(t *testing.T, semaphore tfsync.Semaphore
 				Config: testAccTransitGatewayConnectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "gre"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "transport_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "gre"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "transport_attachment_id", transitGatewayVpcAttachmentResourceName, names.AttrID),
 				),
 			},
 			{
@@ -106,11 +106,11 @@ func testAccTransitGatewayConnect_tags(t *testing.T, semaphore tfsync.Semaphore)
 		CheckDestroy:             testAccCheckTransitGatewayConnectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTransitGatewayConnectConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -119,20 +119,20 @@ func testAccTransitGatewayConnect_tags(t *testing.T, semaphore tfsync.Semaphore)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayConnectConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayConnectConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTransitGatewayConnectConfig_tags1(rName, "key2", "value2"),
+				Config: testAccTransitGatewayConnectConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -164,8 +164,8 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociationAndP
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &transitGatewayConnect1),
 					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx, &transitGateway1, &transitGatewayConnect1),
 					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx, &transitGateway1, &transitGatewayConnect1),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", acctest.CtFalse),
 				),
 			},
 			{
@@ -201,7 +201,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 					testAccCheckTransitGatewayExists(ctx, transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &transitGatewayConnect1),
 					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx, &transitGateway1, &transitGatewayConnect1),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", acctest.CtFalse),
 				),
 			},
 			{
@@ -216,7 +216,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &transitGatewayConnect2),
 					testAccCheckTransitGatewayConnectNotRecreated(&transitGatewayConnect1, &transitGatewayConnect2),
 					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(ctx, &transitGateway2, &transitGatewayConnect2),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", acctest.CtTrue),
 				),
 			},
 			{
@@ -226,7 +226,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTableAssociation(t *
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &transitGatewayConnect3),
 					testAccCheckTransitGatewayConnectNotRecreated(&transitGatewayConnect2, &transitGatewayConnect3),
 					testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentNotAssociated(ctx, &transitGateway3, &transitGatewayConnect3),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "false"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", acctest.CtFalse),
 				),
 			},
 		},
@@ -257,7 +257,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 					testAccCheckTransitGatewayExists(ctx, transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &transitGatewayConnect1),
 					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx, &transitGateway1, &transitGatewayConnect1),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", acctest.CtFalse),
 				),
 			},
 			{
@@ -272,7 +272,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &transitGatewayConnect2),
 					testAccCheckTransitGatewayConnectNotRecreated(&transitGatewayConnect1, &transitGatewayConnect2),
 					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(ctx, &transitGateway2, &transitGatewayConnect2),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", acctest.CtTrue),
 				),
 			},
 			{
@@ -282,7 +282,7 @@ func testAccTransitGatewayConnect_TransitGatewayDefaultRouteTablePropagation(t *
 					testAccCheckTransitGatewayConnectExists(ctx, resourceName, &transitGatewayConnect3),
 					testAccCheckTransitGatewayConnectNotRecreated(&transitGatewayConnect2, &transitGatewayConnect3),
 					testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentNotPropagated(ctx, &transitGateway3, &transitGatewayConnect3),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", acctest.CtFalse),
 				),
 			},
 		},
