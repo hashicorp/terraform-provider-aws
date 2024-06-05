@@ -22,6 +22,7 @@ var (
 	FindConnectorByID            = findConnectorByID
 	FindProfileByID              = findProfileByID
 	FindServerByID               = findServerByID
+	FindTag                      = findTag
 	FindUserByTwoPartKey         = findUserByTwoPartKey
 	FindUserSSHKeyByThreePartKey = findUserSSHKeyByThreePartKey
 	FindWorkflowByID             = findWorkflowByID

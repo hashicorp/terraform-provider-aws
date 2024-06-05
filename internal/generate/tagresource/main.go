@@ -19,7 +19,7 @@ import (
 )
 
 var (
-	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagFunc     = flag.String("GetTagFunc", "findTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
 	updateTagsFunc = flag.String("UpdateTagsFunc", "updateTags", "updateTagsFunc")
 )
