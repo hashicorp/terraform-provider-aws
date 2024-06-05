@@ -93,6 +93,7 @@ var (
 	FindRouteByPrefixListIDDestinationV2                       = findRouteByPrefixListIDDestination
 	FindRouteTableAssociationByIDV2                            = findRouteTableAssociationByID
 	FindRouteTableByIDV2                                       = findRouteTableByID
+	FindTag                                                    = findTag
 	FindTransitGatewayByID                                     = findTransitGatewayByID
 	FindTransitGatewayConnectByID                              = findTransitGatewayConnectByID
 	FindTransitGatewayConnectPeerByID                          = findTransitGatewayConnectPeerByID
