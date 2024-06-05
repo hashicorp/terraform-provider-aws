@@ -10,12 +10,18 @@ jobs:
     name: open-pr-stats
     if: github.repository_owner == 'hashicorp'
     steps:
+      - name: Generate Token
+        id: generate_token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{secrets.APP_PEM }}
       - name: open-pr-stats
         uses: breathingdust/github-team-slackbot@8f1053f9b472b94e6564ebc499a92136c48ace1f # v18.5.1
         with:
-          github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN}}
-          org: hashicorp
-          repo: terraform-provider-aws
+          github_token: ${{ steps.generate_token.outputs.token }}
           team_slug: terraform-aws
           slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
           slack_channel: ${{ secrets.SLACK_CHANNEL }}
