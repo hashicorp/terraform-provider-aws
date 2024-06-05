@@ -77,7 +77,6 @@ var (
 	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByID
 	FindRouteTableByIDV2                                   = findRouteTableByID
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
-	FindVPCEndpointByIDV2                                  = findVPCEndpointByIDV2
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2 = findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2
 	FindVPCEndpointConnectionNotificationByIDV2            = findVPCEndpointConnectionNotificationByIDV2
 	FindVPCEndpointRouteTableAssociationExistsV2           = findVPCEndpointRouteTableAssociationExistsV2
