@@ -14,6 +14,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // GetTag fetches an individual transfer service tag for a resource.
@@ -116,16 +117,17 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	}
 }
 
-// updateTagsNoIgnoreSystem updates transfer service tags.
+// updateTags updates transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*transfer.Options)) error {
+func updateTags(ctx context.Context, conn *transfer.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*transfer.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Transfer)
 	if len(removedTags) > 0 {
 		input := &transfer.UntagResourceInput{
 			Arn:     aws.String(identifier),
@@ -140,6 +142,7 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 	}
 
 	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Transfer)
 	if len(updatedTags) > 0 {
 		input := &transfer.TagResourceInput{
 			Arn:  aws.String(identifier),
@@ -154,4 +157,10 @@ func updateTagsNoIgnoreSystem(ctx context.Context, conn *transfer.Client, identi
 	}
 
 	return nil
+}
+
+// UpdateTags updates transfer service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).TransferClient(ctx), identifier, oldTags, newTags)
 }
