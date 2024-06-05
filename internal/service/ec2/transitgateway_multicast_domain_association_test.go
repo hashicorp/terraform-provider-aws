@@ -138,19 +138,9 @@ func testAccCheckTransitGatewayMulticastDomainAssociationExists(ctx context.Cont
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Transit Gateway Multicast Domain Association ID is set")
-		}
-
-		multicastDomainID, attachmentID, subnetID, err := tfec2.TransitGatewayMulticastDomainAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, multicastDomainID, attachmentID, subnetID)
+		output, err := tfec2.FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_multicast_domain_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID], rs.Primary.Attributes[names.AttrSubnetID])
 
 		if err != nil {
 			return err
@@ -171,13 +161,7 @@ func testAccCheckTransitGatewayMulticastDomainAssociationDestroy(ctx context.Con
 				continue
 			}
 
-			multicastDomainID, attachmentID, subnetID, err := tfec2.TransitGatewayMulticastDomainAssociationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, multicastDomainID, attachmentID, subnetID)
+			_, err := tfec2.FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_multicast_domain_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID], rs.Primary.Attributes[names.AttrSubnetID])
 
 			if tfresource.NotFound(err) {
 				continue
