@@ -23,7 +23,7 @@
 {{ define "TestCaseSetupNoProviders" -}}
 	PreCheck:     func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
-	CheckDestroy: testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}),
+	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
 {{- end }}
 
 {{ define "TagsKnownValueForNull" -}}
@@ -102,23 +102,27 @@ import (
 func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	t.Helper()
 
-	t.Run(acctest.CtBasic, {{ template "testname" . }}_tags)
-	t.Run("null", {{ template "testname" . }}_tags_null)
-	t.Run("AddOnUpdate", {{ template "testname" . }}_tags_AddOnUpdate)
-	t.Run("EmptyTag_OnCreate", {{ template "testname" . }}_tags_EmptyTag_OnCreate)
-	t.Run("EmptyTag_OnUpdate_Add", {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add)
-	t.Run("EmptyTag_OnUpdate_Replace", {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace)
-	t.Run("DefaultTags_providerOnly", {{ template "testname" . }}_tags_DefaultTags_providerOnly)
-	t.Run("DefaultTags_nonOverlapping", {{ template "testname" . }}_tags_DefaultTags_nonOverlapping)
-	t.Run("DefaultTags_overlapping", {{ template "testname" . }}_tags_DefaultTags_overlapping)
-	t.Run("DefaultTags_updateToProviderOnly", {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly)
-	t.Run("DefaultTags_updateToResourceOnly", {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly)
-	t.Run("DefaultTags_emptyResourceTag", {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag)
-	t.Run("DefaultTags_nullOverlappingResourceTag", {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag)
-	t.Run("DefaultTags_nullNonOverlappingResourceTag", {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag)
-	t.Run("ComputedTag_OnCreate", {{ template "testname" . }}_tags_ComputedTag_OnCreate)
-	t.Run("ComputedTag_OnUpdate_Add", {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add)
-	t.Run("ComputedTag_OnUpdate_Replace", {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace)
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:                             {{ template "testname" . }}_tags,
+		"null":                                      {{ template "testname" . }}_tags_null,
+		"AddOnUpdate":                               {{ template "testname" . }}_tags_AddOnUpdate,
+		"EmptyTag_OnCreate":                         {{ template "testname" . }}_tags_EmptyTag_OnCreate,
+		"EmptyTag_OnUpdate_Add":                     {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add,
+		"EmptyTag_OnUpdate_Replace":                 {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace,
+		"DefaultTags_providerOnly":                  {{ template "testname" . }}_tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                {{ template "testname" . }}_tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   {{ template "testname" . }}_tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      {{ template "testname" . }}_tags_ComputedTag_OnCreate,
+		"ComputedTag_OnUpdate_Add":                  {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add,
+		"ComputedTag_OnUpdate_Replace":              {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
 }
 {{ end }}
 
