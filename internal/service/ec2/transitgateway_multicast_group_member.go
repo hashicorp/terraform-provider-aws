@@ -52,13 +52,12 @@ func resourceTransitGatewayMulticastGroupMember() *schema.Resource {
 
 func resourceTransitGatewayMulticastGroupMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	groupIPAddress := d.Get("group_ip_address").(string)
 	eniID := d.Get(names.AttrNetworkInterfaceID).(string)
-	id := TransitGatewayMulticastGroupMemberCreateResourceID(multicastDomainID, groupIPAddress, eniID)
+	id := transitGatewayMulticastGroupMemberCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 	input := &ec2.RegisterTransitGatewayMulticastGroupMembersInput{
 		GroupIpAddress:                  aws.String(groupIPAddress),
 		NetworkInterfaceIds:             []string{eniID},
@@ -79,11 +78,9 @@ func resourceTransitGatewayMulticastGroupMemberCreate(ctx context.Context, d *sc
 
 func resourceTransitGatewayMulticastGroupMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupMemberParseResourceID(d.Id())
-
+	multicastDomainID, groupIPAddress, eniID, err := transitGatewayMulticastGroupMemberParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -113,16 +110,18 @@ func resourceTransitGatewayMulticastGroupMemberRead(ctx context.Context, d *sche
 
 func resourceTransitGatewayMulticastGroupMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupMemberParseResourceID(d.Id())
-
+	multicastDomainID, groupIPAddress, eniID, err := transitGatewayMulticastGroupMemberParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = deregisterTransitGatewayMulticastGroupMember(ctx, conn, multicastDomainID, groupIPAddress, eniID)
+
+	if tfawserr.ErrCodeEquals(err, errCodeTransitGatewayMulticastGroupMemberNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -132,7 +131,7 @@ func resourceTransitGatewayMulticastGroupMemberDelete(ctx context.Context, d *sc
 }
 
 func deregisterTransitGatewayMulticastGroupMember(ctx context.Context, conn *ec2.Client, multicastDomainID, groupIPAddress, eniID string) error {
-	id := TransitGatewayMulticastGroupMemberCreateResourceID(multicastDomainID, groupIPAddress, eniID)
+	id := transitGatewayMulticastGroupMemberCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Group Member: %s", id)
 	_, err := conn.DeregisterTransitGatewayMulticastGroupMembers(ctx, &ec2.DeregisterTransitGatewayMulticastGroupMembersInput{
@@ -162,14 +161,14 @@ func deregisterTransitGatewayMulticastGroupMember(ctx context.Context, conn *ec2
 
 const transitGatewayMulticastGroupMemberIDSeparator = "/"
 
-func TransitGatewayMulticastGroupMemberCreateResourceID(multicastDomainID, groupIPAddress, eniID string) string {
+func transitGatewayMulticastGroupMemberCreateResourceID(multicastDomainID, groupIPAddress, eniID string) string {
 	parts := []string{multicastDomainID, groupIPAddress, eniID}
 	id := strings.Join(parts, transitGatewayMulticastGroupMemberIDSeparator)
 
 	return id
 }
 
-func TransitGatewayMulticastGroupMemberParseResourceID(id string) (string, string, string, error) {
+func transitGatewayMulticastGroupMemberParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, transitGatewayMulticastGroupMemberIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
