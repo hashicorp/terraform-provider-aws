@@ -129,6 +129,7 @@ const (
 	errCodeRouteAlreadyExists                                = "RouteAlreadyExists"
 	errCodeSnapshotCreationPerVolumeRateExceeded             = "SnapshotCreationPerVolumeRateExceeded"
 	errCodeTransitGatewayMulticastGroupMemberNotFound        = "TransitGatewayMulticastGroupMember.NotFound"
+	errCodeTransitGatewayRouteTablePropagationNotFound       = "TransitGatewayRouteTablePropagation.NotFound"
 	errCodeUnsupportedOperation                              = "UnsupportedOperation"
 	errCodeVolumeInUse                                       = "VolumeInUse"
 	errCodeVPNConnectionLimitExceeded                        = "VpnConnectionLimitExceeded"

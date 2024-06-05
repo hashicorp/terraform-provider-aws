@@ -63,7 +63,7 @@ func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *s
 
 	transitGatewayAttachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
-	id := TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	input := &ec2.EnableTransitGatewayRouteTablePropagationInput{
 		TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -88,10 +88,9 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTablePropagationParseResourceID(d.Id())
-
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := transitGatewayRouteTablePropagationParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	transitGatewayPropagation, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
@@ -118,10 +117,9 @@ func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *s
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayRouteTableID, transitGatewayAttachmentID, err := TransitGatewayRouteTablePropagationParseResourceID(d.Id())
-
+	transitGatewayRouteTableID, transitGatewayAttachmentID, err := transitGatewayRouteTablePropagationParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route Table Propagation: %s", d.Id())
@@ -130,7 +128,7 @@ func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *s
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound, errCodeTransitGatewayRouteTablePropagationNotFound) {
 		return diags
 	}
 
@@ -153,7 +151,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 		return nil
 	}
 
-	id := TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+	id := transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 	_, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 	if tfresource.NotFound(err) {
@@ -204,14 +202,14 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 
 const transitGatewayRouteTablePropagationIDSeparator = "_"
 
-func TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID string) string {
+func transitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID string) string {
 	parts := []string{transitGatewayRouteTableID, transitGatewayAttachmentID}
 	id := strings.Join(parts, transitGatewayRouteTablePropagationIDSeparator)
 
 	return id
 }
 
-func TransitGatewayRouteTablePropagationParseResourceID(id string) (string, string, error) {
+func transitGatewayRouteTablePropagationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, transitGatewayRouteTablePropagationIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
