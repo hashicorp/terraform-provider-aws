@@ -58,7 +58,7 @@ func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *sc
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	groupIPAddress := d.Get("group_ip_address").(string)
 	eniID := d.Get(names.AttrNetworkInterfaceID).(string)
-	id := TransitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID)
+	id := transitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 	input := &ec2.RegisterTransitGatewayMulticastGroupSourcesInput{
 		GroupIpAddress:                  aws.String(groupIPAddress),
 		NetworkInterfaceIds:             []string{eniID},
@@ -83,7 +83,6 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -117,12 +116,15 @@ func resourceTransitGatewayMulticastGroupSourceDelete(ctx context.Context, d *sc
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	multicastDomainID, groupIPAddress, eniID, err := TransitGatewayMulticastGroupSourceParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = deregisterTransitGatewayMulticastGroupSource(ctx, conn, multicastDomainID, groupIPAddress, eniID)
+
+	if tfawserr.ErrCodeEquals(err, errCodeTransitGatewayMulticastGroupSourceNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -132,7 +134,7 @@ func resourceTransitGatewayMulticastGroupSourceDelete(ctx context.Context, d *sc
 }
 
 func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2.Client, multicastDomainID, groupIPAddress, eniID string) error {
-	id := TransitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID)
+	id := transitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Group Source: %s", id)
 	_, err := conn.DeregisterTransitGatewayMulticastGroupSources(ctx, &ec2.DeregisterTransitGatewayMulticastGroupSourcesInput{
@@ -162,7 +164,7 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 
 const transitGatewayMulticastGroupSourceIDSeparator = "/"
 
-func TransitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID string) string {
+func transitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID string) string {
 	parts := []string{multicastDomainID, groupIPAddress, eniID}
 	id := strings.Join(parts, transitGatewayMulticastGroupSourceIDSeparator)
 

@@ -110,19 +110,9 @@ func testAccCheckTransitGatewayMulticastGroupSourceExists(ctx context.Context, n
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Transit Gateway Multicast Group Source ID is set")
-		}
-
-		multicastDomainID, groupIPAddress, eniID, err := tfec2.TransitGatewayMulticastGroupSourceParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
+		output, err := tfec2.FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_multicast_domain_id"], rs.Primary.Attributes["group_ip_address"], rs.Primary.Attributes[names.AttrNetworkInterfaceID])
 
 		if err != nil {
 			return err
@@ -143,13 +133,7 @@ func testAccCheckTransitGatewayMulticastGroupSourceDestroy(ctx context.Context) 
 				continue
 			}
 
-			multicastDomainID, groupIPAddress, eniID, err := tfec2.TransitGatewayMulticastGroupSourceParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
+			_, err := tfec2.FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_multicast_domain_id"], rs.Primary.Attributes["group_ip_address"], rs.Primary.Attributes[names.AttrNetworkInterfaceID])
 
 			if tfresource.NotFound(err) {
 				continue
