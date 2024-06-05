@@ -8,6 +8,18 @@ jobs:
     if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
+      - name: Generate Token
+        id: generate_token
+        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          installation_retrieval_mode: id
+          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
+          private_key: ${{secrets.APP_PEM }}
+          permissions: >-
+            {
+              "contents": "write"
+            }
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
         with:
           fetch-depth: 0
@@ -27,5 +39,6 @@ jobs:
             git config --local user.name changelogbot
             git add CHANGELOG.md
             git commit -m "$MSG"
+            git remote set-url origin https://x-access-token:${{ steps.generate_token.outputs.token }}@github.com/${{ github.repository }}
             git push
           fi
