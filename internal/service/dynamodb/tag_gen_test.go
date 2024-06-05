@@ -30,7 +30,7 @@ func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tfdynamodb.findTag(ctx, conn, identifier, key)
+			_, err = tfdynamodb.FindTag(ctx, conn, identifier, key)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -61,7 +61,7 @@ func testAccCheckTagExists(ctx context.Context, n string) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
-		_, err = tfdynamodb.findTag(ctx, conn, identifier, key)
+		_, err = tfdynamodb.FindTag(ctx, conn, identifier, key)
 
 		return err
 	}
