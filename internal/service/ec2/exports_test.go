@@ -76,6 +76,7 @@ var (
 	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestination
 	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByID
 	FindRouteTableByIDV2                                   = findRouteTableByID
+	FindTag                                                = findTag
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2 = findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2
 	FindVPCEndpointConnectionNotificationByIDV2            = findVPCEndpointConnectionNotificationByIDV2
