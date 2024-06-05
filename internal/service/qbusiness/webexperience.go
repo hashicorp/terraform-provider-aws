@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -36,7 +37,7 @@ import (
 // @FrameworkResource("aws_qbusiness_webexperience", name="Webexperience")
 // @Tags(identifierAttribute="arn")
 func newResourceWebexperience(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplication{}
+	r := &resourceWebexperience{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -59,17 +60,25 @@ func (r *resourceWebexperience) Schema(ctx context.Context, req resource.SchemaR
 		Attributes: map[string]schema.Attribute{
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrApplicationID: schema.StringAttribute{
+				Description: "Identifier of the Amazon Q application associated with the webexperience",
+				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
+				},
+			},
 			"iam_service_role_arn": schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Description: "The Amazon Resource Name (ARN) of the service role attached to your web experience",
 				Optional:    true,
 			},
 			"sample_prompts_control_mode": schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.WebExperienceSamplePromptsControlMode](),
 				Required:    true,
 				Description: "Status information about whether file upload functionality is activated or deactivated for your end user.",
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.WebExperienceSamplePromptsControlMode](),
-				},
 			},
 			"subtitle": schema.StringAttribute{
 				Description: "The subtitle for your Amazon Q Business web experience.",
@@ -87,6 +96,9 @@ func (r *resourceWebexperience) Schema(ctx context.Context, req resource.SchemaR
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
 				},
 			},
+			"webexperience_id": schema.StringAttribute{
+				Computed: true,
+			},
 			"welcome_message": schema.StringAttribute{
 				Description: "The customized welcome message for end users of an Amazon Q Business web experience.",
 				Optional:    true,
@@ -98,22 +110,28 @@ func (r *resourceWebexperience) Schema(ctx context.Context, req resource.SchemaR
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
+		},
 	}
 }
 
 type resourceWebexperienceData struct {
-	ApplicationId            types.String                                                       `json:"application_id"`
-	ID                       types.String                                                       `json:"id"`
-	RoleArn                  types.String                                                       `json:"iam_service_role_arn"`
-	SamplePromptsControlMode fwtypes.StringEnum[awstypes.WebExperienceSamplePromptsControlMode] `json:"sample_prompts_control_mode"`
-	Subtitle                 types.String                                                       `json:"subtitle"`
+	ApplicationId            types.String                                                       `tfsdk:"application_id"`
+	ID                       types.String                                                       `tfsdk:"id"`
+	RoleArn                  fwtypes.ARN                                                        `tfsdk:"iam_service_role_arn"`
+	SamplePromptsControlMode fwtypes.StringEnum[awstypes.WebExperienceSamplePromptsControlMode] `tfsdk:"sample_prompts_control_mode"`
+	Subtitle                 types.String                                                       `tfsdk:"subtitle"`
 	Tags                     types.Map                                                          `tfsdk:"tags"`
 	TagsAll                  types.Map                                                          `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                     `tfsdk:"timeouts"`
-	Title                    types.String                                                       `json:"title"`
-	WebexperienceArn         types.String                                                       `json:"arn"`
-	WebexperienceId          types.String                                                       `json:"webexperience_id"`
-	WelcomeMessage           types.String                                                       `json:"welcome_message"`
+	Title                    types.String                                                       `tfsdk:"title"`
+	WebexperienceArn         types.String                                                       `tfsdk:"arn"`
+	WebexperienceId          types.String                                                       `tfsdk:"webexperience_id"`
+	WelcomeMessage           types.String                                                       `tfsdk:"welcome_message"`
 }
 
 func (r *resourceWebexperience) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -141,7 +159,7 @@ func (r *resourceWebexperience) Create(ctx context.Context, req resource.CreateR
 	}
 
 	data.WebexperienceArn = fwflex.StringToFramework(ctx, out.WebExperienceArn)
-	data.ApplicationId = fwflex.StringToFramework(ctx, out.WebExperienceId)
+	data.WebexperienceId = fwflex.StringToFramework(ctx, out.WebExperienceId)
 
 	data.setID()
 
@@ -205,7 +223,6 @@ func (r *resourceWebexperience) Update(ctx context.Context, req resource.UpdateR
 		!old.Subtitle.Equal(new.Subtitle) ||
 		!old.Title.Equal(new.Title) ||
 		!old.WelcomeMessage.Equal(new.WelcomeMessage) {
-
 		conn := r.Meta().QBusinessClient(ctx)
 
 		input := &qbusiness.UpdateWebExperienceInput{}

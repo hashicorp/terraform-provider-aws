@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessWebexperience_basic(t *testing.T) {
@@ -35,8 +36,7 @@ func TestAccQBusinessWebexperience_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
 					resource.TestCheckResourceAttrSet(resourceName, "webexperience_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "sample_propmpts_control_mode", "DISABLED"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -85,26 +85,87 @@ func TestAccQBusinessWebexperience_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckWebexperienceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebexperienceConfig_tags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccWebexperienceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccWebexperienceConfig_tags(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWebexperienceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQBusinessWebexperience_title(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webex qbusiness.GetWebExperienceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qbusiness_webexperience.test"
+	title1 := "title1"
+	title2 := "title2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWebexperience(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebexperienceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebexperienceConfig_title(rName, title1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
+					resource.TestCheckResourceAttr(resourceName, "title", title1),
+					resource.TestCheckResourceAttr(resourceName, "subtitle", title1),
+					resource.TestCheckResourceAttr(resourceName, "welcome_message", title1),
+				),
+			},
+			{
+				Config: testAccWebexperienceConfig_title(rName, title2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
+					resource.TestCheckResourceAttr(resourceName, "title", title2),
+					resource.TestCheckResourceAttr(resourceName, "subtitle", title2),
+					resource.TestCheckResourceAttr(resourceName, "welcome_message", title2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQBusinessWebexperience_samplePromptsControlMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webex qbusiness.GetWebExperienceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qbusiness_webexperience.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckWebexperience(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebexperienceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebexperienceConfig_samplePromptsControlMode(rName, "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
+					resource.TestCheckResourceAttr(resourceName, "sample_prompts_control_mode", "ENABLED"),
+				),
+			},
+			{
+				Config: testAccWebexperienceConfig_samplePromptsControlMode(rName, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
+					resource.TestCheckResourceAttr(resourceName, "sample_prompts_control_mode", "DISABLED"),
 				),
 			},
 		},
@@ -175,20 +236,19 @@ func testAccCheckWebexperienceExists(ctx context.Context, n string, v *qbusiness
 }
 
 func testAccWebexperienceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), `
 resource "aws_qbusiness_webexperience" "test" {
-  application_id               = aws_qbusiness_app.test.application_id
-  sample_propmpts_control_mode = "DISABLED"
-  title                        = %[1]q
+  application_id              = aws_qbusiness_app.test.id
+  sample_prompts_control_mode = "DISABLED"
 }
-`, rName))
+`)
 }
 
 func testAccWebexperienceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_webexperience" "test" {
-  application_id               = aws_qbusiness_app.test.application_id
-  sample_propmpts_control_mode = "DISABLED"
+  application_id              = aws_qbusiness_app.test.id
+  sample_prompts_control_mode = "DISABLED"
 
   tags = {
     %[2]q = %[3]q
@@ -196,4 +256,25 @@ resource "aws_qbusiness_webexperience" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccWebexperienceConfig_title(rName, title string) string {
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
+resource "aws_qbusiness_webexperience" "test" {
+  application_id              = aws_qbusiness_app.test.id
+  sample_prompts_control_mode = "DISABLED"
+  title                       = %[1]q
+  subtitle                    = %[1]q
+  welcome_message             = %[1]q
+}
+`, title))
+}
+
+func testAccWebexperienceConfig_samplePromptsControlMode(rName, control string) string {
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
+resource "aws_qbusiness_webexperience" "test" {
+  application_id              = aws_qbusiness_app.test.id
+  sample_prompts_control_mode = %[1]q
+}
+`, control))
 }
