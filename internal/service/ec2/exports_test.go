@@ -39,6 +39,7 @@ var (
 	ResourceSecurityGroupIngressRule         = newSecurityGroupIngressRuleResource
 	ResourceTag                              = resourceTag
 	ResourceTransitGatewayPeeringAttachment  = resourceTransitGatewayPeeringAttachment
+	ResourceVPCEndpoint                      = resourceVPCEndpoint
 	ResourceVPNConnection                    = resourceVPNConnection
 	ResourceVPNConnectionRoute               = resourceVPNConnectionRoute
 	ResourceVPNGateway                       = resourceVPNGateway
@@ -75,8 +76,8 @@ var (
 	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestination
 	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByID
 	FindRouteTableByIDV2                                   = findRouteTableByID
+	FindTag                                                = findTag
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
-	FindVPCEndpointByIDV2                                  = findVPCEndpointByIDV2
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2 = findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2
 	FindVPCEndpointConnectionNotificationByIDV2            = findVPCEndpointConnectionNotificationByIDV2
 	FindVPCEndpointRouteTableAssociationExistsV2           = findVPCEndpointRouteTableAssociationExistsV2

@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_ec2_network_insights_path", name="Network Insights Path")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInsightsPathCreate,

@@ -18,7 +18,7 @@ func expandResourcePermissions(tfList []interface{}) []*quicksight.ResourcePermi
 		tfMap := tfListRaw.(map[string]interface{})
 
 		permission := &quicksight.ResourcePermission{
-			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
+			Actions:   flex.ExpandStringSet(tfMap[names.AttrActions].(*schema.Set)),
 			Principal: aws.String(tfMap[names.AttrPrincipal].(string)),
 		}
 
@@ -108,7 +108,7 @@ func flattenPermissions(perms []*quicksight.ResourcePermission) []interface{} {
 		}
 
 		if p.Actions != nil {
-			perm["actions"] = flex.FlattenStringList(p.Actions)
+			perm[names.AttrActions] = flex.FlattenStringList(p.Actions)
 		}
 
 		values = append(values, perm)

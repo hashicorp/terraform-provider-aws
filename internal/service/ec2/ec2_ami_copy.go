@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_ami_copy", name="AMI")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceAMICopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICopyCreate,

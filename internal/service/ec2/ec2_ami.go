@@ -36,6 +36,7 @@ const (
 
 // @SDKResource("aws_ami", name="AMI")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceAMI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICreate,

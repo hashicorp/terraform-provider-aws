@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_vpc_ipam_scope", name="IPAM Scope")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceIPAMScope() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMScopeCreate,

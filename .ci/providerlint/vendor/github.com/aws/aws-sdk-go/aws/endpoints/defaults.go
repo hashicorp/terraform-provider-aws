@@ -45744,41 +45744,11 @@ var awsisoPartition = partition{
 		"ram": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
-					Region: "fips-us-iso-east-1",
-				}: endpoint{
-					Hostname: "ram-fips.us-iso-east-1.c2s.ic.gov",
-					CredentialScope: credentialScope{
-						Region: "us-iso-east-1",
-					},
-					Deprecated: boxedTrue,
-				},
-				endpointKey{
-					Region: "fips-us-iso-west-1",
-				}: endpoint{
-					Hostname: "ram-fips.us-iso-west-1.c2s.ic.gov",
-					CredentialScope: credentialScope{
-						Region: "us-iso-west-1",
-					},
-					Deprecated: boxedTrue,
-				},
-				endpointKey{
 					Region: "us-iso-east-1",
 				}: endpoint{},
 				endpointKey{
-					Region:  "us-iso-east-1",
-					Variant: fipsVariant,
-				}: endpoint{
-					Hostname: "ram-fips.us-iso-east-1.c2s.ic.gov",
-				},
-				endpointKey{
 					Region: "us-iso-west-1",
 				}: endpoint{},
-				endpointKey{
-					Region:  "us-iso-west-1",
-					Variant: fipsVariant,
-				}: endpoint{
-					Hostname: "ram-fips.us-iso-west-1.c2s.ic.gov",
-				},
 			},
 		},
 		"rbin": service{
@@ -46867,23 +46837,8 @@ var awsisobPartition = partition{
 		"ram": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
-					Region: "fips-us-isob-east-1",
-				}: endpoint{
-					Hostname: "ram-fips.us-isob-east-1.sc2s.sgov.gov",
-					CredentialScope: credentialScope{
-						Region: "us-isob-east-1",
-					},
-					Deprecated: boxedTrue,
-				},
-				endpointKey{
 					Region: "us-isob-east-1",
 				}: endpoint{},
-				endpointKey{
-					Region:  "us-isob-east-1",
-					Variant: fipsVariant,
-				}: endpoint{
-					Hostname: "ram-fips.us-isob-east-1.sc2s.sgov.gov",
-				},
 			},
 		},
 		"rbin": service{

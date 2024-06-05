@@ -2369,7 +2369,7 @@ func sweepVPCEndpoints(region string) error {
 				continue
 			}
 
-			r := ResourceVPCEndpoint()
+			r := resourceVPCEndpoint()
 			d := r.Data(nil)
 			d.SetId(id)
 
