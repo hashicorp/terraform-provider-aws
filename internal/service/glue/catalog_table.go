@@ -155,7 +155,7 @@ func ResourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -702,7 +702,7 @@ func expandStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 		storageDescriptor.Columns = expandColumns(v.([]interface{}))
 	}
 
-	if v, ok := s["location"]; ok {
+	if v, ok := s[names.AttrLocation]; ok {
 		storageDescriptor.Location = aws.String(v.(string))
 	}
 
@@ -904,7 +904,7 @@ func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{
 	storageDescriptor := make(map[string]interface{})
 
 	storageDescriptor["columns"] = flattenColumns(s.Columns)
-	storageDescriptor["location"] = aws.StringValue(s.Location)
+	storageDescriptor[names.AttrLocation] = aws.StringValue(s.Location)
 	storageDescriptor["input_format"] = aws.StringValue(s.InputFormat)
 	storageDescriptor["output_format"] = aws.StringValue(s.OutputFormat)
 	storageDescriptor["compressed"] = aws.BoolValue(s.Compressed)

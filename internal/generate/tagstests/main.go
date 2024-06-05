@@ -23,11 +23,11 @@ import (
 	"text/template"
 
 	"github.com/dlclark/regexp2"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 func main() {
@@ -139,19 +139,21 @@ func main() {
 		}
 
 		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars)
+			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
 			slices.Sort(additionalTfVars)
 			testDirPath := path.Join("testdata", resource.Name)
 
 			common := commonConfig{
-				AdditionalTfVars: additionalTfVars,
-				WithRName:        (resource.Generator != ""),
+				AdditionalTfVars:        additionalTfVars,
+				WithRName:               (resource.Generator != ""),
+				AlternateRegionProvider: resource.AlternateRegionProvider,
 			}
 
 			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
 			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tags_ignore", false, configTmplFile, configTmpl, common)
 		}
 	}
 
@@ -224,7 +226,9 @@ type ResourceDatum struct {
 	PackageProviderNameUpper  string
 	Name                      string
 	TypeName                  string
+	DestroyTakesT             bool
 	ExistsTypeName            string
+	ExistsTakesT              bool
 	FileName                  string
 	Generator                 string
 	NoImport                  bool
@@ -239,7 +243,15 @@ type ResourceDatum struct {
 	GoImports                 []goImport
 	GenerateConfig            bool
 	InitCodeBlocks            []codeBlock
-	AdditionalTfVars          map[string][]string
+	additionalTfVars          map[string]string
+	AlternateRegionProvider   bool
+	TagsUpdateForceNew        bool
+}
+
+func (d ResourceDatum) AdditionalTfVars() map[string]string {
+	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
+		return acctestgen.ConstOrQuote(k)
+	})
 }
 
 type goImport struct {
@@ -252,8 +264,9 @@ type codeBlock struct {
 }
 
 type commonConfig struct {
-	AdditionalTfVars []string
-	WithRName        bool
+	AdditionalTfVars        []string
+	WithRName               bool
+	AlternateRegionProvider bool
 }
 
 type ConfigDatum struct {
@@ -327,7 +340,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		AdditionalTfVars: make(map[string][]string),
+		additionalTfVars: make(map[string]string),
 	}
 	dataSource := false
 	tagged := false
@@ -376,6 +389,23 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			case "Testing":
 				args := common.ParseArgs(m[3])
+				if attr, ok := args.Keyword["altRegionProvider"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid altRegionProvider value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.AlternateRegionProvider = b
+					}
+				}
+
+				if attr, ok := args.Keyword["destroyTakesT"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid destroyTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.DestroyTakesT = b
+					}
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -385,6 +415,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						if importSpec != nil {
 							d.GoImports = append(d.GoImports, *importSpec)
 						}
+					}
+				}
+				if attr, ok := args.Keyword["existsTakesT"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid existsTakesT value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.ExistsTakesT = b
 					}
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
@@ -405,7 +443,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ImportIgnore = strings.Split(attr, ";")
 
 					for i, val := range d.ImportIgnore {
-						d.ImportIgnore[i] = names.ConstOrQuote(val)
+						d.ImportIgnore[i] = namesgen.ConstOrQuote(val)
 					}
 				}
 				if attr, ok := args.Keyword["importStateId"]; ok {
@@ -424,7 +462,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else {
 						d.NoImport = b
 					}
-
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -454,6 +491,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
+					}
+				}
+				// TODO: should probably be a parameter on @Tags
+				if attr, ok := args.Keyword["tagsUpdateForceNew"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsUpdateForceNew value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.TagsUpdateForceNew = b
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
@@ -495,9 +541,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.AdditionalTfVars["certificate_pem"] = []string{acctest.ConstOrQuote("certificate_pem"), "certificatePEM"}
-		d.AdditionalTfVars["private_key_pem"] = []string{acctest.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
-
+		d.additionalTfVars["certificate_pem"] = "certificatePEM"
+		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
 	}
 
 	if tagged {

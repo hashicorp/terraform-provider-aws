@@ -142,7 +142,7 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},

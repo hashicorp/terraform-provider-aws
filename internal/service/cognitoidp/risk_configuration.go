@@ -58,7 +58,7 @@ func resourceRiskConfiguration() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -233,7 +233,7 @@ func resourceRiskConfiguration() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.EventFilterType_Values(), false),
 							},
 						},
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -452,7 +452,7 @@ func expandCompromisedCredentialsRiskConfiguration(riskConfig []interface{}) *co
 		riskExceptionConfigurationType.EventFilter = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := config["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := config[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		riskExceptionConfigurationType.Actions = expandCompromisedCredentialsActions(v)
 	}
 
@@ -471,7 +471,7 @@ func flattenCompromisedCredentialsRiskConfiguration(apiObject *cognitoidentitypr
 	}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = flattenCompromisedCredentialsActions(v)
+		tfMap[names.AttrActions] = flattenCompromisedCredentialsActions(v)
 	}
 
 	return []interface{}{tfMap}
@@ -520,7 +520,7 @@ func expandAccountTakeoverRiskConfiguration(riskConfig []interface{}) *cognitoid
 		accountTakeoverRiskConfiguration.NotifyConfiguration = expandNotifyConfiguration(v)
 	}
 
-	if v, ok := config["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := config[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		accountTakeoverRiskConfiguration.Actions = expandAccountTakeoverActions(v)
 	}
 
@@ -535,7 +535,7 @@ func flattenAccountTakeoverRiskConfiguration(apiObject *cognitoidentityprovider.
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = flattenAccountTakeoverActions(v)
+		tfMap[names.AttrActions] = flattenAccountTakeoverActions(v)
 	}
 
 	if v := apiObject.NotifyConfiguration; v != nil {
