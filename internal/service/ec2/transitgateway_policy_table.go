@@ -114,7 +114,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	d.Set(names.AttrState, transitGatewayPolicyTable.State)
 	d.Set(names.AttrTransitGatewayID, transitGatewayPolicyTable.TransitGatewayId)
 
-	setTagsOut(ctx, transitGatewayPolicyTable.Tags)
+	setTagsOutV2(ctx, transitGatewayPolicyTable.Tags)
 
 	return diags
 }
