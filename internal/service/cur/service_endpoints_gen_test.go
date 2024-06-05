@@ -82,7 +82,9 @@ const (
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
-	const expectedEndpointRegion = providerRegion
+	// Cost and Usage Report has a single regional endpoint
+	// However, the AWS SDK's endpoint resolution returns one for whatever region you're using
+	const expectedEndpointRegion = "us-east-1" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
@@ -407,56 +409,56 @@ func withUseFIPSInConfig(setup *caseSetup) {
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectDefaultFIPSEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultFIPSEndpoint(region),
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectAliasName0ConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: aliasName0ConfigEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
-		region:   "us-west-2",
+		region:   "us-east-1",
 	}
 }
 

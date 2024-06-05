@@ -104,7 +104,7 @@ wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,C
 ,,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,,,,,,,No SDK support
 controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,,2,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,ControlTower,ListLandingZones,,,
 cost-optimization-hub,costoptimizationhub,costoptimizationhub,costoptimizationhub,,costoptimizationhub,,,CostOptimizationHub,CostOptimizationHub,x,,2,,aws_costoptimizationhub_,,costoptimizationhub_,Cost Optimization Hub,AWS,,,,,,,Cost Optimization Hub,GetPreferences,,us-east-1,
-cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,x,,2,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,,
+cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,x,,2,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,us-east-1,
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,,No SDK support
 dataexchange,dataexchange,dataexchange,dataexchange,,dataexchange,,,DataExchange,DataExchange,,1,,,aws_dataexchange_,,dataexchange_,Data Exchange,AWS,,,,,,,DataExchange,ListDataSets,,,
