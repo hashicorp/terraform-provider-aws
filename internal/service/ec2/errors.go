@@ -106,6 +106,7 @@ const (
 	errCodeInvalidTransitGatewayIDNotFound                         = "InvalidTransitGatewayID.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainAssociationNotFound = "InvalidTransitGatewayMulticastDomainAssociation.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainIdNotFound          = "InvalidTransitGatewayMulticastDomainId.NotFound"
+	errCodeInvalidTransitGatewayPolicyTableAssociationNotFound     = "InvalidTransitGatewayPolicyTableAssociation.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound              = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidVPCCIDRBlockAssociationIDNotFound                = "InvalidVpcCidrBlockAssociationID.NotFound"
 	errCodeInvalidVPCEndpointIdNotFound                            = "InvalidVpcEndpointId.NotFound"

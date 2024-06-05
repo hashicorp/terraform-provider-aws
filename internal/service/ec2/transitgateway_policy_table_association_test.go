@@ -92,19 +92,9 @@ func testAccCheckTransitGatewayPolicyTableAssociationExists(ctx context.Context,
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Transit Gateway Policy Table Association ID is set")
-		}
-
-		transitGatewayPolicyTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayPolicyTableAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
+		output, err := tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_policy_table_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 
 		if err != nil {
 			return err
@@ -125,13 +115,7 @@ func testAccCheckTransitGatewayPolicyTableAssociationDestroy(ctx context.Context
 				continue
 			}
 
-			transitGatewayPolicyTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayPolicyTableAssociationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
+			_, err := tfec2.FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_policy_table_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 
 			if tfresource.NotFound(err) {
 				continue
