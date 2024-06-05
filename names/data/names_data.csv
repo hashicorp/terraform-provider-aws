@@ -171,7 +171,7 @@ frauddetector,frauddetector,frauddetector,frauddetector,,frauddetector,,,FraudDe
 ,,,,,,,,,,,,,,,,,FreeRTOS,,x,,,,,,,,,,No SDK support
 fsx,fsx,fsx,fsx,,fsx,,,FSx,FSx,,1,,,aws_fsx_,,fsx_,FSx,Amazon,,,,,,,FSx,DescribeFileSystems,,,
 gamelift,gamelift,gamelift,gamelift,,gamelift,,,GameLift,GameLift,,1,,,aws_gamelift_,,gamelift_,GameLift,Amazon,,,,,,,GameLift,ListGameServerGroups,,,
-globalaccelerator,globalaccelerator,globalaccelerator,globalaccelerator,,globalaccelerator,,,GlobalAccelerator,GlobalAccelerator,x,,2,,aws_globalaccelerator_,,globalaccelerator_,Global Accelerator,AWS,,,,,,,Global Accelerator,ListAccelerators,,,
+globalaccelerator,globalaccelerator,globalaccelerator,globalaccelerator,,globalaccelerator,,,GlobalAccelerator,GlobalAccelerator,x,,2,,aws_globalaccelerator_,,globalaccelerator_,Global Accelerator,AWS,,,,,,,Global Accelerator,ListAccelerators,,us-west-2,
 glue,glue,glue,glue,,glue,,,Glue,Glue,,1,,,aws_glue_,,glue_,Glue,AWS,,,,,,,Glue,ListRegistries,,,
 databrew,databrew,gluedatabrew,databrew,,databrew,,gluedatabrew,DataBrew,GlueDataBrew,,1,,,aws_databrew_,,databrew_,Glue DataBrew,AWS,,x,,,,,DataBrew,,,,
 groundstation,groundstation,groundstation,groundstation,,groundstation,,,GroundStation,GroundStation,,,2,,aws_groundstation_,,groundstation_,Ground Station,AWS,,,,,,,GroundStation,ListConfigs,,,

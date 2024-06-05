@@ -92,9 +92,13 @@ func main() {
 			}
 		}
 
+		if td.OverrideRegion == "us-west-2" {
+			td.Region = "us-east-1"
+		}
+
 		switch packageName {
 		// TODO: This case should be handled in service data
-		case "costoptimizationhub", "cur", "route53domains":
+		case "costoptimizationhub", "cur", "globalaccelerator", "route53domains":
 			td.OverrideRegionRegionalEndpoint = true
 
 		case "chatbot":

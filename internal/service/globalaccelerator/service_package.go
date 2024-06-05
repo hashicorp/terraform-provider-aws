@@ -17,6 +17,11 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return globalaccelerator.NewFromConfig(cfg, func(o *globalaccelerator.Options) {
+		if config["partition"].(string) == names.StandardPartitionID {
+			// Global Accelerator endpoint is only available in AWS Commercial us-west-2 Region.
+			o.Region = names.USWest2RegionID
+		}
+
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			tflog.Debug(ctx, "setting endpoint", map[string]any{
 				"tf_aws.endpoint": endpoint,
@@ -27,9 +32,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
 				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
 			}
-		} else if config["partition"].(string) == names.StandardPartitionID {
-			// Global Accelerator endpoint is only available in AWS Commercial us-west-2 Region.
-			o.Region = names.USWest2RegionID
 		}
 	}), nil
 }
