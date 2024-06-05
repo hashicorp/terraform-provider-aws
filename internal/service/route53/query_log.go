@@ -37,7 +37,7 @@ func resourceQueryLog() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cloudwatch_log_group_arn": {
+			names.AttrCloudWatchLogGroupARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -56,7 +56,7 @@ func resourceQueryLogCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	input := &route53.CreateQueryLoggingConfigInput{
-		CloudWatchLogsLogGroupArn: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
+		CloudWatchLogsLogGroupArn: aws.String(d.Get(names.AttrCloudWatchLogGroupARN).(string)),
 		HostedZoneId:              aws.String(d.Get("zone_id").(string)),
 	}
 
@@ -92,7 +92,7 @@ func resourceQueryLogRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Resource:  "queryloggingconfig/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogsLogGroupArn)
+	d.Set(names.AttrCloudWatchLogGroupARN, output.CloudWatchLogsLogGroupArn)
 	d.Set("zone_id", output.HostedZoneId)
 
 	return nil

@@ -47,7 +47,7 @@ func resourceTask() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cloudwatch_log_group_arn": {
+			names.AttrCloudWatchLogGroupARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -317,7 +317,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Tags:                   getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCloudWatchLogGroupARN); ok {
 		input.CloudWatchLogGroupArn = aws.String(v.(string))
 	}
 
@@ -373,7 +373,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set(names.AttrARN, output.TaskArn)
-	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
+	d.Set(names.AttrCloudWatchLogGroupARN, output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting excludes: %s", err)
@@ -405,8 +405,8 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			TaskArn: aws.String(d.Id()),
 		}
 
-		if d.HasChanges("cloudwatch_log_group_arn") {
-			input.CloudWatchLogGroupArn = aws.String(d.Get("cloudwatch_log_group_arn").(string))
+		if d.HasChanges(names.AttrCloudWatchLogGroupARN) {
+			input.CloudWatchLogGroupArn = aws.String(d.Get(names.AttrCloudWatchLogGroupARN).(string))
 		}
 
 		if d.HasChanges("excludes") {

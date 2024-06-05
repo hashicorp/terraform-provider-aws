@@ -22,6 +22,7 @@ import (
 
 // @SDKResource("aws_ec2_transit_gateway_vpc_attachment_accepter", name="Transit Gateway VPC Attachment")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayVPCAttachmentAccepterCreate,

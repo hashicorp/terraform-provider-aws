@@ -10,7 +10,7 @@
       exclude:
         - internal/service/{{ .ProviderPackage }}/list_pages_gen.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
@@ -36,7 +36,7 @@
             - pattern-not-regex: Framework
             {{- end }}
       - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T) { ... }
+      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING
 {{- end }}
 {{- if .MainAlias }}
@@ -48,7 +48,7 @@
       include:
         - internal/service/{{ .ProviderPackage }}/{{ .FilePrefix }}*_test.go
     patterns:
-      - pattern: func $NAME( ... ) { ... }
+      - pattern: func $NAME( ... )
       - metavariable-pattern:
           metavariable: $NAME
           patterns:

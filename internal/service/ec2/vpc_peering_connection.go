@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_vpc_peering_connection", name="VPC Peering Connection")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCPeeringConnectionCreate,

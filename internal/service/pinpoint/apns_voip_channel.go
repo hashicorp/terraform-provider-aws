@@ -29,7 +29,7 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -93,7 +93,7 @@ func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.APNSVoipChannelRequest{}
 
@@ -142,7 +142,7 @@ func resourceAPNSVoIPChannelRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "getting Pinpoint APNs Voip Channel for application %s: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", output.APNSVoipChannelResponse.ApplicationId)
+	d.Set(names.AttrApplicationID, output.APNSVoipChannelResponse.ApplicationId)
 	d.Set("default_authentication_method", output.APNSVoipChannelResponse.DefaultAuthenticationMethod)
 	d.Set(names.AttrEnabled, output.APNSVoipChannelResponse.Enabled)
 	// Sensitive params are not returned

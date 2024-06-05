@@ -54,7 +54,7 @@ func resourceAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -276,7 +276,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  "association/" + aws.ToString(association.AssociationId),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("association_id", association.AssociationId)
+	d.Set(names.AttrAssociationID, association.AssociationId)
 	d.Set("association_name", association.AssociationName)
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 	d.Set("compliance_severity", association.ComplianceSeverity)

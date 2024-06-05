@@ -713,6 +713,34 @@ func FindInstanceByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Insta
 	return output, nil
 }
 
+func FindInstanceByIDV2(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Instance, error) {
+	input := &ec2_sdkv2.DescribeInstancesInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := FindInstanceV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.State.Name == awstypes.InstanceStateNameTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(output.State.Name),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.InstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindVolumeAttachment(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string) (*ec2.VolumeAttachment, error) {
 	input := &ec2.DescribeVolumesInput{
 		Filters: newAttributeFilterList(map[string]string{

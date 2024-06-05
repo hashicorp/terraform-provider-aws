@@ -46,7 +46,7 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"ip_addresses": {
+			names.AttrIPAddresses: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -143,7 +143,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		ips = append(ips, v.Ip)
 	}
 
-	d.Set("ip_addresses", aws.StringValueSlice(ips))
+	d.Set(names.AttrIPAddresses, aws.StringValueSlice(ips))
 
 	return nil
 }

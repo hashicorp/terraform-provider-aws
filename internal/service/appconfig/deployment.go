@@ -41,7 +41,7 @@ func ResourceDeployment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -113,7 +113,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	input := &appconfig.StartDeploymentInput{
-		ApplicationId:          aws.String(d.Get("application_id").(string)),
+		ApplicationId:          aws.String(d.Get(names.AttrApplicationID).(string)),
 		EnvironmentId:          aws.String(d.Get("environment_id").(string)),
 		ConfigurationProfileId: aws.String(d.Get("configuration_profile_id").(string)),
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
@@ -186,7 +186,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 		Service:   "appconfig",
 	}.String()
 
-	d.Set("application_id", output.ApplicationId)
+	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set(names.AttrARN, arn)
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
 	d.Set("configuration_version", output.ConfigurationVersion)

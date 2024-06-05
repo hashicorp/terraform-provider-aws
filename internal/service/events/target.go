@@ -120,7 +120,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"capacity_provider_strategy": {
+						names.AttrCapacityProviderStrategy: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -935,7 +935,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 		tfMap := c.(map[string]interface{})
 		tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]interface{}))
 
-		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrCapacityProviderStrategy].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
 		}
 
@@ -1199,7 +1199,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 	}
 
 	if ecsParameters.CapacityProviderStrategy != nil {
-		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
+		config[names.AttrCapacityProviderStrategy] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
 	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()

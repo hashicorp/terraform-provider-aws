@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_ec2_transit_gateway_policy_table", name="Transit Gateway Policy Table")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTransitGatewayPolicyTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPolicyTableCreate,

@@ -5,6 +5,24 @@ package transfer
 
 // Exports for use in tests only.
 var (
-	ResourceServer = resourceServer
-	ResourceTag    = resourceTag
+	ResourceAccess      = resourceAccess
+	ResourceAgreement   = resourceAgreement
+	ResourceCertificate = resourceCertificate
+	ResourceConnector   = resourceConnector
+	ResourceProfile     = resourceProfile
+	ResourceServer      = resourceServer
+	ResourceSSHKey      = resourceSSHKey
+	ResourceTag         = resourceTag
+	ResourceUser        = resourceUser
+	ResourceWorkflow    = resourceWorkflow
+
+	FindAccessByTwoPartKey       = findAccessByTwoPartKey
+	FindAgreementByTwoPartKey    = findAgreementByTwoPartKey
+	FindCertificateByID          = findCertificateByID
+	FindConnectorByID            = findConnectorByID
+	FindProfileByID              = findProfileByID
+	FindServerByID               = findServerByID
+	FindUserByTwoPartKey         = findUserByTwoPartKey
+	FindUserSSHKeyByThreePartKey = findUserSSHKeyByThreePartKey
+	FindWorkflowByID             = findWorkflowByID
 )

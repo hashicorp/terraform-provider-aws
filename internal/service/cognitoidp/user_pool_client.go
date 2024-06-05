@@ -233,7 +233,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -261,7 +261,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 							Validators: []validator.String{
 								stringvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("application_arn"),
-									path.MatchRelative().AtParent().AtName("application_id"),
+									path.MatchRelative().AtParent().AtName(names.AttrApplicationID),
 								),
 								stringvalidator.ConflictsWith(
 									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
@@ -269,7 +269,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 								),
 							},
 						},
-						"application_id": schema.StringAttribute{
+						names.AttrApplicationID: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
@@ -541,8 +541,8 @@ func (r *userPoolClientResource) Delete(ctx context.Context, request resource.De
 	params := state.deleteInput(ctx)
 
 	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
-		names.AttrID:   state.ID.ValueString(),
-		"user_pool_id": state.UserPoolID.ValueString(),
+		names.AttrID:         state.ID.ValueString(),
+		names.AttrUserPoolID: state.UserPoolID.ValueString(),
 	})
 
 	conn := r.Meta().CognitoIDPConn(ctx)
@@ -570,7 +570,7 @@ func (r *userPoolClientResource) ImportState(ctx context.Context, request resour
 	userPoolId := parts[0]
 	clientId := parts[1]
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), userPoolId)...)
 }
 
 func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
@@ -736,7 +736,7 @@ func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovi
 
 	attrs := map[string]attr.Value{}
 	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn)
-	attrs["application_id"] = flex.StringToFramework(ctx, ac.ApplicationId)
+	attrs[names.AttrApplicationID] = flex.StringToFramework(ctx, ac.ApplicationId)
 	attrs[names.AttrExternalID] = flex.StringToFramework(ctx, ac.ExternalId)
 	attrs[names.AttrRoleARN] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
 	attrs["user_data_shared"] = flex.BoolToFramework(ctx, ac.UserDataShared)

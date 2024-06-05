@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_ec2_managed_prefix_list", name="Managed Prefix List")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPrefixListCreate,

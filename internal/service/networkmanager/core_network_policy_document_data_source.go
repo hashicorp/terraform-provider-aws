@@ -160,7 +160,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"location": {
+									names.AttrLocation: {
 										Type:     schema.TypeString,
 										Required: true,
 										// Not all regions are valid but we will not maintain a hardcoded list
@@ -620,7 +620,7 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 			continue
 		}
 
-		location := cfgEdgeLocation["location"].(string)
+		location := cfgEdgeLocation[names.AttrLocation].(string)
 
 		if _, ok := locMap[location]; ok {
 			return nil, fmt.Errorf("duplicate Location (%s). Remove the Location or ensure the Location is unique.", location)
