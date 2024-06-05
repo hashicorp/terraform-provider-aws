@@ -82,12 +82,13 @@ const (
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
-	const region = "us-west-2" //lintignore:AWSAT003
+	const providerRegion = "us-west-2" //lintignore:AWSAT003
+	const expectedEndpointRegion = providerRegion
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(region),
+			expected: expectDefaultEndpoint(expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -286,7 +287,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, region, testcase, callService)
+			testEndpointCase(t, providerRegion, testcase, callService)
 		})
 	}
 }

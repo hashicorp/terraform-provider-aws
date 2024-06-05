@@ -115,12 +115,19 @@ const (
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
-	const region = "{{ .Region }}" //lintignore:AWSAT003
+	const providerRegion = "{{ .Region }}" //lintignore:AWSAT003
+	{{ if .OverrideRegionRegionalEndpoint -}}
+	// {{ .HumanFriendly }} has a single regional endpoint
+	// However, the AWS SDK's endpoint resolution returns one for whatever region you're using
+	const expectedEndpointRegion = "{{ .OverrideRegion }}" //lintignore:AWSAT003
+	{{ else -}}
+	const expectedEndpointRegion = providerRegion
+	{{ end }}
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(region),
+			expected: expectDefaultEndpoint(expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -479,7 +486,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			testcase := testcase
 
 			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV1)
+				testEndpointCase(t, providerRegion, testcase, callServiceV1)
 			})
 		}
 	})
@@ -489,7 +496,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			testcase := testcase
 
 			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV2)
+				testEndpointCase(t, providerRegion, testcase, callServiceV2)
 			})
 		}
 	})
@@ -498,7 +505,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
-            testEndpointCase(t, region, testcase, callService)
+            testEndpointCase(t, providerRegion, testcase, callService)
 		})
 	}
 	{{ end -}}

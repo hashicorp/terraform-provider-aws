@@ -56,6 +56,7 @@ func main() {
 		g.Infof("Generating internal/service/%s/%s", packageName, filename)
 
 		td := TemplateData{
+			HumanFriendly:     l.HumanFriendly(),
 			PackageName:       packageName,
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
@@ -113,6 +114,7 @@ func main() {
 }
 
 type TemplateData struct {
+	HumanFriendly                     string
 	PackageName                       string
 	GoV1Package                       string
 	GoV2Package                       string
@@ -129,6 +131,8 @@ type TemplateData struct {
 	Aliases                           []string
 	ImportAwsTypes                    bool
 	OverrideRegion                    string
+	// The provider switches to the required region, but the service has a regional endpoint
+	OverrideRegionRegionalEndpoint bool
 }
 
 //go:embed file.gtpl
