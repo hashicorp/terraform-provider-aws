@@ -62,6 +62,8 @@ var (
 	ResourceVPNGatewayRoutePropagation               = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                                        = customFiltersSchema
+	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
+	ErrCodeInvalidSpotDatafeedNotFound                         = errCodeInvalidSpotDatafeedNotFound
 	FindAvailabilityZonesV2                                    = findAvailabilityZonesV2
 	FindCarrierGatewayByID                                     = findCarrierGatewayByID
 	FindClientVPNAuthorizationRuleByThreePartKey               = findClientVPNAuthorizationRuleByThreePartKey

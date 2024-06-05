@@ -1686,7 +1686,7 @@ func FindSpotDatafeedSubscription(ctx context.Context, conn *ec2.EC2) (*ec2.Spot
 
 	output, err := conn.DescribeSpotDatafeedSubscriptionWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotDatafeedNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
