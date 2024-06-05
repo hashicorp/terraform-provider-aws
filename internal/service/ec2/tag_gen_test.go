@@ -30,7 +30,7 @@ func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tfec2.GetTag(ctx, conn, identifier, key)
+			_, err = tfec2.findTag(ctx, conn, identifier, key)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -61,7 +61,7 @@ func testAccCheckTagExists(ctx context.Context, n string) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err = tfec2.GetTag(ctx, conn, identifier, key)
+		_, err = tfec2.findTag(ctx, conn, identifier, key)
 
 		return err
 	}

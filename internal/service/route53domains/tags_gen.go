@@ -17,12 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// GetTag fetches an individual route53domains service tag for a resource.
+// findTag fetches an individual route53domains service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
 // This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn *route53domains.Client, identifier, key string, optFns ...func(*route53domains.Options)) (*string, error) {
+func findTag(ctx context.Context, conn *route53domains.Client, identifier, key string, optFns ...func(*route53domains.Options)) (*string, error) {
 	listTags, err := listTags(ctx, conn, identifier, optFns...)
 
 	if err != nil {
