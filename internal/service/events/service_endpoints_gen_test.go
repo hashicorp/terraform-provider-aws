@@ -329,7 +329,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(region),
+			expected: expectDefaultFIPSEndpoint(expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -484,6 +484,7 @@ func expectDefaultEndpoint(region string) caseExpectations {
 func expectDefaultFIPSEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultFIPSEndpoint(region),
+		region:   "us-west-2",
 	}
 }
 

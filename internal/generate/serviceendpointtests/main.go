@@ -96,8 +96,9 @@ func main() {
 		// case "costoptimizationhub", "cur", "route53domains":
 		// 	td.Region = "us-east-1"
 		// }
+		// This should be moved to service data
 		switch packageName {
-		case "route53domains":
+		case "costoptimizationhub", "route53domains":
 			td.OverrideRegionRegionalEndpoint = true
 		}
 
