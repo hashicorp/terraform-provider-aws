@@ -38,9 +38,7 @@ var (
 	ResourceSecurityGroupEgressRule                  = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                 = newSecurityGroupIngressRuleResource
 	ResourceTag                                      = resourceTag
-	ResourceTransitGateway                           = resourceTransitGateway
 	ResourceTransitGatewayConnect                    = resourceTransitGatewayConnect
-	ResourceTransitGatewayConnectPeer                = resourceTransitGatewayConnectPeer
 	ResourceTransitGatewayMulticastDomain            = resourceTransitGatewayMulticastDomain
 	ResourceTransitGatewayMulticastDomainAssociation = resourceTransitGatewayMulticastDomainAssociation
 	ResourceTransitGatewayMulticastGroupMember       = resourceTransitGatewayMulticastGroupMember

@@ -14,6 +14,8 @@ var (
 	NewCustomFilterListFrameworkV2                                   = newCustomFilterListFrameworkV2
 	NewFilter                                                        = newFilter
 	NewFilterV2                                                      = newFilterV2
+	ResourceTransitGateway                                           = resourceTransitGateway
+	ResourceTransitGatewayConnectPeer                                = resourceTransitGatewayConnectPeer
 	VPCEndpointCreationTimeout                                       = vpcEndpointCreationTimeout
 	WaitVPCEndpointAvailableV2                                       = waitVPCEndpointAvailableV2
 )
