@@ -92,7 +92,7 @@ func resourceTransitGatewayPrefixListReferenceCreate(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Prefix List Reference: %s", err)
 	}
 
-	d.SetId(TransitGatewayPrefixListReferenceCreateResourceID(aws.ToString(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.ToString(output.TransitGatewayPrefixListReference.PrefixListId)))
+	d.SetId(transitGatewayPrefixListReferenceCreateResourceID(aws.ToString(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.ToString(output.TransitGatewayPrefixListReference.PrefixListId)))
 
 	if _, err := waitTransitGatewayPrefixListReferenceStateCreated(ctx, conn, aws.ToString(output.TransitGatewayPrefixListReference.TransitGatewayRouteTableId), aws.ToString(output.TransitGatewayPrefixListReference.PrefixListId)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Prefix List Reference (%s) create: %s", d.Id(), err)
@@ -105,10 +105,9 @@ func resourceTransitGatewayPrefixListReferenceRead(ctx context.Context, d *schem
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
-
+	transitGatewayRouteTableID, prefixListID, err := transitGatewayPrefixListReferenceParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Prefix List Reference (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	transitGatewayPrefixListReference, err := findTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)
@@ -175,19 +174,18 @@ func resourceTransitGatewayPrefixListReferenceDelete(ctx context.Context, d *sch
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
-
+	transitGatewayRouteTableID, prefixListID, err := transitGatewayPrefixListReferenceParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Prefix List Reference (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Prefix List Reference: %s", d.Id())
+	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Prefix List Reference: %s", d.Id())
 	_, err = conn.DeleteTransitGatewayPrefixListReference(ctx, &ec2.DeleteTransitGatewayPrefixListReferenceInput{
 		PrefixListId:               aws.String(prefixListID),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound, errCodeInvalidPrefixListIDNotFound) {
 		return diags
 	}
 
@@ -204,14 +202,14 @@ func resourceTransitGatewayPrefixListReferenceDelete(ctx context.Context, d *sch
 
 const transitGatewayPrefixListReferenceIDSeparator = "_"
 
-func TransitGatewayPrefixListReferenceCreateResourceID(transitGatewayRouteTableID string, prefixListID string) string {
+func transitGatewayPrefixListReferenceCreateResourceID(transitGatewayRouteTableID string, prefixListID string) string {
 	parts := []string{transitGatewayRouteTableID, prefixListID}
 	id := strings.Join(parts, transitGatewayPrefixListReferenceIDSeparator)
 
 	return id
 }
 
-func TransitGatewayPrefixListReferenceParseResourceID(id string) (string, string, error) {
+func transitGatewayPrefixListReferenceParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, transitGatewayPrefixListReferenceIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
