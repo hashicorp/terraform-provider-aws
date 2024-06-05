@@ -27,7 +27,7 @@ import (
 // @SDKResource("aws_ec2_transit_gateway_route_table", name="Transit Gateway Route Table")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceTransitGatewayRouteTable() *schema.Resource {
+func resourceTransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteTableRead,

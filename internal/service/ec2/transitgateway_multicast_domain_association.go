@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_multicast_domain_association")
-func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_multicast_domain_association", name="Transit Gateway Multicast Domain Association")
+func resourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayMulticastDomainAssociationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayMulticastDomainAssociationRead,

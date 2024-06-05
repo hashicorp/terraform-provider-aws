@@ -27,7 +27,7 @@ import (
 // @SDKResource("aws_ec2_transit_gateway_connect", name="Transit Gateway Connect")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceTransitGatewayConnect() *schema.Resource {
+func resourceTransitGatewayConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayConnectRead,

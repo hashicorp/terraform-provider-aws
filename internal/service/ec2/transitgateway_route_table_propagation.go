@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_route_table_propagation")
-func ResourceTransitGatewayRouteTablePropagation() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_route_table_propagation", name="Transit Gateway Route Table Propagation")
+func resourceTransitGatewayRouteTablePropagation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTablePropagationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteTablePropagationRead,

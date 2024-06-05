@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_route_table_associations")
-func DataSourceTransitGatewayRouteTableAssociations() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_route_table_associations", name="Transit Gateway Route Table Associations")
+func dataSourceTransitGatewayRouteTableAssociations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableAssociationsRead,
 

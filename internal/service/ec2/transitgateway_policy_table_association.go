@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_policy_table_association")
-func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_policy_table_association", name="Transit Gateway Policy Table Association")
+func resourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPolicyTableAssociationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayPolicyTableAssociationRead,

@@ -20,10 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_vpc_attachment_accepter", name="Transit Gateway VPC Attachment")
+// @SDKResource("aws_ec2_transit_gateway_vpc_attachment_accepter", name="Transit Gateway VPC Attachment Accepter")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
+func resourceTransitGatewayVPCAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayVPCAttachmentAccepterCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayVPCAttachmentAccepterRead,

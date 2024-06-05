@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_route_table_propagations")
-func DataSourceTransitGatewayRouteTablePropagations() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_route_table_propagations", name="Transit Gateway Route Table Propagations")
+func dataSourceTransitGatewayRouteTablePropagations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTablePropagationsRead,
 

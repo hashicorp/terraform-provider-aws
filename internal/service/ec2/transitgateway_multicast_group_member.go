@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_multicast_group_member")
-func ResourceTransitGatewayMulticastGroupMember() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_multicast_group_member", name="Transit Gateway Multicast Group Member")
+func resourceTransitGatewayMulticastGroupMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayMulticastGroupMemberCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayMulticastGroupMemberRead,

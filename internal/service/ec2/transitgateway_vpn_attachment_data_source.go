@@ -19,8 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_vpn_attachment")
-func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_vpn_attachment", name="Transit Gateway VPN Attachment")
+// @Tags
+func dataSourceTransitGatewayVPNAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayVPNAttachmentRead,
 
@@ -46,7 +47,6 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
@@ -86,9 +86,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, transitGatewayAttachment.Tags)
 
 	return diags
 }

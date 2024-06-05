@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_attachments")
-func DataSourceTransitGatewayAttachments() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_attachments", name="Transit Gateway Attachments")
+func dataSourceTransitGatewayAttachments() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayAttachmentsRead,
 

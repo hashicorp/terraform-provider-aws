@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_route_table_association")
-func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_route_table_association", name="Transit Gateway Route Table Association")
+func resourceTransitGatewayRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteTableAssociationRead,

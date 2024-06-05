@@ -19,8 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_attachment")
-func DataSourceTransitGatewayAttachment() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_attachment", name="Transit Gateway Attachment")
+// @Tags
+func dataSourceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayAttachmentRead,
 
@@ -75,7 +76,6 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
@@ -125,9 +125,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, transitGatewayAttachment.Tags)
 
 	return diags
 }

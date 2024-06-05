@@ -32,7 +32,7 @@ import (
 // @SDKResource("aws_ec2_transit_gateway_connect_peer", name="Transit Gateway Connect Peer")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceTransitGatewayConnectPeer() *schema.Resource {
+func resourceTransitGatewayConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectPeerCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayConnectPeerRead,

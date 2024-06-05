@@ -23,12 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_route")
-func ResourceTransitGatewayRoute() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_route", name="Transit Gateway Route")
+func resourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayRouteCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayRouteRead,
 		DeleteWithoutTimeout: resourceTransitGatewayRouteDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

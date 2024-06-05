@@ -21,13 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_transit_gateway_prefix_list_reference")
-func ResourceTransitGatewayPrefixListReference() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_prefix_list_reference", name="Transit Gateway Prefix List Reference")
+func resourceTransitGatewayPrefixListReference() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPrefixListReferenceCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayPrefixListReferenceRead,
 		UpdateWithoutTimeout: resourceTransitGatewayPrefixListReferenceUpdate,
 		DeleteWithoutTimeout: resourceTransitGatewayPrefixListReferenceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
