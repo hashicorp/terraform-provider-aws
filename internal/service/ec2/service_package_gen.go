@@ -51,6 +51,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
+			Factory: newResourceCapacityBlockReservation,
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory: newResourceEndpointPrivateDNS,
 			Name:    "Endpoint Private DNS",
 		},
@@ -559,11 +565,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAvailabilityZoneGroup,
 			TypeName: "aws_ec2_availability_zone_group",
-		},
-		{
-			Factory:  ResourceCapacityBlockReservation,
-			TypeName: "aws_ec2_capacity_block_reservation",
-			Name:     "Capacity Block Reservation",
 		},
 		{
 			Factory:  ResourceCapacityReservation,
