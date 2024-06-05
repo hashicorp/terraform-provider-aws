@@ -92,9 +92,16 @@ func main() {
 			}
 		}
 
-		// This should be moved to service data
 		switch packageName {
+		// TODO: This case should be handled in service data
 		case "costoptimizationhub", "cur", "route53domains":
+			td.OverrideRegionRegionalEndpoint = true
+
+		case "chatbot":
+			// chatbot is available in `us-east-2`, `us-west-2`, `eu-west-1`, and `ap-southeast-1`
+			// If the service is called from any other region, it defaults to `us-west-2`
+			td.Region = "us-east-1"
+			td.OverrideRegion = "us-west-2"
 			td.OverrideRegionRegionalEndpoint = true
 		}
 

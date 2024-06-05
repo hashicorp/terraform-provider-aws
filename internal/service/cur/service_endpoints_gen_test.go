@@ -82,8 +82,8 @@ const (
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
-	// Cost and Usage Report has a single regional endpoint
-	// However, the AWS SDK's endpoint resolution returns one for whatever region you're using
+	// Cost and Usage Report uses a regional endpoint but is only available in one region or a limited number of regions.
+	// The provider overrides the region for Cost and Usage Report, but the AWS SDK's endpoint resolution returns one for the current region.
 	const expectedEndpointRegion = "us-east-1" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{

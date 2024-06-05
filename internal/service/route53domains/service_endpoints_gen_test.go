@@ -77,8 +77,8 @@ const (
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
-	// Route 53 Domains has a single regional endpoint
-	// However, the AWS SDK's endpoint resolution returns one for whatever region you're using
+	// Route 53 Domains uses a regional endpoint but is only available in one region or a limited number of regions.
+	// The provider overrides the region for Route 53 Domains, but the AWS SDK's endpoint resolution returns one for the current region.
 	const expectedEndpointRegion = "us-east-1" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{

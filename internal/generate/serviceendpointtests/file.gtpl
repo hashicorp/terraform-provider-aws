@@ -117,8 +117,8 @@ const (
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	const providerRegion = "{{ .Region }}" //lintignore:AWSAT003
 	{{ if .OverrideRegionRegionalEndpoint -}}
-	// {{ .HumanFriendly }} has a single regional endpoint
-	// However, the AWS SDK's endpoint resolution returns one for whatever region you're using
+	// {{ .HumanFriendly }} uses a regional endpoint but is only available in one region or a limited number of regions.
+	// The provider overrides the region for {{ .HumanFriendly }}, but the AWS SDK's endpoint resolution returns one for the current region.
 	const expectedEndpointRegion = "{{ .OverrideRegion }}" //lintignore:AWSAT003
 	{{ else -}}
 	const expectedEndpointRegion = providerRegion
