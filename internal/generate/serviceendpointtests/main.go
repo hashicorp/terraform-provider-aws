@@ -66,13 +66,11 @@ func main() {
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
 			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),
+			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
 		if l.ClientSDKV1() {
 			td.GoV1Package = l.GoV1Package()
 
-			if strings.Contains(td.APICallParams, "aws_sdkv1") {
-				td.ImportAWS_V1 = true
-			}
 			switch packageName {
 			case "imagebuilder",
 				"globalaccelerator",
@@ -93,10 +91,10 @@ func main() {
 			}
 		}
 
-		switch packageName {
-		case "costoptimizationhub", "cur", "route53domains":
-			td.Region = "us-east-1"
-		}
+		// switch packageName {
+		// case "costoptimizationhub", "cur", "route53domains":
+		// 	td.Region = "us-east-1"
+		// }
 
 		if td.APICall == "" {
 			g.Fatalf("error generating service endpoint tests: package %q missing APICall", packageName)
@@ -129,8 +127,8 @@ type TemplateData struct {
 	V1NameResolverNeedsUnknownService bool
 	V1AlternateInputPackage           string
 	Aliases                           []string
-	ImportAWS_V1                      bool
 	ImportAwsTypes                    bool
+	OverrideRegion                    string
 }
 
 //go:embed file.gtpl

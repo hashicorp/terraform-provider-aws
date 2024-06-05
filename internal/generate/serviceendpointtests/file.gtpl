@@ -6,6 +6,7 @@ import (
 	"context"
 	{{- if ne .GoV2Package "" }}
 	"errors"
+	"reflect"
 	{{- end }}
 	"fmt"
 	"maps"
@@ -14,14 +15,11 @@ import (
 	{{- end }}
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
 	{{ if ne .GoV1Package "" }}
-	{{ if .ImportAWS_V1 }}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	{{ end -}}
 	{{ if eq .GoV2Package "" }}"github.com/aws/aws-sdk-go/aws/endpoints"{{ end }}
 	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
 	{{- end }}
@@ -30,13 +28,14 @@ import (
 	{{- end -}}
 	{{- if ne .GoV2Package "" }}
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 	{{- if .ImportAwsTypes }}
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}/types"
 	{{- end }}
-	{{- end }}
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
+	{{- end }}
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	{{- if gt (len .Aliases) 0 }}
@@ -70,11 +69,17 @@ type configFile struct {
 type caseExpectations struct {
 	diags    diag.Diagnostics
 	endpoint string
+	region   string
+}
+
+type apiCallParams struct {
+	endpoint string
+	region   string
 }
 
 type setupFunc func(setup *caseSetup)
 
-type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) string
+type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams
 
 const (
 	packageNameConfigEndpoint = "https://packagename-config.endpoint.test/"
@@ -577,19 +582,20 @@ func defaultFIPSEndpoint(region string) string {
 }
 
 {{ if ne .GoV2Package "" }}
-func callService{{ if ne .GoV1Package "" }}V2{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callService{{ if ne .GoV1Package "" }}V2{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	var endpoint string
-
 	client := meta.{{ .ProviderNameUpper }}Client(ctx)
+
+	var result apiCallParams
 
 	_, err := client.{{ .APICall }}(ctx, &{{ .GoV2Package }}_sdkv2.{{ .APICall }}Input{
 	{{ if ne .APICallParams "" }}{{ .APICallParams }},{{ end }}
 	},
 		func(opts *{{ .GoV2Package }}_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
-				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
+				addRetrieveRegionMiddleware(&result.region),
 				addCancelRequestMiddleware(),
 			)
 		},
@@ -600,12 +606,12 @@ func callService{{ if ne .GoV1Package "" }}V2{{ end }}(ctx context.Context, t *t
 		t.Fatalf("Unexpected error: %s", err)
 	}
 
-	return endpoint
+	return result
 }
 {{ end }}
 
 {{ if ne .GoV1Package "" }}
-func callService{{ if ne .GoV2Package "" }}V1{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callService{{ if ne .GoV2Package "" }}V1{{ end }}(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.{{ .ProviderNameUpper }}Conn(ctx)
@@ -619,9 +625,10 @@ func callService{{ if ne .GoV2Package "" }}V1{{ end }}(ctx context.Context, t *t
 
 	req.HTTPRequest.URL.Path = "/"
 
-	endpoint := req.HTTPRequest.URL.String()
-
-	return endpoint
+	return apiCallParams{
+		endpoint: req.HTTPRequest.URL.String(),
+		region:   aws_sdkv1.StringValue(client.Config.Region),
+	}
 }
 {{ end }}
 
@@ -699,6 +706,7 @@ func withUseFIPSInConfig(setup *caseSetup) {
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 
@@ -711,13 +719,17 @@ func expectDefaultFIPSEndpoint(region string) caseExpectations {
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 
+{{ $region := .Region }}
+{{ if .OverrideRegion }}{{ $region = .OverrideRegion }}{{ end }}
 {{ range $i, $alias := .Aliases }}
 func expectAliasName{{ $i }}ConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: aliasName{{ $i }}ConfigEndpoint,
+		region:   "{{ $region }}",
 	}
 }
 {{ end }}
@@ -725,12 +737,14 @@ func expectAliasName{{ $i }}ConfigEndpoint() caseExpectations {
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 
@@ -741,6 +755,7 @@ func expectTfAwsEnvVarEndpoint() caseExpectations {
 		diags: diag.Diagnostics{
 			provider.DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar),
 		},
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 {{ end }}
@@ -752,6 +767,7 @@ func expectDeprecatedEnvVarEndpoint() caseExpectations {
 		diags: diag.Diagnostics{
 			provider.DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar),
 		},
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 {{ end }}
@@ -759,12 +775,14 @@ func expectDeprecatedEnvVarEndpoint() caseExpectations {
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
+		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
 	}
 }
 
@@ -828,13 +846,18 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	endpoint := callF(ctx, t, meta)
+	callParams := callF(ctx, t, meta)
 
-	if endpoint != testcase.expected.endpoint {
-		t.Errorf("expected endpoint %q, got %q", testcase.expected.endpoint, endpoint)
+	if e, a := testcase.expected.endpoint, callParams.endpoint; e != a {
+		t.Errorf("expected endpoint %q, got %q", e, a)
+	}
+
+	if e, a := testcase.expected.region, callParams.region; e != a {
+		t.Errorf("expected region %q, got %q", e, a)
 	}
 }
 
+{{ if ne .GoV2Package "" }}
 func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
 		return stack.Finalize.Add(
@@ -863,6 +886,26 @@ func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.Fi
 
 			return next.HandleFinalize(ctx, in)
 		})
+}
+
+func addRetrieveRegionMiddleware(region *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Serialize.Add(
+			retrieveRegionMiddleware(region),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
+	return middleware.SerializeMiddlewareFunc(
+		"Test: Retrieve Region",
+		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+			*region = awsmiddleware.GetRegion(ctx)
+
+			return next.HandleSerialize(ctx, in)
+		},
+	)
 }
 
 var errCancelOperation = fmt.Errorf("Test: Canceling request")
@@ -897,6 +940,7 @@ func fullValueTypeName(v reflect.Value) string {
 	requestType := v.Type()
 	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
 }
+{{ end }}
 
 func generateSharedConfigFile(config configFile) string {
 	var buf strings.Builder

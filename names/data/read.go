@@ -171,7 +171,7 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 	return sr[colEndpointAPIParams]
 }
 
-func (sr ServiceRecord) colEndpointOverrideRegion() string {
+func (sr ServiceRecord) EndpointOverrideRegion() string {
 	return sr[colEndpointOverrideRegion]
 }
 

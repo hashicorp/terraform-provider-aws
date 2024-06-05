@@ -9,14 +9,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -47,11 +45,17 @@ type configFile struct {
 type caseExpectations struct {
 	diags    diag.Diagnostics
 	endpoint string
+	region   string
+}
+
+type apiCallParams struct {
+	endpoint string
+	region   string
 }
 
 type setupFunc func(setup *caseSetup)
 
-type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) string
+type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams
 
 const (
 	packageNameConfigEndpoint = "https://packagename-config.endpoint.test/"
@@ -265,7 +269,7 @@ func defaultFIPSEndpoint(region string) string {
 	return url.String()
 }
 
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.GuardDutyConn(ctx)
@@ -274,9 +278,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 
 	req.HTTPRequest.URL.Path = "/"
 
-	endpoint := req.HTTPRequest.URL.String()
-
-	return endpoint
+	return apiCallParams{
+		endpoint: req.HTTPRequest.URL.String(),
+		region:   aws_sdkv1.StringValue(client.Config.Region),
+	}
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -316,6 +321,7 @@ func withUseFIPSInConfig(setup *caseSetup) {
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
+		region:   "us-west-2",
 	}
 }
 
@@ -328,30 +334,35 @@ func expectDefaultFIPSEndpoint(region string) caseExpectations {
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
+		region:   "us-west-2",
 	}
 }
 
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
+		region:   "us-west-2",
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
+		region:   "us-west-2",
 	}
 }
 
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
+		region:   "us-west-2",
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
+		region:   "us-west-2",
 	}
 }
 
@@ -415,74 +426,15 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	endpoint := callF(ctx, t, meta)
+	callParams := callF(ctx, t, meta)
 
-	if endpoint != testcase.expected.endpoint {
-		t.Errorf("expected endpoint %q, got %q", testcase.expected.endpoint, endpoint)
-	}
-}
-
-func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
-	return func(stack *middleware.Stack) error {
-		return stack.Finalize.Add(
-			retrieveEndpointURLMiddleware(t, endpoint),
-			middleware.After,
-		)
-	}
-}
-
-func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.FinalizeMiddleware {
-	return middleware.FinalizeMiddlewareFunc(
-		"Test: Retrieve Endpoint",
-		func(ctx context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
-			t.Helper()
-
-			request, ok := in.Request.(*smithyhttp.Request)
-			if !ok {
-				t.Fatalf("Expected *github.com/aws/smithy-go/transport/http.Request, got %s", fullTypeName(in.Request))
-			}
-
-			url := request.URL
-			url.RawQuery = ""
-			url.Path = "/"
-
-			*endpoint = url.String()
-
-			return next.HandleFinalize(ctx, in)
-		})
-}
-
-var errCancelOperation = fmt.Errorf("Test: Canceling request")
-
-func addCancelRequestMiddleware() func(*middleware.Stack) error {
-	return func(stack *middleware.Stack) error {
-		return stack.Finalize.Add(
-			cancelRequestMiddleware(),
-			middleware.After,
-		)
-	}
-}
-
-// cancelRequestMiddleware creates a Smithy middleware that intercepts the request before sending and cancels it
-func cancelRequestMiddleware() middleware.FinalizeMiddleware {
-	return middleware.FinalizeMiddlewareFunc(
-		"Test: Cancel Requests",
-		func(_ context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
-			return middleware.FinalizeOutput{}, middleware.Metadata{}, errCancelOperation
-		})
-}
-
-func fullTypeName(i interface{}) string {
-	return fullValueTypeName(reflect.ValueOf(i))
-}
-
-func fullValueTypeName(v reflect.Value) string {
-	if v.Kind() == reflect.Ptr {
-		return "*" + fullValueTypeName(reflect.Indirect(v))
+	if e, a := testcase.expected.endpoint, callParams.endpoint; e != a {
+		t.Errorf("expected endpoint %q, got %q", e, a)
 	}
 
-	requestType := v.Type()
-	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
+	if e, a := testcase.expected.region, callParams.region; e != a {
+		t.Errorf("expected region %q, got %q", e, a)
+	}
 }
 
 func generateSharedConfigFile(config configFile) string {
