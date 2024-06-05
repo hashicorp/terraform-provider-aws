@@ -96,6 +96,10 @@ func main() {
 		// case "costoptimizationhub", "cur", "route53domains":
 		// 	td.Region = "us-east-1"
 		// }
+		switch packageName {
+		case "route53domains":
+			td.OverrideRegionRegionalEndpoint = true
+		}
 
 		if td.APICall == "" {
 			g.Fatalf("error generating service endpoint tests: package %q missing APICall", packageName)
