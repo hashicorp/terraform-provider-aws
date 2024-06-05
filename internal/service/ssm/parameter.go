@@ -258,7 +258,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "invalid configuration, cannot set type = %s and insecure_value", param.Type)
 	}
 
-	detail, err := findParameterMetadataByName(ctx, conn, d.Id())
+	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
