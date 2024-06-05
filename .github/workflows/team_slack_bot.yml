@@ -18,6 +18,10 @@ jobs:
           installation_retrieval_mode: id
           installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
           private_key: ${{secrets.APP_PEM }}
+          permissions: >-
+            {
+              "members": "read"
+            }
       - name: open-pr-stats
         uses: breathingdust/github-team-slackbot@8f1053f9b472b94e6564ebc499a92136c48ace1f # v18.5.1
         with:
