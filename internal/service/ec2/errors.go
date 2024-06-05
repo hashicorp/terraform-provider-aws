@@ -29,6 +29,7 @@ const (
 	errCodeInvalidAMIIDUnavailable                           = "InvalidAMIID.Unavailable"
 	errCodeInvalidAddressNotFound                            = "InvalidAddress.NotFound"
 	errCodeInvalidAllocationIDNotFound                       = "InvalidAllocationID.NotFound"
+	errCodeInvalidAssociationNotFound                        = "InvalidAssociation.NotFound"
 	errCodeInvalidAssociationIDNotFound                      = "InvalidAssociationID.NotFound"
 	errCodeInvalidAttachmentIDNotFound                       = "InvalidAttachmentID.NotFound"
 	errCodeInvalidCapacityReservationIdNotFound              = "InvalidCapacityReservationId.NotFound'"

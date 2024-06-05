@@ -73,7 +73,7 @@ func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *
 
 	if v := transitGatewayAttachment.Association; v != nil {
 		if transitGatewayRouteTableID := aws.ToString(v.TransitGatewayRouteTableId); transitGatewayRouteTableID != "" && v.State == awstypes.TransitGatewayAssociationStateAssociated {
-			id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+			id := transitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 			input := &ec2.DisassociateTransitGatewayRouteTableInput{
 				TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
 				TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
