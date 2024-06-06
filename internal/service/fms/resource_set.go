@@ -76,6 +76,10 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				"update_token": schema.StringAttribute{
 					Optional: true,
+					Computed: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
 				},
 				"resource_set_status": schema.StringAttribute{
 					Optional:   true,
@@ -94,6 +98,7 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrID:      framework.IDAttribute(),
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -126,35 +131,30 @@ func (r *resourceResourceSet) Create(ctx context.Context, req resource.CreateReq
 
 	in.TagList = getTagsIn(ctx)
 
-	// planID, diags := plan.ResourceSetData.ToPtr(ctx)
-	// resp.Diagnostics.Append(diags...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
-
 	out, err := conn.PutResourceSet(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.FMS, create.ErrActionCreating, ResNameResourceSet, plan.ARN.String(), err),
+			create.ProblemStandardMessage(names.FMS, create.ErrActionCreating, ResNameResourceSet, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.ResourceSet == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.FMS, create.ErrActionCreating, ResNameResourceSet, plan.ARN.String(), nil),
+			create.ProblemStandardMessage(names.FMS, create.ErrActionCreating, ResNameResourceSet, plan.ID.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
 	plan.ARN = flex.StringToFramework(ctx, out.ResourceSetArn)
+	plan.ID = flex.StringToFramework(ctx, out.ResourceSet.Id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := waitResourceSetCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
+	output, err := waitResourceSetCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForCreation, ResNameResourceSet, plan.ARN.String(), err),
+			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForCreation, ResNameResourceSet, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -177,16 +177,14 @@ func (r *resourceResourceSet) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	resourceSet, _ := state.ResourceSet.ToPtr(ctx)
-
-	out, err := findResourceSetByID(ctx, conn, resourceSet.ID.ValueString())
+	out, err := findResourceSetByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.FMS, create.ErrActionSetting, ResNameResourceSet, state.ARN.String(), err),
+			create.ProblemStandardMessage(names.FMS, create.ErrActionSetting, ResNameResourceSet, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -214,14 +212,14 @@ func (r *resourceResourceSet) Update(ctx context.Context, req resource.UpdateReq
 		out, err := conn.PutResourceSet(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.FMS, create.ErrActionUpdating, ResNameResourceSet, plan.ARN.String(), err),
+				create.ProblemStandardMessage(names.FMS, create.ErrActionUpdating, ResNameResourceSet, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.ResourceSet == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.FMS, create.ErrActionUpdating, ResNameResourceSet, plan.ARN.String(), nil),
+				create.ProblemStandardMessage(names.FMS, create.ErrActionUpdating, ResNameResourceSet, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -231,10 +229,10 @@ func (r *resourceResourceSet) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitResourceSetUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
+	_, err := waitResourceSetUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForUpdate, ResNameResourceSet, plan.ARN.String(), err),
+			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForUpdate, ResNameResourceSet, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -252,10 +250,8 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	resourceSet, _ := state.ResourceSet.ToPtr(ctx)
-
 	in := &fms.DeleteResourceSetInput{
-		Identifier: aws.String(resourceSet.ID.ValueString()),
+		Identifier: aws.String(state.ID.ValueString()),
 	}
 
 	_, err := conn.DeleteResourceSet(ctx, in)
@@ -264,17 +260,17 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.FMS, create.ErrActionDeleting, ResNameResourceSet, state.ARN.String(), err),
+			create.ProblemStandardMessage(names.FMS, create.ErrActionDeleting, ResNameResourceSet, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitResourceSetDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
+	_, err = waitResourceSetDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForDeletion, ResNameResourceSet, state.ARN.String(), err),
+			create.ProblemStandardMessage(names.FMS, create.ErrActionWaitingForDeletion, ResNameResourceSet, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -379,6 +375,7 @@ func findResourceSetByID(ctx context.Context, conn *fms.Client, id string) (*fms
 
 type resourceResourceSetData struct {
 	ARN         types.String                                     `tfsdk:"arn"`
+	ID          types.String                                     `tfsdk:"id"`
 	ResourceSet fwtypes.ListNestedObjectValueOf[resourceSetData] `tfsdk:"resource_set"`
 	Tags        types.Map                                        `tfsdk:"tags"`
 	TagsAll     types.Map                                        `tfsdk:"tags_all"`

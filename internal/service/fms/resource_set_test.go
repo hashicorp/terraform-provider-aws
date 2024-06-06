@@ -22,14 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFMSResourceSet_basic(t *testing.T) {
+func testAccFMSResourceSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var resourceset fms.GetResourceSetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_resource_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
@@ -52,7 +52,7 @@ func TestAccFMSResourceSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccFMSResourceSet_disappears(t *testing.T) {
+func testAccFMSResourceSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -62,7 +62,7 @@ func TestAccFMSResourceSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_resource_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
@@ -83,14 +83,14 @@ func TestAccFMSResourceSet_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFMSResourceSet_tags(t *testing.T) {
+func testAccFMSResourceSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var resourceset fms.GetResourceSetOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_resource_set.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
@@ -210,7 +210,7 @@ resource "aws_fms_resource_set" "test" {
   depends_on = [aws_fms_admin_account.test]
   resource_set {
     name                = %[1]q
-    resource_type_list  = ["testing"]
+    resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
     resource_set_status = "ACTIVE"
   }
 }
@@ -228,7 +228,7 @@ resource "aws_fms_admin_account" "test" {
 resource "aws_fms_resource_set" "test" {
   resource_set {
     name                = %[1]q
-    resource_type_list  = ["testing"]
+    resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
     resource_set_status = "ACTIVE"
   }
 
@@ -249,7 +249,7 @@ resource "aws_fms_admin_account" "test" {
 resource "aws_fms_resource_set" "test" {
   resource_set {
     name                = %[1]q
-    resource_type_list  = ["testing"]
+    resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
     resource_set_status = "ACTIVE"
   }
 
