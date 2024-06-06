@@ -51,18 +51,18 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringInSlice(engine_Values(), false),
-				AtLeastOneOf:  []string{"engine", "source_db_cluster_identifier"},
+				AtLeastOneOf:  []string{names.AttrEngine, "source_db_cluster_identifier"},
 				ConflictsWith: []string{"source_db_cluster_identifier"},
 			},
 			names.AttrEngineVersion: {
@@ -101,14 +101,14 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				AtLeastOneOf:  []string{"engine", "source_db_cluster_identifier"},
-				ConflictsWith: []string{"engine"},
+				AtLeastOneOf:  []string{names.AttrEngine, "source_db_cluster_identifier"},
+				ConflictsWith: []string{names.AttrEngine},
 			},
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -132,11 +132,11 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.DatabaseName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -148,7 +148,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.SourceDBClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_encrypted"); ok {
+	if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
 		input.StorageEncrypted = aws.Bool(v.(bool))
 	}
 
@@ -186,15 +186,15 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
 	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
-	d.Set("deletion_protection", globalCluster.DeletionProtection)
-	d.Set("engine", globalCluster.Engine)
+	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
+	d.Set(names.AttrEngine, globalCluster.Engine)
 	d.Set(names.AttrEngineVersion, globalCluster.EngineVersion)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_cluster_members: %s", err)
 	}
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
-	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, globalCluster.StorageEncrypted)
 
 	return diags
 }
@@ -204,9 +204,9 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		input := &docdb.ModifyGlobalClusterInput{
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			GlobalClusterIdentifier: aws.String(d.Id()),
 		}
 

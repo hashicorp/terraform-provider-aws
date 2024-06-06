@@ -97,7 +97,7 @@ const (
 	packageName = "{{ .PackageName }}"
 	awsEnvVar   = "{{ .AwsEnvVar }}"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "{{ .ConfigParameter }}"
+	configParam = {{ .ConfigParameter }}
 	{{ if ne .TFAWSEnvVar "" -}}
 	tfAwsEnvVar       = "{{ .TFAWSEnvVar }}"
 	{{- end }}
@@ -800,7 +800,7 @@ func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.Fi
 		})
 }
 
-var errCancelOperation = fmt.Errorf("Test: Cancelling request")
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
 
 func addCancelRequestMiddleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {

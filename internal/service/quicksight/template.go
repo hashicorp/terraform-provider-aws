@@ -51,7 +51,7 @@ func ResourceTemplate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -63,7 +63,7 @@ func ResourceTemplate() *schema.Resource {
 					Computed: true,
 				},
 				"definition": quicksightschema.TemplateDefinitionSchema(),
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -79,7 +79,7 @@ func ResourceTemplate() *schema.Resource {
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
@@ -134,7 +134,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	templateId := d.Get("template_id").(string)
@@ -197,9 +197,9 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)

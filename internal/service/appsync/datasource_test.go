@@ -144,7 +144,7 @@ func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", "true"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", acctest.CtTrue),
 				),
 			},
 			{
@@ -152,7 +152,7 @@ func testAccDataSource_DynamoDB_useCallerCredentials(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExistsDataSource(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.0.use_caller_credentials", acctest.CtFalse),
 				),
 			},
 			{

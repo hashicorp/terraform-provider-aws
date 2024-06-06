@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_ec2_traffic_mirror_session", name="Traffic Mirror Session")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTrafficMirrorSession() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorSessionCreate,

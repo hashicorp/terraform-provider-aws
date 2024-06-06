@@ -234,7 +234,7 @@ func TestAccRedshiftServerlessNamespace_manageAdminPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
 					testAccCheckNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "manage_admin_password", "true"),
+					resource.TestCheckResourceAttr(resourceName, "manage_admin_password", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "admin_password_secret_arn"),
 				),
 			},

@@ -120,7 +120,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -190,11 +190,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(out.ETag), `"`))
 	d.Set("expiration", out.Expiration)
-	if out.Expires != nil {
-		d.Set("expires", out.Expires.Format(time.RFC1123))
-	} else {
-		d.Set("expires", nil)
-	}
+	d.Set("expires", out.ExpiresString) // formatted in RFC1123
 	if out.LastModified != nil {
 		d.Set("last_modified", out.LastModified.Format(time.RFC1123))
 	} else {
@@ -208,9 +204,9 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if out.StorageClass != "" {
-		d.Set("storage_class", out.StorageClass)
+		d.Set(names.AttrStorageClass, out.StorageClass)
 	}
 	d.Set("version_id", out.VersionId)
 	d.Set("website_redirect_location", out.WebsiteRedirectLocation)

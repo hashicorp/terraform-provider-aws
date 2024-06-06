@@ -1,14 +1,85 @@
-## 5.51.0 (Unreleased)
+## 5.53.0 (Unreleased)
 
 FEATURES:
 
+* **New Resource:** `aws_paymentcryptography_key` ([#37017](https://github.com/hashicorp/terraform-provider-aws/issues/37017))
+* **New Resource:** `aws_paymentcryptography_key_alias` ([#37020](https://github.com/hashicorp/terraform-provider-aws/issues/37020))
+
+ENHANCEMENTS:
+
+* resource/aws_lb: Add support for IPv6-only Application Load Balancers ([#37700](https://github.com/hashicorp/terraform-provider-aws/issues/37700))
+* resource/aws_pipes_pipe: Add `log_configuration` argument ([#37135](https://github.com/hashicorp/terraform-provider-aws/issues/37135))
+* resource/aws_transfer_ssh_key: Add `ssh_key_id` attribute ([#37548](https://github.com/hashicorp/terraform-provider-aws/issues/37548))
+
+BUG FIXES:
+
+* resource/aws_cloudwatch_log_group: Correctly handles tag updates with empty string tags ([#37668](https://github.com/hashicorp/terraform-provider-aws/issues/37668))
+* resource/aws_kms_external_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource ([#37818](https://github.com/hashicorp/terraform-provider-aws/issues/37818))
+* resource/aws_kms_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource ([#37818](https://github.com/hashicorp/terraform-provider-aws/issues/37818))
+* resource/aws_kms_replica_external_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource ([#37818](https://github.com/hashicorp/terraform-provider-aws/issues/37818))
+* resource/aws_kms_replica_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource ([#37818](https://github.com/hashicorp/terraform-provider-aws/issues/37818))
+* resource/aws_mq_broker: Do not reboot on changes to `maintenance_window_start_time` or `auto_minor_version_upgrade` ([#36506](https://github.com/hashicorp/terraform-provider-aws/issues/36506))
+* resource/aws_secretsmanager_secret: Tags with empty values no longer remove all tags. ([#37743](https://github.com/hashicorp/terraform-provider-aws/issues/37743))
+* resource/aws_ssm_parameter: Fix `Cannot import non-existent remote object` errors when importing resources with version ([#37832](https://github.com/hashicorp/terraform-provider-aws/issues/37832))
+* resource/aws_vpc_endpoint: Restore pre-v5.51.0 default of `false` for `private_dns_enabled` ([#37715](https://github.com/hashicorp/terraform-provider-aws/issues/37715))
+
+## 5.52.0 (May 30, 2024)
+
+ENHANCEMENTS:
+
+* resource/aws_kinesisanalyticsv2_application: Add `application_mode` argument ([#37714](https://github.com/hashicorp/terraform-provider-aws/issues/37714))
+* resource/aws_lightsail_bucket: Add support to `ListTags` function for proper key-only tag handling ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_certificate: Add support to `ListTags` function for proper key-only tag handling ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_container_service: Add support to `ListTags` function for proper key-only tag handling ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_database: Add support to `ListTags` function for proper key-only tag handling ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_distribution: Add support to `ListTags` function for proper key-only tag handling ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_key_pair: Add support to `ListTags` function for proper key-only tag handling ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_lb: Add support to `ListTags` function for proper key-only tag handling ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+
+BUG FIXES:
+
+* resource/aws_lightsail_database: Prevent destroy failure when resource is already deleted outside Terraform ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_instance: Fix crash when reading a resource that has a key-only tag ([#37587](https://github.com/hashicorp/terraform-provider-aws/issues/37587))
+* resource/aws_lightsail_key_pair: Prevent destroy failure when resource is already deleted outside Terraform ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+* resource/aws_lightsail_lb: Prevent destroy failure when resource is already deleted outside Terraform ([#37711](https://github.com/hashicorp/terraform-provider-aws/issues/37711))
+
+## 5.51.1 (May 24, 2024)
+
+ENHANCEMENTS:
+
+* resource/aws_ecs_service: Add `volume_configuration` argument ([#37019](https://github.com/hashicorp/terraform-provider-aws/issues/37019))
+* resource/aws_ecs_task_definition: Add `configure_at_launch` parameter in `volume` argument ([#37019](https://github.com/hashicorp/terraform-provider-aws/issues/37019))
+
+BUG FIXES:
+
+* data-source/aws_route53_zone: Fix incorrect `name_servers` values ([#37685](https://github.com/hashicorp/terraform-provider-aws/issues/37685))
+* data-source/aws_route53_zone: Permit both `name` and `zone_id` arguments when one is an empty string ([#37686](https://github.com/hashicorp/terraform-provider-aws/issues/37686))
+* resource/aws_route53_zone: Fix incorrect `name_servers` values ([#37685](https://github.com/hashicorp/terraform-provider-aws/issues/37685))
+
+## 5.51.0 (May 23, 2024)
+
+NOTES:
+
+* data-source/aws_lambda_function: `source_code_hash` attribute has been deprecated in favor of `code_sha256`. Will be removed in a future major version ([#37669](https://github.com/hashicorp/terraform-provider-aws/issues/37669))
+* data-source/aws_lambda_layer_version: `source_code_hash` attribute has been deprecated in favor of `code_sha256`. Will be removed in a future major version ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
+
+FEATURES:
+
+* **New Data Source:** `aws_chatbot_slack_workspace` ([#37218](https://github.com/hashicorp/terraform-provider-aws/issues/37218))
+* **New Resource:** `aws_lambda_runtime_management_config` ([#37643](https://github.com/hashicorp/terraform-provider-aws/issues/37643))
+* **New Resource:** `aws_vpc_endpoint_private_dns` ([#37628](https://github.com/hashicorp/terraform-provider-aws/issues/37628))
 * **New Resource:** `aws_vpc_endpoint_service_private_dns_verification` ([#37176](https://github.com/hashicorp/terraform-provider-aws/issues/37176))
 
 ENHANCEMENTS:
 
+* data-source/aws_lambda_function: Add `code_sha256` attribute ([#37669](https://github.com/hashicorp/terraform-provider-aws/issues/37669))
+* data-source/aws_lambda_layer_version: Add `code_sha256` attribute ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
 * data-source/aws_route53_traffic_policy_document: Add support for `application-load-balancer`, `elastic-beanstalk` and `network-load-balancer` `endpoint.type` values ([#37618](https://github.com/hashicorp/terraform-provider-aws/issues/37618))
 * resource/aws_api_gateway_deployment: Add `canary_settings` attribute ([#37573](https://github.com/hashicorp/terraform-provider-aws/issues/37573))
 * resource/aws_iam_openid_connect_provider: Allow `client_id_list` to be updated in-place ([#37612](https://github.com/hashicorp/terraform-provider-aws/issues/37612))
+* resource/aws_lambda_function: Add `code_sha256` attribute ([#37669](https://github.com/hashicorp/terraform-provider-aws/issues/37669))
+* resource/aws_lambda_function: Remove `replace_security_group_on_destroy` and `replacement_security_group_ids` deprecations, re-implement with alternate workflow ([#37624](https://github.com/hashicorp/terraform-provider-aws/issues/37624))
+* resource/aws_lambda_layer_version: Add `code_sha256` attribute ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
 * resource/aws_route53_health_check: Add plan-time validation of `cloudwatch_alarm_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
 * resource/aws_route53_record: Add plan-time validation of `latency_routing_policy.region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
 * resource/aws_route53_vpc_association_authorization: Add plan-time validation of `vpc_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
@@ -19,7 +90,10 @@ BUG FIXES:
 
 * resource/aws_dynamodb_table_replica: Correctly set `kms_key_arn` on Read ([#37570](https://github.com/hashicorp/terraform-provider-aws/issues/37570))
 * resource/aws_kms_grant: Change `grant_token` to [`Sensitive`](https://developer.hashicorp.com/terraform/plugin/best-practices/sensitive-state#using-sensitive-flag-functionality) ([#37593](https://github.com/hashicorp/terraform-provider-aws/issues/37593))
+* resource/aws_lambda_function: Fix issue when `source_code_hash` causes drift even if source code has not changed ([#37669](https://github.com/hashicorp/terraform-provider-aws/issues/37669))
+* resource/aws_lambda_layer_version: Fix issue when `source_code_hash` forces a replacement even if source code has not changed ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
 * resource/aws_m2_deployment: Fix `state` error on `deployment_id` during start/stop update ([#37581](https://github.com/hashicorp/terraform-provider-aws/issues/37581))
+* resource/aws_storagegateway_smb_file_share: Fix crash when `cache_attributes` is removed on update ([#37611](https://github.com/hashicorp/terraform-provider-aws/issues/37611))
 
 ## 5.50.0 (May 17, 2024)
 

@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_launch_template", name="Launch Template")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
@@ -89,7 +90,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
@@ -113,7 +114,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1333,7 +1334,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 		apiObject.NoDevice = aws.String(v)
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
@@ -1393,7 +1394,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.SnapshotId = aws.String(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Throughput = aws.Int64(int64(v))
 	}
 
@@ -2363,7 +2364,7 @@ func flattenLaunchTemplateBlockDeviceMapping(apiObject *ec2.LaunchTemplateBlockD
 	}
 
 	if v := apiObject.VirtualName; v != nil {
-		tfMap["virtual_name"] = aws.StringValue(v)
+		tfMap[names.AttrVirtualName] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2415,7 +2416,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.Throughput; v != nil {
-		tfMap["throughput"] = aws.Int64Value(v)
+		tfMap[names.AttrThroughput] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {

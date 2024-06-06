@@ -27,7 +27,7 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCatalogID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", acctest.Ct0),
 				),

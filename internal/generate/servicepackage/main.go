@@ -20,8 +20,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
+	namesgen "github.com/hashicorp/terraform-provider-aws/names/generate"
 )
 
 func main() {
@@ -202,7 +202,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
-				d.TagsIdentifierAttribute = names.ConstOrQuote(attr)
+				d.TagsIdentifierAttribute = namesgen.ConstOrQuote(attr)
 			}
 
 			if attr, ok := args.Keyword["resourceType"]; ok {

@@ -7,6 +7,12 @@ on:
       - 'release/**'
   pull_request_target:
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   community_check:
     if: github.event_name == 'pull_request_target'
@@ -76,8 +82,5 @@ jobs:
           go-version-file: .go-version
       - name: go mod
         run: |
-          gover=go`cat .go-version | xargs`
-          go install golang.org/dl/${gover}@latest
-          ${gover} download
           echo "Using make to check dependencies"
-          make depscheck
+          make deps-check

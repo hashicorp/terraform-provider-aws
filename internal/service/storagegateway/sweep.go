@@ -50,7 +50,7 @@ func sweepGateways(region string) error {
 		}
 
 		for _, gateway := range page.Gateways {
-			r := ResourceGateway()
+			r := resourceGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(gateway.GatewayARN))
 
@@ -94,7 +94,7 @@ func sweepTapePools(region string) error {
 		}
 
 		for _, pool := range page.PoolInfos {
-			r := ResourceTapePool()
+			r := resourceTapePool()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(pool.PoolARN))
 
@@ -138,7 +138,7 @@ func sweepFileSystemAssociations(region string) error {
 		}
 
 		for _, assoc := range page.FileSystemAssociationSummaryList {
-			r := ResourceFileSystemAssociation()
+			r := resourceFileSystemAssociation()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(assoc.FileSystemAssociationARN))
 

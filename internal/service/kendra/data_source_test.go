@@ -1322,7 +1322,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": acctest.Ct1,
 						"condition.0.condition_document_attribute_key":  "_document_title",
@@ -1332,7 +1332,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               acctest.Ct1,
 						"target.0.target_document_attribute_key": "_category",
-						"target.0.target_document_attribute_value_deletion":       "false",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtFalse,
 						"target.0.target_document_attribute_value.#":              acctest.Ct1,
 						"target.0.target_document_attribute_value.0.string_value": "bar",
 					}),
@@ -1355,7 +1355,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": acctest.Ct1,
 						"condition.0.condition_document_attribute_key":  "_document_title",
@@ -1365,12 +1365,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               acctest.Ct1,
 						"target.0.target_document_attribute_key": "_category",
-						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtTrue,
 						"target.0.target_document_attribute_value.#":              acctest.Ct1,
 						"target.0.target_document_attribute_value.0.string_value": "bar2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": acctest.Ct1,
 						"condition.0.condition_document_attribute_key": "_created_at",
@@ -1380,7 +1380,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               acctest.Ct1,
 						"target.0.target_document_attribute_key": "_authors",
-						"target.0.target_document_attribute_value_deletion":              "false",
+						"target.0.target_document_attribute_value_deletion":              acctest.CtFalse,
 						"target.0.target_document_attribute_value.#":                     acctest.Ct1,
 						"target.0.target_document_attribute_value.0.string_list_value.#": acctest.Ct2,
 					}),
@@ -1403,7 +1403,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": acctest.Ct1,
 						"condition.0.condition_document_attribute_key":  "_document_title",
@@ -1413,12 +1413,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               acctest.Ct1,
 						"target.0.target_document_attribute_key": "_category",
-						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtTrue,
 						"target.0.target_document_attribute_value.#":              acctest.Ct1,
 						"target.0.target_document_attribute_value.0.string_value": "bar2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "false",
+						"document_content_deletion": acctest.CtFalse,
 
 						"condition.#": acctest.Ct1,
 						"condition.0.condition_document_attribute_key": "_created_at",
@@ -1428,12 +1428,12 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               acctest.Ct1,
 						"target.0.target_document_attribute_key": "_authors",
-						"target.0.target_document_attribute_value_deletion":              "false",
+						"target.0.target_document_attribute_value_deletion":              acctest.CtFalse,
 						"target.0.target_document_attribute_value.#":                     acctest.Ct1,
 						"target.0.target_document_attribute_value.0.string_list_value.#": acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_document_enrichment_configuration.0.inline_configurations.*", map[string]string{
-						"document_content_deletion": "true",
+						"document_content_deletion": acctest.CtTrue,
 
 						"condition.#": acctest.Ct1,
 						"condition.0.condition_document_attribute_key": "_excerpt_page_number",
@@ -1443,7 +1443,7 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_InlineConfigu
 
 						"target.#":                               acctest.Ct1,
 						"target.0.target_document_attribute_key": "_document_title",
-						"target.0.target_document_attribute_value_deletion":       "true",
+						"target.0.target_document_attribute_value_deletion":       acctest.CtTrue,
 						"target.0.target_document_attribute_value.#":              acctest.Ct1,
 						"target.0.target_document_attribute_value.0.string_value": "baz",
 					}),

@@ -70,7 +70,7 @@ func testAccMember_invite_disassociate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
 			},
@@ -79,7 +79,7 @@ func testAccMember_invite_disassociate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Removed"),
 				),
 			},
@@ -113,7 +113,7 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
 				),
 			},
@@ -122,7 +122,7 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
 			},
@@ -159,9 +159,9 @@ func testAccMember_invitationMessage(t *testing.T) {
 					testAccCheckMemberExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),

@@ -55,7 +55,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
@@ -268,7 +268,7 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_groups.*", securityGroupResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -297,7 +297,7 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_groups.*", securityGroupResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -395,7 +395,7 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExistsV2(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
 			{
@@ -408,14 +408,14 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExistsV2(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExistsV2(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
 		},

@@ -64,7 +64,7 @@ func resourceFileCache() *schema.Resource {
 				MaxItems: 8,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"association_id": {
+						names.AttrAssociationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -596,7 +596,7 @@ func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssoci
 		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
-			"association_id":                 dataRepositoryAssociation.AssociationId,
+			names.AttrAssociationID:          dataRepositoryAssociation.AssociationId,
 			"data_repository_path":           dataRepositoryAssociation.DataRepositoryPath,
 			"data_repository_subdirectories": aws.StringValueSlice(dataRepositoryAssociation.DataRepositorySubdirectories),
 			"file_cache_id":                  dataRepositoryAssociation.FileCacheId,

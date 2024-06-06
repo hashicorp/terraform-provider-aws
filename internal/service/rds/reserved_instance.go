@@ -26,6 +26,7 @@ const (
 
 // @SDKResource("aws_rds_reserved_instance", name="Reserved Instance")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReservedInstanceCreate,

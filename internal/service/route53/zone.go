@@ -430,9 +430,13 @@ func findNameServersByZone(ctx context.Context, conn *route53.Client, zoneID, zo
 	if err != nil {
 		return nil, err
 	}
+	if len(output) == 0 {
+		return nil, nil
+	}
+	records := output[0].ResourceRecords
 
-	ns := tfslices.ApplyToAll(output, func(v awstypes.ResourceRecordSet) string {
-		return aws.ToString(v.Name)
+	ns := tfslices.ApplyToAll(records, func(v awstypes.ResourceRecord) string {
+		return aws.ToString(v.Value)
 	})
 	slices.Sort(ns)
 

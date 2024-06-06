@@ -33,13 +33,14 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for VPC Endpoint creation
-	VPCEndpointCreationTimeout = 10 * time.Minute
+	// Maximum amount of time to wait for VPC Endpoint creation.
+	vpcEndpointCreationTimeout = 10 * time.Minute
 )
 
 // @SDKResource("aws_vpc_endpoint", name="VPC Endpoint")
 // @Tags(identifierAttribute="id")
-func ResourceVPCEndpoint() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRead,
@@ -135,7 +136,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			"private_dns_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"requester_managed": {
 				Type:     schema.TypeBool,
@@ -185,7 +186,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(VPCEndpointCreationTimeout),
+			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -266,7 +267,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if _, err = waitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) create: %s", serviceName, err)
 	}
 
@@ -381,7 +382,6 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChanges("dns_options", names.AttrIPAddressType, names.AttrPolicy, "private_dns_enabled", names.AttrSecurityGroupIDs, "route_table_ids", names.AttrSubnetIDs) {
-		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
 		}
@@ -403,6 +403,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.IpAddressType = awstypes.IpAddressType(d.Get(names.AttrIPAddressType).(string))
 		}
 
+		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		if d.HasChange("private_dns_enabled") {
 			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
 		}

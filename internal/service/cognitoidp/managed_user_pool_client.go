@@ -239,7 +239,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -267,7 +267,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 							Validators: []validator.String{
 								stringvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("application_arn"),
-									path.MatchRelative().AtParent().AtName("application_id"),
+									path.MatchRelative().AtParent().AtName(names.AttrApplicationID),
 								),
 								stringvalidator.ConflictsWith(
 									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
@@ -275,7 +275,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 								),
 							},
 						},
-						"application_id": schema.StringAttribute{
+						names.AttrApplicationID: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
@@ -693,7 +693,7 @@ func (r *managedUserPoolClientResource) ImportState(ctx context.Context, request
 	userPoolId := parts[0]
 	clientId := parts[1]
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), userPoolId)...)
 }
 
 func (r *managedUserPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {

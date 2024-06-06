@@ -36,7 +36,7 @@ func DataSourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -46,11 +46,11 @@ func DataSourceVPC() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"association_id": {
+						names.AttrAssociationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -135,7 +135,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &ec2.DescribeVpcsInput{
 		Filters: newAttributeFilterListV2(
 			map[string]string{
-				"cidr":            d.Get("cidr_block").(string),
+				"cidr":            d.Get(names.AttrCIDRBlock).(string),
 				"dhcp-options-id": d.Get("dhcp_options_id").(string),
 				"isDefault":       isDefaultStr,
 				names.AttrState:   d.Get(names.AttrState).(string),
@@ -172,7 +172,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Resource:  "vpc/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("cidr_block", vpc.CidrBlock)
+	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("default", vpc.IsDefault)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
@@ -206,9 +206,9 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	cidrAssociations := []interface{}{}
 	for _, v := range vpc.CidrBlockAssociationSet {
 		association := map[string]interface{}{
-			"association_id": aws.ToString(v.AssociationId),
-			"cidr_block":     aws.ToString(v.CidrBlock),
-			names.AttrState:  aws.ToString(aws.String(string(v.CidrBlockState.State))),
+			names.AttrAssociationID: aws.ToString(v.AssociationId),
+			names.AttrCIDRBlock:     aws.ToString(v.CidrBlock),
+			names.AttrState:         aws.ToString(aws.String(string(v.CidrBlockState.State))),
 		}
 		cidrAssociations = append(cidrAssociations, association)
 	}

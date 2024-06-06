@@ -44,8 +44,8 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_version", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", acctest.Ct0),
@@ -220,7 +220,7 @@ func TestAccEC2LaunchTemplate_BlockDeviceMappingsEBS_deleteOnTermination(t *test
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
 				),
 			},
@@ -231,7 +231,7 @@ func TestAccEC2LaunchTemplate_BlockDeviceMappingsEBS_deleteOnTermination(t *test
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
 				),
 			},
@@ -291,10 +291,10 @@ func TestAccEC2LaunchTemplate_ebsOptimized(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_ebsOptimized(rName, "true"),
+				Config: testAccLaunchTemplateConfig_ebsOptimized(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtTrue),
 				),
 			},
 			{
@@ -303,24 +303,24 @@ func TestAccEC2LaunchTemplate_ebsOptimized(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchTemplateConfig_ebsOptimized(rName, "false"),
+				Config: testAccLaunchTemplateConfig_ebsOptimized(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccLaunchTemplateConfig_ebsOptimized(rName, "\"true\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccLaunchTemplateConfig_ebsOptimized(rName, "\"false\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 				),
 			},
 			{
@@ -384,21 +384,21 @@ func TestAccEC2LaunchTemplate_NetworkInterfaces_deleteOnTermination(t *testing.T
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_networkInterfacesDeleteOnTermination(rName, "true"),
+				Config: testAccLaunchTemplateConfig_networkInterfacesDeleteOnTermination(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", acctest.CtTrue),
 				),
 			},
 			{
-				Config: testAccLaunchTemplateConfig_networkInterfacesDeleteOnTermination(rName, "false"),
+				Config: testAccLaunchTemplateConfig_networkInterfacesDeleteOnTermination(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.security_groups.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", acctest.CtFalse),
 				),
 			},
 			{
@@ -447,7 +447,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "disable_api_termination"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
@@ -1110,12 +1110,12 @@ func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_associatePublicIPAddress(rName, "true"),
+				Config: testAccLaunchTemplateConfig_associatePublicIPAddress(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", acctest.Ct2),
 				),
 			},
@@ -1125,12 +1125,12 @@ func TestAccEC2LaunchTemplate_associatePublicIPAddress(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchTemplateConfig_associatePublicIPAddress(rName, "false"),
+				Config: testAccLaunchTemplateConfig_associatePublicIPAddress(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", acctest.Ct2),
 				),
 			},
@@ -1161,12 +1161,12 @@ func TestAccEC2LaunchTemplate_associateCarrierIPAddress(t *testing.T) {
 		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchTemplateConfig_associateCarrierIPAddress(rName, "true"),
+				Config: testAccLaunchTemplateConfig_associateCarrierIPAddress(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", acctest.Ct2),
 				),
 			},
@@ -1176,12 +1176,12 @@ func TestAccEC2LaunchTemplate_associateCarrierIPAddress(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchTemplateConfig_associateCarrierIPAddress(rName, "false"),
+				Config: testAccLaunchTemplateConfig_associateCarrierIPAddress(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_carrier_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", acctest.Ct2),
 				),
 			},
@@ -1279,8 +1279,8 @@ func TestAccEC2LaunchTemplate_privateDNSNameOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "false"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
 				),
 			},
@@ -2730,7 +2730,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_requireHibernateSupport(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "instance_requirements.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.require_hibernate_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.require_hibernate_support", acctest.CtFalse),
 				),
 			},
 			{
@@ -2750,7 +2750,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_requireHibernateSupport(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "instance_requirements.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.require_hibernate_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.require_hibernate_support", acctest.CtTrue),
 				),
 			},
 			{
@@ -3009,7 +3009,7 @@ func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_enclaveOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -3021,14 +3021,14 @@ func TestAccEC2LaunchTemplate_enclaveOptions(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_enclaveOptions(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccLaunchTemplateConfig_enclaveOptions(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -3051,7 +3051,7 @@ func TestAccEC2LaunchTemplate_hibernation(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_hibernation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", "true"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", acctest.CtTrue),
 				),
 			},
 			{
@@ -3063,14 +3063,14 @@ func TestAccEC2LaunchTemplate_hibernation(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_hibernation(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", "false"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccLaunchTemplateConfig_hibernation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", "true"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation_options.0.configured", acctest.CtTrue),
 				),
 			},
 		},

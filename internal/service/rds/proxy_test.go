@@ -52,10 +52,10 @@ func TestAccRDSProxy_basic(t *testing.T) {
 						names.AttrDescription:       "test",
 						"iam_auth":                  "DISABLED",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
+					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
-					resource.TestCheckResourceAttr(resourceName, "require_tls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", acctest.Ct2),
@@ -132,7 +132,7 @@ func TestAccRDSProxy_debugLogging(t *testing.T) {
 				Config: testAccProxyConfig_debugLogging(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "debug_logging", "true"),
+					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtTrue),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func TestAccRDSProxy_debugLogging(t *testing.T) {
 				Config: testAccProxyConfig_debugLogging(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
+					resource.TestCheckResourceAttr(resourceName, "debug_logging", acctest.CtFalse),
 				),
 			},
 		},
@@ -210,7 +210,7 @@ func TestAccRDSProxy_requireTLS(t *testing.T) {
 				Config: testAccProxyConfig_requireTLS(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "require_tls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtTrue),
 				),
 			},
 			{
@@ -222,7 +222,7 @@ func TestAccRDSProxy_requireTLS(t *testing.T) {
 				Config: testAccProxyConfig_requireTLS(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "require_tls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "require_tls", acctest.CtFalse),
 				),
 			},
 		},

@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
+const serializeDelay = 4*time.Minute + 30*time.Second
+
 // Serialize to limit API rate-limit exceeded errors.
 func TestAccAmplify_serial(t *testing.T) {
 	t.Parallel()
@@ -17,8 +19,8 @@ func TestAccAmplify_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			acctest.CtBasic:            testAccApp_basic,
-			"disappears":               testAccApp_disappears,
-			"tags":                     testAccApp_tags,
+			acctest.CtDisappears:       testAccApp_disappears,
+			"tags":                     testAccAmplifyApp_tagsSerial,
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
@@ -31,28 +33,28 @@ func TestAccAmplify_serial(t *testing.T) {
 		},
 		"BackendEnvironment": {
 			acctest.CtBasic:                 testAccBackendEnvironment_basic,
-			"disappears":                    testAccBackendEnvironment_disappears,
+			acctest.CtDisappears:            testAccBackendEnvironment_disappears,
 			"DeploymentArtifacts_StackName": testAccBackendEnvironment_DeploymentArtifacts_StackName,
 		},
 		"Branch": {
 			acctest.CtBasic:        testAccBranch_basic,
-			"disappears":           testAccBranch_disappears,
-			"tags":                 testAccBranch_tags,
+			acctest.CtDisappears:   testAccBranch_disappears,
+			"tags":                 testAccAmplifyBranch_tagsSerial,
 			"BasicAuthCredentials": testAccBranch_BasicAuthCredentials,
 			"EnvironmentVariables": testAccBranch_EnvironmentVariables,
 			"OptionalArguments":    testAccBranch_OptionalArguments,
 		},
 		"DomainAssociation": {
-			acctest.CtBasic: testAccDomainAssociation_basic,
-			"disappears":    testAccDomainAssociation_disappears,
-			"update":        testAccDomainAssociation_update,
+			acctest.CtBasic:      testAccDomainAssociation_basic,
+			acctest.CtDisappears: testAccDomainAssociation_disappears,
+			"update":             testAccDomainAssociation_update,
 		},
 		"Webhook": {
-			acctest.CtBasic: testAccWebhook_basic,
-			"disappears":    testAccWebhook_disappears,
-			"update":        testAccWebhook_update,
+			acctest.CtBasic:      testAccWebhook_basic,
+			acctest.CtDisappears: testAccWebhook_disappears,
+			"update":             testAccWebhook_update,
 		},
 	}
 
-	acctest.RunSerialTests2Levels(t, testCases, 5*time.Second)
+	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
 }

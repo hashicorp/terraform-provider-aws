@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_db_parameter_group", name="DB Parameter Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterGroupCreate,

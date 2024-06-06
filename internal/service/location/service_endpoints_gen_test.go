@@ -68,7 +68,7 @@ const (
 	packageName = "location"
 	awsEnvVar   = "AWS_ENDPOINT_URL_LOCATION"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "location"
+	configParam = names.AttrLocation
 
 	aliasName0 = "locationservice"
 )
@@ -485,7 +485,7 @@ func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.Fi
 		})
 }
 
-var errCancelOperation = fmt.Errorf("Test: Cancelling request")
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
 
 func addCancelRequestMiddleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {

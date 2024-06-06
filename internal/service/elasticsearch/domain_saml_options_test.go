@@ -42,7 +42,7 @@ func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 					testAccCheckDomainExists(ctx, esDomainResourceName, &domain),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.idp.0.entity_id", idpEntityId),
 				),

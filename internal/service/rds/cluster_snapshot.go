@@ -29,6 +29,7 @@ const clusterSnapshotCreateTimeout = 2 * time.Minute
 
 // @SDKResource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
+// @Testing(tagsTest=false)
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
@@ -45,7 +46,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -75,7 +76,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +108,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -167,20 +168,20 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
-	d.Set("engine", snapshot.Engine)
+	d.Set(names.AttrEngine, snapshot.Engine)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set(names.AttrPort, snapshot.Port)
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
 	d.Set(names.AttrStatus, snapshot.Status)
-	d.Set("storage_encrypted", snapshot.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
 	setTagsOut(ctx, snapshot.TagList)

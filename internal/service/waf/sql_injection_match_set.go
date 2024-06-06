@@ -104,11 +104,11 @@ func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF SqlInjectionMatchSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF SqlInjectionMatchSet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF SqlInjectionMatchSet (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrName, sqlInjectionMatchSet.Name)

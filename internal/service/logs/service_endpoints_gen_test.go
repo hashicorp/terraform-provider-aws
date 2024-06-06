@@ -69,7 +69,7 @@ const (
 	packageName = "logs"
 	awsEnvVar   = "AWS_ENDPOINT_URL_CLOUDWATCH_LOGS"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "cloudwatch_logs"
+	configParam = names.AttrCloudWatchLogs
 
 	aliasName0 = "cloudwatchlog"
 	aliasName1 = "cloudwatchlogs"
@@ -571,7 +571,7 @@ func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.Fi
 		})
 }
 
-var errCancelOperation = fmt.Errorf("Test: Cancelling request")
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
 
 func addCancelRequestMiddleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
