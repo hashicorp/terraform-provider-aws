@@ -84,6 +84,7 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				"resource_set_status": schema.StringAttribute{
 					Optional:   true,
+					Computed:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.ResourceSetStatus](),
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),

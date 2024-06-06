@@ -211,7 +211,6 @@ resource "aws_fms_resource_set" "test" {
   resource_set {
     name                = %[1]q
     resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
-    resource_set_status = "ACTIVE"
   }
 }
 `, rName)
@@ -229,7 +228,6 @@ resource "aws_fms_resource_set" "test" {
   resource_set {
     name                = %[1]q
     resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
-    resource_set_status = "ACTIVE"
   }
 
   tags = {
@@ -250,7 +248,6 @@ resource "aws_fms_resource_set" "test" {
   resource_set {
     name                = %[1]q
     resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
-    resource_set_status = "ACTIVE"
   }
 
   tags = {
