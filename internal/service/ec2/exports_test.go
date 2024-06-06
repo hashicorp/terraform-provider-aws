@@ -63,7 +63,6 @@ var (
 	ResourceAMICopy                                  = resourceAMICopy
 	ResourceAMIFromInstance                          = resourceAMIFromInstance
 	ResourceAMILaunchPermission                      = resourceAMILaunchPermission
-	ResourceAMI                                      = resourceAMI
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

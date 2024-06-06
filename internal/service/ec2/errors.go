@@ -139,19 +139,19 @@ const (
 	errCodeVolumeInUse                                             = "VolumeInUse"
 )
 
-func CancelSpotFleetRequestError(apiObject awstypes.CancelSpotFleetRequestsErrorItem) error {
-	if apiObject.Error == nil {
+func cancelSpotFleetRequestError(apiObject *awstypes.CancelSpotFleetRequestsError) error {
+	if apiObject == nil {
 		return nil
 	}
 
-	return awserr.New(string(apiObject.Error.Code), aws_sdkv2.ToString(apiObject.Error.Message), nil)
+	return errs.APIError(apiObject.Code, aws_sdkv2.ToString(apiObject.Message))
 }
 
-func CancelSpotFleetRequestsError(apiObjects []awstypes.CancelSpotFleetRequestsErrorItem) error {
+func cancelSpotFleetRequestsError(apiObjects []awstypes.CancelSpotFleetRequestsErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := CancelSpotFleetRequestError(apiObject); err != nil {
+		if err := cancelSpotFleetRequestError(apiObject.Error); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.SpotFleetRequestId), err))
 		}
 	}
@@ -159,19 +159,19 @@ func CancelSpotFleetRequestsError(apiObjects []awstypes.CancelSpotFleetRequestsE
 	return errors.Join(errs...)
 }
 
-func deleteFleetError(apiObject awstypes.DeleteFleetErrorItem) error {
-	if apiObject.Error == nil {
+func deleteFleetError(apiObject *awstypes.DeleteFleetError) error {
+	if apiObject == nil {
 		return nil
 	}
 
-	return awserr.New(string(apiObject.Error.Code), aws_sdkv2.ToString(apiObject.Error.Message), nil)
+	return errs.APIError(apiObject.Code, aws_sdkv2.ToString(apiObject.Message))
 }
 
 func deleteFleetsError(apiObjects []awstypes.DeleteFleetErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := deleteFleetError(apiObject); err != nil {
+		if err := deleteFleetError(apiObject.Error); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.FleetId), err))
 		}
 	}
@@ -197,6 +197,26 @@ func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
 
 		if err := UnsuccessfulItemError(apiObject.Error); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+func unsuccessfulItemErrorV2(apiObject *awstypes.UnsuccessfulItemError) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return errs.APIError(aws_sdkv2.ToString(apiObject.Code), aws_sdkv2.ToString(apiObject.Message))
+}
+
+func unsuccessfulItemsErrorV2(apiObjects []awstypes.UnsuccessfulItem) error {
+	var errs []error
+
+	for _, apiObject := range apiObjects {
+		if err := unsuccessfulItemErrorV2(apiObject.Error); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.ResourceId), err))
 		}
 	}
 
@@ -240,5 +260,5 @@ func networkACLEntryAlreadyExistsError(naclID string, egress bool, ruleNumber in
 }
 
 func routeAlreadyExistsError(routeTableID, destination string) error {
-	return awserr.New(errCodeRouteAlreadyExists, fmt.Sprintf("Route in Route Table (%s) with destination (%s) already exists", routeTableID, destination), nil)
+	return errs.APIError(errCodeRouteAlreadyExists, fmt.Sprintf("Route in Route Table (%s) with destination (%s) already exists", routeTableID, destination))
 }

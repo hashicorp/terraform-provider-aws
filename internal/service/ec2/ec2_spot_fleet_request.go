@@ -1171,7 +1171,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err == nil && output != nil {
-		err = CancelSpotFleetRequestsError(output.UnsuccessfulFleetRequests)
+		err = cancelSpotFleetRequestsError(output.UnsuccessfulFleetRequests)
 	}
 
 	if tfawserr.ErrCodeEquals(err, string(awstypes.CancelBatchErrorCodeFleetRequestIdDoesNotExist)) {
