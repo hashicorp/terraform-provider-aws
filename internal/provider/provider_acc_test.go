@@ -244,7 +244,7 @@ func TestAccProvider_overrideUseFipsEndpointFlagForOneService(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_overridesUseFipsEndpointFlagForAppconfig(rName),
+				Config: testAccProviderConfig_overridesUseFipsEndpointFlagForAppConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -1060,7 +1060,7 @@ resource "aws_s3_bucket" "test" {
 `, rName))
 }
 
-func testAccProviderConfig_overridesUseFipsEndpointFlagForAppconfig(rName string) string {
+func testAccProviderConfig_overridesUseFipsEndpointFlagForAppConfig(rName string) string {
 	appconfig_endpoint := fmt.Sprintf("https://appconfig.%s.%s", acctest.Region(), acctest.PartitionDNSSuffix())
 	//lintignore:AT004
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
