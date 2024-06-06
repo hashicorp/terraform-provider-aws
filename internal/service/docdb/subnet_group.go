@@ -226,7 +226,7 @@ func findDBSubnetGroups(ctx context.Context, conn *docdb.Client, input *docdb.De
 		if err != nil {
 			return nil, err
 		}
-		
+
 		output = append(output, page.DBSubnetGroups...)
 	}
 
