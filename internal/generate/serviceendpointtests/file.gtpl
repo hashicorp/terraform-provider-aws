@@ -449,6 +449,23 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			},
 			expected: expectBaseConfigFileEndpoint(),
 		},
+
+		// Use FIPS endpoint on Config
+
+		"use fips config": {
+			with: []setupFunc{
+				withUseFIPSInConfig,
+			},
+			expected: expectDefaultFIPSEndpoint(region),
+		},
+
+		"use fips config with package name endpoint config": {
+			with: []setupFunc{
+				withUseFIPSInConfig,
+				withPackageNameEndpointInConfig,
+			},
+			expected: expectPackageNameConfigEndpoint(),
+		},
 	}
 
 	{{ if and (ne .GoV1Package "") (ne .GoV2Package "") }}
@@ -507,6 +524,44 @@ func defaultEndpoint(region string) string {
 		}
 	{{- end -}}
 	)
+	if err != nil {
+		return err.Error()
+	}
+
+	url, _ := url.Parse(ep.URL)
+
+	if url.Path == "" {
+		url.Path = "/"
+	}
+
+	return url.String()
+{{ end -}}
+}
+
+func defaultFIPSEndpoint(region string) string {
+{{- if ne .GoV2Package "" }}
+	r := {{ .GoV2Package }}_sdkv2.NewDefaultEndpointResolverV2()
+
+	ep, err := r.ResolveEndpoint(context.Background(), {{ .GoV2Package }}_sdkv2.EndpointParameters{
+		Region:  aws_sdkv2.String(region),
+		UseFIPS: aws_sdkv2.Bool(true),
+	})
+	if err != nil {
+		return err.Error()
+	}
+
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
+	}
+
+	return ep.URI.String()
+{{ else }}
+	r := endpoints.DefaultResolver()
+
+	ep, err := r.EndpointFor({{ .GoV1Package }}_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
+		{{- if .V1NameResolverNeedsUnknownService }}opt.ResolveUnknownService = true{{ end }}
+		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
+	})
 	if err != nil {
 		return err.Error()
 	}
@@ -637,9 +692,19 @@ func withBaseEndpointInConfigFile(setup *caseSetup) {
 	setup.configFile.baseUrl = baseConfigFileEndpoint
 }
 
+func withUseFIPSInConfig(setup *caseSetup) {
+	setup.config["use_fips_endpoint"] = true
+}
+
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
+	}
+}
+
+func expectDefaultFIPSEndpoint(region string) caseExpectations {
+	return caseExpectations{
+		endpoint: defaultFIPSEndpoint(region),
 	}
 }
 
