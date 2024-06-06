@@ -7,10 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	docdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdb"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -95,27 +91,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.DocDB
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*docdb_sdkv1.DocDB, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-
-		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
-		}
-	}
-
-	return docdb_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

@@ -194,7 +194,6 @@ import (
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
@@ -569,10 +568,6 @@ func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm_sdkv2.Clie
 
 func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {
 	return errs.Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect, make(map[string]any)))
-}
-
-func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
-	return errs.Must(conn[*docdb_sdkv1.DocDB](ctx, c, names.DocDB, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBClient(ctx context.Context) *docdb_sdkv2.Client {

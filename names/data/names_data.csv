@@ -122,7 +122,7 @@ devops-guru,devopsguru,devopsguru,devopsguru,,devopsguru,,,DevOpsGuru,DevOpsGuru
 directconnect,directconnect,directconnect,directconnect,,directconnect,,,DirectConnect,DirectConnect,,1,,aws_dx_,aws_directconnect_,,dx_,Direct Connect,AWS,,,,,,,Direct Connect,DescribeConnections,,
 dlm,dlm,dlm,dlm,,dlm,,,DLM,DLM,,,2,,aws_dlm_,,dlm_,DLM (Data Lifecycle Manager),Amazon,,,,,,,DLM,GetLifecyclePolicies,,
 dms,dms,databasemigrationservice,databasemigrationservice,,dms,,databasemigration;databasemigrationservice,DMS,DatabaseMigrationService,,1,,,aws_dms_,,dms_,DMS (Database Migration),AWS,,,,,,,Database Migration Service,DescribeCertificates,,
-docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,2,,aws_docdb_,,docdb_,DocumentDB,Amazon,,,,,,,DocDB,DescribeDBClusters,,
+docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,,2,,aws_docdb_,,docdb_,DocumentDB,Amazon,,,,,,,DocDB,DescribeDBClusters,,
 docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocumentDB Elastic,Amazon,,,,,,,DocDB Elastic,ListClusters,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,,2,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,,,,,,DRS,DescribeJobs,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,
