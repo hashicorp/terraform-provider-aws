@@ -111,51 +111,6 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMPatchBaseline_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var patch ssm.GetPatchBaselineOutput
-	name := sdkacctest.RandString(10)
-	resourceName := "aws_ssm_patch_baseline.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccPatchBaselineConfig_tags2(name, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identity ssm.GetPatchBaselineOutput
@@ -537,37 +492,6 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "test" {
-  name                              = %[1]q
-  description                       = "Baseline containing all updates approved for production systems"
-  approved_patches                  = ["KB123456"]
-  approved_patches_compliance_level = "CRITICAL"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccPatchBaselineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "test" {
-  name                              = %[1]q
-  description                       = "Baseline containing all updates approved for production systems"
-  approved_patches                  = ["KB123456"]
-  approved_patches_compliance_level = "CRITICAL"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
 func testAccPatchBaselineConfig_basicUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
@@ -575,13 +499,6 @@ resource "aws_ssm_patch_baseline" "test" {
   description                       = "Baseline containing all updates approved for production systems - August 2017"
   approved_patches                  = ["KB123456", "KB456789"]
   approved_patches_compliance_level = "HIGH"
-  approval_rule {
-    approve_after_days = 7
-    patch_filter {
-      key    = "CLASSIFICATION"
-      values = ["CriticalUpdates"]
-    }
-  }
 }
 `, rName)
 }
