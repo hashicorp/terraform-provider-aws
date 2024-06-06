@@ -30,9 +30,9 @@ func TestAccFMS_serial(t *testing.T) {
 			"update":                 testAccPolicy_update,
 		},
 		"ResourceSet": {
-			acctest.CtBasic: testAccFMSResourceSet_basic,
-			"disappears":    testAccFMSResourceSet_disappears,
-			"tags":          testAccFMSResourceSet_tags,
+			acctest.CtBasic:      testAccFMSResourceSet_basic,
+			acctest.CtDisappears: testAccFMSResourceSet_disappears,
+			"tags":               testAccFMSResourceSet_tags,
 		},
 	}
 

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -60,10 +61,10 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 		CustomType: fwtypes.NewListNestedObjectTypeOf[resourceSetData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"name": schema.StringAttribute{
+				names.AttrName: schema.StringAttribute{
 					Required: true,
 				},
-				"description": schema.StringAttribute{
+				names.AttrDescription: schema.StringAttribute{
 					Optional: true,
 				},
 				names.AttrID: framework.IDAttribute(),
@@ -105,7 +106,7 @@ func (r *resourceResourceSet) Schema(ctx context.Context, req resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"resource_set": resourceSetLNB,
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -278,13 +279,13 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceResourceSet) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(awstypes.ResourceSetStatusActive)},
+		Target:                    enum.Slice(awstypes.ResourceSetStatusActive),
 		Refresh:                   statusResourceSet(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -301,8 +302,8 @@ func waitResourceSetCreated(ctx context.Context, conn *fms.Client, id string, ti
 
 func waitResourceSetUpdated(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.ResourceSetStatusOutOfAdminScope)},
-		Target:                    []string{string(awstypes.ResourceSetStatusActive)},
+		Pending:                   enum.Slice(awstypes.ResourceSetStatusOutOfAdminScope),
+		Target:                    enum.Slice(awstypes.ResourceSetStatusActive),
 		Refresh:                   statusResourceSet(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
