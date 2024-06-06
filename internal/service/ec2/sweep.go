@@ -2749,7 +2749,7 @@ func sweepAMIs(region string) error {
 		}
 
 		for _, v := range page.Images {
-			r := ResourceAMI()
+			r := resourceAMI()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.ImageId))
 

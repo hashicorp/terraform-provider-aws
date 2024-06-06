@@ -39,7 +39,7 @@ const (
 // @SDKResource("aws_ami", name="AMI")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceAMI() *schema.Resource {
+func resourceAMI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICreate,
 		// The Read, Update and Delete operations are shared with aws_ami_copy and aws_ami_from_instance,

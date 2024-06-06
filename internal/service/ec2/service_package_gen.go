@@ -456,7 +456,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAMI,
+			Factory:  resourceAMI,
 			TypeName: "aws_ami",
 			Name:     "AMI",
 			Tags: &types.ServicePackageResourceTags{
