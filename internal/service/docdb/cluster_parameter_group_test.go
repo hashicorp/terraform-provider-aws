@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
