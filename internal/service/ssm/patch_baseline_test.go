@@ -67,7 +67,6 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", resourceName, "approved_patches_enable_non_security"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "OperatingSystem", resourceName, "operating_system"),
 					checkResourceAttrJMESNotExists(resourceName, name.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays"),
-
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -500,7 +499,7 @@ func checkResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestChe
 
 		result, err := jmespath.Search(jmesPath, jsonData)
 		if err != nil {
-			return nil
+			return fmt.Errorf("%s: Expected attribute %q not not found: %w", name, key, err)
 		}
 
 		var v string
