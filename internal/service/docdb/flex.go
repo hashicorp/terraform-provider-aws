@@ -8,7 +8,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -16,16 +15,16 @@ import (
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandParameters(configured []interface{}) []*awstypes.Parameter {
-	parameters := make([]*awstypes.Parameter, 0, len(configured))
+func expandParameters(configured []interface{}) []awstypes.Parameter {
+	parameters := make([]awstypes.Parameter, 0, len(configured))
 
 	// Loop over our configured parameters and create
 	// an array of aws-sdk-go compatible objects
 	for _, pRaw := range configured {
 		data := pRaw.(map[string]interface{})
 
-		p := &awstypes.Parameter{
-			ApplyMethod:    aws.String(data["apply_method"].(string)),
+		p := awstypes.Parameter{
+			ApplyMethod:    awstypes.ApplyMethod(data["apply_method"].(string)),
 			ParameterName:  aws.String(data[names.AttrName].(string)),
 			ParameterValue: aws.String(data[names.AttrValue].(string)),
 		}
@@ -37,7 +36,7 @@ func expandParameters(configured []interface{}) []*awstypes.Parameter {
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func flattenParameters(list []*awstypes.Parameter, parameterList []interface{}) []map[string]interface{} {
+func flattenParameters(list []awstypes.Parameter, parameterList []interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterValue != nil {

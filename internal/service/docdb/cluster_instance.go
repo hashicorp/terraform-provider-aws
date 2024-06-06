@@ -368,6 +368,10 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		DBInstanceIdentifier: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}

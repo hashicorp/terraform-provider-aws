@@ -816,7 +816,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		}
 
 		for _, v := range page.DBClusters {
-			if reflect.ValueOf(v).IsZero() && filter(v) {
+			if !reflect.ValueOf(v).IsZero() && filter(v) {
 				output = append(output, v)
 			}
 		}
