@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -183,7 +184,7 @@ func ResourceClusterInstance() *schema.Resource {
 
 func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	identifier := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
@@ -221,7 +222,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateDBInstanceWithContext(ctx, input)
+		return conn.CreateDBInstance(ctx, input)
 	}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 	if err != nil {
@@ -239,7 +240,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	db, err := FindDBInstanceByID(ctx, conn, d.Id())
 
@@ -253,7 +254,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Instance (%s): %s", d.Id(), err)
 	}
 
-	clusterID := aws.StringValue(db.DBClusterIdentifier)
+	clusterID := aws.ToString(db.DBClusterIdentifier)
 	dbc, err := FindDBClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
@@ -280,7 +281,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrEngine, db.Engine)
 	d.Set(names.AttrEngineVersion, db.EngineVersion)
 	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
-	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.ToString(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	// The AWS API does not expose 'PerformanceInsightsKMSKeyId'  the line below should be uncommented
@@ -291,8 +292,8 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
 	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
-	if v := tfslices.Filter(dbc.DBClusterMembers, func(v *docdb.DBClusterMember) bool {
-		return aws.StringValue(v.DBInstanceIdentifier) == d.Id()
+	if v := tfslices.Filter(dbc.DBClusterMembers, func(v *awstypes.DBClusterMember) bool {
+		return aws.ToString(v.DBInstanceIdentifier) == d.Id()
 	}); len(v) == 1 {
 		d.Set("writer", v[0].IsClusterWriter)
 	}
@@ -302,7 +303,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &docdb.ModifyDBInstanceInput{
@@ -343,7 +344,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-			return conn.ModifyDBInstanceWithContext(ctx, input)
+			return conn.ModifyDBInstance(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
@@ -360,10 +361,10 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Instance: %s", d.Id())
-	_, err := conn.DeleteDBInstanceWithContext(ctx, &docdb.DeleteDBInstanceInput{
+	_, err := conn.DeleteDBInstance(ctx, &docdb.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
 	})
 
@@ -378,7 +379,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindDBInstanceByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.DBInstance, error) {
+func FindDBInstanceByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBInstance, error) {
 	input := &docdb.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
@@ -389,7 +390,7 @@ func FindDBInstanceByID(ctx context.Context, conn *docdb.DocDB, id string) (*doc
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBInstanceIdentifier) != id {
+	if aws.ToString(output.DBInstanceIdentifier) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -398,7 +399,7 @@ func FindDBInstanceByID(ctx context.Context, conn *docdb.DocDB, id string) (*doc
 	return output, nil
 }
 
-func findDBInstance(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBInstancesInput) (*docdb.DBInstance, error) {
+func findDBInstance(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBInstancesInput) (*awstypes.DBInstance, error) {
 	output, err := findDBInstances(ctx, conn, input)
 
 	if err != nil {
@@ -408,8 +409,8 @@ func findDBInstance(ctx context.Context, conn *docdb.DocDB, input *docdb.Describ
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findDBInstances(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBInstancesInput) ([]*docdb.DBInstance, error) {
-	var output []*docdb.DBInstance
+func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBInstancesInput) ([]*awstypes.DBInstance, error) {
+	var output []*awstypes.DBInstance
 
 	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
 		if page == nil {
@@ -425,7 +426,7 @@ func findDBInstances(ctx context.Context, conn *docdb.DocDB, input *docdb.Descri
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBInstanceNotFoundFault) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -439,7 +440,7 @@ func findDBInstances(ctx context.Context, conn *docdb.DocDB, input *docdb.Descri
 	return output, nil
 }
 
-func statusDBInstance(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
+func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDBInstanceByID(ctx, conn, id)
 
@@ -451,11 +452,11 @@ func statusDBInstance(ctx context.Context, conn *docdb.DocDB, id string) retry.S
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.DBInstanceStatus), nil
+		return output, aws.ToString(output.DBInstanceStatus), nil
 	}
 }
 
-func waitDBInstanceAvailable(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) { //nolint:unparam
+func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"backing-up",
@@ -481,14 +482,14 @@ func waitDBInstanceAvailable(ctx context.Context, conn *docdb.DocDB, id string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*docdb.DBInstance); ok {
+	if output, ok := outputRaw.(*awstypes.DBInstance); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDBInstanceDeleted(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBInstance, error) {
+func waitDBInstanceDeleted(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBInstance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			"configuring-log-exports",
@@ -504,7 +505,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *docdb.DocDB, id string, ti
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*docdb.DBInstance); ok {
+	if output, ok := outputRaw.(*awstypes.DBInstance); ok {
 		return output, err
 	}
 

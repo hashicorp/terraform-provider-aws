@@ -9,15 +9,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -79,8 +81,8 @@ func ResourceClusterParameterGroup() *schema.Resource {
 						"apply_method": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      docdb.ApplyMethodPendingReboot,
-							ValidateFunc: validation.StringInSlice(docdb.ApplyMethod_Values(), false),
+							Default:      awstypes.ApplyMethodPendingReboot,
+							ValidateFunc: enum.Validate[awstypes.ApplyMethod](),
 						},
 						names.AttrName: {
 							Type:     schema.TypeString,
@@ -103,7 +105,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 
 func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &docdb.CreateDBClusterParameterGroupInput{
@@ -113,7 +115,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 		Tags:                        getTagsIn(ctx),
 	}
 
-	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, input)
+	_, err := conn.CreateDBClusterParameterGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Parameter Group (%s): %s", name, err)
@@ -134,7 +136,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	dbClusterParameterGroup, err := FindDBClusterParameterGroupByName(ctx, conn, d.Id())
 
@@ -152,7 +154,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrDescription, dbClusterParameterGroup.Description)
 	d.Set(names.AttrFamily, dbClusterParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbClusterParameterGroup.DBClusterParameterGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	input := &docdb.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -173,7 +175,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	if d.HasChange(names.AttrParameter) {
 		o, n := d.GetChange(names.AttrParameter)
@@ -193,14 +195,14 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 
 func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Parameter Group: %s", d.Id())
-	_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, &docdb.DeleteDBClusterParameterGroupInput{
+	_, err := conn.DeleteDBClusterParameterGroup(ctx, &docdb.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBParameterGroupNotFoundFault) {
 		return diags
 	}
 
@@ -219,7 +221,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.DocDB, name string, parameters []*docdb.Parameter) error {
+func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.Client, name string, parameters []*awstypes.Parameter) error {
 	const (
 		clusterParameterGroupMaxParamsBulkEdit = 20
 	)
@@ -230,7 +232,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.DocD
 			Parameters:                  chunk,
 		}
 
-		_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
+		_, err := conn.ModifyDBClusterParameterGroup(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("modifying DocumentDB Cluster Parameter Group (%s): %w", name, err)
@@ -240,7 +242,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.DocD
 	return nil
 }
 
-func FindDBClusterParameterGroupByName(ctx context.Context, conn *docdb.DocDB, name string) (*docdb.DBClusterParameterGroup, error) {
+func FindDBClusterParameterGroupByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.DBClusterParameterGroup, error) {
 	input := &docdb.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(name),
 	}
@@ -251,7 +253,7 @@ func FindDBClusterParameterGroupByName(ctx context.Context, conn *docdb.DocDB, n
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBClusterParameterGroupName) != name {
+	if aws.ToString(output.DBClusterParameterGroupName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -260,7 +262,7 @@ func FindDBClusterParameterGroupByName(ctx context.Context, conn *docdb.DocDB, n
 	return output, nil
 }
 
-func findDBClusterParameterGroup(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClusterParameterGroupsInput) (*docdb.DBClusterParameterGroup, error) {
+func findDBClusterParameterGroup(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClusterParameterGroupsInput) (*awstypes.DBClusterParameterGroup, error) {
 	output, err := findDBClusterParameterGroups(ctx, conn, input)
 
 	if err != nil {
@@ -270,8 +272,8 @@ func findDBClusterParameterGroup(ctx context.Context, conn *docdb.DocDB, input *
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findDBClusterParameterGroups(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClusterParameterGroupsInput) ([]*docdb.DBClusterParameterGroup, error) {
-	var output []*docdb.DBClusterParameterGroup
+func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClusterParameterGroupsInput) ([]*awstypes.DBClusterParameterGroup, error) {
+	var output []*awstypes.DBClusterParameterGroup
 
 	err := conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
 		if page == nil {
@@ -287,7 +289,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.DocDB, input 
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBParameterGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -301,8 +303,8 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.DocDB, input 
 	return output, nil
 }
 
-func findDBClusterParameters(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClusterParametersInput) ([]*docdb.Parameter, error) {
-	var output []*docdb.Parameter
+func findDBClusterParameters(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClusterParametersInput) ([]*awstypes.Parameter, error) {
+	var output []*awstypes.Parameter
 
 	err := conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterParametersOutput, lastPage bool) bool {
 		if page == nil {
@@ -318,7 +320,7 @@ func findDBClusterParameters(ctx context.Context, conn *docdb.DocDB, input *docd
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBParameterGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -7,23 +7,24 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandParameters(configured []interface{}) []*docdb.Parameter {
-	parameters := make([]*docdb.Parameter, 0, len(configured))
+func expandParameters(configured []interface{}) []*awstypes.Parameter {
+	parameters := make([]*awstypes.Parameter, 0, len(configured))
 
 	// Loop over our configured parameters and create
 	// an array of aws-sdk-go compatible objects
 	for _, pRaw := range configured {
 		data := pRaw.(map[string]interface{})
 
-		p := &docdb.Parameter{
+		p := &awstypes.Parameter{
 			ApplyMethod:    aws.String(data["apply_method"].(string)),
 			ParameterName:  aws.String(data[names.AttrName].(string)),
 			ParameterValue: aws.String(data[names.AttrValue].(string)),
@@ -36,11 +37,11 @@ func expandParameters(configured []interface{}) []*docdb.Parameter {
 }
 
 // Flattens an array of Parameters into a []map[string]interface{}
-func flattenParameters(list []*docdb.Parameter, parameterList []interface{}) []map[string]interface{} {
+func flattenParameters(list []*awstypes.Parameter, parameterList []interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, i := range list {
 		if i.ParameterValue != nil {
-			name := aws.StringValue(i.ParameterName)
+			name := aws.ToString(i.ParameterName)
 
 			// Check if any non-user parameters are specified in the configuration.
 			parameterFound := false
@@ -51,14 +52,14 @@ func flattenParameters(list []*docdb.Parameter, parameterList []interface{}) []m
 			}
 
 			// Skip parameters that are not user defined or specified in the configuration.
-			if aws.StringValue(i.Source) != "user" && !parameterFound {
+			if aws.ToString(i.Source) != "user" && !parameterFound {
 				continue
 			}
 
 			result = append(result, map[string]interface{}{
-				"apply_method":  aws.StringValue(i.ApplyMethod),
-				names.AttrName:  aws.StringValue(i.ParameterName),
-				names.AttrValue: aws.StringValue(i.ParameterValue),
+				"apply_method":  string(i.ApplyMethod),
+				names.AttrName:  aws.ToString(i.ParameterName),
+				names.AttrValue: aws.ToString(i.ParameterValue),
 			})
 		}
 	}

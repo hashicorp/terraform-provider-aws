@@ -8,8 +8,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
@@ -74,7 +75,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %d", err)
 	}
-	conn := client.DocDBConn(ctx)
+	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -84,8 +85,8 @@ func sweepClusters(region string) error {
 		}
 
 		for _, v := range page.DBClusters {
-			arn := aws.StringValue(v.DBClusterArn)
-			id := aws.StringValue(v.DBClusterIdentifier)
+			arn := aws.ToString(v.DBClusterArn)
+			id := aws.ToString(v.DBClusterIdentifier)
 
 			r := ResourceCluster()
 			d := r.Data(nil)
@@ -133,7 +134,7 @@ func sweepClusterSnapshots(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.DocDBConn(ctx)
+	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBClusterSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -145,7 +146,7 @@ func sweepClusterSnapshots(region string) error {
 		for _, v := range page.DBClusterSnapshots {
 			r := ResourceClusterSnapshot()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DBClusterSnapshotIdentifier))
+			d.SetId(aws.ToString(v.DBClusterSnapshotIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -177,7 +178,7 @@ func sweepClusterParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DocDBConn(ctx)
+	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBClusterParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -187,7 +188,7 @@ func sweepClusterParameterGroups(region string) error {
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			name := aws.StringValue(v.DBClusterParameterGroupName)
+			name := aws.ToString(v.DBClusterParameterGroupName)
 
 			if strings.HasPrefix(name, "default.") {
 				log.Printf("[INFO] Skipping DocumentDB Cluster Parameter Group: %s", name)
@@ -228,7 +229,7 @@ func sweepClusterInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DocDBConn(ctx)
+	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -240,7 +241,7 @@ func sweepClusterInstances(region string) error {
 		for _, v := range page.DBInstances {
 			r := ResourceClusterInstance()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DBInstanceIdentifier))
+			d.SetId(aws.ToString(v.DBInstanceIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -272,7 +273,7 @@ func sweepGlobalClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.DocDBConn(ctx)
+	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeGlobalClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -284,7 +285,7 @@ func sweepGlobalClusters(region string) error {
 		for _, v := range page.GlobalClusters {
 			r := ResourceGlobalCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
+			d.SetId(aws.ToString(v.GlobalClusterIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -316,7 +317,7 @@ func sweepSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DocDBConn(ctx)
+	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeDBSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -328,7 +329,7 @@ func sweepSubnetGroups(region string) error {
 		for _, v := range page.DBSubnetGroups {
 			r := ResourceSubnetGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DBSubnetGroupName))
+			d.SetId(aws.ToString(v.DBSubnetGroupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -360,7 +361,7 @@ func sweepEventSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.DocDBConn(ctx)
+	conn := client.DocDBClient(ctx)
 	input := &docdb.DescribeEventSubscriptionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -372,7 +373,7 @@ func sweepEventSubscriptions(region string) error {
 		for _, v := range page.EventSubscriptionsList {
 			r := ResourceEventSubscription()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.CustSubscriptionId))
+			d.SetId(aws.ToString(v.CustSubscriptionId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

@@ -6,8 +6,9 @@ package docdb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,7 +67,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 
 func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -90,17 +91,17 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.Vpc = aws.Bool(v.(bool))
 	}
 
-	var orderableDBInstance *docdb.OrderableDBInstanceOption
+	var orderableDBInstance *awstypes.OrderableDBInstanceOption
 	var err error
 	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]interface{})); len(preferredInstanceClasses) > 0 {
-		var orderableDBInstances []*docdb.OrderableDBInstanceOption
+		var orderableDBInstances []*awstypes.OrderableDBInstanceOption
 
 		orderableDBInstances, err = findOrderableDBInstances(ctx, conn, input)
 		if err == nil {
 		PreferredInstanceClassLoop:
 			for _, preferredInstanceClass := range preferredInstanceClasses {
 				for _, v := range orderableDBInstances {
-					if preferredInstanceClass == aws.StringValue(v.DBInstanceClass) {
+					if preferredInstanceClass == aws.ToString(v.DBInstanceClass) {
 						orderableDBInstance = v
 						break PreferredInstanceClassLoop
 					}
@@ -119,9 +120,9 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("DocumentDB Orderable DB Instance", err))
 	}
 
-	d.SetId(aws.StringValue(orderableDBInstance.DBInstanceClass))
-	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *docdb.AvailabilityZone) string {
-		return aws.StringValue(v.Name)
+	d.SetId(aws.ToString(orderableDBInstance.DBInstanceClass))
+	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *awstypes.AvailabilityZone) string {
+		return aws.ToString(v.Name)
 	}))
 	d.Set(names.AttrEngine, orderableDBInstance.Engine)
 	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
@@ -132,7 +133,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func findOrderableDBInstance(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeOrderableDBInstanceOptionsInput) (*docdb.OrderableDBInstanceOption, error) {
+func findOrderableDBInstance(ctx context.Context, conn *docdb.Client, input *docdb.DescribeOrderableDBInstanceOptionsInput) (*awstypes.OrderableDBInstanceOption, error) {
 	output, err := findOrderableDBInstances(ctx, conn, input)
 
 	if err != nil {
@@ -142,8 +143,8 @@ func findOrderableDBInstance(ctx context.Context, conn *docdb.DocDB, input *docd
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findOrderableDBInstances(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeOrderableDBInstanceOptionsInput) ([]*docdb.OrderableDBInstanceOption, error) {
-	var output []*docdb.OrderableDBInstanceOption
+func findOrderableDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.DescribeOrderableDBInstanceOptionsInput) ([]*awstypes.OrderableDBInstanceOption, error) {
+	var output []*awstypes.OrderableDBInstanceOption
 
 	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(page *docdb.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 		if page == nil {

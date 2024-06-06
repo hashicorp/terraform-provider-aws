@@ -8,9 +8,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -103,7 +104,7 @@ func ResourceEventSubscription() *schema.Resource {
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &docdb.CreateEventSubscriptionInput{
@@ -122,16 +123,16 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk(names.AttrSourceType); ok {
-		input.SourceType = aws.String(v.(string))
+		input.SourceType = awstypes.SourceType(v.(string))
 	}
 
-	output, err := conn.CreateEventSubscriptionWithContext(ctx, input)
+	output, err := conn.CreateEventSubscription(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Event Subscription (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
+	d.SetId(aws.ToString(output.EventSubscription.CustSubscriptionId))
 
 	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DocumentDB Event Subscription (%s) create: %s", d.Id(), err)
@@ -143,7 +144,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	output, err := FindEventSubscriptionByName(ctx, conn, d.Id())
 
@@ -160,11 +161,11 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrARN, output.EventSubscriptionArn)
 	d.Set("customer_aws_id", output.CustomerAwsId)
 	d.Set(names.AttrEnabled, output.Enabled)
-	d.Set("event_categories", aws.StringValueSlice(output.EventCategoriesList))
+	d.Set("event_categories", output.EventCategoriesList)
 	d.Set(names.AttrName, output.CustSubscriptionId)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.CustSubscriptionId)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.CustSubscriptionId)))
 	d.Set(names.AttrSNSTopicARN, output.SnsTopicArn)
-	d.Set("source_ids", aws.StringValueSlice(output.SourceIdsList))
+	d.Set("source_ids", output.SourceIdsList)
 	d.Set(names.AttrSourceType, output.SourceType)
 
 	return diags
@@ -173,7 +174,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "source_ids") {
 		input := &docdb.ModifyEventSubscriptionInput{
@@ -186,7 +187,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
-			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
+			input.SourceType = awstypes.SourceType(d.Get(names.AttrSourceType).(string))
 		}
 
 		if d.HasChange(names.AttrSNSTopicARN) {
@@ -194,10 +195,10 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange(names.AttrSourceType) {
-			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
+			input.SourceType = awstypes.SourceType(d.Get(names.AttrSourceType).(string))
 		}
 
-		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
+		_, err := conn.ModifyEventSubscription(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating DocumentDB Event Subscription (%s): %s", d.Id(), err)
@@ -224,7 +225,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(remove) > 0 {
 			for _, v := range remove {
-				_, err := conn.RemoveSourceIdentifierFromSubscriptionWithContext(ctx, &docdb.RemoveSourceIdentifierFromSubscriptionInput{
+				_, err := conn.RemoveSourceIdentifierFromSubscription(ctx, &docdb.RemoveSourceIdentifierFromSubscriptionInput{
 					SourceIdentifier: v,
 					SubscriptionName: aws.String(d.Id()),
 				})
@@ -237,7 +238,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(add) > 0 {
 			for _, v := range add {
-				_, err := conn.AddSourceIdentifierToSubscriptionWithContext(ctx, &docdb.AddSourceIdentifierToSubscriptionInput{
+				_, err := conn.AddSourceIdentifierToSubscription(ctx, &docdb.AddSourceIdentifierToSubscriptionInput{
 					SourceIdentifier: v,
 					SubscriptionName: aws.String(d.Id()),
 				})
@@ -255,14 +256,14 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Event Subscription: %s", d.Id())
-	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &docdb.DeleteEventSubscriptionInput{
+	_, err := conn.DeleteEventSubscription(ctx, &docdb.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeSubscriptionNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeSubscriptionNotFoundFault) {
 		return diags
 	}
 
@@ -277,7 +278,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindEventSubscriptionByName(ctx context.Context, conn *docdb.DocDB, name string) (*docdb.EventSubscription, error) {
+func FindEventSubscriptionByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.EventSubscription, error) {
 	input := &docdb.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
@@ -288,7 +289,7 @@ func FindEventSubscriptionByName(ctx context.Context, conn *docdb.DocDB, name st
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.CustSubscriptionId) != name {
+	if aws.ToString(output.CustSubscriptionId) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -297,7 +298,7 @@ func FindEventSubscriptionByName(ctx context.Context, conn *docdb.DocDB, name st
 	return output, nil
 }
 
-func findEventSubscription(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeEventSubscriptionsInput) (*docdb.EventSubscription, error) {
+func findEventSubscription(ctx context.Context, conn *docdb.Client, input *docdb.DescribeEventSubscriptionsInput) (*awstypes.EventSubscription, error) {
 	output, err := findEventSubscriptions(ctx, conn, input)
 
 	if err != nil {
@@ -307,8 +308,8 @@ func findEventSubscription(ctx context.Context, conn *docdb.DocDB, input *docdb.
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findEventSubscriptions(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeEventSubscriptionsInput) ([]*docdb.EventSubscription, error) {
-	var output []*docdb.EventSubscription
+func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docdb.DescribeEventSubscriptionsInput) ([]*awstypes.EventSubscription, error) {
+	var output []*awstypes.EventSubscription
 
 	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *docdb.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -324,7 +325,7 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.DocDB, input *docdb
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeSubscriptionNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeSubscriptionNotFoundFault) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -338,7 +339,7 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.DocDB, input *docdb
 	return output, nil
 }
 
-func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, name string) retry.StateRefreshFunc {
+func statusEventSubscription(ctx context.Context, conn *docdb.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEventSubscriptionByName(ctx, conn, name)
 
@@ -350,11 +351,11 @@ func statusEventSubscription(ctx context.Context, conn *docdb.DocDB, name string
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.DocDB, name string, timeout time.Duration) (*docdb.EventSubscription, error) {
+func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusCreating},
 		Target:     []string{eventSubscriptionStatusActive},
@@ -366,14 +367,14 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *docdb.DocDB, name s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+	if output, ok := outputRaw.(*awstypes.EventSubscription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.DocDB, name string, timeout time.Duration) (*docdb.EventSubscription, error) {
+func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusModifying},
 		Target:     []string{eventSubscriptionStatusActive},
@@ -385,14 +386,14 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *docdb.DocDB, name s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+	if output, ok := outputRaw.(*awstypes.EventSubscription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.DocDB, name string, timeout time.Duration) (*docdb.EventSubscription, error) {
+func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.Client, name string, timeout time.Duration) (*awstypes.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
@@ -404,7 +405,7 @@ func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.DocDB, name s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
+	if output, ok := outputRaw.(*awstypes.EventSubscription); ok {
 		return output, err
 	}
 

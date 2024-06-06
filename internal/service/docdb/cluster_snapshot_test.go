@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbClusterSnapshot docdb.DBClusterSnapshot
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster_snapshot.test"
 
@@ -60,7 +61,7 @@ func TestAccDocDBClusterSnapshot_basic(t *testing.T) {
 
 func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbClusterSnapshot docdb.DBClusterSnapshot
+	var dbClusterSnapshot awstypes.DBClusterSnapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster_snapshot.test"
 
@@ -84,7 +85,7 @@ func TestAccDocDBClusterSnapshot_disappears(t *testing.T) {
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster_snapshot" {
@@ -108,14 +109,14 @@ func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *docdb.DBClusterSnapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstypes.DBClusterSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 

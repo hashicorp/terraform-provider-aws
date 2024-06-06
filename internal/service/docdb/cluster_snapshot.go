@@ -8,9 +8,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -99,7 +100,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 
 func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	clusterSnapshotID := d.Get("db_cluster_snapshot_identifier").(string)
 	input := &docdb.CreateDBClusterSnapshotInput{
@@ -107,7 +108,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		DBClusterSnapshotIdentifier: aws.String(clusterSnapshotID),
 	}
 
-	_, err := conn.CreateDBClusterSnapshotWithContext(ctx, input)
+	_, err := conn.CreateDBClusterSnapshot(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster Snapshot (%s): %s", clusterSnapshotID, err)
@@ -124,7 +125,7 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
 
@@ -138,7 +139,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, snapshot.AvailabilityZones)
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
@@ -157,14 +158,14 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
+	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DocumentDB Cluster Snapshot: %s", d.Id())
-	_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{
+	_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterSnapshotNotFoundFault) {
 		return diags
 	}
 
@@ -175,7 +176,7 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindClusterSnapshotByID(ctx context.Context, conn *docdb.DocDB, id string) (*docdb.DBClusterSnapshot, error) {
+func FindClusterSnapshotByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBClusterSnapshot, error) {
 	input := &docdb.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
@@ -186,7 +187,7 @@ func FindClusterSnapshotByID(ctx context.Context, conn *docdb.DocDB, id string) 
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBClusterSnapshotIdentifier) != id {
+	if aws.ToString(output.DBClusterSnapshotIdentifier) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -195,7 +196,7 @@ func FindClusterSnapshotByID(ctx context.Context, conn *docdb.DocDB, id string) 
 	return output, nil
 }
 
-func findClusterSnapshot(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClusterSnapshotsInput) (*docdb.DBClusterSnapshot, error) {
+func findClusterSnapshot(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClusterSnapshotsInput) (*awstypes.DBClusterSnapshot, error) {
 	output, err := findClusterSnapshots(ctx, conn, input)
 
 	if err != nil {
@@ -205,8 +206,8 @@ func findClusterSnapshot(ctx context.Context, conn *docdb.DocDB, input *docdb.De
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findClusterSnapshots(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClusterSnapshotsInput) ([]*docdb.DBClusterSnapshot, error) {
-	var output []*docdb.DBClusterSnapshot
+func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClusterSnapshotsInput) ([]*awstypes.DBClusterSnapshot, error) {
+	var output []*awstypes.DBClusterSnapshot
 
 	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
@@ -222,7 +223,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.DocDB, input *docdb.D
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBClusterSnapshotNotFoundFault) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBClusterSnapshotNotFoundFault) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -236,7 +237,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.DocDB, input *docdb.D
 	return output, nil
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *docdb.DocDB, id string) retry.StateRefreshFunc {
+func statusClusterSnapshot(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindClusterSnapshotByID(ctx, conn, id)
 
@@ -248,11 +249,11 @@ func statusClusterSnapshot(ctx context.Context, conn *docdb.DocDB, id string) re
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }
 
-func waitClusterSnapshotCreated(ctx context.Context, conn *docdb.DocDB, id string, timeout time.Duration) (*docdb.DBClusterSnapshot, error) {
+func waitClusterSnapshotCreated(ctx context.Context, conn *docdb.Client, id string, timeout time.Duration) (*awstypes.DBClusterSnapshot, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{clusterSnapshotStatusCreating},
 		Target:     []string{clusterSnapshotStatusAvailable},
@@ -264,7 +265,7 @@ func waitClusterSnapshotCreated(ctx context.Context, conn *docdb.DocDB, id strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*docdb.DBClusterSnapshot); ok {
+	if output, ok := outputRaw.(*awstypes.DBClusterSnapshot); ok {
 		return output, err
 	}
 

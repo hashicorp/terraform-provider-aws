@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,7 +23,7 @@ import (
 
 func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	resourceName := "aws_docdb_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -54,7 +55,7 @@ func TestAccDocDBSubnetGroup_basic(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	resourceName := "aws_docdb_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -78,7 +79,7 @@ func TestAccDocDBSubnetGroup_disappears(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	resourceName := "aws_docdb_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -107,7 +108,7 @@ func TestAccDocDBSubnetGroup_nameGenerated(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	resourceName := "aws_docdb_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -136,7 +137,7 @@ func TestAccDocDBSubnetGroup_namePrefix(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	resourceName := "aws_docdb_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -171,7 +172,7 @@ func TestAccDocDBSubnetGroup_updateDescription(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_updateSubnets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	resourceName := "aws_docdb_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -206,7 +207,7 @@ func TestAccDocDBSubnetGroup_updateSubnets(t *testing.T) {
 
 func TestAccDocDBSubnetGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBSubnetGroup
+	var v awstypes.DBSubnetGroup
 	resourceName := "aws_docdb_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -252,7 +253,7 @@ func TestAccDocDBSubnetGroup_tags(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_subnet_group" {
@@ -276,14 +277,14 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *docdb.DBSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *awstypes.DBSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindDBSubnetGroupByName(ctx, conn, rs.Primary.ID)
 

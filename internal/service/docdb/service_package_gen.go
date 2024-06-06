@@ -5,6 +5,8 @@ package docdb
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	docdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdb"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
@@ -114,6 +116,25 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*d
 	}
 
 	return docdb_sdkv1.New(sess.Copy(&cfg)), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*docdb_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return docdb_sdkv2.NewFromConfig(cfg, func(o *docdb_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

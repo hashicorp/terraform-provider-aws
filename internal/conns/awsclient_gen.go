@@ -69,6 +69,7 @@ import (
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
+	docdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdb"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	drs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/drs"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -572,6 +573,10 @@ func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.
 
 func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
 	return errs.Must(conn[*docdb_sdkv1.DocDB](ctx, c, names.DocDB, make(map[string]any)))
+}
+
+func (c *AWSClient) DocDBClient(ctx context.Context) *docdb_sdkv2.Client {
+	return errs.Must(client[*docdb_sdkv2.Client](ctx, c, names.DocDB, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
