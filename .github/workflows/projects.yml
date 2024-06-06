@@ -19,7 +19,6 @@ env:
 jobs:
   team_board:
     name: Provider Team Project
-    needs: community_check
     runs-on: ubuntu-latest
 
     env:
