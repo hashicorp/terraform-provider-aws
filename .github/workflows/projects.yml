@@ -87,7 +87,7 @@ jobs:
 
       - name: Maintainer Assignments
         if: |
-          steps.author.conclusion != 'skipped'
+          steps.assignee.conclusion != 'skipped'
           && fromJSON(steps.assignee.outputs.is_maintainer)
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
