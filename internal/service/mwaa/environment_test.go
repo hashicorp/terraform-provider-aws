@@ -294,7 +294,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_workers", "20"),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", "15"),
 					resource.TestCheckResourceAttr(resourceName, "max_webservers", "5"),
-					resource.TestCheckResourceAttr(resourceName, "min_webservers", "4"),
+					resource.TestCheckResourceAttr(resourceName, "min_webservers", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.Ct1),
