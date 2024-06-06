@@ -71,27 +71,53 @@ func ResourceDefaultInternetGateway() *schema.Resource {
 }
 func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	input := &ec2.CreateInternetGatewayInput{
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
+	// Check if there is a default VPC
+	ec2Client := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	input := &ec2v2.DescribeVpcsInput{
+		Filters: newAttributeFilterListV2(
+			map[string]string{
+				"isDefault": "true",
+			},
+		),
 	}
+	_, err := findVPCV2(ctx, ec2Client, input)
 
-	log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
-	output, err := conn.CreateInternetGatewayWithContext(ctx, input)
+	if err == nil {
+		// Check if there is an IGW assigned to the default VPC
+		input := &ec2.DescribeInternetGatewaysInput{}
+		input.Filters = newAttributeFilterList(map[string]string{
+			"attachment.vpc-id": d.Get(names.AttrVPCID).(string),
+		})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
-	}
+		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
+		_, err := FindInternetGateway(ctx, conn, input)
 
-	if v, ok := d.GetOk(names.AttrVPCID); ok {
-		if err := attachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
+		// Attached IGW not found, so we create one
+		if err != nil {
+
+			input := &ec2.CreateInternetGatewayInput{
+				TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
+			}
+
+			log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
+			output, err := conn.CreateInternetGatewayWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
+			}
+
+			d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
+
+			if v, ok := d.GetOk(names.AttrVPCID); ok {
+				if err := attachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
+				}
+			}
 		}
 	}
-
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
 }
 
@@ -105,6 +131,7 @@ func resourceDefaultInternetGatewayDelete(ctx context.Context, d *schema.Resourc
 			Filters: newAttributeFilterListV2(
 				map[string]string{
 					"isDefault": "true",
+					"vpc-id":    d.Get(names.AttrVPCID).(string),
 				},
 			),
 		}
