@@ -76,7 +76,7 @@ func (r *resourceCapacityBlockReservation) Schema(ctx context.Context, _ resourc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"created_date": schema.StringAttribute{
+			names.AttrCreatedDate: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -355,7 +355,7 @@ func findCapacityBlockReservationByID(ctx context.Context, conn *ec2.Client, id 
 func waitCapacityBlockReservationActive(ctx context.Context, conn *ec2.Client, timeout time.Duration, id string) (*awstypes.CapacityReservation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CapacityReservationStatePaymentPending),
-		Target:     enum.Slice(awstypes.CapacityReservationStateActive),
+		Target:     enum.Slice(awstypes.CapacityReservationStateActive, awstypes.CapacityReservationStateScheduled),
 		Refresh:    statusCapacityBlockReservation(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
