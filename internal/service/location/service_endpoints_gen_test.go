@@ -68,7 +68,7 @@ const (
 	packageName = "location"
 	awsEnvVar   = "AWS_ENDPOINT_URL_LOCATION"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "location"
+	configParam = names.AttrLocation
 
 	aliasName0 = "locationservice"
 )

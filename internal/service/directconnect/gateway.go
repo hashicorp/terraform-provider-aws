@@ -44,7 +44,7 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(output.AmazonSideAsn), 10))
 	d.Set(names.AttrName, output.DirectConnectGatewayName)
-	d.Set("owner_account_id", output.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, output.OwnerAccount)
 
 	return diags
 }

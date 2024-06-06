@@ -41,7 +41,7 @@ func ResourceDataSource() *schema.Resource {
 					Computed: true,
 				},
 
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -548,7 +548,7 @@ func ResourceDataSource() *schema.Resource {
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -615,7 +615,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_source_id").(string)
 
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 
@@ -690,7 +690,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	dataSource := output.DataSource
 
 	d.Set(names.AttrARN, dataSource.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("data_source_id", dataSource.DataSourceId)
 	d.Set(names.AttrName, dataSource.Name)
 

@@ -14,6 +14,12 @@ on:
       - infrastructure/repository/labels-service.tf
       - .goreleaser.yml
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   copywrite:
     name: add headers check

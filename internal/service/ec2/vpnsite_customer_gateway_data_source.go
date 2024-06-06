@@ -40,6 +40,10 @@ func dataSourceCustomerGateway() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"bgp_asn_extended": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -107,6 +111,17 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("bgp_asn", v)
 	} else {
 		d.Set("bgp_asn", nil)
+	}
+	if v := aws.ToString(cgw.BgpAsnExtended); v != "" {
+		v, err := strconv.ParseInt(v, 0, 0)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		d.Set("bgp_asn_extended", v)
+	} else {
+		d.Set("bgp_asn_extended", nil)
 	}
 	d.Set(names.AttrCertificateARN, cgw.CertificateArn)
 	d.Set(names.AttrDeviceName, cgw.DeviceName)

@@ -40,7 +40,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.name", "aws_memorydb_cluster.test", names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.node_type", "aws_memorydb_cluster.test", "node_type"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.num_shards", "aws_memorydb_cluster.test", "num_shards"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.parameter_group_name", "aws_memorydb_cluster.test", "parameter_group_name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.parameter_group_name", "aws_memorydb_cluster.test", names.AttrParameterGroupName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.port", "aws_memorydb_cluster.test", names.AttrPort),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.snapshot_retention_limit", "aws_memorydb_cluster.test", "snapshot_retention_limit"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.snapshot_window", "aws_memorydb_cluster.test", "snapshot_window"),

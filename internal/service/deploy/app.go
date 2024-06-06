@@ -61,7 +61,7 @@ func resourceApp() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(appCreateResourceID(aws.ToString(app.ApplicationId), appName))
 	}
 
-	d.Set("application_id", app.ApplicationId)
+	d.Set(names.AttrApplicationID, app.ApplicationId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "codedeploy",

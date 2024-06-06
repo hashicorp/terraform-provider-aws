@@ -30,7 +30,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 				Config: testAccVPCNATGatewayDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "allocation_id", resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrPair(dataSourceNameByID, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(dataSourceNameByID, names.AttrAssociationID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "connectivity_type", resourceName, "connectivity_type"),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "private_ip", resourceName, "private_ip"),
@@ -41,7 +41,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameByID, "tags.#", resourceName, "tags.#"),
 
 					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetID, "allocation_id", resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetID, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetID, names.AttrAssociationID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetID, "connectivity_type", resourceName, "connectivity_type"),
 					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetID, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetID, "private_ip", resourceName, "private_ip"),
@@ -52,7 +52,7 @@ func TestAccVPCNATGatewayDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameBySubnetID, "tags.#", resourceName, "tags.#"),
 
 					resource.TestCheckResourceAttrPair(dataSourceNameByTags, "allocation_id", resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrPair(dataSourceNameByTags, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(dataSourceNameByTags, names.AttrAssociationID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(dataSourceNameByTags, "connectivity_type", resourceName, "connectivity_type"),
 					resource.TestCheckResourceAttrPair(dataSourceNameByTags, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceNameByTags, "private_ip", resourceName, "private_ip"),

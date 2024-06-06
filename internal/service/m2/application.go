@@ -61,8 +61,8 @@ func (*applicationResource) Metadata(_ context.Context, request resource.Metadat
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": framework.IDAttribute(),
-			names.AttrARN:    framework.ARNAttributeComputedOnly(),
+			names.AttrApplicationID: framework.IDAttribute(),
+			names.AttrARN:           framework.ARNAttributeComputedOnly(),
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},

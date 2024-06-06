@@ -25,7 +25,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationProfileRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
@@ -93,7 +93,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	appId := d.Get("application_id").(string)
+	appId := d.Get(names.AttrApplicationID).(string)
 	profileId := d.Get("configuration_profile_id").(string)
 	ID := fmt.Sprintf("%s:%s", profileId, appId)
 
@@ -104,7 +104,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(ID)
 
-	d.Set("application_id", appId)
+	d.Set(names.AttrApplicationID, appId)
 
 	arn := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,

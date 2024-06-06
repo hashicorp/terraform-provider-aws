@@ -28,6 +28,9 @@ import (
 
 // @SDKResource("aws_appmesh_gateway_route", name="Gateway Route")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.GatewayRouteData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccGatewayRouteImportStateIdFunc)
 func resourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayRouteCreate,
@@ -72,7 +75,7 @@ func resourceGatewayRoute() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -560,7 +563,7 @@ func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("mesh_name", gatewayRoute.MeshName)
 	d.Set("mesh_owner", gatewayRoute.Metadata.MeshOwner)
 	d.Set(names.AttrName, gatewayRoute.GatewayRouteName)
-	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, gatewayRoute.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

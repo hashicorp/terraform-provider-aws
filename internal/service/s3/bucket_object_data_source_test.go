@@ -200,7 +200,7 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
 					resource.TestCheckResourceAttr(dataSourceName, "sse_kms_key_id", ""),
 					// Supported, but difficult to reproduce in short testing time
-					resource.TestCheckResourceAttrPair(dataSourceName, "storage_class", resourceName, "storage_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStorageClass, resourceName, names.AttrStorageClass),
 					resource.TestCheckResourceAttr(dataSourceName, "expiration", ""),
 					// Currently unsupported in aws_s3_object resource
 					resource.TestCheckResourceAttr(dataSourceName, "expires", ""),

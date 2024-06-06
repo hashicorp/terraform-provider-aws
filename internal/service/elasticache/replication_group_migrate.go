@@ -84,7 +84,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -108,8 +108,8 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 				ConflictsWith: []string{
 					"num_node_groups",
-					"parameter_group_name",
-					"engine",
+					names.AttrParameterGroupName,
+					names.AttrEngine,
 					names.AttrEngineVersion,
 					"node_type",
 					"security_group_names",
@@ -203,7 +203,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -321,7 +321,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

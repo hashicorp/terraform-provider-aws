@@ -45,7 +45,7 @@ func resourceInsight() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"aws_account_id":                              stringFilterSchema(),
+						names.AttrAWSAccountID:                        stringFilterSchema(),
 						"company_name":                                stringFilterSchema(),
 						"compliance_status":                           stringFilterSchema(),
 						"confidence":                                  numberFilterSchema(),
@@ -506,7 +506,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 
 	filters := &types.AwsSecurityFindingFilters{}
 
-	if v, ok := tfMap["aws_account_id"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrAWSAccountID].(*schema.Set); ok && v.Len() > 0 {
 		filters.AwsAccountId = expandStringFilters(v.List())
 	}
 
@@ -1138,7 +1138,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 	}
 
 	m := map[string]interface{}{
-		"aws_account_id":                              flattenStringFilters(filters.AwsAccountId),
+		names.AttrAWSAccountID:                        flattenStringFilters(filters.AwsAccountId),
 		"company_name":                                flattenStringFilters(filters.CompanyName),
 		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
 		"confidence":                                  flattenNumberFilters(filters.Confidence),

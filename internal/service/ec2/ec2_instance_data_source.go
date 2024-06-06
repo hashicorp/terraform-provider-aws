@@ -100,7 +100,7 @@ func DataSourceInstance() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrTags: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -156,7 +156,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -338,7 +338,7 @@ func DataSourceInstance() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrTags: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

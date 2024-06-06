@@ -65,10 +65,12 @@ import (
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
+	devicefarm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
+	drs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/drs"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -163,6 +165,7 @@ import (
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	synthetics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/synthetics"
+	timestreaminfluxdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	transfer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -188,7 +191,6 @@ import (
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
-	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
@@ -247,7 +249,6 @@ import (
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
-	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -521,6 +522,10 @@ func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1
 	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS, make(map[string]any)))
 }
 
+func (c *AWSClient) DRSClient(ctx context.Context) *drs_sdkv2.Client {
+	return errs.Must(client[*drs_sdkv2.Client](ctx, c, names.DRS, make(map[string]any)))
+}
+
 func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
 	return errs.Must(conn[*directoryservice_sdkv1.DirectoryService](ctx, c, names.DS, make(map[string]any)))
 }
@@ -557,8 +562,8 @@ func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru_sdkv2.Clie
 	return errs.Must(client[*devopsguru_sdkv2.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
 }
 
-func (c *AWSClient) DeviceFarmConn(ctx context.Context) *devicefarm_sdkv1.DeviceFarm {
-	return errs.Must(conn[*devicefarm_sdkv1.DeviceFarm](ctx, c, names.DeviceFarm, make(map[string]any)))
+func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm_sdkv2.Client {
+	return errs.Must(client[*devicefarm_sdkv2.Client](ctx, c, names.DeviceFarm, make(map[string]any)))
 }
 
 func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {
@@ -1177,16 +1182,16 @@ func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics_sdkv2.Clie
 	return errs.Must(client[*synthetics_sdkv2.Client](ctx, c, names.Synthetics, make(map[string]any)))
 }
 
+func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb_sdkv2.Client {
+	return errs.Must(client[*timestreaminfluxdb_sdkv2.Client](ctx, c, names.TimestreamInfluxDB, make(map[string]any)))
+}
+
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {
 	return errs.Must(client[*timestreamwrite_sdkv2.Client](ctx, c, names.TimestreamWrite, make(map[string]any)))
 }
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
 	return errs.Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe, make(map[string]any)))
-}
-
-func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
-	return errs.Must(conn[*transfer_sdkv1.Transfer](ctx, c, names.Transfer, make(map[string]any)))
 }
 
 func (c *AWSClient) TransferClient(ctx context.Context) *transfer_sdkv2.Client {

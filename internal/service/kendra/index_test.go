@@ -1362,7 +1362,6 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "disappears"
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1372,7 +1371,7 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
+				Config: testAccIndexConfig_basic(rName, rName2, rName3, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceIndex(), resourceName),

@@ -71,6 +71,7 @@ Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
 DataSync
@@ -222,6 +223,7 @@ Signer
 Storage Gateway
 Systems Manager for SAP
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway

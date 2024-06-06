@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
@@ -36,6 +37,10 @@ func resourceAuthorizer() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAuthorizerImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -258,9 +263,11 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Authorizer: %s", d.Id())
-	_, err := conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
-		ApiId:        aws.String(d.Get("api_id").(string)),
-		AuthorizerId: aws.String(d.Id()),
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
+			ApiId:        aws.String(d.Get("api_id").(string)),
+			AuthorizerId: aws.String(d.Id()),
+		})
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
