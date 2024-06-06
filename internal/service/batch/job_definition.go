@@ -60,7 +60,7 @@ func ResourceJobDefinition() *schema.Resource {
 			"container_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"eks_properties", "node_properties"},
+				ConflictsWith: []string{"eks_properties", "ecs_properties", "node_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -89,7 +89,7 @@ func ResourceJobDefinition() *schema.Resource {
 			"node_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"container_properties", "eks_properties"},
+				ConflictsWith: []string{"container_properties", "eks_properties", "ecs_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -105,7 +105,7 @@ func ResourceJobDefinition() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Optional:      true,
-				ConflictsWith: []string{"container_properties", "node_properties"},
+				ConflictsWith: []string{"container_properties", "node_properties", "ecs_properties"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"pod_properties": {
@@ -327,6 +327,414 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 			},
 
+			"ecs_properties": {
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				ConflictsWith: []string{"container_properties", "node_properties", "eks_properties"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"task_properties": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"containers": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"image": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"command": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"depends_on": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"condition": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"container_name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"environment": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"value": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"essential": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"linux_parameters": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"devices": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"host_path": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"container_path": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"permissions": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
+															"init_process_enabled": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"max_swap": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"shared_memory_size": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"swappiness": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"tmpfs": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"container_path": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"size": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																		"mount_options": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"log_configuration": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"log_driver": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"options": {
+																Type:     schema.TypeMap,
+																Optional: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+															"secret_options": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"value_from": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"mount_points": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"container_path": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"read_only": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"source_volume": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"privileged": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"readonly_root_filesystem": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"repository_credentials": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"credentials_parameter": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"resource_requirements": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"type": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"value": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"secrets": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"value_from": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"ulimits": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"hard_limit": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+															"name": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"soft_limit": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+												"user": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"ephemeral_storage": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"size_in_gib": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+									"execution_role_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"ipc_mode": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(IpcMode_Values(), false),
+									},
+									"network_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assign_public_ip": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"pid_mode": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(PidMode_Values(), false),
+									},
+									"platform_version": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"runtime_platform": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cpu_architecture": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"operating_system_family": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"task_role_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"volumes": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"efs_volume_configuration": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"file_system_id": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"authorization_config": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"access_point_id": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"iam": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"root_directory": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"transit_encryption": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"transit_encryption_port": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"host": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"source_path": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -521,6 +929,34 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		return !reflect.DeepEqual(oeks, neks)
 	}
 
+	if d.HasChange("ecs_properties") {
+		o, n := d.GetChange("ecs_properties")
+		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
+			return false
+		}
+
+		if d.Get(names.AttrType).(string) != batch.JobDefinitionTypeContainer {
+			return false
+		}
+
+		var oecs, necs *batch.EcsTaskProperties
+		if len(o.([]interface{})) > 0 {
+			oProps := o.([]interface{})[0].(map[string]interface{})
+			if otaskProps, ok := oProps["task_properties"].([]interface{}); ok && len(otaskProps) > 0 {
+				oecs = expandECSTaskProperties(otaskProps[0].(map[string]interface{}))
+			}
+		}
+
+		if len(n.([]interface{})) > 0 {
+			nProps := n.([]interface{})[0].(map[string]interface{})
+			if ntaskProps, ok := nProps["task_properties"].([]interface{}); ok && len(ntaskProps) > 0 {
+				necs = expandECSTaskProperties(ntaskProps[0].(map[string]interface{}))
+			}
+		}
+
+		return !reflect.DeepEqual(oecs, necs)
+	}
+
 	if d.HasChange("retry_strategy") {
 		o, n := d.GetChange("retry_strategy")
 		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
@@ -615,6 +1051,20 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 				}
 			}
 		}
+
+		if v, ok := d.GetOk("ecs_properties"); ok && len(v.([]interface{})) > 0 {
+			ecsProps := v.([]interface{})[0].(map[string]interface{})
+			if taskProps, ok := ecsProps["task_properties"].([]interface{}); ok && len(taskProps) > 0 {
+				if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
+					props := expandECSTaskProperties(taskProps[0].(map[string]interface{}))
+					input.EcsProperties = &batch.EcsProperties{
+						TaskProperties: []*batch.EcsTaskProperties{
+							props,
+						},
+					}
+				}
+			}
+		}
 	}
 
 	if jobDefinitionType == batch.JobDefinitionTypeMultinode {
@@ -623,6 +1073,9 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 		if v, ok := d.GetOk("eks_properties"); ok && v != nil {
 			return sdkdiag.AppendErrorf(diags, "No `eks_properties` can be specified when `type` is %q", jobDefinitionType)
+		}
+		if v, ok := d.GetOk("ecs_properties"); ok && v != nil {
+			return sdkdiag.AppendErrorf(diags, "No `ecs_properties` can be specified when `type` is %q", jobDefinitionType)
 		}
 
 		if v, ok := d.GetOk("node_properties"); ok {
@@ -703,6 +1156,10 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
 	}
 
+	if err := d.Set("ecs_properties", flattenECSProperties(jobDefinition.EcsProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ecs_properties: %s", err)
+	}
+
 	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
 
 	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
@@ -774,6 +1231,18 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 				props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
 				input.EksProperties = &batch.EksProperties{
 					PodProperties: props,
+				}
+			}
+		}
+
+		if v, ok := d.GetOk("ecs_properties"); ok {
+			ecsProps := v.([]interface{})[0].(map[string]interface{})
+			if taskProps, ok := ecsProps["task_properties"].([]interface{}); ok && len(taskProps) > 0 {
+				props := expandECSTaskProperties(taskProps[0].(map[string]interface{}))
+				input.EcsProperties = &batch.EcsProperties{
+					TaskProperties: []*batch.EcsTaskProperties{
+						props,
+					},
 				}
 			}
 		}

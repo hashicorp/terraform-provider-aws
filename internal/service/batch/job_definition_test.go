@@ -842,6 +842,82 @@ func TestAccBatchJobDefinition_EKSProperties_update(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_ECSProperties_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_ECSProperties_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_ECSProperties_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_ECSProperties_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+				),
+			},
+			{
+				Config: testAccJobDefinitionConfig_ECSProperties_advancedUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.0.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.0.value", "Environment Variable"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+		},
+	})
+}
+
 func TestAccBatchJobDefinition_createTypeContainerWithNodeProperties(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1675,6 +1751,126 @@ resource "aws_batch_job_definition" "test" {
 
   timeout {
     attempt_duration_seconds = 60
+  }
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_ECSProperties_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  platform_capabilities = ["FARGATE"]
+  ecs_properties {
+    task_properties {
+      execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+      containers {
+        essential = true
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resource_requirements {
+          value = "1.0"
+          type = "VCPU"
+        }
+        resource_requirements {
+          value = "2048"
+          type = "MEMORY"
+        }
+        log_configuration {
+          log_driver = "awslogs"
+          options = {
+            awslogs-group         = %[1]q
+            awslogs-region        = "ap-northeast-1"
+            awslogs-stream-prefix = "ecs"
+          }
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_ECSProperties_advancedUpdate(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  platform_capabilities = ["FARGATE"]
+  ecs_properties {
+    task_properties {
+      execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+      containers {
+        essential = true
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resource_requirements {
+          value = "1.0"
+          type = "VCPU"
+        }
+        resource_requirements {
+          value = "2048"
+          type = "MEMORY"
+        }
+        environment {
+		  name = "test"
+		  value = "Environment Variable"
+        }
+      }
+    }
   }
 }
 `, rName)
