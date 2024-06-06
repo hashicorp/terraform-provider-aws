@@ -27,8 +27,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ami")
-func DataSourceAMI() *schema.Resource {
+// @SDKDataSource("aws_ami", name="AMI")
+// @Tags
+func dataSourceAMI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAMIRead,
 
@@ -235,7 +236,6 @@ func DataSourceAMI() *schema.Resource {
 func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
@@ -343,9 +343,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, image.Tags)
 
 	return diags
 }
