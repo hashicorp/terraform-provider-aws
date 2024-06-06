@@ -757,7 +757,7 @@ func findSpotDatafeedSubscription(ctx context.Context, conn *ec2.Client) (*awsty
 
 	output, err := conn.DescribeSpotDatafeedSubscription(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotDatafeedNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -3219,4 +3219,1033 @@ func findImageLaunchPermission(ctx context.Context, conn *ec2.Client, imageID, a
 	}
 
 	return nil, &retry.NotFoundError{}
+}
+
+func findTransitGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewaysInput) (*awstypes.TransitGateway, error) {
+	output, err := findTransitGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.TransitGateway) bool { return v.Options != nil })
+}
+
+func findTransitGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewaysInput) ([]awstypes.TransitGateway, error) {
+	var output []awstypes.TransitGateway
+
+	pages := ec2.NewDescribeTransitGatewaysPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGateways...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGateway, error) {
+	input := &ec2.DescribeTransitGatewaysInput{
+		TransitGatewayIds: []string{id},
+	}
+
+	output, err := findTransitGateway(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypes.TransitGatewayAttachment, error) {
+	output, err := findTransitGatewayAttachments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayAttachments(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) ([]awstypes.TransitGatewayAttachment, error) {
+	var output []awstypes.TransitGatewayAttachment
+
+	pages := ec2.NewDescribeTransitGatewayAttachmentsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayAttachments...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayAttachmentByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayAttachment, error) {
+	input := &ec2.DescribeTransitGatewayAttachmentsInput{
+		TransitGatewayAttachmentIds: []string{id},
+	}
+
+	output, err := findTransitGatewayAttachment(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayConnect(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectsInput) (*awstypes.TransitGatewayConnect, error) {
+	output, err := findTransitGatewayConnects(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.TransitGatewayConnect) bool { return v.Options != nil })
+}
+
+func findTransitGatewayConnects(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectsInput) ([]awstypes.TransitGatewayConnect, error) {
+	var output []awstypes.TransitGatewayConnect
+
+	pages := ec2.NewDescribeTransitGatewayConnectsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayConnects...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayConnectByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayConnect, error) {
+	input := &ec2.DescribeTransitGatewayConnectsInput{
+		TransitGatewayAttachmentIds: []string{id},
+	}
+
+	output, err := findTransitGatewayConnect(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayAttachmentStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayConnectPeer(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectPeersInput) (*awstypes.TransitGatewayConnectPeer, error) {
+	output, err := findTransitGatewayConnectPeers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output,
+		func(v *awstypes.TransitGatewayConnectPeer) bool { return v.ConnectPeerConfiguration != nil },
+		func(v *awstypes.TransitGatewayConnectPeer) bool {
+			return len(v.ConnectPeerConfiguration.BgpConfigurations) > 0
+		},
+	)
+}
+
+func findTransitGatewayConnectPeers(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayConnectPeersInput) ([]awstypes.TransitGatewayConnectPeer, error) {
+	var output []awstypes.TransitGatewayConnectPeer
+
+	pages := ec2.NewDescribeTransitGatewayConnectPeersPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayConnectPeerIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayConnectPeers...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayConnectPeerByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayConnectPeer, error) {
+	input := &ec2.DescribeTransitGatewayConnectPeersInput{
+		TransitGatewayConnectPeerIds: []string{id},
+	}
+
+	output, err := findTransitGatewayConnectPeer(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayConnectPeerStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayConnectPeerId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMulticastDomainsInput) (*awstypes.TransitGatewayMulticastDomain, error) {
+	output, err := findTransitGatewayMulticastDomains(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.TransitGatewayMulticastDomain) bool { return v.Options != nil })
+}
+
+func findTransitGatewayMulticastDomains(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayMulticastDomainsInput) ([]awstypes.TransitGatewayMulticastDomain, error) {
+	var output []awstypes.TransitGatewayMulticastDomain
+
+	pages := ec2.NewDescribeTransitGatewayMulticastDomainsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayMulticastDomains...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMulticastDomainByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayMulticastDomain, error) {
+	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{
+		TransitGatewayMulticastDomainIds: []string{id},
+	}
+
+	output, err := findTransitGatewayMulticastDomain(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayMulticastDomainStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayMulticastDomainId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMulticastDomainAssociation(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayMulticastDomainAssociationsInput) (*awstypes.TransitGatewayMulticastDomainAssociation, error) {
+	output, err := findTransitGatewayMulticastDomainAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.TransitGatewayMulticastDomainAssociation) bool { return v.Subnet != nil })
+}
+
+func findTransitGatewayMulticastDomainAssociations(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayMulticastDomainAssociationsInput) ([]awstypes.TransitGatewayMulticastDomainAssociation, error) {
+	var output []awstypes.TransitGatewayMulticastDomainAssociation
+
+	pages := ec2.NewGetTransitGatewayMulticastDomainAssociationsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.MulticastDomainAssociations...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMulticastDomainAssociationByThreePartKey(ctx context.Context, conn *ec2.Client, multicastDomainID, attachmentID, subnetID string) (*awstypes.TransitGatewayMulticastDomainAssociation, error) {
+	input := &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"subnet-id":                     subnetID,
+			"transit-gateway-attachment-id": attachmentID,
+		}),
+		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
+	}
+
+	output, err := findTransitGatewayMulticastDomainAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.Subnet.State; state == awstypes.TransitGatewayMulitcastDomainAssociationStateDisassociated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != attachmentID || aws.ToString(output.Subnet.SubnetId) != subnetID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMulticastGroups(ctx context.Context, conn *ec2.Client, input *ec2.SearchTransitGatewayMulticastGroupsInput) ([]awstypes.TransitGatewayMulticastGroup, error) {
+	var output []awstypes.TransitGatewayMulticastGroup
+
+	pages := ec2.NewSearchTransitGatewayMulticastGroupsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.MulticastGroups...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayMulticastGroupMemberByThreePartKey(ctx context.Context, conn *ec2.Client, multicastDomainID, groupIPAddress, eniID string) (*awstypes.TransitGatewayMulticastGroup, error) {
+	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"group-ip-address": groupIPAddress,
+			"is-group-member":  "true",
+			"is-group-source":  "false",
+		}),
+		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
+	}
+
+	output, err := findTransitGatewayMulticastGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output {
+		if aws.ToString(v.NetworkInterfaceId) == eniID {
+			// Eventual consistency check.
+			if aws.ToString(v.GroupIpAddress) != groupIPAddress || !aws.ToBool(v.GroupMember) {
+				return nil, &retry.NotFoundError{
+					LastRequest: input,
+				}
+			}
+
+			return &v, nil
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
+}
+
+func findTransitGatewayMulticastGroupSourceByThreePartKey(ctx context.Context, conn *ec2.Client, multicastDomainID, groupIPAddress, eniID string) (*awstypes.TransitGatewayMulticastGroup, error) {
+	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"group-ip-address": groupIPAddress,
+			"is-group-member":  "false",
+			"is-group-source":  "true",
+		}),
+		TransitGatewayMulticastDomainId: aws.String(multicastDomainID),
+	}
+
+	output, err := findTransitGatewayMulticastGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output {
+		if aws.ToString(v.NetworkInterfaceId) == eniID {
+			// Eventual consistency check.
+			if aws.ToString(v.GroupIpAddress) != groupIPAddress || !aws.ToBool(v.GroupSource) {
+				return nil, &retry.NotFoundError{
+					LastRequest: input,
+				}
+			}
+
+			return &v, nil
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
+}
+
+func findTransitGatewayPeeringAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) (*awstypes.TransitGatewayPeeringAttachment, error) {
+	output, err := findTransitGatewayPeeringAttachments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output,
+		func(v *awstypes.TransitGatewayPeeringAttachment) bool { return v.AccepterTgwInfo != nil },
+		func(v *awstypes.TransitGatewayPeeringAttachment) bool { return v.RequesterTgwInfo != nil },
+	)
+}
+
+func findTransitGatewayPeeringAttachments(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) ([]awstypes.TransitGatewayPeeringAttachment, error) {
+	var output []awstypes.TransitGatewayPeeringAttachment
+
+	pages := ec2.NewDescribeTransitGatewayPeeringAttachmentsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayPeeringAttachments...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPeeringAttachmentByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPeeringAttachment, error) {
+	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
+		TransitGatewayAttachmentIds: []string{id},
+	}
+
+	output, err := findTransitGatewayPeeringAttachment(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// See https://docs.aws.amazon.com/vpc/latest/tgw/tgw-vpc-attachments.html#vpc-attachment-lifecycle.
+	switch state := output.State; state {
+	case awstypes.TransitGatewayAttachmentStateDeleted,
+		awstypes.TransitGatewayAttachmentStateFailed,
+		awstypes.TransitGatewayAttachmentStateRejected:
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPrefixListReference(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPrefixListReferencesInput) (*awstypes.TransitGatewayPrefixListReference, error) {
+	output, err := findTransitGatewayPrefixListReferences(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayPrefixListReferences(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPrefixListReferencesInput) ([]awstypes.TransitGatewayPrefixListReference, error) {
+	var output []awstypes.TransitGatewayPrefixListReference
+
+	pages := ec2.NewGetTransitGatewayPrefixListReferencesPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayPrefixListReferences...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, prefixListID string) (*awstypes.TransitGatewayPrefixListReference, error) {
+	input := &ec2.GetTransitGatewayPrefixListReferencesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"prefix-list-id": prefixListID,
+		}),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	output, err := findTransitGatewayPrefixListReference(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.PrefixListId) != prefixListID || aws.ToString(output.TransitGatewayRouteTableId) != transitGatewayRouteTableID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayStaticRoute(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, destination string) (*awstypes.TransitGatewayRoute, error) {
+	input := &ec2.SearchTransitGatewayRoutesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			names.AttrType:             string(awstypes.TransitGatewayRouteTypeStatic),
+			"route-search.exact-match": destination,
+		}),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	output, err := findTransitGatewayRoutes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range output {
+		if v := aws.ToString(route.DestinationCidrBlock); types.CIDRBlocksEqual(v, destination) {
+			if state := route.State; state == awstypes.TransitGatewayRouteStateDeleted {
+				return nil, &retry.NotFoundError{
+					Message:     string(state),
+					LastRequest: input,
+				}
+			}
+
+			route.DestinationCidrBlock = aws.String(types.CanonicalCIDRBlock(v))
+
+			return &route, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func findTransitGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.SearchTransitGatewayRoutesInput) ([]awstypes.TransitGatewayRoute, error) {
+	output, err := conn.SearchTransitGatewayRoutes(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Routes, err
+}
+
+func findTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*awstypes.TransitGatewayPolicyTable, error) {
+	output, err := findTransitGatewayPolicyTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayRouteTablesInput) (*awstypes.TransitGatewayRouteTable, error) {
+	output, err := findTransitGatewayRouteTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayPolicyTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPolicyTablesInput) ([]awstypes.TransitGatewayPolicyTable, error) {
+	var output []awstypes.TransitGatewayPolicyTable
+
+	pages := ec2.NewDescribeTransitGatewayPolicyTablesPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayPolicyTables...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]awstypes.TransitGatewayRouteTable, error) {
+	var output []awstypes.TransitGatewayRouteTable
+
+	pages := ec2.NewDescribeTransitGatewayRouteTablesPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayRouteTables...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPolicyTableByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPolicyTable, error) {
+	input := &ec2.DescribeTransitGatewayPolicyTablesInput{
+		TransitGatewayPolicyTableIds: []string{id},
+	}
+
+	output, err := findTransitGatewayPolicyTable(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayPolicyTableId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayRouteTableByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayRouteTable, error) {
+	input := &ec2.DescribeTransitGatewayRouteTablesInput{
+		TransitGatewayRouteTableIds: []string{id},
+	}
+
+	output, err := findTransitGatewayRouteTable(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayRouteTableStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayRouteTableId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPolicyTableAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, transitGatewayPolicyTableID, transitGatewayAttachmentID string) (*awstypes.TransitGatewayPolicyTableAssociation, error) {
+	input := &ec2.GetTransitGatewayPolicyTableAssociationsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
+		TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
+	}
+
+	output, err := findTransitGatewayPolicyTableAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayAssociationStateDisassociated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func findTransitGatewayRouteTableAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*awstypes.TransitGatewayRouteTableAssociation, error) {
+	input := &ec2.GetTransitGatewayRouteTableAssociationsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	output, err := findTransitGatewayRouteTableAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayAssociationStateDisassociated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func findTransitGatewayRouteTableAssociation(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayRouteTableAssociationsInput) (*awstypes.TransitGatewayRouteTableAssociation, error) {
+	output, err := findTransitGatewayRouteTableAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayPolicyTableAssociations(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableAssociationsInput) ([]awstypes.TransitGatewayPolicyTableAssociation, error) {
+	var output []awstypes.TransitGatewayPolicyTableAssociation
+
+	pages := ec2.NewGetTransitGatewayPolicyTableAssociationsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Associations...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayPolicyTableAssociation(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayPolicyTableAssociationsInput) (*awstypes.TransitGatewayPolicyTableAssociation, error) {
+	output, err := findTransitGatewayPolicyTableAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayRouteTableAssociations(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayRouteTableAssociationsInput) ([]awstypes.TransitGatewayRouteTableAssociation, error) {
+	var output []awstypes.TransitGatewayRouteTableAssociation
+
+	pages := ec2.NewGetTransitGatewayRouteTableAssociationsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Associations...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayRouteTablePropagationByTwoPartKey(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*awstypes.TransitGatewayRouteTablePropagation, error) {
+	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
+		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+	}
+
+	output, err := findTransitGatewayRouteTablePropagation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.TransitGatewayPropagationStateDisabled {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func findTransitGatewayRouteTablePropagation(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayRouteTablePropagationsInput) (*awstypes.TransitGatewayRouteTablePropagation, error) {
+	output, err := findTransitGatewayRouteTablePropagations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayRouteTablePropagations(ctx context.Context, conn *ec2.Client, input *ec2.GetTransitGatewayRouteTablePropagationsInput) ([]awstypes.TransitGatewayRouteTablePropagation, error) {
+	var output []awstypes.TransitGatewayRouteTablePropagation
+
+	pages := ec2.NewGetTransitGatewayRouteTablePropagationsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayRouteTablePropagations...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayVpcAttachmentsInput) (*awstypes.TransitGatewayVpcAttachment, error) {
+	output, err := findTransitGatewayVPCAttachments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.TransitGatewayVpcAttachment) bool { return v.Options != nil })
+}
+
+func findTransitGatewayVPCAttachments(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayVpcAttachmentsInput) ([]awstypes.TransitGatewayVpcAttachment, error) {
+	var output []awstypes.TransitGatewayVpcAttachment
+
+	pages := ec2.NewDescribeTransitGatewayVpcAttachmentsPaginator(conn, input)
+	if pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TransitGatewayVpcAttachments...)
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayVPCAttachmentByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayVpcAttachment, error) {
+	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
+		TransitGatewayAttachmentIds: []string{id},
+	}
+
+	output, err := findTransitGatewayVPCAttachment(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// See https://docs.aws.amazon.com/vpc/latest/tgw/tgw-vpc-attachments.html#vpc-attachment-lifecycle.
+	switch state := output.State; state {
+	case awstypes.TransitGatewayAttachmentStateDeleted,
+		awstypes.TransitGatewayAttachmentStateFailed,
+		awstypes.TransitGatewayAttachmentStateRejected:
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

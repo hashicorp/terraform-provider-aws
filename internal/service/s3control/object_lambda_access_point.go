@@ -82,7 +82,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"actions": {
+									names.AttrActions: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem: &schema.Schema{
@@ -362,7 +362,7 @@ func expandObjectLambdaTransformationConfiguration(tfMap map[string]interface{})
 
 	apiObject := &types.ObjectLambdaTransformationConfiguration{}
 
-	if v, ok := tfMap["actions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrActions].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Actions = flex.ExpandStringyValueSet[types.ObjectLambdaTransformationConfigurationAction](v)
 	}
 
@@ -455,7 +455,7 @@ func flattenObjectLambdaTransformationConfiguration(apiObject types.ObjectLambda
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = v
+		tfMap[names.AttrActions] = v
 	}
 
 	if v := apiObject.ContentTransformation; v != nil {

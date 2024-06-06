@@ -954,7 +954,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	switch {
 	case err == nil:
 		d.Set("acceleration_status", bucketAccelerate.Status)
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedArgument):
+	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedArgument, errCodeUnsupportedOperation):
 		d.Set("acceleration_status", nil)
 	default:
 		return diag.Errorf("reading S3 Bucket (%s) accelerate configuration: %s", d.Id(), err)
@@ -1072,7 +1072,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		if err := d.Set("server_side_encryption_configuration", flattenBucketServerSideEncryptionConfiguration(encryptionConfiguration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_side_encryption_configuration: %s", err)
 		}
-	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
+	case tfresource.NotFound(err), tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented, errCodeUnsupportedOperation):
 		d.Set("server_side_encryption_configuration", nil)
 	default:
 		return diag.Errorf("reading S3 Bucket (%s) server-side encryption configuration: %s", d.Id(), err)

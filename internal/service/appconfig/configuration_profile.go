@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appconfig_configuration_profile", name="Connection Profile")
+// @SDKResource("aws_appconfig_configuration_profile", name="Configuration Profile")
 // @Tags(identifierAttribute="arn")
 func ResourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
