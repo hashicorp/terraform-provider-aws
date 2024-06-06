@@ -80,8 +80,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceAMIIDs,
+			Factory:  dataSourceAMIIDs,
 			TypeName: "aws_ami_ids",
+			Name:     "AMI IDs",
 		},
 		{
 			Factory:  DataSourceAvailabilityZone,

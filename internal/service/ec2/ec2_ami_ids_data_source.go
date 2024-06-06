@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ami_ids")
-func DataSourceAMIIDs() *schema.Resource {
+// @SDKDataSource("aws_ami_ids", name="AMI IDs")
+func dataSourceAMIIDs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAMIIDsRead,
 
