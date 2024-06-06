@@ -26,7 +26,7 @@ import (
 // @SDKResource("aws_ami_copy", name="AMI")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceAMICopy() *schema.Resource {
+func resourceAMICopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMICopyCreate,
 		// The remaining operations are shared with the generic aws_ami resource,

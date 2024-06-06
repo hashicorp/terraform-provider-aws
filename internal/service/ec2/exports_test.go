@@ -60,6 +60,7 @@ var (
 	ResourceVPNGateway                               = resourceVPNGateway
 	ResourceVPNGatewayAttachment                     = resourceVPNGatewayAttachment
 	ResourceVPNGatewayRoutePropagation               = resourceVPNGatewayRoutePropagation
+	ResourceAMICopy                                  = resourceAMICopy
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
