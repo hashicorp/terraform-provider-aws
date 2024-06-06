@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_flow_log", name="Flow Log")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceFlowLog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLogFlowCreate,

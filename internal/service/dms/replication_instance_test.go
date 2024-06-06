@@ -217,7 +217,7 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", names.AttrApplyImmediately},
+				ImportStateVerifyIgnore: []string{names.AttrAllowMajorVersionUpgrade, names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),

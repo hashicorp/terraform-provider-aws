@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_apigatewayv2_stage", name="Stage")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetStageOutput")
+// @Testing(importStateIdFunc="testAccStageImportStateIdFunc")
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,

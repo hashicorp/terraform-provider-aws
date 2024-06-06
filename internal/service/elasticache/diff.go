@@ -54,7 +54,7 @@ func customizeDiffValidateClusterMemcachedSnapshotIdentifier(_ context.Context, 
 	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
-	if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {
+	if _, ok := diff.GetOk(names.AttrFinalSnapshotIdentifier); !ok {
 		return nil
 	}
 	return errors.New(`engine "memcached" does not support final_snapshot_identifier`)

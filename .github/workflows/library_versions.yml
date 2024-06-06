@@ -38,7 +38,9 @@ jobs:
 
       - name: Check diff for AWS SDK Go V1
         id: diff
-        run: make preferred-lib || (echo "found=true" >> "$GITHUB_OUTPUT")
+        run: |
+          git diff origin/${{ github.event.pull_request.base.ref }} internal/ |
+            (grep '^\+\s*"github.com/aws/aws-sdk-go/' && echo "found=true" >> "$GITHUB_OUTPUT") || echo "found=false" >> "$GITHUB_OUTPUT"
 
   comment:
     runs-on: ubuntu-latest

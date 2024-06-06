@@ -58,7 +58,7 @@ func ResourceIPSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(guardduty.IpSetFormat_Values(), false),
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -83,7 +83,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		DetectorId: aws.String(detectorID),
 		Name:       aws.String(d.Get(names.AttrName).(string)),
 		Format:     aws.String(d.Get(names.AttrFormat).(string)),
-		Location:   aws.String(d.Get("location").(string)),
+		Location:   aws.String(d.Get(names.AttrLocation).(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
 		Tags:       getTagsIn(ctx),
 	}
@@ -145,7 +145,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("detector_id", detectorId)
 	d.Set(names.AttrFormat, resp.Format)
-	d.Set("location", resp.Location)
+	d.Set(names.AttrLocation, resp.Location)
 	d.Set(names.AttrName, resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.IpSetStatusActive)
 
@@ -163,7 +163,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty IPSet (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChanges("activate", "location", names.AttrName) {
+	if d.HasChanges("activate", names.AttrLocation, names.AttrName) {
 		input := &guardduty.UpdateIPSetInput{
 			DetectorId: aws.String(detectorId),
 			IpSetId:    aws.String(ipSetId),
@@ -172,8 +172,8 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if d.HasChange(names.AttrName) {
 			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
-		if d.HasChange("location") {
-			input.Location = aws.String(d.Get("location").(string))
+		if d.HasChange(names.AttrLocation) {
+			input.Location = aws.String(d.Get(names.AttrLocation).(string))
 		}
 		if d.HasChange("activate") {
 			input.Activate = aws.Bool(d.Get("activate").(bool))

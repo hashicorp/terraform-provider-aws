@@ -44,7 +44,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -278,7 +278,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 
 	result := &types.VerifiedAccessLogOptions{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
@@ -380,7 +380,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = flattenVerifiedAccessLogCloudWatchLogs(v)
+		tfMap[names.AttrCloudWatchLogs] = flattenVerifiedAccessLogCloudWatchLogs(v)
 	}
 
 	if v := apiObject.IncludeTrustContext; v != nil {

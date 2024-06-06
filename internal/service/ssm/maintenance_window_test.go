@@ -12,7 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -45,8 +48,11 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_offset", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(0 16 ? * TUE *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -88,52 +94,6 @@ func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "bar"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var winId ssm.GetMaintenanceWindowOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssm_maintenance_window.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMaintenanceWindowConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccMaintenanceWindowConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccMaintenanceWindowConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -576,37 +536,6 @@ resource "aws_ssm_maintenance_window" "test" {
   schedule    = "cron(0 16 ? * TUE *)"
 }
 `, rName, desc)
-}
-
-func testAccMaintenanceWindowConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "test" {
-  cutoff   = 1
-  duration = 3
-  name     = %[1]q
-  schedule = "cron(0 16 ? * TUE *)"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccMaintenanceWindowConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_maintenance_window" "test" {
-  cutoff   = 1
-  duration = 3
-  name     = %[1]q
-  schedule = "cron(0 16 ? * TUE *)"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccMaintenanceWindowConfig_cutoff(rName string, cutoff int) string {

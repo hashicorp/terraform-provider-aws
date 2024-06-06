@@ -125,7 +125,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -970,7 +970,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 		ReplicationGroupId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 		input.FinalSnapshotIdentifier = aws.String(v.(string))
 	}
 

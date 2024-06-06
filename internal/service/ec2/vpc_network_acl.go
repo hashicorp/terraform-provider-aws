@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLCreate,
