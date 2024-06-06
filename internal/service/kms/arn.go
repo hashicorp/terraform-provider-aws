@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -32,7 +33,7 @@ func aliasARNToKeyARN(inputARN, keyID string) (string, error) {
 		Service:   parsedARN.Service,
 		Region:    parsedARN.Region,
 		AccountID: parsedARN.AccountID,
-		Resource:  strings.Join([]string{"key", keyID}, arnResourceSeparator),
+		Resource:  strings.Join([]string{names.AttrKey, keyID}, arnResourceSeparator),
 	}.String()
 
 	return outputARN, nil

@@ -51,7 +51,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			{
 				Config: testAccUserConfig_basic(name2, path2),
@@ -114,7 +114,7 @@ func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -145,7 +145,7 @@ func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -176,7 +176,7 @@ func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -206,7 +206,7 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -236,7 +236,7 @@ func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -267,7 +267,7 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 		},
 	})
@@ -372,7 +372,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			{
 				Config: testAccUserConfig_basic(name2, path),
@@ -410,7 +410,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			{
 				Config: testAccUserConfig_basic(name, path2),
@@ -452,7 +452,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
+					names.AttrForceDestroy},
 			},
 			// Test update
 			{
@@ -468,7 +468,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			// Test removal
 			{

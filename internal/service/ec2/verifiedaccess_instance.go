@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_verifiedaccess_instance", name="Verified Access Instance")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVerifiedAccessInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceCreate,
@@ -36,11 +37,11 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -49,7 +50,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +59,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -98,7 +99,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessInstance),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -133,10 +134,10 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("creation_time", output.CreationTime)
-	d.Set("description", output.Description)
+	d.Set(names.AttrCreationTime, output.CreationTime)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("fips_enabled", output.FipsEnabled)
-	d.Set("last_updated_time", output.LastUpdatedTime)
+	d.Set(names.AttrLastUpdatedTime, output.LastUpdatedTime)
 
 	if v := output.VerifiedAccessTrustProviders; v != nil {
 		if err := d.Set("verified_access_trust_providers", flattenVerifiedAccessTrustProviders(v)); err != nil {
@@ -155,14 +156,14 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyVerifiedAccessInstanceInput{
 			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessInstanceId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		_, err := conn.ModifyVerifiedAccessInstance(ctx, input)
@@ -222,7 +223,7 @@ func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProvi
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := apiObject.VerifiedAccessTrustProviderId; v != nil {

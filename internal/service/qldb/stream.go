@@ -40,7 +40,7 @@ func resourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func resourceStream() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -86,7 +86,7 @@ func resourceStream() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -115,7 +115,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get("stream_name").(string)
 	input := &qldb.StreamJournalToKinesisInput{
 		LedgerName: aws.String(ledgerName),
-		RoleArn:    aws.String(d.Get("role_arn").(string)),
+		RoleArn:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		StreamName: aws.String(name),
 		Tags:       getTagsIn(ctx),
 	}
@@ -165,7 +165,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("reading QLDB Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", stream.Arn)
+	d.Set(names.AttrARN, stream.Arn)
 	if stream.ExclusiveEndTime != nil {
 		d.Set("exclusive_end_time", aws.ToTime(stream.ExclusiveEndTime).Format(time.RFC3339))
 	} else {
@@ -184,7 +184,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("kinesis_configuration", nil)
 	}
 	d.Set("ledger_name", stream.LedgerName)
-	d.Set("role_arn", stream.RoleArn)
+	d.Set(names.AttrRoleARN, stream.RoleArn)
 	d.Set("stream_name", stream.StreamName)
 
 	return nil
@@ -356,7 +356,7 @@ func expandKinesisConfiguration(tfMap map[string]interface{}) *types.KinesisConf
 		apiObject.AggregationEnabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamArn = aws.String(v)
 	}
 
@@ -375,7 +375,7 @@ func flattenKinesisConfiguration(apiObject *types.KinesisConfiguration) map[stri
 	}
 
 	if v := apiObject.StreamArn; v != nil {
-		tfMap["stream_arn"] = aws.ToString(v)
+		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
 
 	return tfMap

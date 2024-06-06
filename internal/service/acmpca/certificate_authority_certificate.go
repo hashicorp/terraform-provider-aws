@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_acmpca_certificate_authority_certificate", name="Certificate Authority Certificate")
@@ -33,7 +34,7 @@ func resourceCertificateAuthorityCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate": {
+			names.AttrCertificate: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -45,7 +46,7 @@ func resourceCertificateAuthorityCertificate() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -61,11 +62,11 @@ func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schem
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.ImportCertificateAuthorityCertificateInput{
-		Certificate:             []byte(d.Get("certificate").(string)),
+		Certificate:             []byte(d.Get(names.AttrCertificate).(string)),
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	if v, ok := d.Get("certificate_chain").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrCertificateChain).(string); ok && v != "" {
 		input.CertificateChain = []byte(v)
 	}
 
@@ -96,8 +97,8 @@ func resourceCertificateAuthorityCertificateRead(ctx context.Context, d *schema.
 	}
 
 	d.Set("certificate_authority_arn", d.Id())
-	d.Set("certificate", output.Certificate)
-	d.Set("certificate_chain", output.CertificateChain)
+	d.Set(names.AttrCertificate, output.Certificate)
+	d.Set(names.AttrCertificateChain, output.CertificateChain)
 
 	return diags
 }

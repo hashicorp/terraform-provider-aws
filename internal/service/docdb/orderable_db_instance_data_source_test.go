@@ -33,8 +33,8 @@ func TestAccDocDBOrderableDBInstanceDataSource_basic(t *testing.T) {
 				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, license),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", class),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", license),
 				),
 			},
@@ -58,8 +58,8 @@ func TestAccDocDBOrderableDBInstanceDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, license, preferredOption),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
-					resource.TestCheckResourceAttr(dataSourceName, "engine_version", engineVersion),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngineVersion, engineVersion),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", license),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredOption),
 				),

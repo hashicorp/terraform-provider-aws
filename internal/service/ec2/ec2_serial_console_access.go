@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_serial_console_access")
@@ -26,7 +27,7 @@ func ResourceSerialConsoleAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -40,7 +41,7 @@ func resourceSerialConsoleAccessCreate(ctx context.Context, d *schema.ResourceDa
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	enabled := d.Get("enabled").(bool)
+	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Serial Console Access (%t): %s", enabled, err)
 	}
@@ -61,7 +62,7 @@ func resourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Serial Console Access: %s", err)
 	}
 
-	d.Set("enabled", output.SerialConsoleAccessEnabled)
+	d.Set(names.AttrEnabled, output.SerialConsoleAccessEnabled)
 
 	return diags
 }
@@ -71,7 +72,7 @@ func resourceSerialConsoleAccessUpdate(ctx context.Context, d *schema.ResourceDa
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	enabled := d.Get("enabled").(bool)
+	enabled := d.Get(names.AttrEnabled).(bool)
 	if err := setSerialConsoleAccess(ctx, conn, enabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 Serial Console Access (%t): %s", enabled, err)
 	}

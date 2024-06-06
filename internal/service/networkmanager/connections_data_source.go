@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_connections")
@@ -29,12 +30,12 @@ func DataSourceConnections() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -44,7 +45,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetConnectionsInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
@@ -73,7 +74,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", connectionIDs)
+	d.Set(names.AttrIDs, connectionIDs)
 
 	return diags
 }

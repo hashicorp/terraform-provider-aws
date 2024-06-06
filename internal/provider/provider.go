@@ -941,13 +941,13 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 		}
 
 		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
-		tfAwsEnvVar := names.TfAwsEnvVar(pkg)
+		tfAwsEnvVar := names.TFAWSEnvVar(pkg)
 		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
 		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
 			continue
 		}
 
-		awsEnvVar := names.AwsServiceEnvVar(pkg)
+		awsEnvVar := names.AWSServiceEnvVar(pkg)
 		if awsEnvVar != "" {
 			if v := os.Getenv(awsEnvVar); v != "" {
 				endpoints[pkg] = v

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
@@ -37,7 +38,7 @@ func resourceSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +78,7 @@ func resourceSchedule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -112,7 +113,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Recurrence = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("start_time"); ok {
+	if v, ok := d.GetOk(names.AttrStartTime); ok {
 		v, _ := time.Parse(ScheduleTimeLayout, v.(string))
 
 		input.StartTime = aws.Time(v)
@@ -170,7 +171,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", sa.ScheduledActionARN)
+	d.Set(names.AttrARN, sa.ScheduledActionARN)
 	d.Set("autoscaling_group_name", sa.AutoScalingGroupName)
 	if sa.DesiredCapacity == nil {
 		d.Set("desired_capacity", -1)
@@ -192,7 +193,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("recurrence", sa.Recurrence)
 	if sa.StartTime != nil {
-		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
+		d.Set(names.AttrStartTime, sa.StartTime.Format(ScheduleTimeLayout))
 	}
 	d.Set("time_zone", sa.TimeZone)
 
