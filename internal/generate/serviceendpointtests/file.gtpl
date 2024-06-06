@@ -20,7 +20,9 @@ import (
 
 	{{ if ne .GoV1Package "" }}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	{{ if eq .GoV2Package "" }}"github.com/aws/aws-sdk-go/aws/endpoints"{{ end }}
+	{{- if eq .GoV2Package "" }}
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	{{- end }}
 	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
 	{{- end }}
 	{{- if ne .V1AlternateInputPackage "" }}

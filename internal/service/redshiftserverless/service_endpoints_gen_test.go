@@ -13,11 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	redshiftserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"

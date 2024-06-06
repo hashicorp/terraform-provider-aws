@@ -13,11 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
