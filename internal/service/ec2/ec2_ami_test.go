@@ -253,12 +253,12 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.snapshot_id", snapshotResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						names.AttrDeviceName: "/dev/sdb",
-						"virtual_name":       "ephemeral0",
+						names.AttrDeviceName:  "/dev/sdb",
+						names.AttrVirtualName: "ephemeral0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						names.AttrDeviceName: "/dev/sdc",
-						"virtual_name":       "ephemeral1",
+						names.AttrDeviceName:  "/dev/sdc",
+						names.AttrVirtualName: "ephemeral1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kernel_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

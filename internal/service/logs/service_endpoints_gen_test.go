@@ -69,7 +69,7 @@ const (
 	packageName = "logs"
 	awsEnvVar   = "AWS_ENDPOINT_URL_CLOUDWATCH_LOGS"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "cloudwatch_logs"
+	configParam = names.AttrCloudWatchLogs
 
 	aliasName0 = "cloudwatchlog"
 	aliasName1 = "cloudwatchlogs"

@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_vpc_dhcp_options", name="DHCP Options")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCDHCPOptionsCreate,

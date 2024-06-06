@@ -50,7 +50,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -163,7 +163,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		"vpc-id":             d.Get(names.AttrVPCID).(string),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		filters["cidrBlock"] = v.(string)
 	}
 
@@ -200,7 +200,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
 	d.Set("available_ip_address_count", subnet.AvailableIpAddressCount)
-	d.Set("cidr_block", subnet.CidrBlock)
+	d.Set(names.AttrCIDRBlock, subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("enable_dns64", subnet.EnableDns64)

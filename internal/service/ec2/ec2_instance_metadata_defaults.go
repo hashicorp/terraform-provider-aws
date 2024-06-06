@@ -30,7 +30,7 @@ const (
 	httpPutResponseHopLimitNoPreference = -1
 )
 
-// @FrameworkResource(name="Instance Metadata Defaults")
+// @FrameworkResource("aws_ec2_instance_metadata_defaults", name="Instance Metadata Defaults")
 func newInstanceMetadataDefaultsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &instanceMetadataDefaultsResource{}
 

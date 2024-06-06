@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func testAccTransitGatewayMulticastDomain_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayMulticastDomain
+	var v awstypes.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -61,7 +61,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T, semaphore tfsync.S
 
 func testAccTransitGatewayMulticastDomain_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayMulticastDomain
+	var v awstypes.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,7 +89,7 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T, semaphore tfs
 
 func testAccTransitGatewayMulticastDomain_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayMulticastDomain
+	var v awstypes.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -137,7 +137,7 @@ func testAccTransitGatewayMulticastDomain_tags(t *testing.T, semaphore tfsync.Se
 
 func testAccTransitGatewayMulticastDomain_igmpv2Support(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayMulticastDomain
+	var v awstypes.TransitGatewayMulticastDomain
 	resourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -169,7 +169,7 @@ func testAccTransitGatewayMulticastDomain_igmpv2Support(t *testing.T, semaphore 
 	})
 }
 
-func testAccCheckTransitGatewayMulticastDomainExists(ctx context.Context, n string, v *ec2.TransitGatewayMulticastDomain) resource.TestCheckFunc {
+func testAccCheckTransitGatewayMulticastDomainExists(ctx context.Context, n string, v *awstypes.TransitGatewayMulticastDomain) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -180,7 +180,7 @@ func testAccCheckTransitGatewayMulticastDomainExists(ctx context.Context, n stri
 			return fmt.Errorf("No EC2 Transit Gateway Multicast Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayMulticastDomainByID(ctx, conn, rs.Primary.ID)
 
@@ -196,7 +196,7 @@ func testAccCheckTransitGatewayMulticastDomainExists(ctx context.Context, n stri
 
 func testAccCheckTransitGatewayMulticastDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_multicast_domain" {

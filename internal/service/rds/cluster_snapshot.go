@@ -29,6 +29,7 @@ const clusterSnapshotCreateTimeout = 2 * time.Minute
 
 // @SDKResource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
+// @Testing(tagsTest=false)
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterSnapshotCreate,
@@ -45,7 +46,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -167,7 +168,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)

@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_appconfig_deployment", name="Deployment")
 // @Tags(identifierAttribute="arn")
+// @Testing(checkDestroyNoop=true)
+// @Testing(importIgnore="state")
 func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,

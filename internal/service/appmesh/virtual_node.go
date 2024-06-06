@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_node", name="Virtual Node")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualNodeData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualNodeImportStateIdFunc)
 func resourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

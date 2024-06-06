@@ -7,6 +7,7 @@
 //go:generate go run ../../generate/listpages/main.go -ListOps=DescribeSpotFleetInstances,DescribeSpotFleetRequestHistory,DescribeVpcEndpointServices
 //go:generate go run ../../generate/listpages/main.go -ListOps=DescribeVpcEndpointServices -AWSSDKVersion=2 -V2Suffix list_pagesv2_gen.go
 //go:generate go run ../../generate/servicepackage/main.go
+//go:generate go run ../../generate/tagstests/main.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package ec2

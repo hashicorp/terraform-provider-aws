@@ -117,7 +117,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "aurora-postgresql"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
@@ -210,7 +210,7 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 				Config: testAccGlobalClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
@@ -223,7 +223,7 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},

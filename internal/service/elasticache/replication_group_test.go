@@ -2143,7 +2143,7 @@ func TestAccElastiCacheReplicationGroup_finalSnapshot(t *testing.T) {
 				Config: testAccReplicationGroupConfig_finalSnapshot(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "final_snapshot_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFinalSnapshotIdentifier, rName),
 				),
 			},
 		},
