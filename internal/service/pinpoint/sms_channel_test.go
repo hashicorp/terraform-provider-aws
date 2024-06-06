@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfpinpoint "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccPinpointSMSChannel_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +34,7 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -54,7 +55,7 @@ func TestAccPinpointSMSChannel_basic(t *testing.T) {
 				Config: testAccSMSChannelConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -71,7 +72,7 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
 					resource.TestCheckResourceAttr(resourceName, "short_code", shortCode),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "promotional_messages_per_second"),
 					resource.TestCheckResourceAttrSet(resourceName, "transactional_messages_per_second"),
 				),
@@ -106,7 +107,7 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 					testAccCheckSMSChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "sender_id", senderId),
 					resource.TestCheckResourceAttr(resourceName, "short_code", newShortCode),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "promotional_messages_per_second"),
 					resource.TestCheckResourceAttrSet(resourceName, "transactional_messages_per_second"),
 				),
@@ -122,7 +123,7 @@ func TestAccPinpointSMSChannel_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PinpointServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSMSChannelDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -45,13 +45,16 @@ interpolation.
 
 * `arn` - ARN of the Auto Scaling group.
 * `availabilityZones` - One or more Availability Zones for the group.
-* `defaultCoolDown` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
+* `default_cool_down` - Amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `desiredCapacity` - Desired size of the group.
 * `desiredCapacityType` - The unit of measurement for the value returned for `desiredCapacity`.
 * `enabledMetrics` - List of metrics enabled for collection.
 * `healthCheckGracePeriod` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `healthCheckType` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
+* `instanceMaintenancePolicy` - Instance maintenance policy for the group.
+    * `minHealthyPercentage` - Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+    * `maxHealthyPercentage` - Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
 * `launchConfiguration` - The name of the associated launch configuration.
 * `launchTemplate` - List of launch templates for the group.
     * `id` - ID of the launch template.
@@ -139,9 +142,9 @@ interpolation.
 * `warmPool` - List of warm pool configuration objects.
     * `instanceReusePolicy` - List of instance reuse policy objects.
         * `reuseOnScaleIn` - Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
-    * `maxGroupPreparedPolicy` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+    * `max_group_prepared_policy` - Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
     * `minSize` - Minimum number of instances to maintain in the warm pool.
     * `poolState` - Instance state to transition to after the lifecycle actions are complete.
 * `warmPoolSize` - Current size of the warm pool.
 
-<!-- cache-key: cdktf-0.18.0 input-99dec3ec98ed7de1189a2c55151981d1b50b501480be637bbbe4a2b5d7102172 -->
+<!-- cache-key: cdktf-0.20.1 input-26572cc32b6838affc843d4557992ced62698f925facebdb8877cf21be04699b -->

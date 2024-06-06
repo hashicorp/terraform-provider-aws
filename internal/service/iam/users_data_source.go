@@ -6,20 +6,21 @@ package iam
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_users")
-func DataSourceUsers() *schema.Resource {
+// @SDKDataSource("aws_iam_users", name="Users")
+func dataSourceUsers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUsersRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -29,7 +30,7 @@ func DataSourceUsers() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -44,7 +45,7 @@ func DataSourceUsers() *schema.Resource {
 
 func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	nameRegex := d.Get("name_regex").(string)
 	pathPrefix := d.Get("path_prefix").(string)
@@ -57,18 +58,18 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, r := range results {
-		names = append(names, aws.StringValue(r.UserName))
-		arns = append(arns, aws.StringValue(r.Arn))
+		nms = append(nms, aws.ToString(r.UserName))
+		arns = append(arns, aws.ToString(r.Arn))
 	}
 
-	if err := d.Set("names", names); err != nil {
+	if err := d.Set(names.AttrNames, nms); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 
-	if err := d.Set("arns", arns); err != nil {
+	if err := d.Set(names.AttrARNs, arns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 

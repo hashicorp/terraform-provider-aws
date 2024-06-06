@@ -29,7 +29,7 @@ func TestAccSESV2DedicatedIPPool_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckDedicatedIPPool(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccSESV2DedicatedIPPool_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccSESV2DedicatedIPPool_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckDedicatedIPPool(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccSESV2DedicatedIPPool_scalingMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckDedicatedIPPool(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,17 +116,17 @@ func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckDedicatedIPPool(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDedicatedIPPoolConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDedicatedIPPoolConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -135,22 +135,22 @@ func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDedicatedIPPoolConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDedicatedIPPoolConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDedicatedIPPoolConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDedicatedIPPoolConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

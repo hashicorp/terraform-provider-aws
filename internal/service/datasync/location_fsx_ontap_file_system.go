@@ -10,14 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -28,7 +30,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
+func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxONTAPFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxONTAPFileSystemRead,
@@ -53,11 +55,11 @@ func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +67,7 @@ func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -87,14 +89,12 @@ func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
-													Type:     schema.TypeString,
-													Default:  datasync.NfsVersionNfs3,
-													Optional: true,
-													ForceNew: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														datasync.NfsVersionNfs3,
-													}, false),
+												names.AttrVersion: {
+													Type:         schema.TypeString,
+													Default:      awstypes.NfsVersionNfs3,
+													Optional:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.NfsVersionNfs3), false),
 												},
 											},
 										},
@@ -110,7 +110,7 @@ func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"domain": {
+									names.AttrDomain: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -123,22 +123,22 @@ func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"version": {
+												names.AttrVersion: {
 													Type:     schema.TypeString,
-													Default:  datasync.SmbVersionAutomatic,
+													Default:  awstypes.SmbVersionAutomatic,
 													Optional: true,
 													ForceNew: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														datasync.SmbVersionAutomatic,
-														datasync.SmbVersionSmb2,
-														datasync.SmbVersionSmb3,
-														datasync.SmbVersionSmb20,
-													}, false),
+													ValidateFunc: validation.StringInSlice(enum.Slice(
+														awstypes.SmbVersionAutomatic,
+														awstypes.SmbVersionSmb2,
+														awstypes.SmbVersionSmb3,
+														awstypes.SmbVersionSmb20,
+													), false),
 												},
 											},
 										},
 									},
-									"password": {
+									names.AttrPassword: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -183,7 +183,7 @@ func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -195,11 +195,11 @@ func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
 
 func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationFsxOntapInput{
-		Protocol:                 expandProtocol(d.Get("protocol").([]interface{})),
-		SecurityGroupArns:        flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
+		Protocol:                 expandProtocol(d.Get(names.AttrProtocol).([]interface{})),
+		SecurityGroupArns:        flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		StorageVirtualMachineArn: aws.String(d.Get("storage_virtual_machine_arn").(string)),
 		Tags:                     getTagsIn(ctx),
 	}
@@ -208,22 +208,22 @@ func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.Res
 		input.Subdirectory = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateLocationFsxOntapWithContext(ctx, input)
+	output, err := conn.CreateLocationFsxOntap(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Location FSx for NetApp ONTAP File System: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.LocationArn))
+	d.SetId(aws.ToString(output.LocationArn))
 
 	return append(diags, resourceLocationFSxONTAPFileSystemRead(ctx, d, meta)...)
 }
 
 func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	output, err := FindLocationFSxONTAPByARN(ctx, conn, d.Id())
+	output, err := findLocationFSxONTAPByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for NetApp ONTAP File System (%s) not found, removing from state", d.Id())
@@ -235,28 +235,28 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location FSx for NetApp ONTAP File System (%s): %s", d.Id(), err)
 	}
 
-	uri := aws.StringValue(output.LocationUri)
+	uri := aws.ToString(output.LocationUri)
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
-	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrARN, output.LocationArn)
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
 	// SMB Password is not returned from the API.
-	if output.Protocol != nil && output.Protocol.SMB != nil && aws.StringValue(output.Protocol.SMB.Password) == "" {
+	if output.Protocol != nil && output.Protocol.SMB != nil && aws.ToString(output.Protocol.SMB.Password) == "" {
 		if smbPassword := d.Get("protocol.0.smb.0.password").(string); smbPassword != "" {
 			output.Protocol.SMB.Password = aws.String(smbPassword)
 		}
 	}
-	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
+	if err := d.Set(names.AttrProtocol, flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}
-	d.Set("security_group_arns", aws.StringValueSlice(output.SecurityGroupArns))
+	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("storage_virtual_machine_arn", output.StorageVirtualMachineArn)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }
@@ -271,16 +271,16 @@ func resourceLocationFSxONTAPFileSystemUpdate(ctx context.Context, d *schema.Res
 
 func resourceLocationFSxONTAPFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DataSync Location FSx for NetApp ONTAP File System: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, input)
+	_, err := conn.DeleteLocation(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
 	}
 
@@ -291,14 +291,14 @@ func resourceLocationFSxONTAPFileSystemDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func FindLocationFSxONTAPByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOntapOutput, error) {
+func findLocationFSxONTAPByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeLocationFsxOntapOutput, error) {
 	input := &datasync.DescribeLocationFsxOntapInput{
 		LocationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeLocationFsxOntapWithContext(ctx, input)
+	output, err := conn.DescribeLocationFsxOntap(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

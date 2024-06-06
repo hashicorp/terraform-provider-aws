@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to manage S3 Bucket Ownership Controls. For more information, see the [S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/about-object-ownership.html).
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```terraform

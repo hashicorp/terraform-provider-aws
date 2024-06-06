@@ -5,39 +5,37 @@ package ce_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCECostAllocationTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostAllocationTag
+	var output awstypes.CostAllocationTag
 	resourceName := "aws_ce_cost_allocation_tag.test"
 	rName := "Tag01"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		CheckDestroy:             testAccCheckCostAllocationTagDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			},
 			{
@@ -50,37 +48,88 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			}, {
 				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCostAllocationTagExists(ctx context.Context, resourceName string, output *costexplorer.CostAllocationTag) resource.TestCheckFunc {
+func TestAccCECostAllocationTag_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var output awstypes.CostAllocationTag
+	resourceName := "aws_ce_cost_allocation_tag.test"
+	rName := "Tag02"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCostAllocationTagDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfce.ResourceCostAllocationTag(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckCostAllocationTagExists(ctx context.Context, n string, v *awstypes.CostAllocationTag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CE, create.ErrActionCheckingExistence, tfce.ResNameCostAllocationTag, resourceName, errors.New("not found in state"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
-		costAllocTag, err := tfce.FindCostAllocationTagByKey(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+		output, err := tfce.FindCostAllocationTagByTagKey(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*output = *costAllocTag
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckCostAllocationTagDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ce_cost_allocation_tag" {
+				continue
+			}
+
+			output, err := tfce.FindCostAllocationTagByTagKey(ctx, conn, rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			if output.Status == awstypes.CostAllocationTagStatusInactive {
+				continue
+			}
+
+			return fmt.Errorf("Cost Explorer Anomaly Subscription %s still exists", rs.Primary.ID)
+		}
 
 		return nil
 	}

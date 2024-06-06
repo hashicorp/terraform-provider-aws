@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mskconnect_custom_plugin")
@@ -20,11 +22,11 @@ func DataSourceCustomPlugin() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCustomPluginRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,11 +34,11 @@ func DataSourceCustomPlugin() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,9 +47,11 @@ func DataSourceCustomPlugin() *schema.Resource {
 }
 
 func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	name := d.Get("name")
+	name := d.Get(names.AttrName)
 	var output []*kafkaconnect.CustomPluginSummary
 
 	err := conn.ListCustomPluginsPagesWithContext(ctx, &kafkaconnect.ListCustomPluginsInput{}, func(page *kafkaconnect.ListCustomPluginsOutput, lastPage bool) bool {
@@ -65,7 +69,7 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("listing MSK Connect Custom Plugins: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Connect Custom Plugins: %s", err)
 	}
 
 	if len(output) == 0 || output[0] == nil {
@@ -75,17 +79,17 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MSK Connect Custom Plugin", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Connect Custom Plugin", err))
 	}
 
 	plugin := output[0]
 
 	d.SetId(aws.StringValue(plugin.CustomPluginArn))
 
-	d.Set("arn", plugin.CustomPluginArn)
-	d.Set("description", plugin.Description)
-	d.Set("name", plugin.Name)
-	d.Set("state", plugin.CustomPluginState)
+	d.Set(names.AttrARN, plugin.CustomPluginArn)
+	d.Set(names.AttrDescription, plugin.Description)
+	d.Set(names.AttrName, plugin.Name)
+	d.Set(names.AttrState, plugin.CustomPluginState)
 
 	if plugin.LatestRevision != nil {
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
@@ -93,5 +97,5 @@ func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("latest_revision", nil)
 	}
 
-	return nil
+	return diags
 }

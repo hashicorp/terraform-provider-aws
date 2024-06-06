@@ -34,7 +34,7 @@ func ResourceRegistryPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -62,7 +62,7 @@ func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	registryName := d.Get("registry_name").(string)
-	policy, err := structure.ExpandJsonFromString(d.Get("policy").(string))
+	policy, err := structure.ExpandJsonFromString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return create.DiagError(names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
 	}
@@ -104,7 +104,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
 	}
 
-	d.Set("policy", policy)
+	d.Set(names.AttrPolicy, policy)
 	d.Set("registry_name", d.Id())
 
 	return nil
@@ -113,12 +113,12 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	policy, err := structure.ExpandJsonFromString(d.Get("policy").(string))
+	policy, err := structure.ExpandJsonFromString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return create.DiagError(names.Schemas, create.ErrActionUpdating, ResNameRegistryPolicy, d.Id(), err)
 	}
 
-	if d.HasChanges("policy") {
+	if d.HasChanges(names.AttrPolicy) {
 		input := &schemas.PutResourcePolicyInput{
 			Policy:       policy,
 			RegistryName: aws.String(d.Id()),

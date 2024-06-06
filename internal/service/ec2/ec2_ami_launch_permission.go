@@ -18,8 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ami_launch_permission")
@@ -34,18 +36,18 @@ func ResourceAMILaunchPermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"group": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.PermissionGroup_Values(), false),
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"image_id": {
 				Type:     schema.TypeString,
@@ -57,24 +59,26 @@ func ResourceAMILaunchPermission() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"organizational_unit_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 		},
 	}
 }
 
 func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	imageID := d.Get("image_id").(string)
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	group := d.Get("group").(string)
 	organizationARN := d.Get("organization_arn").(string)
 	organizationalUnitARN := d.Get("organizational_unit_arn").(string)
@@ -91,21 +95,23 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 	_, err := conn.ModifyImageAttributeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AMI Launch Permission (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating AMI Launch Permission (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceAMILaunchPermissionRead(ctx, d, meta)
+	return append(diags, resourceAMILaunchPermissionRead(ctx, d, meta)...)
 }
 
 func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	imageID, accountID, group, organizationARN, organizationalUnitARN, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = FindImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
@@ -113,29 +119,31 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AMI Launch Permission %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AMI Launch Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("group", group)
 	d.Set("image_id", imageID)
 	d.Set("organization_arn", organizationARN)
 	d.Set("organizational_unit_arn", organizationalUnitARN)
 
-	return nil
+	return diags
 }
 
 func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	imageID, accountID, group, organizationARN, organizationalUnitARN, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &ec2.ModifyImageAttributeInput{
@@ -150,14 +158,14 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	_, err = conn.ModifyImageAttributeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AMI Launch Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

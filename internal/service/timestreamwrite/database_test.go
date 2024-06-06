@@ -27,7 +27,7 @@ func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,10 +35,10 @@ func TestAccTimestreamWriteDatabase_basic(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "timestream", fmt.Sprintf("database/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccTimestreamWriteDatabase_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +81,7 @@ func TestAccTimestreamWriteDatabase_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,8 +89,8 @@ func TestAccTimestreamWriteDatabase_kmsKey(t *testing.T) {
 				Config: testAccDatabaseConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,14 +118,14 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
 				Config: testAccDatabaseConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccTimestreamWriteDatabase_updateKMSKey(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 				),
 			},
 		},
@@ -151,40 +151,40 @@ func TestAccTimestreamWriteDatabase_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDatabaseConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
 			{

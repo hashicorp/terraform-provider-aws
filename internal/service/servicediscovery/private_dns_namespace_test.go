@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,10 +39,10 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 				Config: testAccPrivateDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexache.MustCompile(`namespace/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`namespace/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -65,7 +66,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +93,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,14 +101,14 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 				Config: testAccPrivateDNSNamespaceConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
 				),
 			},
 			{
 				Config: testAccPrivateDNSNamespaceConfig_description(rName, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 				),
 			},
 		},
@@ -127,7 +128,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -150,16 +151,16 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrivateDNSNamespaceConfig_tags1(rName, "key1", "value1"),
+				Config: testAccPrivateDNSNamespaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -169,20 +170,20 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPrivateDNSNamespaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPrivateDNSNamespaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPrivateDNSNamespaceConfig_tags1(rName, "key2", "value2"),
+				Config: testAccPrivateDNSNamespaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

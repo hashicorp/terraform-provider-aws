@@ -5,6 +5,7 @@ package dms
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,7 +47,7 @@ func ResourceReplicationConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +57,7 @@ func ResourceReplicationConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -65,7 +67,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -85,7 +87,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"preferred_maintenance_window": {
+						names.AttrPreferredMaintenanceWindow: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -97,7 +99,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validReplicationSubnetGroupID,
 						},
-						"vpc_security_group_ids": {
+						names.AttrVPCSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -111,10 +113,18 @@ func ResourceReplicationConfig() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
+			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
 			"replication_settings": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringIsJSON),
+					validateReplicationSettings,
+				),
+				DiffSuppressFunc:      suppressEquivalentTaskSettings,
+				DiffSuppressOnRefresh: true,
 			},
 			"replication_type": {
 				Type:         schema.TypeString,
@@ -206,7 +216,7 @@ func resourceReplicationConfigCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceReplicationConfigRead(ctx, d, meta)
+	return append(diags, resourceReplicationConfigRead(ctx, d, meta)...)
 }
 
 func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -225,7 +235,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", replicationConfig.ReplicationConfigArn)
+	d.Set(names.AttrARN, replicationConfig.ReplicationConfigArn)
 	if err := d.Set("compute_config", flattenComputeConfig(replicationConfig.ComputeConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
@@ -244,7 +254,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "start_replication") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_replication") {
 		if err := stopReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -286,7 +296,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 		_, err := conn.ModifyReplicationConfigWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Config (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying DMS Replication Config (%s): %s", d.Id(), err)
 		}
 
 		if d.Get("start_replication").(bool) {
@@ -459,6 +469,22 @@ func statusReplication(ctx context.Context, conn *dms.DatabaseMigrationService, 
 	}
 }
 
+func setLastReplicationError(err error, replication *dms.Replication) {
+	var errs []error
+
+	errs = append(errs, tfslices.ApplyToAll(replication.FailureMessages, func(v *string) error {
+		if v := aws.StringValue(v); v != "" {
+			return errors.New(v)
+		}
+		return nil
+	})...)
+	if v := aws.StringValue(replication.StopReason); v != "" {
+		errs = append(errs, errors.New(v))
+	}
+
+	tfresource.SetLastError(err, errors.Join(errs...))
+}
+
 func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) (*dms.Replication, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
@@ -481,6 +507,7 @@ func waitReplicationRunning(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -500,6 +527,7 @@ func waitReplicationStopped(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -519,6 +547,7 @@ func waitReplicationDeleted(ctx context.Context, conn *dms.DatabaseMigrationServ
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dms.Replication); ok {
+		setLastReplicationError(err, output)
 		return output, err
 	}
 
@@ -533,7 +562,6 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 	}
 
 	replicationStatus := aws.StringValue(replication.Status)
-
 	if replicationStatus == replicationStatusRunning {
 		return nil
 	}
@@ -563,12 +591,15 @@ func startReplication(ctx context.Context, conn *dms.DatabaseMigrationService, a
 func stopReplication(ctx context.Context, conn *dms.DatabaseMigrationService, arn string, timeout time.Duration) error {
 	replication, err := findReplicationByReplicationConfigARN(ctx, conn, arn)
 
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("reading DMS Replication Config (%s) replication: %s", arn, err)
 	}
 
 	replicationStatus := aws.StringValue(replication.Status)
-
 	if replicationStatus == replicationStatusStopped || replicationStatus == replicationStatusCreated || replicationStatus == replicationStatusFailed {
 		return nil
 	}
@@ -596,15 +627,15 @@ func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"availability_zone":            aws.StringValue(apiObject.AvailabilityZone),
-		"dns_name_servers":             aws.StringValue(apiObject.DnsNameServers),
-		"kms_key_id":                   aws.StringValue(apiObject.KmsKeyId),
-		"max_capacity_units":           aws.Int64Value(apiObject.MaxCapacityUnits),
-		"min_capacity_units":           aws.Int64Value(apiObject.MinCapacityUnits),
-		"multi_az":                     aws.BoolValue(apiObject.MultiAZ),
-		"preferred_maintenance_window": aws.StringValue(apiObject.PreferredMaintenanceWindow),
-		"replication_subnet_group_id":  aws.StringValue(apiObject.ReplicationSubnetGroupId),
-		"vpc_security_group_ids":       flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
+		names.AttrAvailabilityZone:           aws.StringValue(apiObject.AvailabilityZone),
+		"dns_name_servers":                   aws.StringValue(apiObject.DnsNameServers),
+		names.AttrKMSKeyID:                   aws.StringValue(apiObject.KmsKeyId),
+		"max_capacity_units":                 aws.Int64Value(apiObject.MaxCapacityUnits),
+		"min_capacity_units":                 aws.Int64Value(apiObject.MinCapacityUnits),
+		"multi_az":                           aws.BoolValue(apiObject.MultiAZ),
+		names.AttrPreferredMaintenanceWindow: aws.StringValue(apiObject.PreferredMaintenanceWindow),
+		"replication_subnet_group_id":        aws.StringValue(apiObject.ReplicationSubnetGroupId),
+		names.AttrVPCSecurityGroupIDs:        flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
 	}
 
 	return []interface{}{tfMap}
@@ -617,7 +648,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 
 	apiObject := &dms.ComputeConfig{}
 
-	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -625,7 +656,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.DnsNameServers = aws.String(v)
 	}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -641,7 +672,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.MultiAZ = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["preferred_maintenance_window"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPreferredMaintenanceWindow].(string); ok && v != "" {
 		apiObject.PreferredMaintenanceWindow = aws.String(v)
 	}
 
@@ -649,7 +680,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.ReplicationSubnetGroupId = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrVPCSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 

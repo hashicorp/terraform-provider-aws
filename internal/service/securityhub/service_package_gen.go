@@ -5,9 +5,8 @@ package securityhub
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	securityhub_sdkv1 "github.com/aws/aws-sdk-go/service/securityhub"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,7 +19,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAutomationRuleResource,
+			Name:    "Automation Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -30,48 +37,69 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccount,
+			Factory:  resourceAccount,
 			TypeName: "aws_securityhub_account",
+			Name:     "Account",
 		},
 		{
-			Factory:  ResourceActionTarget,
+			Factory:  resourceActionTarget,
 			TypeName: "aws_securityhub_action_target",
+			Name:     "Action Target",
 		},
 		{
-			Factory:  ResourceFindingAggregator,
+			Factory:  resourceConfigurationPolicy,
+			TypeName: "aws_securityhub_configuration_policy",
+			Name:     "Configuration Policy",
+		},
+		{
+			Factory:  resourceConfigurationPolicyAssociation,
+			TypeName: "aws_securityhub_configuration_policy_association",
+			Name:     "Configuration Policy Association",
+		},
+		{
+			Factory:  resourceFindingAggregator,
 			TypeName: "aws_securityhub_finding_aggregator",
+			Name:     "Finding Aggregator",
 		},
 		{
-			Factory:  ResourceInsight,
+			Factory:  resourceInsight,
 			TypeName: "aws_securityhub_insight",
+			Name:     "Insight",
 		},
 		{
-			Factory:  ResourceInviteAccepter,
+			Factory:  resourceInviteAccepter,
 			TypeName: "aws_securityhub_invite_accepter",
+			Name:     "Invite Accepter",
 		},
 		{
-			Factory:  ResourceMember,
+			Factory:  resourceMember,
 			TypeName: "aws_securityhub_member",
+			Name:     "Member",
 		},
 		{
-			Factory:  ResourceOrganizationAdminAccount,
+			Factory:  resourceOrganizationAdminAccount,
 			TypeName: "aws_securityhub_organization_admin_account",
+			Name:     "Organization Admin Account",
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_securityhub_organization_configuration",
+			Name:     "Organization Configuration",
 		},
 		{
-			Factory:  ResourceProductSubscription,
+			Factory:  resourceProductSubscription,
 			TypeName: "aws_securityhub_product_subscription",
+			Name:     "Product Subscription",
 		},
 		{
-			Factory:  ResourceStandardsControl,
+			Factory:  resourceStandardsControl,
 			TypeName: "aws_securityhub_standards_control",
+			Name:     "Standards Control",
 		},
 		{
-			Factory:  ResourceStandardsSubscription,
+			Factory:  resourceStandardsSubscription,
 			TypeName: "aws_securityhub_standards_subscription",
+			Name:     "Standards Subscription",
 		},
 	}
 }
@@ -80,11 +108,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SecurityHub
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*securityhub_sdkv1.SecurityHub, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*securityhub_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return securityhub_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return securityhub_sdkv2.NewFromConfig(cfg, func(o *securityhub_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

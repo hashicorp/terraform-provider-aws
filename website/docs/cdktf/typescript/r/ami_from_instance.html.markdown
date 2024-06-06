@@ -11,7 +11,7 @@ description: |-
 # Resource: aws_ami_from_instance
 
 The "AMI from instance" resource allows the creation of an Amazon Machine
-Image (AMI) modelled after an existing EBS-backed EC2 instance.
+Image (AMI) modeled after an existing EBS-backed EC2 instance.
 
 The created AMI will refer to implicitly-created snapshots of the instance's
 EBS volumes and mimick its assigned block device configuration at the time
@@ -67,9 +67,9 @@ This resource supports the following arguments:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `40M`)
-* `update` - (Default `40M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `40m`)
+* `update` - (Default `40m`)
+* `delete` - (Default `90m`)
 
 ## Attribute Reference
 
@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the created AMI.
 
 This resource also exports a full set of attributes corresponding to the arguments of the
-[`awsAmi`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
+[`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
 
-<!-- cache-key: cdktf-0.18.0 input-d3b464f0179fdca5ee710daa9220402ec177617c9090c92a91af04fa0dca1ffa -->
+<!-- cache-key: cdktf-0.20.1 input-4fe8c5ccb7949e4e568ee6466ad138d934f82a74818318c1ee9ec048a8d2c352 -->

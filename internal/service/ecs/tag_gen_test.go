@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -14,11 +13,12 @@ import (
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_tag" {
@@ -26,12 +26,11 @@ func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
 
-			_, err = tfecs.GetTag(ctx, conn, identifier, key)
+			_, err = tfecs.FindTag(ctx, conn, identifier, key)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -41,32 +40,28 @@ func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("%s resource (%s) tag (%s) still exists", ecs.ServiceID, identifier, key)
+			return fmt.Errorf("%s resource (%s) tag (%s) still exists", names.ECS, identifier, key)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTagExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckTagExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("%s: missing resource ID", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
-		_, err = tfecs.GetTag(ctx, conn, identifier, key)
+		_, err = tfecs.FindTag(ctx, conn, identifier, key)
 
 		return err
 	}

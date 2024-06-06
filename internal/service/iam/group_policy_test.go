@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMGroupPolicy_basic(t *testing.T) {
@@ -27,7 +27,7 @@ func TestAccIAMGroupPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,8 +35,8 @@ func TestAccIAMGroupPolicy_basic(t *testing.T) {
 				Config: testAccGroupPolicyConfig_basic(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccIAMGroupPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccIAMGroupPolicy_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,8 +88,8 @@ func TestAccIAMGroupPolicy_nameGenerated(t *testing.T) {
 				Config: testAccGroupPolicyConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -109,7 +109,7 @@ func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,8 +117,8 @@ func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
 				Config: testAccGroupPolicyConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccIAMGroupPolicy_unknownsInPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRolePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +151,7 @@ func TestAccIAMGroupPolicy_unknownsInPolicy(t *testing.T) {
 				Config: testAccGroupPolicyConfig_unknowns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -166,7 +166,7 @@ func TestAccIAMGroupPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -174,16 +174,16 @@ func TestAccIAMGroupPolicy_update(t *testing.T) {
 				Config: testAccGroupPolicyConfig_basic(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 			{
 				Config: testAccGroupPolicyConfig_basic(rName, "ec2:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 				),
 			},
 		},
@@ -192,7 +192,7 @@ func TestAccIAMGroupPolicy_update(t *testing.T) {
 
 func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_policy" {
@@ -233,7 +233,7 @@ func testAccCheckGroupPolicyExists(ctx context.Context, n string, v *string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
 

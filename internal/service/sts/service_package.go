@@ -6,19 +6,22 @@ package sts
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	sts_sdkv1 "github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*sts_sdkv1.STS, error) {
-	sess := m["session"].(*session_sdkv1.Session)
-	config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(m["endpoint"].(string))}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sts.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	if stsRegion := m["sts_region"].(string); stsRegion != "" {
-		config.Region = aws_sdkv1.String(stsRegion)
-	}
+	return sts.NewFromConfig(cfg, func(o *sts.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			o.BaseEndpoint = aws.String(endpoint)
+		}
 
-	return sts_sdkv1.New(sess.Copy(config)), nil
+		if stsRegion := config["sts_region"].(string); stsRegion != "" {
+			o.Region = stsRegion
+		}
+	}), nil
 }

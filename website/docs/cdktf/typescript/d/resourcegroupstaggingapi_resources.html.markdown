@@ -108,11 +108,11 @@ If you don't specify a `tagFilter`, the response includes all resources that wer
 This data source exports the following attributes in addition to the arguments above:
 
 * `resourceTagMappingList` - List of objects matching the search criteria.
-    * `complianceDetails` - List of objects with information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys.
+    * `compliance_details` - List of objects with information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys.
         * `complianceStatus` - Whether the resource is compliant.
         * `keys_with_noncompliant_values ` - Set of tag keys with non-compliant tag values.
         * `non_compliant_keys ` - Set of non-compliant tag keys.
     * `resourceArn` - ARN of the resource.
     * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-dfacd28e615a77cfbad3e63cc2c0fab691bf6f824574bd266ed9fe2b81be6bdc -->
+<!-- cache-key: cdktf-0.20.1 input-dfacd28e615a77cfbad3e63cc2c0fab691bf6f824574bd266ed9fe2b81be6bdc -->

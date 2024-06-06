@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // add sweeper to delete known test servicecat constraints
@@ -28,7 +29,7 @@ func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConstraintDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,13 +38,13 @@ func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConstraintExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "NOTIFICATION"),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "owner"),
-					resource.TestCheckResourceAttrSet(resourceName, "parameters"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NOTIFICATION"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameters),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
 			},
 			{
@@ -62,7 +63,7 @@ func TestAccServiceCatalogConstraint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConstraintDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,20 +87,20 @@ func TestAccServiceCatalogConstraint_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConstraintDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
 				Config: testAccConstraintConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName2),
 				),
 			},
 		},

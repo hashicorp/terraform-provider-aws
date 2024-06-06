@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_firewall_rule")
@@ -34,7 +35,7 @@ func ResourceFirewallRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.Action_Values(), false),
@@ -71,12 +72,12 @@ func ResourceFirewallRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validResolverName,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -90,14 +91,14 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
 	ruleID := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallRuleInput{
-		Action:               aws.String(d.Get("action").(string)),
+		Action:               aws.String(d.Get(names.AttrAction).(string)),
 		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		Name:                 aws.String(name),
-		Priority:             aws.Int64(int64(d.Get("priority").(int))),
+		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
@@ -148,15 +149,15 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("action", firewallRule.Action)
+	d.Set(names.AttrAction, firewallRule.Action)
 	d.Set("block_override_dns_type", firewallRule.BlockOverrideDnsType)
 	d.Set("block_override_domain", firewallRule.BlockOverrideDomain)
 	d.Set("block_override_ttl", firewallRule.BlockOverrideTtl)
 	d.Set("block_response", firewallRule.BlockResponse)
 	d.Set("firewall_rule_group_id", firewallRule.FirewallRuleGroupId)
 	d.Set("firewall_domain_list_id", firewallRule.FirewallDomainListId)
-	d.Set("name", firewallRule.Name)
-	d.Set("priority", firewallRule.Priority)
+	d.Set(names.AttrName, firewallRule.Name)
+	d.Set(names.AttrPriority, firewallRule.Priority)
 
 	return nil
 }
@@ -171,11 +172,11 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	input := &route53resolver.UpdateFirewallRuleInput{
-		Action:               aws.String(d.Get("action").(string)),
+		Action:               aws.String(d.Get(names.AttrAction).(string)),
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
-		Name:                 aws.String(d.Get("name").(string)),
-		Priority:             aws.Int64(int64(d.Get("priority").(int))),
+		Name:                 aws.String(d.Get(names.AttrName).(string)),
+		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {

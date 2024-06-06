@@ -115,35 +115,35 @@ This resource supports the following arguments:
 
 ### options Argument Reference
 
-~> **NOTE:** If `atime` is set to `bestEffort`, `mtime` must be set to `preserve`. If `atime` is set to `none`, `mtime` must be set to `none`.
+~> **NOTE:** If `atime` is set to `BEST_EFFORT`, `mtime` must be set to `PRESERVE`. If `atime` is set to `NONE`, `mtime` must be set to `NONE`.
 
 The `options` configuration block supports the following arguments:
 
-* `atime` - (Optional) A file metadata that shows the last time a file was accessed (that is when the file was read or written to). If set to `bestEffort`, the DataSync Task attempts to preserve the original (that is, the version before sync `preparing` phase) `atime` attribute on all source files. Valid values: `bestEffort`, `none`. Default: `bestEffort`.
-* `bytesPerSecond` - (Optional) Limits the bandwidth utilized. For example, to set a maximum of 1 MB, set this value to `1048576`. Value values: `1` or greater. Default: `1` (unlimited).
-* `gid` - (Optional) Group identifier of the file's owners. Valid values: `both`, `intValue`, `name`, `none`. Default: `intValue` (preserve integer value of the ID).
-* `logLevel` - (Optional) Determines the type of logs that DataSync publishes to a log stream in the Amazon CloudWatch log group that you provide. Valid values: `off`, `basic`, `transfer`. Default: `off`.
-* `mtime` - (Optional) A file metadata that indicates the last time a file was modified (written to) before the sync `preparing` phase. Value values: `none`, `preserve`. Default: `preserve`.
-* `objectTags` - (Optional) Specifies whether object tags are maintained when transferring between object storage systems. If you want your DataSync task to ignore object tags, specify the NONE value. Valid values: `preserve`, `none`. Default value: `preserve`.
-* `overwriteMode` - (Optional) Determines whether files at the destination should be overwritten or preserved when copying files. Valid values: `always`, `never`. Default: `always`.
-* `posixPermissions` - (Optional) Determines which users or groups can access a file for a specific purpose such as reading, writing, or execution of the file. Valid values: `none`, `preserve`. Default: `preserve`.
-* `preserveDeletedFiles` - (Optional) Whether files deleted in the source should be removed or preserved in the destination file system. Valid values: `preserve`, `remove`. Default: `preserve`.
-* `preserveDevices` - (Optional) Whether the DataSync Task should preserve the metadata of block and character devices in the source files system, and recreate the files with that device name and metadata on the destination. The DataSync Task can’t sync the actual contents of such devices, because many of the devices are non-terminal and don’t return an end of file (EOF) marker. Valid values: `none`, `preserve`. Default: `none` (ignore special devices).
-* `securityDescriptorCopyFlags` - (Optional) Determines which components of the SMB security descriptor are copied from source to destination objects. This value is only used for transfers between SMB and Amazon FSx for Windows File Server locations, or between two Amazon FSx for Windows File Server locations. Valid values: `none`, `ownerDacl`, `ownerDaclSacl`. Default: `ownerDacl`.
-* `taskQueueing` - (Optional) Determines whether tasks should be queued before executing the tasks. Valid values: `enabled`, `disabled`. Default `enabled`.
-* `transferMode` - (Optional) Determines whether DataSync transfers only the data and metadata that differ between the source and the destination location, or whether DataSync transfers all the content from the source, without comparing to the destination location. Valid values: `changed`, `all`. Default: `changed`
-* `uid` - (Optional) User identifier of the file's owners. Valid values: `both`, `intValue`, `name`, `none`. Default: `intValue` (preserve integer value of the ID).
-* `verifyMode` - (Optional) Whether a data integrity verification should be performed at the end of a task execution after all data and metadata have been transferred. Valid values: `none`, `pointInTimeConsistent`, `onlyFilesTransferred`. Default: `pointInTimeConsistent`.
+* `atime` - (Optional) A file metadata that shows the last time a file was accessed (that is when the file was read or written to). If set to `BEST_EFFORT`, the DataSync Task attempts to preserve the original (that is, the version before sync `PREPARING` phase) `atime` attribute on all source files. Valid values: `BEST_EFFORT`, `NONE`. Default: `BEST_EFFORT`.
+* `bytesPerSecond` - (Optional) Limits the bandwidth utilized. For example, to set a maximum of 1 MB, set this value to `1048576`. Value values: `-1` or greater. Default: `-1` (unlimited).
+* `gid` - (Optional) Group identifier of the file's owners. Valid values: `BOTH`, `INT_VALUE`, `NAME`, `NONE`. Default: `INT_VALUE` (preserve integer value of the ID).
+* `logLevel` - (Optional) Determines the type of logs that DataSync publishes to a log stream in the Amazon CloudWatch log group that you provide. Valid values: `OFF`, `BASIC`, `TRANSFER`. Default: `OFF`.
+* `mtime` - (Optional) A file metadata that indicates the last time a file was modified (written to) before the sync `PREPARING` phase. Value values: `NONE`, `PRESERVE`. Default: `PRESERVE`.
+* `objectTags` - (Optional) Specifies whether object tags are maintained when transferring between object storage systems. If you want your DataSync task to ignore object tags, specify the NONE value. Valid values: `PRESERVE`, `NONE`. Default value: `PRESERVE`.
+* `overwriteMode` - (Optional) Determines whether files at the destination should be overwritten or preserved when copying files. Valid values: `ALWAYS`, `NEVER`. Default: `ALWAYS`.
+* `posixPermissions` - (Optional) Determines which users or groups can access a file for a specific purpose such as reading, writing, or execution of the file. Valid values: `NONE`, `PRESERVE`. Default: `PRESERVE`.
+* `preserveDeletedFiles` - (Optional) Whether files deleted in the source should be removed or preserved in the destination file system. Valid values: `PRESERVE`, `REMOVE`. Default: `PRESERVE`.
+* `preserveDevices` - (Optional) Whether the DataSync Task should preserve the metadata of block and character devices in the source files system, and recreate the files with that device name and metadata on the destination. The DataSync Task can’t sync the actual contents of such devices, because many of the devices are non-terminal and don’t return an end of file (EOF) marker. Valid values: `NONE`, `PRESERVE`. Default: `NONE` (ignore special devices).
+* `securityDescriptorCopyFlags` - (Optional) Determines which components of the SMB security descriptor are copied from source to destination objects. This value is only used for transfers between SMB and Amazon FSx for Windows File Server locations, or between two Amazon FSx for Windows File Server locations. Valid values: `NONE`, `OWNER_DACL`, `OWNER_DACL_SACL`. Default: `OWNER_DACL`.
+* `taskQueueing` - (Optional) Determines whether tasks should be queued before executing the tasks. Valid values: `ENABLED`, `DISABLED`. Default `ENABLED`.
+* `transferMode` - (Optional) Determines whether DataSync transfers only the data and metadata that differ between the source and the destination location, or whether DataSync transfers all the content from the source, without comparing to the destination location. Valid values: `CHANGED`, `ALL`. Default: `CHANGED`
+* `uid` - (Optional) User identifier of the file's owners. Valid values: `BOTH`, `INT_VALUE`, `NAME`, `NONE`. Default: `INT_VALUE` (preserve integer value of the ID).
+* `verifyMode` - (Optional) Whether a data integrity verification should be performed at the end of a task execution after all data and metadata have been transferred. Valid values: `NONE`, `POINT_IN_TIME_CONSISTENT`, `ONLY_FILES_TRANSFERRED`. Default: `POINT_IN_TIME_CONSISTENT`.
 
 ### `taskReportConfig` Argument Reference
 
 The following arguments are supported inside the `taskReportConfig` configuration block:
 
 * `s3Destination` - (Required) Configuration block containing the configuration for the Amazon S3 bucket where DataSync uploads your task report. See [`s3Destination`](#s3_destination-argument-reference) below.
-* `s3ObjectVersioning` - (Optional) Specifies whether your task report includes the new version of each object transferred into an S3 bucket. This only applies if you enable versioning on your bucket. Keep in mind that setting this to INCLUDE can increase the duration of your task execution. Valid values: `include` and `none`.
-* `outputType` - (Optional) Specifies the type of task report you'd like. Valid values: `summaryOnly` and `standard`.
+* `s3ObjectVersioning` - (Optional) Specifies whether your task report includes the new version of each object transferred into an S3 bucket. This only applies if you enable versioning on your bucket. Keep in mind that setting this to INCLUDE can increase the duration of your task execution. Valid values: `INCLUDE` and `NONE`.
+* `outputType` - (Optional) Specifies the type of task report you'd like. Valid values: `SUMMARY_ONLY` and `STANDARD`.
 * `reportOverrides` - (Optional) Configuration block containing the configuration of the reporting level for aspects of your task report. See [`reportOverrides`](#report_overrides-argument-reference) below.
-* `reportLevel` - Specifies whether you want your task report to include only what went wrong with your transfer or a list of what succeeded and didn't. Valid values: `errorsOnly` and `successesAndErrors`.
+* `reportLevel` - Specifies whether you want your task report to include only what went wrong with your transfer or a list of what succeeded and didn't. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
 
 ### `s3Destination` Argument Reference
 
@@ -157,10 +157,12 @@ The following arguments are supported inside the `s3Destination` configuration b
 
 The following arguments are supported inside the `reportOverrides` configuration block:
 
-* `deletedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to delete in your destination location. This only applies if you configure your task to delete data in the destination that isn't in the source. Valid values: `errorsOnly` and `successesAndErrors`.
-* `skippedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to skip during your transfer. Valid values: `errorsOnly` and `successesAndErrors`.
-* `transferredOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to transfer. Valid values: `errorsOnly` and `successesAndErrors`.
-* `verifiedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to verify at the end of your transfer. Valid values: `errorsOnly` and `successesAndErrors`.
+* `deletedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to delete in your destination location. This only applies if you configure your task to delete data in the destination that isn't in the source. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+* `skippedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to skip during your transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+* `transferredOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+* `verifiedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to verify at the end of your transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+
+~> **NOTE:** If any `reportOverrides` are set to the same value as `task_report_config.report_level`, they will always be flagged as changed. Only set overrides to a value that differs from `task_report_config.report_level`.
 
 ### Schedule
 
@@ -168,12 +170,12 @@ The following arguments are supported inside the `reportOverrides` configuration
 
 ### excludes Argument Reference
 
-* `filterType` - (Optional) The type of filter rule to apply. Valid values: `simplePattern`.
+* `filterType` - (Optional) The type of filter rule to apply. Valid values: `SIMPLE_PATTERN`.
 * `value` - (Optional) A single filter string that consists of the patterns to exclude. The patterns are delimited by "|" (that is, a pipe), for example: `/folder1|/folder2`
 
 ### includes Argument Reference
 
-* `filterType` - (Optional) The type of filter rule to apply. Valid values: `simplePattern`.
+* `filterType` - (Optional) The type of filter rule to apply. Valid values: `SIMPLE_PATTERN`.
 * `value` - (Optional) A single filter string that consists of the patterns to include. The patterns are delimited by "|" (that is, a pipe), for example: `/folder1|/folder2`
 
 ## Attribute Reference
@@ -188,28 +190,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
+* `create` - (Default `5m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsDatasyncTask` using the DataSync Task Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { DatasyncTask } from "./.gen/providers/aws/datasync-task";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    DatasyncTask.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsDatasyncTask` using the DataSync Task Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 
 ```console
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a9b1e645629a52a15aec012195e559eac62da9c511b83c6c57412c96d99cca4a -->
+<!-- cache-key: cdktf-0.20.1 input-31b892fb93faa525a767449c304854f23fafedbe0997378add704550c2fb2682 -->

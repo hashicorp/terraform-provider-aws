@@ -14,6 +14,10 @@ type ServerCapabilities struct {
 	// means the caller can use a cached copy of the provider's schema instead.
 	GetProviderSchemaOptional bool
 
+	// MoveResourceState signals that a provider supports the MoveResourceState
+	// RPC.
+	MoveResourceState bool
+
 	// PlanDestroy signals that a provider expects a call to
 	// PlanResourceChange when a resource is going to be destroyed. This is
 	// opt-in to prevent unexpected errors or panics since the

@@ -6,6 +6,9 @@ import (
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
+	{{- if and .ListTagsOpPaginated .ServiceTagsMap }}
+	"maps"
+	{{- end }}
 	{{- if .TimePkg }}
 	"time"
 	{{- end }}
@@ -44,8 +47,8 @@ import (
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	{{- end }}
-	{{- if .InternalTypesPkg }}
-    "github.com/hashicorp/terraform-provider-aws/internal/types"
+	{{- if .InternalOptionPkg }}
+    "github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	{{- end }}
 	{{- if .NamesPkg }}
     "github.com/hashicorp/terraform-provider-aws/names"

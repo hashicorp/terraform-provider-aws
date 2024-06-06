@@ -11,7 +11,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2023.05"
+version = "2024.03"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
@@ -62,6 +62,7 @@ project {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
         }
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
+        text("TEST_EXCLUDE_PATTERN", "", display = ParameterDisplay.HIDDEN)
         text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
@@ -594,6 +595,10 @@ object Sanity : BuildType({
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
         }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
+        }
     }
 })
 
@@ -654,6 +659,17 @@ object Performance : BuildType({
                     enforceCleanCheckoutForDependencies = true
                 }
             }
+        }
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
         }
     }
 })

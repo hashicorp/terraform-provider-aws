@@ -12,6 +12,8 @@ Provides an S3 bucket request payment configuration resource. For more informati
 
 ~> **NOTE:** Destroying an `aws_s3_bucket_request_payment_configuration` resource resets the bucket's `payer` to the S3 default: the bucket owner.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```terraform

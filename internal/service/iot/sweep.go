@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -88,6 +89,14 @@ func RegisterSweepers() {
 		Name: "aws_iot_domain_configuration",
 		F:    sweepDomainConfigurations,
 	})
+
+	resource.AddTestSweepers("aws_iot_ca_certificate", &resource.Sweeper{
+		Name: "aws_iot_ca_certificate",
+		F:    sweepCACertificates,
+		Dependencies: []string{
+			"aws_iot_certificate",
+		},
+	})
 }
 
 func sweepCertificates(region string) error {
@@ -109,6 +118,7 @@ func sweepCertificates(region string) error {
 			r := ResourceCertificate()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.CertificateId))
+			d.Set("active", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -165,8 +175,8 @@ func sweepPolicyAttachments(region string) error {
 					r := ResourcePolicyAttachment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s|%s", policyName, aws.StringValue(v)))
-					d.Set("policy", policyName)
-					d.Set("target", v)
+					d.Set(names.AttrPolicy, policyName)
+					d.Set(names.AttrTarget, v)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -323,7 +333,7 @@ func sweepThingPrincipalAttachments(region string) error {
 					r := ResourceThingPrincipalAttachment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s|%s", thingName, aws.StringValue(v)))
-					d.Set("principal", v)
+					d.Set(names.AttrPrincipal, v)
 					d.Set("thing", thingName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -601,7 +611,7 @@ func sweepAuthorizers(region string) error {
 			r := ResourceAuthorizer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.AuthorizerName))
-			d.Set("status", iot.AuthorizerStatusActive)
+			d.Set(names.AttrStatus, iot.AuthorizerStatusActive)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -668,7 +678,7 @@ func sweepDomainConfigurations(region string) error {
 			r := ResourceDomainConfiguration()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set("status", output.DomainConfigurationStatus)
+			d.Set(names.AttrStatus, output.DomainConfigurationStatus)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -689,6 +699,51 @@ func sweepDomainConfigurations(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IoT Domain Configurations (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCACertificates(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListCACertificatesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListCACertificatesPagesWithContext(ctx, input, func(page *iot.ListCACertificatesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Certificates {
+			r := ResourceCACertificate()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.CertificateId))
+			d.Set("active", true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT CA Certificate sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT CA Certificates (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT CA Certificates (%s): %w", region, err)
 	}
 
 	return nil

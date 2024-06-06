@@ -3,107 +3,250 @@
 
 // Package names provides constants for AWS service names that are used as keys
 // for the endpoints slice in internal/conns/conns.go. The package also exposes
-// access to data found in the names_data.csv file, which provides additional
+// access to data found in the data/names_data.csv file, which provides additional
 // service-related name information.
 //
 // Consumers of the names package include the conns package
 // (internal/conn/conns.go), the provider package
 // (internal/provider/provider.go), generators, and the skaff tool.
 //
-// It is very important that information in the names_data.csv be exactly
+// It is very important that information in the data/names_data.csv be exactly
 // correct because the Terrform AWS Provider relies on the information to
 // function correctly.
 package names
 
 import (
-	_ "embed"
-	"encoding/csv"
 	"fmt"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
-// These "should" be defined by the AWS Go SDK v2, but currently aren't.
+// Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
-	AccountEndpointID                    = "account"
-	ACMEndpointID                        = "acm"
+	ACMPCAEndpointID                     = "acm-pca"
+	AMPEndpointID                        = "aps"
+	AppStreamEndpointID                  = "appstream2"
+	ApplicationAutoscalingEndpointID     = "application-autoscaling"
+	AppIntegrationsEndpointID            = "app-integrations"
+	AppConfigEndpointID                  = "appconfig"
+	AmplifyEndpointID                    = "amplify"
+	APIGatewayID                         = "apigateway"
+	APIGatewayV2EndpointID               = "apigateway"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
-	CleanRoomsEndpointID                 = "cleanrooms"
-	CloudWatchLogsEndpointID             = "logs"
+	AutoScalingPlansEndpointID           = "autoscaling-plans"
+	BatchEndpointID                      = "batch"
+	BedrockAgentEndpointID               = "bedrockagent"
+	BedrockEndpointID                    = "bedrock"
+	BCMDataExportsEndpointID             = "bcm-data-exports"
+	BudgetsEndpointID                    = "budgets"
+	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
+	ChimeSDKVoiceEndpointID              = "voice-chime"
+	CloudFormationEndpointID             = "cloudformation"
+	CloudFrontEndpointID                 = "cloudfront"
+	CloudSearchEndpointID                = "cloudsearch"
+	CloudWatchEndpointID                 = "monitoring"
+	Cloud9EndpointID                     = "cloud9"
+	CodeArtifactEndpointID               = "codeartifact"
+	CodeGuruReviewerEndpointID           = "codeguru-reviewer"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
-	CodeStarNotificationsEndpointID      = "codestar-notifications"
+	CognitoIdentityEndpointID            = "cognito-identity"
 	ComprehendEndpointID                 = "comprehend"
-	ComputeOptimizerEndpointID           = "computeoptimizer"
-	DSEndpointID                         = "ds"
-	EMRServerlessEndpointID              = "emrserverless"
-	GlacierEndpointID                    = "glacier"
+	ConfigServiceEndpointID              = "config"
+	DeviceFarmEndpointID                 = "devicefarm"
+	DevOpsGuruEndpointID                 = "devops-guru"
+	DLMEndpointID                        = "dlm"
+	ECREndpointID                        = "api.ecr"
+	EKSEndpointID                        = "eks"
+	EMREndpointID                        = "elasticmapreduce"
+	EventsEndpointID                     = "events"
+	EvidentlyEndpointID                  = "evidently"
+	FMSEndpointID                        = "fms"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
-	InternetMonitorEndpointID            = "internetmonitor"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
-	KeyspacesEndpointID                  = "keyspaces"
+	KMSEndpointID                        = "kms"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
+	M2EndpointID                         = "m2"
+	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
+	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
+	OpenSearchIngestionEndpointID        = "osis"
+	PaymentCryptographyEndpointID        = "paymentcryptography"
 	PipesEndpointID                      = "pipes"
-	PricingEndpointID                    = "pricing"
+	PollyEndpointID                      = "polly"
 	QLDBEndpointID                       = "qldb"
-	RedshiftDataEndpointID               = "redshift-data"
+	RedshiftServerlessEndpointID         = "redshift-serverless"
+	RedshiftEndpointID                   = "redshift"
+	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
-	ResourceGroupsEndpointID             = "resource-groups"
-	ResourceGroupsTaggingAPIEndpointID   = "tagging"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
 	ServiceQuotasEndpointID              = "servicequotas"
-	S3EndpointID                         = "s3"
-	S3ControlEndpointID                  = "s3-control"
-	SESV2EndpointID                      = "sesv2"
-	SNSEndpointID                        = "sns"
-	SQSEndpointID                        = "sqs"
+	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
+	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
-	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
-	SWFEndpointID                        = "swf"
-	TimestreamWriteEndpointID            = "ingest.timestream"
+	SSOAdminEndpointID                   = "sso"
+	STSEndpointID                        = "sts"
 	TranscribeEndpointID                 = "transcribe"
+	TransferEndpointID                   = "transfer"
+	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
-	XRayEndpointID                       = "xray"
+	WAFEndpointID                        = "waf"
+	WAFRegionalEndpointID                = "waf-regional"
 )
 
 // These should move to aws-sdk-go-base.
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
+	ChinaPartitionID      = "aws-cn"     // AWS China partition.
+	ISOPartitionID        = "aws-iso"    // AWS ISO (US) partition.
+	ISOBPartitionID       = "aws-iso-b"  // AWS ISOB (US) partition.
+	ISOEPartitionID       = "aws-iso-e"  // AWS ISOE (Europe) partition.
+	ISOFPartitionID       = "aws-iso-f"  // AWS ISOF partition.
 	StandardPartitionID   = "aws"        // AWS Standard partition.
 	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
 )
 
 const (
-	USEast1RegionID = "us-east-1" // US East (N. Virginia).
-	USWest1RegionID = "us-west-1" // US West (N. California).
-	USWest2RegionID = "us-west-2" // US West (Oregon).
+	// AWS Standard partition's regions.
+	GlobalRegionID = "aws-global" // AWS Standard global region.
 
+	AFSouth1RegionID     = "af-south-1"     // Africa (Cape Town).
+	APEast1RegionID      = "ap-east-1"      // Asia Pacific (Hong Kong).
+	APNortheast1RegionID = "ap-northeast-1" // Asia Pacific (Tokyo).
+	APNortheast2RegionID = "ap-northeast-2" // Asia Pacific (Seoul).
+	APNortheast3RegionID = "ap-northeast-3" // Asia Pacific (Osaka).
+	APSouth1RegionID     = "ap-south-1"     // Asia Pacific (Mumbai).
+	APSouth2RegionID     = "ap-south-2"     // Asia Pacific (Hyderabad).
+	APSoutheast1RegionID = "ap-southeast-1" // Asia Pacific (Singapore).
+	APSoutheast2RegionID = "ap-southeast-2" // Asia Pacific (Sydney).
+	APSoutheast3RegionID = "ap-southeast-3" // Asia Pacific (Jakarta).
+	APSoutheast4RegionID = "ap-southeast-4" // Asia Pacific (Melbourne).
+	CACentral1RegionID   = "ca-central-1"   // Canada (Central).
+	CAWest1RegionID      = "ca-west-1"      // Canada West (Calgary).
+	EUCentral1RegionID   = "eu-central-1"   // Europe (Frankfurt).
+	EUCentral2RegionID   = "eu-central-2"   // Europe (Zurich).
+	EUNorth1RegionID     = "eu-north-1"     // Europe (Stockholm).
+	EUSouth1RegionID     = "eu-south-1"     // Europe (Milan).
+	EUSouth2RegionID     = "eu-south-2"     // Europe (Spain).
+	EUWest1RegionID      = "eu-west-1"      // Europe (Ireland).
+	EUWest2RegionID      = "eu-west-2"      // Europe (London).
+	EUWest3RegionID      = "eu-west-3"      // Europe (Paris).
+	ILCentral1RegionID   = "il-central-1"   // Israel (Tel Aviv).
+	MECentral1RegionID   = "me-central-1"   // Middle East (UAE).
+	MESouth1RegionID     = "me-south-1"     // Middle East (Bahrain).
+	SAEast1RegionID      = "sa-east-1"      // South America (Sao Paulo).
+	USEast1RegionID      = "us-east-1"      // US East (N. Virginia).
+	USEast2RegionID      = "us-east-2"      // US East (Ohio).
+	USWest1RegionID      = "us-west-1"      // US West (N. California).
+	USWest2RegionID      = "us-west-2"      // US West (Oregon).
+
+	// AWS China partition's regions.
+	CNNorth1RegionID     = "cn-north-1"     // China (Beijing).
+	CNNorthwest1RegionID = "cn-northwest-1" // China (Ningxia).
+
+	// AWS GovCloud (US) partition's regions.
 	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
 	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
+
+	// AWS ISO (US) partition's regions.
+	USISOEast1RegionID = "us-iso-east-1" // US ISO East.
+	USISOWest1RegionID = "us-iso-west-1" // US ISO WEST.
+
+	// AWS ISOB (US) partition's regions.
+	USISOBEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
 )
 
-// Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
+func DNSSuffixForPartition(partition string) string {
+	switch partition {
+	case "":
+		return ""
+	case ChinaPartitionID:
+		return "amazonaws.com.cn"
+	case ISOPartitionID:
+		return "c2s.ic.gov"
+	case ISOBPartitionID:
+		return "sc2s.sgov.gov"
+	case ISOEPartitionID:
+		return "cloud.adc-e.uk"
+	case ISOFPartitionID:
+		return "csp.hci.ic.gov"
+	default:
+		return "amazonaws.com"
+	}
+}
+
+func IsOptInRegion(region string) bool {
+	switch region {
+	case AFSouth1RegionID,
+		APEast1RegionID, APSouth2RegionID,
+		APSoutheast3RegionID, APSoutheast4RegionID,
+		CAWest1RegionID,
+		EUCentral2RegionID,
+		EUSouth1RegionID, EUSouth2RegionID,
+		ILCentral1RegionID,
+		MECentral1RegionID,
+		MESouth1RegionID:
+		return true
+	default:
+		return false
+	}
+}
+
+func PartitionForRegion(region string) string {
+	switch region {
+	case "":
+		return ""
+	case CNNorth1RegionID, CNNorthwest1RegionID:
+		return ChinaPartitionID
+	case USISOEast1RegionID, USISOWest1RegionID:
+		return ISOPartitionID
+	case USISOBEast1RegionID:
+		return ISOBPartitionID
+	case USGovEast1RegionID, USGovWest1RegionID:
+		return USGovCloudPartitionID
+	default:
+		return StandardPartitionID
+	}
+}
+
+// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
+func ReverseDNS(hostname string) string {
+	parts := strings.Split(hostname, ".")
+
+	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
+		parts[i], parts[j] = parts[j], parts[i]
+	}
+
+	return strings.Join(parts, ".")
+}
+
+// Type ServiceDatum corresponds closely to columns in `data/names_data.csv` and are
 // described in detail in README.md.
 type ServiceDatum struct {
 	Aliases            []string
+	AWSServiceEnvVar   string
 	Brand              string
+	ClientSDKV1        bool
 	DeprecatedEnvVar   string
-	EnvVar             string
+	EndpointOnly       bool
 	GoV1ClientTypeName string
 	GoV1Package        string
 	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
+	SDKID              string
+	TFAWSEnvVar        string
 }
 
 // serviceData key is the AWS provider service package
@@ -118,58 +261,45 @@ func init() {
 	}
 }
 
-//go:embed names_data.csv
-var namesData string
-
 func readCSVIntoServiceData() error {
 	// names_data.csv is dynamically embedded so changes, additions should be made
 	// there also
 
-	r := csv.NewReader(strings.NewReader(namesData))
-
-	d, err := r.ReadAll()
+	d, err := data.ReadAllServiceData()
 	if err != nil {
 		return fmt.Errorf("reading CSV into service data: %w", err)
 	}
 
-	for i, l := range d {
-		if i < 1 { // omit header line
+	for _, l := range d {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[ColExclude] != "" {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
-		if l[ColNotImplemented] != "" {
-			continue
-		}
-
-		if l[ColProviderPackageActual] == "" && l[ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[ColProviderPackageCorrect]
-
-		if l[ColProviderPackageActual] != "" {
-			p = l[ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		serviceData[p] = &ServiceDatum{
-			Brand:              l[ColBrand],
-			DeprecatedEnvVar:   l[ColDeprecatedEnvVar],
-			EnvVar:             l[ColEnvVar],
-			GoV1ClientTypeName: l[ColGoV1ClientTypeName],
-			GoV1Package:        l[ColGoV1Package],
-			GoV2Package:        l[ColGoV2Package],
-			HumanFriendly:      l[ColHumanFriendly],
-			ProviderNameUpper:  l[ColProviderNameUpper],
+			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
+			Brand:              l.Brand(),
+			ClientSDKV1:        l.ClientSDKV1(),
+			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
+			EndpointOnly:       l.EndpointOnly(),
+			GoV1ClientTypeName: l.GoV1ClientTypeName(),
+			GoV1Package:        l.GoV1Package(),
+			GoV2Package:        l.GoV2Package(),
+			HumanFriendly:      l.HumanFriendly(),
+			ProviderNameUpper:  l.ProviderNameUpper(),
+			SDKID:              l.SDKID(),
+			TFAWSEnvVar:        l.TFAWSEnvVar(),
 		}
 
 		a := []string{p}
 
-		if l[ColAliases] != "" {
-			a = append(a, strings.Split(l[ColAliases], ";")...)
+		if len(l.Aliases()) > 0 {
+			a = append(a, l.Aliases()...)
 		}
 
 		serviceData[p].Aliases = a
@@ -212,6 +342,48 @@ func Aliases() []string {
 	return keys
 }
 
+type Endpoint struct {
+	ProviderPackage string
+	Aliases         []string
+}
+
+func Endpoints() []Endpoint {
+	endpoints := make([]Endpoint, 0, len(serviceData))
+
+	for k, v := range serviceData {
+		ep := Endpoint{
+			ProviderPackage: k,
+		}
+		if len(v.Aliases) > 1 {
+			ep.Aliases = v.Aliases[1:]
+		}
+		endpoints = append(endpoints, ep)
+	}
+
+	return endpoints
+}
+
+type ServiceNameUpper struct {
+	ProviderPackage   string
+	ProviderNameUpper string
+	SDKID             string
+}
+
+func ServiceNamesUpper() []ServiceNameUpper {
+	serviceNames := make([]ServiceNameUpper, 0, len(serviceData))
+
+	for k, v := range serviceData {
+		sn := ServiceNameUpper{
+			ProviderPackage:   k,
+			ProviderNameUpper: v.ProviderNameUpper,
+			SDKID:             v.SDKID,
+		}
+		serviceNames = append(serviceNames, sn)
+	}
+
+	return serviceNames
+}
+
 func ProviderNameUpper(service string) (string, error) {
 	if v, ok := serviceData[service]; ok {
 		return v.ProviderNameUpper, nil
@@ -220,6 +392,7 @@ func ProviderNameUpper(service string) (string, error) {
 	return "", fmt.Errorf("no service data found for %s", service)
 }
 
+// Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
 func DeprecatedEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
 		return v.DeprecatedEnvVar
@@ -228,12 +401,39 @@ func DeprecatedEnvVar(service string) string {
 	return ""
 }
 
-func EnvVar(service string) string {
+// Deprecated `TF_AWS_<service>_ENDPOINT` envvar defined for some services
+func TFAWSEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.EnvVar
+		return v.TFAWSEnvVar
 	}
 
 	return ""
+}
+
+// Standard service endpoint envvar defined by AWS
+func AWSServiceEnvVar(service string) string {
+	if v, ok := serviceData[service]; ok {
+		return v.AWSServiceEnvVar
+	}
+
+	return ""
+}
+
+// Service SDK ID from AWS SDK for Go v2
+func SDKID(service string) string {
+	if v, ok := serviceData[service]; ok {
+		return v.SDKID
+	}
+
+	return ""
+}
+
+func ClientSDKV1(service string) bool {
+	if v, ok := serviceData[service]; ok {
+		return v.ClientSDKV1
+	}
+
+	return false
 }
 
 func FullHumanFriendly(service string) (string, error) {

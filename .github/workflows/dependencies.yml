@@ -7,6 +7,12 @@ on:
       - 'release/**'
   pull_request_target:
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   community_check:
     if: github.event_name == 'pull_request_target'
@@ -22,7 +28,7 @@ jobs:
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         if: needs.community_check.outputs.maintainer == 'false'
         id: filter
         with:
@@ -40,7 +46,7 @@ jobs:
     steps:
       - name: Find Existing PR Comment
         id: prc
-        uses: peter-evans/find-comment@a54c31d7fa095754bfef525c0c8e5e5674c4b4b1 # v2.4.0
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
@@ -48,7 +54,7 @@ jobs:
       - run: echo ${{ steps.prc.outputs.comment-id }}
       - name: PR Comment
         if: steps.prc.outputs.comment-id == ''
-        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2 # v3.1.0
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -70,13 +76,11 @@ jobs:
     name: go mod
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version-file: go.mod
+          go-version-file: .go-version
       - name: go mod
         run: |
-          echo "==> Checking source code with go mod tidy..."
-          go mod tidy
-          git diff --exit-code -- go.mod go.sum || \
-            (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+          echo "Using make to check dependencies"
+          make deps-check

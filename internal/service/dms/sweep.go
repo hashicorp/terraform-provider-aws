@@ -32,7 +32,6 @@ func RegisterSweepers() {
 		Name: "aws_dms_replication_instance",
 		F:    sweepReplicationInstances,
 		Dependencies: []string{
-			"aws_dms_replication_subnet_group",
 			"aws_dms_replication_task",
 		},
 	})
@@ -40,6 +39,9 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_dms_replication_subnet_group", &resource.Sweeper{
 		Name: "aws_dms_replication_subnet_group",
 		F:    sweepReplicationSubnetGroups,
+		Dependencies: []string{
+			"aws_dms_replication_instance",
+		},
 	})
 
 	resource.AddTestSweepers("aws_dms_replication_task", &resource.Sweeper{

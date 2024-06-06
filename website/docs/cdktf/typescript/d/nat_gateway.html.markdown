@@ -102,6 +102,6 @@ the selected Nat Gateway.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-4030116e2abe81b3824dc015b0bf174d688531f1ad8692b89eca913c4b816418 -->
+<!-- cache-key: cdktf-0.20.1 input-4030116e2abe81b3824dc015b0bf174d688531f1ad8692b89eca913c4b816418 -->

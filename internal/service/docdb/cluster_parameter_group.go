@@ -26,8 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const clusterParameterGroupMaxParamsBulkEdit = 20
-
 // @SDKResource("aws_docdb_cluster_parameter_group", name="Cluster Parameter Group")
 // @Tags(identifierAttribute="arn")
 func ResourceClusterParameterGroup() *schema.Resource {
@@ -42,38 +40,38 @@ func ResourceClusterParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validParamGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -84,11 +82,11 @@ func ResourceClusterParameterGroup() *schema.Resource {
 							Default:      docdb.ApplyMethodPendingReboot,
 							ValidateFunc: validation.StringInSlice(docdb.ApplyMethod_Values(), false),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -107,11 +105,11 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &docdb.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(name),
-		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
-		Description:                 aws.String(d.Get("description").(string)),
+		DBParameterGroupFamily:      aws.String(d.Get(names.AttrFamily).(string)),
+		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                        getTagsIn(ctx),
 	}
 
@@ -123,7 +121,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(name)
 
-	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
 		err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List()))
 
 		if err != nil {
@@ -150,36 +148,23 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", dbClusterParameterGroup.DBClusterParameterGroupArn)
-	d.Set("description", dbClusterParameterGroup.Description)
-	d.Set("family", dbClusterParameterGroup.DBParameterGroupFamily)
-	d.Set("name", dbClusterParameterGroup.DBClusterParameterGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
+	d.Set(names.AttrARN, dbClusterParameterGroup.DBClusterParameterGroupArn)
+	d.Set(names.AttrDescription, dbClusterParameterGroup.Description)
+	d.Set(names.AttrFamily, dbClusterParameterGroup.DBParameterGroupFamily)
+	d.Set(names.AttrName, dbClusterParameterGroup.DBClusterParameterGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	input := &docdb.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	}
-	var parameters []*docdb.Parameter
 
-	err = conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterParametersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Parameters {
-			if v != nil {
-				parameters = append(parameters, v)
-			}
-		}
-
-		return !lastPage
-	})
+	parameters, err := findDBClusterParameters(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenParameters(parameters, d.Get("parameter").(*schema.Set).List())); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters, d.Get(names.AttrParameter).(*schema.Set).List())); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -190,17 +175,9 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {
 			err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), parameters)
@@ -243,6 +220,9 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 }
 
 func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.DocDB, name string, parameters []*docdb.Parameter) error {
+	const (
+		clusterParameterGroupMaxParamsBulkEdit = 20
+	)
 	// We can only modify 20 parameters at a time, so chunk them until we've got them all.
 	for _, chunk := range tfslices.Chunks(parameters, clusterParameterGroupMaxParamsBulkEdit) {
 		input := &docdb.ModifyDBClusterParameterGroupInput{
@@ -299,6 +279,37 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.DocDB, input 
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findDBClusterParameters(ctx context.Context, conn *docdb.DocDB, input *docdb.DescribeDBClusterParametersInput) ([]*docdb.Parameter, error) {
+	var output []*docdb.Parameter
+
+	err := conn.DescribeDBClusterParametersPagesWithContext(ctx, input, func(page *docdb.DescribeDBClusterParametersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Parameters {
 			if v != nil {
 				output = append(output, v)
 			}

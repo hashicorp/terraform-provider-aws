@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSClusterActivityStream_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +39,7 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 				Config: testAccClusterActivityStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterActivityStreamExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_native_audit_fields_included", "false"),
+					resource.TestCheckResourceAttr(resourceName, "engine_native_audit_fields_included", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
 				),
 			},
@@ -63,7 +64,7 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterActivityStreamDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(fsx.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.FSxServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -38,7 +39,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,43 +47,45 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
 					resource.TestCheckNoResourceAttr(resourceName, "backup_id"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OpenZFSDeploymentTypeSingleAz1),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_ip_address_range", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "preferred_subnet_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "*"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "64"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
@@ -90,6 +93,9 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -103,7 +109,7 @@ func TestAccFSxOpenZFSFileSystem_diskIops(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,22 +117,25 @@ func TestAccFSxOpenZFSFileSystem_diskIops(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 192),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "200"),
 				),
@@ -143,7 +152,7 @@ func TestAccFSxOpenZFSFileSystem_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,90 +176,93 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume1(rName, "NONE", "false", 128),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume1(rName, "NONE", acctest.CtFalse, 128),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "10.0.1.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "sync"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "10",
+						names.AttrID:                 acctest.Ct10,
 						"storage_capacity_quota_gib": "128",
-						"type":                       "USER",
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "USER",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "GROUP",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "GROUP",
 					}),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", "true", 256, 8),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", acctest.CtTrue, 256, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "ZSTD"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "10.0.1.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "async"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "8"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "10",
+						names.AttrID:                 acctest.Ct10,
 						"storage_capacity_quota_gib": "256",
-						"type":                       "USER",
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "USER",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "GROUP",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "GROUP",
 					}),
 				),
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, "NONE", "false", 128, 1024, 512),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, "NONE", acctest.CtFalse, 128, 1024, 512),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem1, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.*", map[string]string{
 						"clients":   "10.0.1.0/24",
 						"options.0": "async",
@@ -261,80 +273,80 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 						"options.0": "sync",
 						"options.1": "rw",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "512"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "10",
+						names.AttrID:                 acctest.Ct10,
 						"storage_capacity_quota_gib": "128",
-						"type":                       "USER",
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "20",
+						names.AttrID:                 "20",
 						"storage_capacity_quota_gib": "1024",
-						"type":                       "GROUP",
+						names.AttrType:               "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "5",
+						names.AttrID:                 "5",
 						"storage_capacity_quota_gib": "1024",
-						"type":                       "GROUP",
+						names.AttrType:               "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "100",
+						names.AttrID:                 "100",
 						"storage_capacity_quota_gib": "128",
-						"type":                       "USER",
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "USER",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "GROUP",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "GROUP",
 					}),
 				),
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume4(rName, "NONE", "false", 128, 1024),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume4(rName, "NONE", acctest.CtFalse, 128, 1024),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "10",
+						names.AttrID:                 acctest.Ct10,
 						"storage_capacity_quota_gib": "128",
-						"type":                       "USER",
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "20",
+						names.AttrID:                 "20",
 						"storage_capacity_quota_gib": "1024",
-						"type":                       "GROUP",
+						names.AttrType:               "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "5",
+						names.AttrID:                 "5",
 						"storage_capacity_quota_gib": "1024",
-						"type":                       "GROUP",
+						names.AttrType:               "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "100",
+						names.AttrID:                 "100",
 						"storage_capacity_quota_gib": "128",
-						"type":                       "USER",
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "USER",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
-						"id":                         "0",
-						"storage_capacity_quota_gib": "0",
-						"type":                       "GROUP",
+						names.AttrID:                 acctest.Ct0,
+						"storage_capacity_quota_gib": acctest.Ct0,
+						names.AttrType:               "GROUP",
 					}),
 				),
 			},
@@ -350,7 +362,7 @@ func TestAccFSxOpenZFSFileSystem_securityGroupIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -358,21 +370,24 @@ func TestAccFSxOpenZFSFileSystem_securityGroupIDs(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_securityGroupIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenZFSFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -387,41 +402,44 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSFileSystemConfig_tags1(rName, "key1", "value1"),
+				Config: testAccOpenZFSFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOpenZFSFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_tags1(rName, "key2", "value2"),
+				Config: testAccOpenZFSFileSystemConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem2, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -436,34 +454,37 @@ func TestAccFSxOpenZFSFileSystem_copyTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, "key1", "value1", "true"),
+				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", "true"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtTrue),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, "key1", "value1", "false"),
+				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", "false"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
 				),
 			},
 		},
@@ -478,7 +499,7 @@ func TestAccFSxOpenZFSFileSystem_throughput(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -490,10 +511,13 @@ func TestAccFSxOpenZFSFileSystem_throughput(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughput(rName, 128),
@@ -515,7 +539,7 @@ func TestAccFSxOpenZFSFileSystem_storageType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -523,14 +547,17 @@ func TestAccFSxOpenZFSFileSystem_storageType(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_storageType(rName, "SSD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "SSD"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -544,7 +571,7 @@ func TestAccFSxOpenZFSFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -556,10 +583,13 @@ func TestAccFSxOpenZFSFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
@@ -581,7 +611,7 @@ func TestAccFSxOpenZFSFileSystem_automaticBackupRetentionDays(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -593,24 +623,27 @@ func TestAccFSxOpenZFSFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct1),
 				),
 			},
 		},
@@ -625,7 +658,7 @@ func TestAccFSxOpenZFSFileSystem_kmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -633,14 +666,17 @@ func TestAccFSxOpenZFSFileSystem_kmsKeyID(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -654,7 +690,7 @@ func TestAccFSxOpenZFSFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -666,10 +702,13 @@ func TestAccFSxOpenZFSFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
@@ -691,7 +730,7 @@ func TestAccFSxOpenZFSFileSystem_throughputCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -703,10 +742,13 @@ func TestAccFSxOpenZFSFileSystem_throughputCapacity(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughputCapacity(rName),
@@ -728,7 +770,7 @@ func TestAccFSxOpenZFSFileSystem_storageCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -740,10 +782,13 @@ func TestAccFSxOpenZFSFileSystem_storageCapacity(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_storageCapacity(rName),
@@ -765,7 +810,7 @@ func TestAccFSxOpenZFSFileSystem_deploymentType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -778,10 +823,13 @@ func TestAccFSxOpenZFSFileSystem_deploymentType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_deploymentType(rName, "SINGLE_AZ_2", 160),
@@ -804,7 +852,7 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -812,45 +860,47 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_multiAZ(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
 					resource.TestCheckNoResourceAttr(resourceName, "backup_id"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OpenZFSDeploymentTypeMultiAz1),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_ip_address_range"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", "id"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(resourceName, "preferred_subnet_id", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.clients", "*"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "160"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
@@ -858,6 +908,9 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -871,7 +924,7 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -879,30 +932,34 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_routeTableIDs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_routeTableIDs(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", "id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.1", names.AttrID),
 				),
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_routeTableIDs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
 				),
 			},
 		},
@@ -998,6 +1055,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName string, iops int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   storage_type        = "SSD"
   subnet_ids          = aws_subnet.test[*].id
@@ -1042,6 +1100,7 @@ resource "aws_security_group" "test1" {
 
 resource "aws_fsx_openzfs_file_system" "test" {
   security_group_ids  = [aws_security_group.test1.id]
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1105,6 +1164,7 @@ resource "aws_security_group" "test2" {
 
 resource "aws_fsx_openzfs_file_system" "test" {
   security_group_ids  = [aws_security_group.test1.id, aws_security_group.test2.id]
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1121,6 +1181,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1137,6 +1198,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1154,6 +1216,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_copyTags(rName, tagKey1, tagValue1, copyTags string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup    = true
   storage_capacity     = 64
   subnet_ids           = aws_subnet.test[*].id
   deployment_type      = "SINGLE_AZ_1"
@@ -1172,6 +1235,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, weeklyMaintenanceStartTime string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup             = true
   storage_capacity              = 64
   subnet_ids                    = aws_subnet.test[*].id
   deployment_type               = "SINGLE_AZ_1"
@@ -1189,6 +1253,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, dailyAutomaticBackupStartTime string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup                 = true
   storage_capacity                  = 64
   subnet_ids                        = aws_subnet.test[*].id
   deployment_type                   = "SINGLE_AZ_1"
@@ -1207,6 +1272,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName string, retention int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup               = true
   storage_capacity                = 64
   subnet_ids                      = aws_subnet.test[*].id
   deployment_type                 = "SINGLE_AZ_1"
@@ -1229,6 +1295,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1246,6 +1313,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_throughput(rName string, throughput int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1261,6 +1329,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_storageType(rName, storageType string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1277,6 +1346,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume1(rName, dataCompression, readOnly string, quotaSize int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1322,6 +1392,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume2(rName, dataCompression, readOnly string, quotaSize, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1368,6 +1439,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, dataCompression, readOnly string, userQuota, groupQuota, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1433,6 +1505,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume4(rName, dataCompression, readOnly string, userQuota, groupQuota int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1484,6 +1557,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_throughputCapacity(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1499,6 +1573,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_storageCapacity(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 75
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1514,6 +1589,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_deploymentType(rName, deploymentType string, throughput int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = %[2]q
@@ -1529,6 +1605,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_multiAZ(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseMultiAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   preferred_subnet_id = aws_subnet.test[0].id
@@ -1568,6 +1645,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   preferred_subnet_id = aws_subnet.test[0].id

@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSProxyTarget_instance(t *testing.T) {
@@ -24,13 +25,13 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbProxyTarget rds.DBProxyTarget
+	var dbProxyTarget types.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,12 +39,12 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_db_instance.test", "address"),
-					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_db_instance.test", "port"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, "aws_db_instance.test", names.AttrAddress),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_db_instance.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTargetARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "tracked_cluster_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "type", "RDS_INSTANCE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "RDS_INSTANCE"),
 				),
 			},
 			{
@@ -61,13 +62,13 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbProxyTarget rds.DBProxyTarget
+	var dbProxyTarget types.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,12 +76,12 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 				Config: testAccProxyTargetConfig_cluster(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
-					resource.TestCheckResourceAttr(resourceName, "endpoint", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "port", "aws_rds_cluster.test", "port"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpoint, ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_rds_cluster.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTargetARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "tracked_cluster_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "type", "TRACKED_CLUSTER"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "TRACKED_CLUSTER"),
 				),
 			},
 			{
@@ -98,13 +99,13 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dbProxyTarget rds.DBProxyTarget
+	var dbProxyTarget types.DBProxyTarget
 	resourceName := "aws_db_proxy_target.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,29 +123,21 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 
 func testAccCheckProxyTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_db_proxy_target" {
 				continue
 			}
 
-			dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
+			dbProxyName, targetGroupName, targetType, rdsResourceID, err := tfrds.ProxyTargetParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
 
-			dbProxyTarget, err := tfrds.FindDBProxyTarget(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+			_, err = tfrds.FindDBProxyTargetByFourPartKey(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceID)
 
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-				continue
-			}
-
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetGroupNotFoundFault) {
-				continue
-			}
-
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyTargetNotFoundFault) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -152,49 +145,40 @@ func testAccCheckProxyTargetDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			if dbProxyTarget != nil {
-				return fmt.Errorf("RDS DB Proxy Target (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("RDS DB Proxy Target %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckProxyTargetExists(ctx context.Context, n string, v *rds.DBProxyTarget) resource.TestCheckFunc {
+func testAccCheckProxyTargetExists(ctx context.Context, n string, v *types.DBProxyTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Proxy ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
-
-		dbProxyName, targetGroupName, targetType, rdsResourceId, err := tfrds.ProxyTargetParseID(rs.Primary.ID)
+		dbProxyName, targetGroupName, targetType, rdsResourceID, err := tfrds.ProxyTargetParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		dbProxyTarget, err := tfrds.FindDBProxyTarget(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceId)
+		output, err := tfrds.FindDBProxyTargetByFourPartKey(ctx, conn, dbProxyName, targetGroupName, targetType, rdsResourceID)
+
 		if err != nil {
 			return err
 		}
 
-		if dbProxyTarget == nil {
-			return fmt.Errorf("RDS DB Proxy Target (%s) not found", rs.Primary.ID)
-		}
-
-		*v = *dbProxyTarget
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccProxyTargetBaseConfig(rName string) string {
+func testAccProxyTargetConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_db_proxy" "test" {
   depends_on = [
@@ -232,8 +216,6 @@ resource "aws_db_subnet_group" "test" {
   }
 }
 
-# Secrets Manager setup
-
 resource "aws_secretsmanager_secret" "test" {
   name                    = %[1]q
   recovery_window_in_days = 0
@@ -244,8 +226,6 @@ resource "aws_secretsmanager_secret_version" "test" {
   secret_string = "{\"username\":\"db_user\",\"password\":\"db_user_password\"}"
 }
 
-# IAM setup
-
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.assume.json
@@ -254,6 +234,7 @@ resource "aws_iam_role" "test" {
 data "aws_iam_policy_document" "assume" {
   statement {
     actions = ["sts:AssumeRole"]
+
     principals {
       type        = "Service"
       identifiers = ["rds.amazonaws.com"]
@@ -282,8 +263,6 @@ data "aws_iam_policy_document" "test" {
   }
 }
 
-# VPC setup
-
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -303,7 +282,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccProxyTargetConfig_instance(rName string) string {
-	return acctest.ConfigCompose(testAccProxyTargetBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProxyTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
   preferred_versions = ["8.0.33", "8.0.32", "8.0.31"]
@@ -341,7 +320,7 @@ resource "aws_db_proxy_target" "test" {
 }
 
 func testAccProxyTargetConfig_cluster(rName string) string {
-	return acctest.ConfigCompose(testAccProxyTargetBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProxyTargetConfig_base(rName), fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine = "aurora-mysql"
 }

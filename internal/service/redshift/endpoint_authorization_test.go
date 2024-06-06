@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,10 +38,10 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
+					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", names.AttrAccountID),
 					acctest.CheckResourceAttrAccountID(resourceName, "grantor"),
 				),
 			},
@@ -48,7 +49,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_delete"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
 			},
 		},
 	})
@@ -65,7 +66,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,30 +74,30 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtFalse),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_delete"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
 			},
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtFalse),
 				),
 			},
 		},
@@ -114,7 +115,7 @@ func TestAccRedshiftEndpointAuthorization_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccRedshiftEndpointAuthorization_disappears_cluster(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,7 +167,7 @@ func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -196,7 +197,7 @@ func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		output, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
+		output, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

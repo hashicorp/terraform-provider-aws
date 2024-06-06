@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
@@ -25,15 +25,15 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitDescendantAccountsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "accounts.#", 0),
-					resource.TestCheckResourceAttr(newOU1DataSourceName, "accounts.#", "0"),
-					resource.TestCheckResourceAttr(newOU2DataSourceName, "accounts.#", "0"),
+					resource.TestCheckResourceAttr(newOU1DataSourceName, "accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(newOU2DataSourceName, "accounts.#", acctest.Ct0),
 				),
 			},
 		},

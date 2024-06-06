@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_codeguruprofiler_profiling_group
+```
+
+```release-note:new-data-source
+aws_codeguruprofiler_profiling_group
+```

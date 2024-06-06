@@ -9,51 +9,54 @@ package s3
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
-	s3types_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
-	s3iface_sdkv1 "github.com/aws/aws-sdk-go/service/s3/s3iface"
-	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
 
-// BucketListTags lists S3 bucket tags.
-// The identifier is the bucket name.
-func BucketListTags(ctx context.Context, conn s3iface_sdkv1.S3API, identifier string) (tftags.KeyValueTags, error) {
-	input := &s3_sdkv1.GetBucketTaggingInput{
-		Bucket: aws_sdkv1.String(identifier),
+func bucketCreateTags(ctx context.Context, conn *s3.Client, identifier string, tags []awstypes.Tag) error {
+	if len(tags) == 0 {
+		return nil
 	}
 
-	output, err := conn.GetBucketTaggingWithContext(ctx, input)
+	return bucketUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
+}
 
-	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
-	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
-	// and the AWS Go SDK has neither as a constant.
-	if tfawserr_sdkv1.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
+// bucketListTags lists S3 bucket tags.
+// The identifier is the bucket name.
+func bucketListTags(ctx context.Context, conn *s3.Client, identifier string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
+	input := &s3.GetBucketTaggingInput{
+		Bucket: aws.String(identifier),
+	}
+
+	output, err := conn.GetBucketTagging(ctx, input, optFns...)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented) {
 		return tftags.New(ctx, nil), nil
 	}
-
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagSet), nil
+	return keyValueTags(ctx, output.TagSet), nil
 }
 
-// BucketUpdateTags updates S3 bucket tags.
+// bucketUpdateTags updates S3 bucket tags.
 // The identifier is the bucket name.
-func BucketUpdateTags(ctx context.Context, conn s3iface_sdkv1.S3API, identifier string, oldTagsMap, newTagsMap any) error {
+func bucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*s3.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := BucketListTags(ctx, conn, identifier)
+	allTags, err := bucketListTags(ctx, conn, identifier, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("listing resource tags (%s): %w", identifier, err)
@@ -62,24 +65,24 @@ func BucketUpdateTags(ctx context.Context, conn s3iface_sdkv1.S3API, identifier 
 	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
 
 	if len(newTags)+len(ignoredTags) > 0 {
-		input := &s3_sdkv1.PutBucketTaggingInput{
-			Bucket: aws_sdkv1.String(identifier),
-			Tagging: &s3_sdkv1.Tagging{
+		input := &s3.PutBucketTaggingInput{
+			Bucket: aws.String(identifier),
+			Tagging: &awstypes.Tagging{
 				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
 
-		_, err := conn.PutBucketTaggingWithContext(ctx, input)
+		_, err := conn.PutBucketTagging(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("setting resource tags (%s): %w", identifier, err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
-		input := &s3_sdkv1.DeleteBucketTaggingInput{
-			Bucket: aws_sdkv1.String(identifier),
+		input := &s3.DeleteBucketTaggingInput{
+			Bucket: aws.String(identifier),
 		}
 
-		_, err := conn.DeleteBucketTaggingWithContext(ctx, input)
+		_, err := conn.DeleteBucketTagging(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("deleting resource tags (%s): %w", identifier, err)
@@ -89,16 +92,20 @@ func BucketUpdateTags(ctx context.Context, conn s3iface_sdkv1.S3API, identifier 
 	return nil
 }
 
-// ObjectListTags lists S3 object tags.
-func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key string) (tftags.KeyValueTags, error) {
-	input := &s3_sdkv2.GetObjectTaggingInput{
-		Bucket: aws_sdkv2.String(bucket),
-		Key:    aws_sdkv2.String(key),
+// objectListTags lists S3 object tags.
+func objectListTags(ctx context.Context, conn *s3.Client, bucket, key string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
+	input := &s3.GetObjectTaggingInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
 	}
 
-	output, err := conn.GetObjectTagging(ctx, input)
+	output, err := conn.GetObjectTagging(ctx, input, optFns...)
 
-	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeNoSuchTagSet, errCodeNoSuchTagSetError) {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet) {
+		return tftags.New(ctx, nil), nil
+	}
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return tftags.New(ctx, nil), nil
 	}
 
@@ -106,16 +113,16 @@ func ObjectListTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key stri
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTagsV2(ctx, output.TagSet), nil
+	return keyValueTags(ctx, output.TagSet), nil
 }
 
-// ObjectUpdateTags updates S3 object tags.
-func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key string, oldTagsMap, newTagsMap any) error {
+// objectUpdateTags updates S3 object tags.
+func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, oldTagsMap, newTagsMap any, optFns ...func(*s3.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := ObjectListTags(ctx, conn, bucket, key)
+	allTags, err := objectListTags(ctx, conn, bucket, key, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("listing resource tags (%s/%s): %w", bucket, key, err)
@@ -124,31 +131,91 @@ func ObjectUpdateTags(ctx context.Context, conn *s3_sdkv2.Client, bucket, key st
 	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
 
 	if len(newTags)+len(ignoredTags) > 0 {
-		input := &s3_sdkv2.PutObjectTaggingInput{
-			Bucket: aws_sdkv2.String(bucket),
-			Key:    aws_sdkv2.String(key),
-			Tagging: &s3types_sdkv2.Tagging{
-				TagSet: tagsV2(newTags.Merge(ignoredTags)),
+		input := &s3.PutObjectTaggingInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+			Tagging: &awstypes.Tagging{
+				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
 
-		_, err := conn.PutObjectTagging(ctx, input)
+		_, err := conn.PutObjectTagging(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("setting resource tags (%s/%s): %w", bucket, key, err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
-		input := &s3_sdkv2.DeleteObjectTaggingInput{
-			Bucket: aws_sdkv2.String(bucket),
-			Key:    aws_sdkv2.String(key),
+		input := &s3.DeleteObjectTaggingInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
 		}
 
-		_, err := conn.DeleteObjectTagging(ctx, input)
+		_, err := conn.DeleteObjectTagging(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("deleting resource tags (%s/%s): %w", bucket, key, err)
 		}
 	}
 
+	return nil
+}
+
+// ListTags lists s3 service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	var (
+		tags tftags.KeyValueTags
+		err  error
+	)
+	switch resourceType {
+	case "Bucket":
+		tags, err = bucketListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier)
+
+	case "Object", "ObjectCopy", "BucketObject":
+		var objectARN objectARN
+		objectARN, err = parseObjectARN(identifier)
+		if err != nil {
+			return err
+		}
+		tags, err = objectListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), objectARN.Bucket, objectARN.Key)
+
+	default:
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
+// UpdateTags updates s3 service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	switch resourceType {
+	case "Bucket":
+		return bucketUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier, oldTags, newTags)
+
+	case "Object", "ObjectCopy", "BucketObject":
+		objectARN, err := parseObjectARN(identifier)
+		if err != nil {
+			return err
+		}
+		return objectUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), objectARN.Bucket, objectARN.Key, oldTags, newTags)
+
+	default:
+		return nil
+	}
+}
+
+func getContextTags(ctx context.Context) tftags.KeyValueTags {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		return inContext.TagsIn.UnwrapOrDefault()
+	}
 	return nil
 }

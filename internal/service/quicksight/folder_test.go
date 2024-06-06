@@ -35,7 +35,7 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,9 +44,9 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
 					resource.TestCheckResourceAttr(resourceName, "folder_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "folder_type", quicksight.FolderTypeShared),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("folder/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("folder/%s", rId)),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccQuickSightFolder_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +95,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,9 +103,9 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_permissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeFolder"),
 				),
@@ -119,9 +119,9 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_permissionsUpdate(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:CreateFolder"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeFolder"),
@@ -142,7 +142,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.Ct0),
 				),
 			},
 		},
@@ -161,16 +161,16 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFolderConfig_tags1(rId, rName, "key1", "value1"),
+				Config: testAccFolderConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -179,20 +179,20 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFolderConfig_tags2(rId, rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFolderConfig_tags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccFolderConfig_tags1(rId, rName, "key2", "value2"),
+				Config: testAccFolderConfig_tags1(rId, rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -215,7 +215,7 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,7 +258,7 @@ func TestAccQuickSightFolder_parentFolderNested(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{

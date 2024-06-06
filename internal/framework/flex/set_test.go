@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 func TestExpandFrameworkStringSet(t *testing.T) {
@@ -68,7 +69,7 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 
 	type testCase struct {
 		input    types.Set
-		expected flex.Set[string]
+		expected itypes.Set[string]
 	}
 	tests := map[string]testCase{
 		"null": {
@@ -115,20 +116,23 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    []string
+		input    []custom
 		expected types.Set
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: []string{"GET", "HEAD"},
+			input: []custom{"GET", "HEAD"},
 			expected: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
 				types.StringValue("HEAD"),
 			}),
 		},
 		"zero elements": {
-			input:    []string{},
+			input:    []custom{},
 			expected: types.SetNull(types.StringType),
 		},
 		"nil array": {
@@ -154,20 +158,23 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 func TestFlattenFrameworkStringValueSetLegacy(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    []string
+		input    []custom
 		expected types.Set
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: []string{"GET", "HEAD"},
+			input: []custom{"GET", "HEAD"},
 			expected: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
 				types.StringValue("HEAD"),
 			}),
 		},
 		"zero elements": {
-			input:    []string{},
+			input:    []custom{},
 			expected: types.SetValueMust(types.StringType, []attr.Value{}),
 		},
 		"nil array": {

@@ -36,6 +36,11 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration      = aws_launch_configuration.foobar.name
   vpc_zone_identifier       = [aws_subnet.example1.id, aws_subnet.example2.id]
 
+  instance_maintenance_policy {
+    min_healthy_percentage = 90
+    max_healthy_percentage = 120
+  }
+
   initial_lifecycle_hook {
     name                 = "foobar"
     default_result       = "CONTINUE"
@@ -418,6 +423,7 @@ This resource supports the following arguments:
   a new Auto Scaling Group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 - `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
 - `health_check_type` - (Optional) "EC2" or "ELB". Controls how health checking is done.
+- `instance_maintenance_policy` - (Optional) If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined [below](#instance_maintenance_policy).
 - `desired_capacity` - (Optional) Number of Amazon EC2 instances that
   should be running in the group. (See also [Waiting for
   Capacity](#waiting-for-capacity) below.)
@@ -656,9 +662,12 @@ This configuration block supports the following:
     - `checkpoint_delay` - (Optional) Number of seconds to wait after a checkpoint. Defaults to `3600`.
     - `checkpoint_percentages` - (Optional) List of percentages for each checkpoint. Values must be unique and in ascending order. To replace all instances, the final number must be `100`.
     - `instance_warmup` - (Optional) Number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
+    - `max_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that can be in service and healthy, or pending, to support your workload when an instance refresh is in place, as a percentage of the desired capacity of the Auto Scaling group. Values must be between `100` and `200`, defaults to `100`.
     - `min_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
     - `skip_matching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
     - `auto_rollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launch_template` or `mixed_instances_policy`.
+    - `alarm_specification` - (Optional) Alarm Specification for Instance Refresh.
+        - `alarms` - (Required) List of Cloudwatch alarms. If any of these alarms goes into ALARM state, Instance Refresh is failed.
     - `scale_in_protected_instances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `Refresh`, `Ignore`, and `Wait`. Default is `Ignore`.
     - `standby_instances` - (Optional) Behavior when encountering instances in the `Standby` state in are found. Available behaviors are `Terminate`, `Ignore`, and `Wait`. Default is `Ignore`.
 - `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
@@ -679,6 +688,13 @@ This configuration block supports the following:
 - `max_group_prepared_capacity` - (Optional) Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
 - `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
 - `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
+
+### instance_maintenance_policy
+
+This configuration block supports the following:
+
+- `min_healthy_percentage` - (Required) Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+- `max_healthy_percentage` - (Required) Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
 
 ### traffic_source
 

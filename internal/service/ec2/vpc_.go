@@ -39,6 +39,7 @@ const (
 
 // @SDKResource("aws_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -62,7 +63,7 @@ func ResourceVPC() *schema.Resource {
 		// Keep in sync with aws_default_vpc's schema.
 		// See notes in default_vpc.go.
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +72,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"ipv6_ipam_pool_id"},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -126,7 +127,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
-				ConflictsWith: []string{"cidr_block"},
+				ConflictsWith: []string{names.AttrCIDRBlock},
 				RequiredWith:  []string{"ipv4_ipam_pool_id"},
 			},
 			"ipv6_association_id": {
@@ -165,7 +166,7 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -185,7 +186,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		TagSpecifications:           getTagSpecificationsInV2(ctx, types.ResourceTypeVpc),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -282,11 +283,11 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("cidr_block", vpc.CidrBlock)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames)
@@ -318,7 +319,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
-	if v, err := findVPCMainRouteTableV2(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
 		d.Set("default_route_table_id", nil)
 		d.Set("main_route_table_id", nil)
@@ -327,7 +328,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
-	if v, err := FindVPCDefaultSecurityGroupV2(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCDefaultSecurityGroupV2(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
 		d.Set("default_security_group_id", nil)
 	} else {
@@ -482,7 +483,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
 		const (
-			timeout = 20 * time.Minute // IPAM eventual consistency
+			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
 			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
@@ -519,12 +520,12 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 	}
 
 	// cidr_block can be set by a value returned from IPAM or explicitly in config.
-	if diff.Id() != "" && diff.HasChange("cidr_block") {
+	if diff.Id() != "" && diff.HasChange(names.AttrCIDRBlock) {
 		// If netmask is set then cidr_block is derived from IPAM, ignore changes.
 		if diff.Get("ipv4_netmask_length") != 0 {
-			return diff.Clear("cidr_block")
+			return diff.Clear(names.AttrCIDRBlock)
 		}
-		return diff.ForceNew("cidr_block")
+		return diff.ForceNew(names.AttrCIDRBlock)
 	}
 
 	return nil

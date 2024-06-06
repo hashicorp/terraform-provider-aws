@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_dnssec_config")
@@ -32,15 +33,15 @@ func ResourceDNSSECConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -57,7 +58,7 @@ func resourceDNSSECConfigCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateResolverDnssecConfigInput{
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		Validation: aws.String(route53resolver.ValidationEnable),
 	}
 
@@ -100,9 +101,9 @@ func resourceDNSSECConfigRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("resolver-dnssec-config/%s", resourceID),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
-	d.Set("resource_id", resourceID)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set(names.AttrResourceID, resourceID)
 	d.Set("validation_status", dnssecConfig.ValidationStatus)
 
 	return nil
@@ -113,7 +114,7 @@ func resourceDNSSECConfigDelete(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver DNSSEC Config: %s", d.Id())
 	_, err := conn.UpdateResolverDnssecConfigWithContext(ctx, &route53resolver.UpdateResolverDnssecConfigInput{
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		Validation: aws.String(route53resolver.ValidationDisable),
 	})
 

@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,15 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_session_context")
-func DataSourceSessionContext() *schema.Resource {
+// @SDKDataSource("aws_iam_session_context", name="Session Context")
+func dataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSessionContextRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -52,9 +53,9 @@ func DataSourceSessionContext() *schema.Resource {
 
 func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 
 	d.SetId(arn)
 
@@ -71,12 +72,12 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	var role *iam.Role
+	var role *awstypes.Role
 
 	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
-		role, err = FindRoleByName(ctx, conn, roleName)
+		role, err = findRoleByName(ctx, conn, roleName)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			return retry.RetryableError(err)
@@ -90,7 +91,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfresource.TimedOut(err) {
-		role, err = FindRoleByName(ctx, conn, roleName)
+		role, err = findRoleByName(ctx, conn, roleName)
 	}
 
 	if err != nil {

@@ -4,16 +4,13 @@
 package identitystore_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/identitystore"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIdentityStoreGroupDataSource_filterDisplayName(t *testing.T) {
@@ -25,19 +22,19 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayName(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", acctest.Ct0),
 				),
 			},
 		},
@@ -53,19 +50,19 @@ func TestAccIdentityStoreGroupDataSource_uniqueAttributeDisplayName(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_uniqueAttributeDisplayName(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", acctest.Ct0),
 				),
 			},
 		},
@@ -81,50 +78,23 @@ func TestAccIdentityStoreGroupDataSource_filterDisplayNameAndGroupID(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupDataSourceConfig_filterDisplayNameAndGroupID(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "group_id", resourceName, "group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "external_ids.#", acctest.Ct0),
 				),
 			},
 		},
 	})
-}
-
-func testAccPreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
-
-	var instances []*ssoadmin.InstanceMetadata
-	err := conn.ListInstancesPagesWithContext(ctx, &ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		instances = append(instances, page.Instances...)
-
-		return !lastPage
-	})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if len(instances) == 0 {
-		t.Skip("skipping acceptance testing: No SSO Instance found.")
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccGroupDataSourceConfig_base(name string) string {

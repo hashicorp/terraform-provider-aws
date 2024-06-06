@@ -5,29 +5,21 @@ package shield_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccShieldDRTAccessLogBucketAssociation_basic(t *testing.T) {
+func testAccDRTAccessLogBucketAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var drtaccesslogbucketassociation shield.DescribeDRTAccessOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_drt_access_log_bucket_association.test"
@@ -42,19 +34,22 @@ func TestAccShieldDRTAccessLogBucketAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
-				Check:  testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"role_arn_association_id"},
 			},
 		},
 	})
 }
 
-func TestAccShieldDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
+func testAccDRTAccessLogBucketAssociation_multiBucket(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var drtaccesslogbucketassociation shield.DescribeDRTAccessOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var buckets = []string{}
 	for i := 0; i < 2; i++ {
@@ -74,20 +69,16 @@ func TestAccShieldDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
 			{
 				Config: testAccDRTAccessLogBucketAssociationConfig_multibucket(rName, buckets),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1, &drtaccesslogbucketassociation),
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2, &drtaccesslogbucketassociation),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName1),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName2),
 				),
 			},
 		},
 	})
 }
 
-func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
+func testAccDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var drtaccesslogbucketassociation shield.DescribeDRTAccessOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_drt_access_log_bucket_association.test"
@@ -103,7 +94,7 @@ func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccDRTAccessLogBucketAssociationConfig_basic(rName, bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName, &drtaccesslogbucketassociation),
+					testAccCheckDRTAccessLogBucketAssociationExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceDRTAccessLogBucketAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -114,69 +105,50 @@ func TestAccShieldDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 
 func testAccCheckDRTAccessLogBucketAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_drt_access_log_bucket_association" {
 				continue
 			}
 
-			input := &shield.DescribeDRTAccessInput{}
-			resp, err := conn.DescribeDRTAccessWithContext(ctx, input)
+			_, err := tfshield.FindDRTLogBucketAssociation(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*shield.ResourceNotFoundException](err) {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
 				return err
 			}
-			if resp != nil {
-				if resp.LogBucketList != nil && len(resp.LogBucketList) > 0 {
-					for _, bucket := range resp.LogBucketList {
-						if *bucket == rs.Primary.Attributes["log_bucket"] {
-							return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, errors.New("bucket association not destroyed"))
-						}
-					}
-				}
-				return nil
-			}
 
-			return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Shield DRT Role ARN Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, name string, drtaccesslogbucketassociation *shield.DescribeDRTAccessOutput) resource.TestCheckFunc {
+func testAccCheckDRTAccessLogBucketAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessLogBucketAssociation, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessLogBucketAssociation, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-		resp, err := conn.DescribeDRTAccessWithContext(ctx, &shield.DescribeDRTAccessInput{})
-		if err != nil {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessLogBucketAssociation, rs.Primary.ID, err)
-		}
+		_, err := tfshield.FindDRTLogBucketAssociation(ctx, conn, rs.Primary.ID)
 
-		*drtaccesslogbucketassociation = *resp
-
-		return nil
+		return err
 	}
 }
 
 func testAccPreCheckLogBucket(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 	input := &shield.DescribeDRTAccessInput{}
-	_, err := conn.DescribeDRTAccessWithContext(ctx, input)
+	_, err := conn.DescribeDRTAccess(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

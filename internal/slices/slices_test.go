@@ -55,28 +55,54 @@ func TestRemoveAll(t *testing.T) {
 
 	type testCase struct {
 		input    []string
+		remove   []string
 		expected []string
 	}
 	tests := map[string]testCase{
 		"two occurrences": {
 			input:    []string{"one", "two", "one"},
+			remove:   []string{"one"},
 			expected: []string{"two"},
 		},
 		"one occurrences": {
 			input:    []string{"one", "two"},
+			remove:   []string{"one"},
 			expected: []string{"two"},
 		},
 		"only occurrence": {
 			input:    []string{"one"},
+			remove:   []string{"one"},
 			expected: []string{},
 		},
 		"no occurrences": {
 			input:    []string{"two", "three", "four"},
+			remove:   []string{"one"},
 			expected: []string{"two", "three", "four"},
 		},
 		"zero elements": {
 			input:    []string{},
+			remove:   []string{"one"},
 			expected: []string{},
+		},
+		"duplicate remove": {
+			input:    []string{"one", "two", "one"},
+			remove:   []string{"one", "one"},
+			expected: []string{"two"},
+		},
+		"remove all": {
+			input:    []string{"one", "two", "three", "two", "one"},
+			remove:   []string{"two", "one", "one", "three"},
+			expected: []string{},
+		},
+		"remove none": {
+			input:    []string{"two", "three", "four"},
+			remove:   []string{"six", "one"},
+			expected: []string{"two", "three", "four"},
+		},
+		"remove two": {
+			input:    []string{"one", "two", "three", "four", "five", "six"},
+			remove:   []string{"six", "one"},
+			expected: []string{"two", "three", "four", "five"},
 		},
 	}
 
@@ -85,7 +111,7 @@ func TestRemoveAll(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := RemoveAll(test.input, "one")
+			got := RemoveAll(test.input, test.remove...)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

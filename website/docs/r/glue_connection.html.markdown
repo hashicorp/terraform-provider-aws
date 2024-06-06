@@ -115,7 +115,7 @@ This resource supports the following arguments:
 
 * `catalog_id` – (Optional) The ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` – (Optional) A map of key-value pairs used as parameters for this connection.
-* `connection_type` – (Optional) The type of the connection. Supported are: `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, and `NETWORK`. Defaults to `JBDC`.
+* `connection_type` – (Optional) The type of the connection. Supported are: `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, and `NETWORK`. Defaults to `JDBC`.
 * `description` – (Optional) Description of the connection.
 * `match_criteria` – (Optional) A list of criteria that can be used in selecting this connection.
 * `name` – (Required) The name of the connection.

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_cluster_role_association")
@@ -47,7 +48,7 @@ func ResourceClusterRoleAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,7 +63,7 @@ func resourceClusterRoleAssociationCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbClusterID := d.Get("db_cluster_identifier").(string)
-	roleARN := d.Get("role_arn").(string)
+	roleARN := d.Get(names.AttrRoleARN).(string)
 	input := &rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(dbClusterID),
 		FeatureName:         aws.String(d.Get("feature_name").(string)),
@@ -121,7 +122,7 @@ func resourceClusterRoleAssociationRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("db_cluster_identifier", dbClusterID)
 	d.Set("feature_name", output.FeatureName)
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 
 	return diags
 }

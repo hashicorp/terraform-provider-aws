@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,7 +27,7 @@ func TestAccS3BucketAccelerateConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAccelerateConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,8 +35,8 @@ func TestAccS3BucketAccelerateConfiguration_basic(t *testing.T) {
 				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.BucketAccelerateStatusEnabled)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.BucketAccelerateStatusEnabled)),
 				),
 			},
 			{
@@ -54,7 +55,7 @@ func TestAccS3BucketAccelerateConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAccelerateConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,16 +63,16 @@ func TestAccS3BucketAccelerateConfiguration_update(t *testing.T) {
 				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.BucketAccelerateStatusEnabled)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.BucketAccelerateStatusEnabled)),
 				),
 			},
 			{
 				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, string(types.BucketAccelerateStatusSuspended)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.BucketAccelerateStatusSuspended)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.BucketAccelerateStatusSuspended)),
 				),
 			},
 			{
@@ -90,7 +91,7 @@ func TestAccS3BucketAccelerateConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAccelerateConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,7 +115,7 @@ func TestAccS3BucketAccelerateConfiguration_migrate_noChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAccelerateConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,8 +130,8 @@ func TestAccS3BucketAccelerateConfiguration_migrate_noChange(t *testing.T) {
 				Config: testAccBucketAccelerateConfigurationConfig_basic(rName, string(types.BucketAccelerateStatusEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.BucketAccelerateStatusEnabled)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.BucketAccelerateStatusEnabled)),
 				),
 			},
 		},
@@ -145,7 +146,7 @@ func TestAccS3BucketAccelerateConfiguration_migrate_withChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAccelerateConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,9 +161,27 @@ func TestAccS3BucketAccelerateConfiguration_migrate_withChange(t *testing.T) {
 				Config: testAccBucketAccelerateConfigurationConfig_basic(rName, string(types.BucketAccelerateStatusSuspended)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.BucketAccelerateStatusSuspended)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.BucketAccelerateStatusSuspended)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketAccelerateConfiguration_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketAccelerateConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketAccelerateConfigurationConfig_directoryBucket(bucketName, string(types.BucketAccelerateStatusEnabled)),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -230,4 +249,21 @@ resource "aws_s3_bucket_accelerate_configuration" "test" {
   status = %[2]q
 }
 `, bucketName, status)
+}
+
+func testAccBucketAccelerateConfigurationConfig_directoryBucket(bucketName, status string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_accelerate_configuration" "test" {
+  bucket = aws_s3_directory_bucket.test.id
+  status = %[1]q
+}
+`, status))
 }

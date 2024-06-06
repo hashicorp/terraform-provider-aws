@@ -55,6 +55,8 @@ func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	certName := d.Get("certificate_name").(string)
 	req := lightsail.AttachLoadBalancerTlsCertificateInput{
@@ -65,7 +67,7 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 	out, err := conn.AttachLoadBalancerTlsCertificate(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeAttachLoadBalancerTlsCertificate), ResLoadBalancerCertificateAttachment, certName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeAttachLoadBalancerTlsCertificate), ResLoadBalancerCertificateAttachment, certName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, certName)
@@ -82,10 +84,12 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 
 	d.SetId(strings.Join(vars, ","))
 
-	return resourceLoadBalancerCertificateAttachmentRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerCertificateAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerCertificateAttachmentById(ctx, conn, d.Id())
@@ -93,22 +97,22 @@ func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schem
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificateAttachment, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificateAttachment, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificateAttachment, d.Id(), err)
 	}
 
 	d.Set("certificate_name", out)
 	d.Set("lb_name", expandLoadBalancerNameFromId(d.Id()))
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerCertificateAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[WARN] Cannot destroy Lightsail Load Balancer Certificate Attachment. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
+	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
 }
 
 func FindLoadBalancerCertificateAttachmentById(ctx context.Context, conn *lightsail.Client, id string) (*string, error) {

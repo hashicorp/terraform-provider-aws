@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDirectConnectGateway_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,7 +36,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
 				),
 			},
 			{
@@ -56,7 +57,7 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +90,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 				Config: testAccGatewayConfig_associationMultiVPNSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
 				),
 			},
 			{
@@ -111,7 +112,7 @@ func TestAccDirectConnectGateway_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,14 +120,14 @@ func TestAccDirectConnectGateway_update(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName1, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
 				Config: testAccGatewayConfig_basic(rName2, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

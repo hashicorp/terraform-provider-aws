@@ -5,7 +5,6 @@ package kafkaconnect
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,8 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_mskconnect_worker_configuration")
@@ -29,11 +31,11 @@ func ResourceWorkerConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -42,7 +44,7 @@ func ResourceWorkerConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,15 +67,17 @@ func ResourceWorkerConfiguration() *schema.Resource {
 }
 
 func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kafkaconnect.CreateWorkerConfigurationInput{
 		Name:                  aws.String(name),
-		PropertiesFileContent: aws.String(verify.Base64Encode([]byte(d.Get("properties_file_content").(string)))),
+		PropertiesFileContent: flex.StringValueToBase64String(d.Get("properties_file_content").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -81,15 +85,17 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.CreateWorkerConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MSK Connect Worker Configuration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Connect Worker Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.WorkerConfigurationArn))
 
-	return resourceWorkerConfigurationRead(ctx, d, meta)
+	return append(diags, resourceWorkerConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	config, err := FindWorkerConfigurationByARN(ctx, conn, d.Id())
@@ -97,16 +103,16 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Worker Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", config.WorkerConfigurationArn)
-	d.Set("description", config.Description)
-	d.Set("name", config.Name)
+	d.Set(names.AttrARN, config.WorkerConfigurationArn)
+	d.Set(names.AttrDescription, config.Description)
+	d.Set(names.AttrName, config.Name)
 
 	if config.LatestRevision != nil {
 		d.Set("latest_revision", config.LatestRevision.Revision)
@@ -116,15 +122,14 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 		d.Set("properties_file_content", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func decodePropertiesFileContent(content string) string {
-	result, err := base64.StdEncoding.DecodeString(content)
-
+	v, err := itypes.Base64Decode(content)
 	if err != nil {
 		return content
 	}
 
-	return string(result)
+	return string(v)
 }

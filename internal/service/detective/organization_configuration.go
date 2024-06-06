@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -42,6 +43,8 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphARN := d.Get("graph_arn").(string)
@@ -53,17 +56,19 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Detective Organization Configuration (%s): %s", graphARN, err)
+		return sdkdiag.AppendErrorf(diags, "updating Detective Organization Configuration (%s): %s", graphARN, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(graphARN)
 	}
 
-	return resourceOrganizationConfigurationRead(ctx, d, meta)
+	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	input := &detective.DescribeOrganizationConfigurationInput{
@@ -73,11 +78,11 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("reading Detective Organization Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Detective Organization Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("graph_arn", d.Id())
 
-	return nil
+	return diags
 }

@@ -1506,8 +1506,8 @@ func Keys(inputMap cty.Value) (cty.Value, error) {
 }
 
 // Lookup performs a dynamic lookup into a map.
-// There are two required arguments, map and key, plus an optional default,
-// which is a value to return if no key is found in map.
+// There are three required arguments, inputMap and key, plus a defaultValue,
+// which is a value to return if the given key is not found in the inputMap.
 func Lookup(inputMap, key, defaultValue cty.Value) (cty.Value, error) {
 	return LookupFunc.Call([]cty.Value{inputMap, key, defaultValue})
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -36,7 +37,7 @@ func sweepApplications(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &kinesisanalytics.ListApplicationsInput{}
-	err = ListApplicationsPages(ctx, conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
+	err = listApplicationsPages(ctx, conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -62,7 +63,7 @@ func sweepApplications(region string) error {
 			d := r.Data(nil)
 			d.SetId(arn)
 			d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
-			d.Set("name", name)
+			d.Set(names.AttrName, name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

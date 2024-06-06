@@ -162,6 +162,28 @@ resource "aws_elasticache_replication_group" "primary" {
 }
 ```
 
+### Redis AUTH and In-Transit Encryption Enabled
+
+```terraform
+resource "aws_elasticache_replication_group" "example" {
+  replication_group_id = "example"
+  description          = "example with authentication"
+  node_type            = "cache.t2.micro"
+  num_cache_clusters   = 1
+  port                 = 6379
+  subnet_group_name    = aws_elasticache_subnet_group.example.name
+  security_group_ids   = [aws_security_group.example.id]
+  parameter_group_name = "default.redis5.0"
+  engine_version       = "5.0.6"
+
+  transit_encryption_enabled = true
+  auth_token                 = "abcdefgh1234567890"
+  auth_token_update_strategy = "ROTATE"
+}
+```
+
+~> When adding a new `auth_token` to a previously passwordless replication group, using the `ROTATE` update strategy will result in support for **both** the new token and passwordless authentication. To immediately require authorization when adding the initial token, use the `SET` strategy instead. See the [Authenticating with the Redis AUTH command](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html) guide for additional details.
+
 ## Argument Reference
 
 The following arguments are required:
@@ -174,6 +196,7 @@ The following arguments are optional:
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
+* `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine type `"redis"` and if the engine version is 6 or higher.
   Defaults to `true`.
@@ -214,6 +237,12 @@ The following arguments are optional:
 * `subnet_group_name` - (Optional) Name of the cache subnet group to be used for the replication group.
 * `tags` - (Optional) Map of tags to assign to the resource. Adding tags to this resource will add or overwrite any existing tags on the clusters in the replication group and not to the group itself. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
+  Changing this argument with an `engine_version` < `7.0.5` will force a replacement.
+  Engine versions prior to `7.0.5` only allow this transit encryption to be configured during creation of the replication group.
+* `transit_encryption_mode` - (Optional) A setting that enables clients to migrate to in-transit encryption with no downtime.
+  Valid values are `preferred` and `required`.
+  When enabling encryption on an existing replication group, this must first be set to `preferred` before setting it to `required` in a subsequent apply.
+  See the `TransitEncryptionMode` field in the [`CreateReplicationGroup` API documentation](https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_CreateReplicationGroup.html) for additional details.
 * `user_group_ids` - (Optional) User Group ID to associate with the replication group. Only a maximum of one (1) user group ID is valid. **NOTE:** This argument _is_ a set because the AWS specification allows for multiple IDs. However, in practice, AWS only allows a maximum size of one.
 
 ### Log Delivery Configuration
@@ -244,7 +273,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `delete` - (Default `40m`)
+* `delete` - (Default `45m`)
 * `update` - (Default `40m`)
 
 ## Import

@@ -47,11 +47,11 @@ func ResourceMultiplex() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -88,7 +88,7 @@ func ResourceMultiplex() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -110,12 +110,14 @@ const (
 )
 
 func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateMultiplexInput{
 		RequestId:         aws.String(id.UniqueId()),
-		Name:              aws.String(d.Get("name").(string)),
-		AvailabilityZones: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
+		Name:              aws.String(d.Get(names.AttrName).(string)),
+		AvailabilityZones: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -125,29 +127,31 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	out, err := conn.CreateMultiplex(ctx, in)
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Multiplex == nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Multiplex.Id))
 
 	if _, err := waitMultiplexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameMultiplex, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForCreation, ResNameMultiplex, d.Id(), err)
 	}
 
 	if d.Get("start_multiplex").(bool) {
 		if err := startMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Id(), err)
 		}
 	}
 
-	return resourceMultiplexRead(ctx, d, meta)
+	return append(diags, resourceMultiplexRead(ctx, d, meta)...)
 }
 
 func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindMultiplexByID(ctx, conn, d.Id())
@@ -155,34 +159,36 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive Multiplex (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameMultiplex, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameMultiplex, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("availability_zones", out.AvailabilityZones)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrAvailabilityZones, out.AvailabilityZones)
+	d.Set(names.AttrName, out.Name)
 
 	if err := d.Set("multiplex_settings", flattenMultiplexSettings(out.MultiplexSettings)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameMultiplex, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameMultiplex, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "start_multiplex") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_multiplex") {
 		in := &medialive.UpdateMultiplexInput{
 			MultiplexId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			in.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			in.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 		if d.HasChange("multiplex_settings") {
 			in.MultiplexSettings = expandMultiplexSettings(d.Get("multiplex_settings").([]interface{}))
@@ -191,38 +197,40 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[DEBUG] Updating MediaLive Multiplex (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateMultiplex(ctx, in)
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
 		}
 
 		if _, err := waitMultiplexUpdated(ctx, conn, aws.ToString(out.Multiplex.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameMultiplex, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForUpdate, ResNameMultiplex, d.Id(), err)
 		}
 	}
 
 	if d.HasChange("start_multiplex") {
 		out, err := FindMultiplexByID(ctx, conn, d.Id())
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
 		}
 		if d.Get("start_multiplex").(bool) {
 			if out.State != types.MultiplexStateRunning {
 				if err := startMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
+					return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
 				}
 			}
 		} else {
 			if out.State == types.MultiplexStateRunning {
 				if err := stopMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
+					return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceMultiplexRead(ctx, d, meta)
+	return append(diags, resourceMultiplexRead(ctx, d, meta)...)
 }
 
 func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Multiplex %s", d.Id())
@@ -230,7 +238,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := FindMultiplexByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -239,7 +247,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	if out.State == types.MultiplexStateRunning {
 		if err := stopMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 		}
 	}
 
@@ -250,17 +258,17 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 	}
 
 	if _, err := waitMultiplexDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForDeletion, ResNameMultiplex, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForDeletion, ResNameMultiplex, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitMultiplexCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {

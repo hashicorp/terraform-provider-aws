@@ -11,7 +11,15 @@ import (
 )
 
 func Validate[T Valueser[T]]() schema.SchemaValidateDiagFunc {
-	return validation.ToDiagFunc(validation.StringInSlice(Values[T](), false))
+	return validate[T](false)
+}
+
+func ValidateIgnoreCase[T Valueser[T]]() schema.SchemaValidateDiagFunc {
+	return validate[T](true)
+}
+
+func validate[T Valueser[T]](ignoreCase bool) schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice(Values[T](), ignoreCase))
 }
 
 // TODO Move to internal/framework/validators or replace with custom types.

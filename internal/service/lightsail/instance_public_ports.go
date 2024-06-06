@@ -6,13 +6,13 @@ package lightsail
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_instance_public_ports")
@@ -77,7 +78,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -162,8 +163,7 @@ func resourceInstancePublicPortsRead(ctx context.Context, d *schema.ResourceData
 func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-
-	var err *multierror.Error
+	var errs []error
 
 	var portInfos []types.PortInfo
 	if v, ok := d.GetOk("port_info"); ok && v.(*schema.Set).Len() > 0 {
@@ -177,11 +177,11 @@ func resourceInstancePublicPortsDelete(ctx context.Context, d *schema.ResourceDa
 		})
 
 		if portError != nil {
-			err = multierror.Append(err, portError)
+			errs = append(errs, portError)
 		}
 	}
 
-	if err != nil {
+	if err := errors.Join(errs...); err != nil {
 		return sdkdiag.AppendErrorf(diags, "unable to close public ports for instance %s: %s", d.Get("instance_name").(string), err)
 	}
 
@@ -196,7 +196,7 @@ func expandPortInfo(tfMap map[string]interface{}) types.PortInfo {
 	apiObject := types.PortInfo{
 		FromPort: int32(tfMap["from_port"].(int)),
 		ToPort:   int32(tfMap["to_port"].(int)),
-		Protocol: types.NetworkProtocol(tfMap["protocol"].(string)),
+		Protocol: types.NetworkProtocol(tfMap[names.AttrProtocol].(string)),
 	}
 
 	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
@@ -245,7 +245,7 @@ func flattenInstancePortState(apiObject types.InstancePortState) map[string]inte
 
 	tfMap["from_port"] = int(apiObject.FromPort)
 	tfMap["to_port"] = int(apiObject.ToPort)
-	tfMap["protocol"] = string(apiObject.Protocol)
+	tfMap[names.AttrProtocol] = string(apiObject.Protocol)
 
 	if v := apiObject.Cidrs; v != nil {
 		tfMap["cidrs"] = v

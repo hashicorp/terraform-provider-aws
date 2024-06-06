@@ -5,6 +5,8 @@ package redshiftserverless
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	redshiftserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -20,22 +22,30 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newCustomDomainAssociationResource,
+			Name:    "Custom Domain Association",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCredentials,
+			Factory:  dataSourceCredentials,
 			TypeName: "aws_redshiftserverless_credentials",
+			Name:     "Credentials",
 		},
 		{
-			Factory:  DataSourceNamespace,
+			Factory:  dataSourceNamespace,
 			TypeName: "aws_redshiftserverless_namespace",
+			Name:     "Namespace",
 		},
 		{
-			Factory:  DataSourceWorkgroup,
+			Factory:  dataSourceWorkgroup,
 			TypeName: "aws_redshiftserverless_workgroup",
+			Name:     "Workgroup",
 		},
 	}
 }
@@ -43,35 +53,39 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceEndpointAccess,
+			Factory:  resourceEndpointAccess,
 			TypeName: "aws_redshiftserverless_endpoint_access",
+			Name:     "Endpoint Access",
 		},
 		{
-			Factory:  ResourceNamespace,
+			Factory:  resourceNamespace,
 			TypeName: "aws_redshiftserverless_namespace",
 			Name:     "Namespace",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceResourcePolicy,
+			Factory:  resourceResourcePolicy,
 			TypeName: "aws_redshiftserverless_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
-			Factory:  ResourceSnapshot,
+			Factory:  resourceSnapshot,
 			TypeName: "aws_redshiftserverless_snapshot",
+			Name:     "Snapshot",
 		},
 		{
-			Factory:  ResourceUsageLimit,
+			Factory:  resourceUsageLimit,
 			TypeName: "aws_redshiftserverless_usage_limit",
+			Name:     "Usage Limit",
 		},
 		{
-			Factory:  ResourceWorkgroup,
+			Factory:  resourceWorkgroup,
 			TypeName: "aws_redshiftserverless_workgroup",
 			Name:     "Workgroup",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -83,9 +97,20 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*redshiftserverless_sdkv1.RedshiftServerless, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return redshiftserverless_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return redshiftserverless_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*redshiftserverless_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return redshiftserverless_sdkv2.NewFromConfig(cfg, func(o *redshiftserverless_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

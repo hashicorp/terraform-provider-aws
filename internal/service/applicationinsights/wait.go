@@ -20,7 +20,7 @@ const (
 func waitApplicationCreated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING"},
-		Target:  []string{"NOT_CONFIGURED"},
+		Target:  []string{"NOT_CONFIGURED", "ACTIVE"},
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: ApplicationCreatedTimeout,
 	}

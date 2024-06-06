@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,6 +42,8 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphARN := d.Get("graph_arn").(string)
@@ -51,15 +54,17 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.AcceptInvitationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("accepting Detective Invitation (%s): %s", graphARN, err)
+		return sdkdiag.AppendErrorf(diags, "accepting Detective Invitation (%s): %s", graphARN, err)
 	}
 
 	d.SetId(graphARN)
 
-	return resourceInvitationAccepterRead(ctx, d, meta)
+	return append(diags, resourceInvitationAccepterRead(ctx, d, meta)...)
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	member, err := FindInvitationByGraphARN(ctx, conn, d.Id())
@@ -67,19 +72,21 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Detective Invitation Accepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Detective Invitation Accepter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Detective Invitation Accepter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("graph_arn", member.GraphArn)
 
-	return nil
+	return diags
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Invitation Accepter: %s", d.Id())
@@ -88,14 +95,14 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("disassociating Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disassociating Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, graphARN string) (*detective.MemberDetail, error) {

@@ -10,14 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -28,7 +29,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_windows_file_system", name="Location FSx for Windows File Server File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
+func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxWindowsFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxWindowsFileSystemRead,
@@ -53,15 +54,15 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -73,7 +74,7 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -100,7 +101,7 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,17 +119,17 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 
 func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationFsxWindowsInput{
 		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
-		Password:          aws.String(d.Get("password").(string)),
-		SecurityGroupArns: flex.ExpandStringSet(d.Get("security_group_arns").(*schema.Set)),
+		Password:          aws.String(d.Get(names.AttrPassword).(string)),
+		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
 		User:              aws.String(d.Get("user").(string)),
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
+	if v, ok := d.GetOk(names.AttrDomain); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -136,22 +137,22 @@ func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.R
 		input.Subdirectory = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateLocationFsxWindowsWithContext(ctx, input)
+	output, err := conn.CreateLocationFsxWindows(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Location FSx for Windows File Server File System: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.LocationArn))
+	d.SetId(aws.ToString(output.LocationArn))
 
 	return append(diags, resourceLocationFSxWindowsFileSystemRead(ctx, d, meta)...)
 }
 
 func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	output, err := FindLocationFSxWindowsByARN(ctx, conn, d.Id())
+	output, err := findLocationFSxWindowsByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for Windows File Server File System (%s) not found, removing from state", d.Id())
@@ -163,19 +164,19 @@ func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location FSx for Windows File Server File System (%s): %s", d.Id(), err)
 	}
 
-	uri := aws.StringValue(output.LocationUri)
+	uri := aws.ToString(output.LocationUri)
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", output.LocationArn)
-	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrARN, output.LocationArn)
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrDomain, output.Domain)
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
-	d.Set("security_group_arns", aws.StringValueSlice(output.SecurityGroupArns))
+	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 	d.Set("user", output.User)
 
 	return diags
@@ -191,14 +192,14 @@ func resourceLocationFSxWindowsFileSystemUpdate(ctx context.Context, d *schema.R
 
 func resourceLocationFSxWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DataSync Location FSx for Windows File Server File System: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
+	_, err := conn.DeleteLocation(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return diags
 	}
 
@@ -209,14 +210,14 @@ func resourceLocationFSxWindowsFileSystemDelete(ctx context.Context, d *schema.R
 	return diags
 }
 
-func FindLocationFSxWindowsByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxWindowsOutput, error) {
+func findLocationFSxWindowsByARN(ctx context.Context, conn *datasync.Client, arn string) (*datasync.DescribeLocationFsxWindowsOutput, error) {
 	input := &datasync.DescribeLocationFsxWindowsInput{
 		LocationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeLocationFsxWindowsWithContext(ctx, input)
+	output, err := conn.DescribeLocationFsxWindows(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

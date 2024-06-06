@@ -6,32 +6,39 @@ package logs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_log_group")
+// @Tags(identifierAttribute="arn")
 func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			"log_group_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -39,37 +46,29 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
 
-	name := d.Get("name").(string)
-	logGroup, err := FindLogGroupByName(ctx, conn, name)
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+
+	name := d.Get(names.AttrName).(string)
+	logGroup, err := findLogGroupByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Log Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
-	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(logGroup.Arn)))
-	d.Set("creation_time", logGroup.CreationTime)
-	d.Set("kms_key_id", logGroup.KmsKeyId)
+	d.Set(names.AttrARN, TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
+	d.Set(names.AttrCreationTime, logGroup.CreationTime)
+	d.Set(names.AttrKMSKeyID, logGroup.KmsKeyId)
+	d.Set("log_group_class", logGroup.LogGroupClass)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 
-	tags, err := listLogGroupTags(ctx, conn, name)
-
-	if err != nil {
-		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", name, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	return nil
+	return diags
 }

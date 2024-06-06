@@ -19,10 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_policy")
-func ResourceBucketPolicy() *schema.Resource {
+// @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
+func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyPut,
 		ReadWithoutTimeout:   resourceBucketPolicyRead,
@@ -34,12 +35,12 @@ func ResourceBucketPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -58,18 +59,21 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketPolicyInput{
 		Bucket: aws.String(bucket),
 		Policy: aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketPolicy(ctx, input)
 	}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 
@@ -80,7 +84,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findBucketPolicy(ctx, conn, d.Id())
 		})
 
@@ -95,6 +99,9 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	if isDirectoryBucket(d.Id()) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
 	policy, err := findBucketPolicy(ctx, conn, d.Id())
 
@@ -108,13 +115,13 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	policy, err = verify.PolicyToSet(d.Get("policy").(string), policy)
+	policy, err = verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("bucket", d.Id())
-	d.Set("policy", policy)
+	d.Set(names.AttrBucket, d.Id())
+	d.Set(names.AttrPolicy, policy)
 
 	return diags
 }
@@ -122,6 +129,9 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	if isDirectoryBucket(d.Id()) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Policy: %s", d.Id())
 	_, err := conn.DeleteBucketPolicy(ctx, &s3.DeleteBucketPolicyInput{
@@ -136,7 +146,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findBucketPolicy(ctx, conn, d.Id())
 	})
 

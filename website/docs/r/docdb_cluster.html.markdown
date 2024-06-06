@@ -57,7 +57,7 @@ This argument supports the following arguments:
 * `enabled_cloudwatch_logs_exports` - (Optional) List of log types to export to cloudwatch. If omitted, no logs will be exported.
    The following log types are supported: `audit`, `profiler`.
 * `engine_version` - (Optional) The database engine version. Updating this argument results in an outage.
-* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `docdb`. Valid Values: `docdb`
+* `engine` - (Optional) The name of the database engine to be used for this DB cluster. Defaults to `docdb`. Valid values: `docdb`.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
     when this DB cluster is deleted. If omitted, no final snapshot will be
     made.
@@ -73,6 +73,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
 * `skip_final_snapshot` - (Optional) Determines whether a final DB snapshot is created before the DB cluster is deleted. If true is specified, no DB snapshot is created. If false is specified, a DB snapshot is created before the DB cluster is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
 * `snapshot_identifier` - (Optional) Specifies whether or not to create this cluster from a snapshot. You can use either the name or ARN when specifying a DB cluster snapshot, or the ARN when specifying a DB snapshot. Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 * `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false`.
+* `storage_type` - (Optional) The storage type to associate with the DB cluster. Valid values: `standard`, `iopt1`.
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate
   with the Cluster

@@ -3,11 +3,13 @@ subcategory: "Shield"
 layout: "aws"
 page_title: "AWS: aws_shield_drt_access_role_arn_association"
 description: |-
-  Terraform resource for managing an AWS Shield DRT Access Role Arn Association.
+  Terraform resource for managing an AWS Shield DRT Access Role ARN Association.
 ---
+
 # Resource: aws_shield_drt_access_role_arn_association
 
-Authorizes the Shield Response Team (SRT) using the specified role, to access your AWS account to assist with DDoS attack mitigation during potential attacks. For more information see [Configure AWS SRT Support](https://docs.aws.amazon.com/waf/latest/developerguide/authorize-srt.html)
+Authorizes the Shield Response Team (SRT) using the specified role, to access your AWS account to assist with DDoS attack mitigation during potential attacks.
+For more information see [Configure AWS SRT Support](https://docs.aws.amazon.com/waf/latest/developerguide/authorize-srt.html)
 
 ## Example Usage
 
@@ -50,3 +52,28 @@ The following arguments are required:
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Shield DRT access role ARN association using the AWS account ID. For example:
+
+```terraform
+import {
+  to = aws_shield_drt_access_role_arn_association.example
+  id = "123456789012"
+}
+```
+
+Using `terraform import`, import Shield DRT access role ARN association using the AWS account ID. For example:
+
+```console
+% terraform import aws_shield_drt_access_role_arn_association.example 123456789012
+```

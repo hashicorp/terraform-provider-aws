@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_finspace_kx_cluster: Add `database.dataview_name`, `scaling_group_configuration`, and `tickerplant_log_configuration` arguments.
+```
+```release-note:enhancement
+resource/aws_finspace_kx_cluster: The `capacity_configuration` argument is now optional.
+```

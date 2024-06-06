@@ -675,8 +675,8 @@ class MyConvertedCode extends TerraformStack {
 
 -> **Note:** In order to be able to have your AWS Lambda function or
    SNS topic invoked by an EventBridge rule, you must set up the right permissions
-   using [`awsLambdaPermission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`awsSnsTopicPolicy`](/docs/providers/aws/r/sns_topic_policy.html).
+   using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
    More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
 
 The following arguments are required:
@@ -691,6 +691,7 @@ The following arguments are optional:
 * `ecsTarget` - (Optional) Parameters used when you are using the rule to invoke Amazon ECS Task. Documented below. A maximum of 1 are allowed.
 * `eventBusName` - (Optional) The name or ARN of the event bus to associate with the rule.
   If you omit this, the `default` event bus is used.
+* `forceDestroy` - (Optional) Used to delete managed rules created by AWS. Defaults to `false`.
 * `httpTarget` - (Optional) Parameters used when you are using the rule to invoke an API Gateway REST endpoint. Documented below. A maximum of 1 is allowed.
 * `input` - (Optional) Valid JSON text passed to the target. Conflicts with `inputPath` and `inputTransformer`.
 * `inputPath` - (Optional) The value of the [JSONPath](http://goessner.net/articles/JsonPath/) that is used for extracting part of the matched event when passing it to the target. Conflicts with `input` and `inputTransformer`.
@@ -728,19 +729,19 @@ The following arguments are optional:
 * `enableEcsManagedTags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the task.
 * `enableExecuteCommand` - (Optional) Whether or not to enable the execute command functionality for the containers in this task. If true, this enables execute command functionality on all containers in the task.
 * `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
-* `launchType` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `ec2`, `external`, or `fargate`.
-* `networkConfiguration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if `launchType` is `fargate` because the awsvpc mode is required for Fargate tasks.
+* `launchType` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `EC2`, `EXTERNAL`, or `FARGATE`.
+* `networkConfiguration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if `launchType` is `FARGATE` because the awsvpc mode is required for Fargate tasks.
 * `orderedPlacementStrategy` - (Optional) An array of placement strategy objects to use for the task. You can specify a maximum of five strategy rules per task.
 * `placementConstraint` - (Optional) An array of placement constraint objects to use for the task. You can specify up to 10 constraints per task (including constraints in the task definition and those specified at runtime). See Below.
-* `platformVersion` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `110`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
-* `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `taskDefinition`.
+* `platformVersion` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
+* `propagateTags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `TASK_DEFINITION`.
 * `taskCount` - (Optional) The number of tasks to create based on the TaskDefinition. Defaults to `1`.
 * `tags` - (Optional) A map of tags to assign to ecs resources.
 
 ### http_target
 
 * `headerParameters` - (Optional) Enables you to specify HTTP headers to add to the request.
-* `pathParameterValues` - (Optional) The list of values that correspond sequentially to any path variables in your endpoint ARN (for example `arn:aws:executeApi:usEast1:123456:myapi/*/post/pets/*`).
+* `pathParameterValues` - (Optional) The list of values that correspond sequentially to any path variables in your endpoint ARN (for example `arn:aws:execute-api:us-east-1:123456:myapi/*/POST/pets/*`).
 * `queryStringParameters` - (Optional) Represents keys/values of query string parameters that are appended to the invoked endpoint.
 
 ### input_transformer
@@ -766,7 +767,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 ### ordered_placement_strategy
 
 * `type` - (Required) Type of placement strategy. The only valid values at this time are `binpack`, `random` and `spread`.
-* `field` - (Optional) The field to apply the placement strategy against. For the `spread` placement strategy, valid values are `instanceId` (or `host`, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as `attribute:ecsAvailabilityZone`. For the `binpack` placement strategy, valid values are `cpu` and `memory`. For the `random` placement strategy, this field is not used. For more information, see [Amazon ECS task placement strategies](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html).
+* `field` - (Optional) The field to apply the placement strategy against. For the `spread` placement strategy, valid values are `instanceId` (or `host`, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as `attribute:ecs.availability-zone`. For the `binpack` placement strategy, valid values are `cpu` and `memory`. For the `random` placement strategy, this field is not used. For more information, see [Amazon ECS task placement strategies](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html).
 
 ### placement_constraint
 
@@ -789,8 +790,8 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 ### run_command_targets
 
-* `key` - (Required) Can be either `tag:tagKey` or `instanceIds`.
-* `values` - (Required) If Key is `tag:tagKey`, Values is a list of tag values. If Key is `instanceIds`, Values is a list of Amazon EC2 instance IDs.
+* `key` - (Required) Can be either `tag:tag-key` or `InstanceIds`.
+* `values` - (Required) If Key is `tag:tag-key`, Values is a list of tag values. If Key is `InstanceIds`, Values is a list of Amazon EC2 instance IDs.
 
 ### sqs_target
 
@@ -811,24 +812,34 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `eventBusName/ruleName/targetId` (if you omit `eventBusName`, the `default` event bus will be used). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
  ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CloudwatchEventTarget } from "./.gen/providers/aws/cloudwatch-event-target";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CloudwatchEventTarget.generateConfigForImport(
+      this,
+      "testEventTarget",
+      "rule-name/target-id"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import EventBridge Targets using `eventBusName/ruleName/targetId` (if you omit `eventBusName`, the `default` event bus will be used). For example:
+Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `eventBusName`, the `default` event bus will be used). For example:
 
  ```console
 % terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-164c7e04d13a473ab9a0bbaa30d85030d052da19096a3497304d82fd1d72d513 -->
+<!-- cache-key: cdktf-0.20.1 input-acca2e4c4d9e32765a5d4c3e255d1c924fd19735df376f9c30498d94ce55e01e -->

@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/locationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLocationGeofenceCollectionDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccLocationGeofenceCollectionDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -31,11 +31,11 @@ func TestAccLocationGeofenceCollectionDataSource_basic(t *testing.T) {
 					testAccCheckGeofenceCollectionExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_arn", resourceName, "collection_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_name", resourceName, "collection_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "create_time", resourceName, "create_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreateTime, resourceName, names.AttrCreateTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "update_time", resourceName, "update_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

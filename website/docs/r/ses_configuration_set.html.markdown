@@ -12,6 +12,8 @@ Provides an SES configuration set resource.
 
 ## Example Usage
 
+### Basic Example
+
 ```terraform
 resource "aws_ses_configuration_set" "test" {
   name = "some-configuration-set-test"
@@ -26,6 +28,18 @@ resource "aws_ses_configuration_set" "test" {
 
   delivery_options {
     tls_policy = "Require"
+  }
+}
+```
+
+### Tracking Options
+
+```terraform
+resource "aws_ses_configuration_set" "test" {
+  name = "some-configuration-set-test"
+
+  tracking_options {
+    custom_redirect_domain = "sub.example.com"
   }
 }
 ```

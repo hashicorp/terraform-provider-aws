@@ -9,7 +9,10 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,15 +25,17 @@ func TestAccSQSQueueDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -44,18 +49,21 @@ func TestAccSQSQueueDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SQSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueueDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Environment", "Production"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Foo", "Bar"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.Empty", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Environment": knownvalue.StringExact("Production"),
+						"Foo":         knownvalue.StringExact("Bar"),
+						"Empty":       knownvalue.StringExact(""),
+					})),
+				},
 			},
 		},
 	})
@@ -74,8 +82,8 @@ func testAccQueueCheckDataSource(datasourceName, resourceName string) resource.T
 		}
 
 		attrNames := []string{
-			"arn",
-			"name",
+			names.AttrARN,
+			names.AttrName,
 		}
 
 		for _, attrName := range attrNames {

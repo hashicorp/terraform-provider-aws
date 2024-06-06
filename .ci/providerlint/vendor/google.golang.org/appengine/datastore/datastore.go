@@ -5,12 +5,12 @@
 package datastore
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
 
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
 
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/internal"

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGameLiftBuild_basic(t *testing.T) {
@@ -50,7 +51,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -58,14 +59,14 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`build/build-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
-					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -78,14 +79,14 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 				Config: testAccBuildConfig_basic(rNameUpdated, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`build/build-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
-					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -121,16 +122,16 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key1", "value1"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -140,20 +141,20 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"storage_location"},
 			},
 			{
-				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key2", "value2"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -189,7 +190,7 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{

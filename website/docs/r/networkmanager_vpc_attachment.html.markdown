@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_vpc_attachment"
 description: |-
-  Terraform resource for managing an AWS NetworkManager VpcAttachment.
+  Terraform resource for managing an AWS Network Manager VPC Attachment.
 ---
 
 # Resource: aws_networkmanager_vpc_attachment
 
-Terraform resource for managing an AWS NetworkManager VpcAttachment.
+Terraform resource for managing an AWS Network Manager VPC Attachment.
 
 ## Example Usage
 
@@ -37,8 +37,11 @@ The following arguments are optional:
 
 ### options
 
-* `appliance_mode_support` - (Optional) Indicates whether appliance mode is supported. If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow.
+* `appliance_mode_support` - (Optional) Indicates whether appliance mode is supported.
+  If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow.
+  If the VPC attachment is pending acceptance, changing this value will recreate the resource.
 * `ipv6_support` - (Optional) Indicates whether IPv6 is supported.
+  If the VPC attachment is pending acceptance, changing this value will recreate the resource.
 
 ## Attribute Reference
 

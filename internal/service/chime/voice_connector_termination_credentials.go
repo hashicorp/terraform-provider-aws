@@ -7,13 +7,18 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_chime_voice_connector_termination_credentials")
@@ -36,12 +41,12 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"username": {
+						names.AttrUsername: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotEmpty,
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -60,7 +65,9 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -69,40 +76,47 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 		Credentials:      expandCredentials(d.Get("credentials").(*schema.Set).List()),
 	}
 
-	if _, err := conn.PutVoiceConnectorTerminationCredentialsWithContext(ctx, input); err != nil {
-		return diag.Errorf("creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
+	if _, err := conn.PutVoiceConnectorTerminationCredentials(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
 
-	return resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
 
-	input := &chimesdkvoice.ListVoiceConnectorTerminationCredentialsInput{
-		VoiceConnectorId: aws.String(d.Id()),
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
+
+	_, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.ListVoiceConnectorTerminationCredentialsOutput, error) {
+		return findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = findVoiceConnectorTerminationCredentialsByID(ctx, conn, d.Id())
 	}
 
-	_, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 	}
 
 	d.Set("voice_connector_id", d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChanges("credentials") {
 		input := &chimesdkvoice.PutVoiceConnectorTerminationCredentialsInput{
@@ -110,58 +124,85 @@ func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *
 			Credentials:      expandCredentials(d.Get("credentials").(*schema.Set).List()),
 		}
 
-		_, err := conn.PutVoiceConnectorTerminationCredentialsWithContext(ctx, input)
+		_, err := conn.PutVoiceConnectorTerminationCredentials(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 		}
 	}
 
-	return resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.DeleteVoiceConnectorTerminationCredentialsInput{
 		VoiceConnectorId: aws.String(d.Id()),
 		Usernames:        expandCredentialsUsernames(d.Get("credentials").(*schema.Set).List()),
 	}
 
-	_, err := conn.DeleteVoiceConnectorTerminationCredentialsWithContext(ctx, input)
+	_, err := conn.DeleteVoiceConnectorTerminationCredentials(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, chimesdkvoice.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandCredentialsUsernames(data []interface{}) []*string {
-	var rawNames []*string
+func expandCredentialsUsernames(data []interface{}) []string {
+	var rawNames []string
 
 	for _, rData := range data {
 		item := rData.(map[string]interface{})
-		rawNames = append(rawNames, aws.String(item["username"].(string)))
+		rawNames = append(rawNames, item[names.AttrUsername].(string))
 	}
 
 	return rawNames
 }
 
-func expandCredentials(data []interface{}) []*chimesdkvoice.Credential {
-	var credentials []*chimesdkvoice.Credential
+func expandCredentials(data []interface{}) []awstypes.Credential {
+	var credentials []awstypes.Credential
 
 	for _, rItem := range data {
 		item := rItem.(map[string]interface{})
-		credentials = append(credentials, &chimesdkvoice.Credential{
-			Username: aws.String(item["username"].(string)),
-			Password: aws.String(item["password"].(string)),
+		credentials = append(credentials, awstypes.Credential{
+			Username: aws.String(item[names.AttrUsername].(string)),
+			Password: aws.String(item[names.AttrPassword].(string)),
 		})
 	}
 
 	return credentials
+}
+
+func findVoiceConnectorTerminationCredentialsByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*chimesdkvoice.ListVoiceConnectorTerminationCredentialsOutput, error) {
+	in := &chimesdkvoice.ListVoiceConnectorTerminationCredentialsInput{
+		VoiceConnectorId: aws.String(id),
+	}
+
+	resp, err := conn.ListVoiceConnectorTerminationCredentials(ctx, in)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if resp == nil || resp.Usernames == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

@@ -5,12 +5,10 @@ package events
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -49,40 +47,6 @@ func validateTargetID(v interface{}, k string) (ws []string, errors []error) {
 	}
 
 	return
-}
-
-func mapKeysDoNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (warnings []string, errors []error) {
-		m, ok := i.(map[string]interface{})
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type of %s to be map", k))
-			return warnings, errors
-		}
-
-		for key := range m {
-			if ok := r.MatchString(key); ok {
-				errors = append(errors, fmt.Errorf("%s: %s: %s", k, message, key))
-			}
-		}
-
-		return warnings, errors
-	}
-}
-
-func mapMaxItems(max int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (warnings []string, errors []error) {
-		m, ok := i.(map[string]interface{})
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type of %s to be map", k))
-			return warnings, errors
-		}
-
-		if len(m) > max {
-			errors = append(errors, fmt.Errorf("expected number of items in %s to be less than or equal to %d, got %d", k, max, len(m)))
-		}
-
-		return warnings, errors
-	}
 }
 
 var validArchiveName = validation.All(

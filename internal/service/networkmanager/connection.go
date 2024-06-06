@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -65,7 +66,7 @@ func ResourceConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +79,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -104,6 +105,8 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -118,7 +121,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ConnectedLinkId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -130,19 +133,21 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.CreateConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Connection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Connection: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Connection.ConnectionId))
 
 	if _, err := waitConnectionCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connection (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connection (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConnectionRead(ctx, d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -151,35 +156,37 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Connection %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", connection.ConnectionArn)
+	d.Set(names.AttrARN, connection.ConnectionArn)
 	d.Set("connected_device_id", connection.ConnectedDeviceId)
 	d.Set("connected_link_id", connection.ConnectedLinkId)
-	d.Set("description", connection.Description)
+	d.Set(names.AttrDescription, connection.Description)
 	d.Set("device_id", connection.DeviceId)
 	d.Set("global_network_id", connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
 	setTagsOut(ctx, connection.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateConnectionInput{
 			ConnectedLinkId: aws.String(d.Get("connected_link_id").(string)),
 			ConnectionId:    aws.String(d.Id()),
-			Description:     aws.String(d.Get("description").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			LinkId:          aws.String(d.Get("link_id").(string)),
 		}
@@ -188,18 +195,20 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.UpdateConnectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager Connection (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager Connection (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitConnectionUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Connection (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connection (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceConnectionRead(ctx, d, meta)
+	return append(diags, resourceConnectionRead(ctx, d, meta)...)
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -211,18 +220,18 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Connection (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitConnectionDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connection (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connection (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindConnection(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetConnectionsInput) (*networkmanager.Connection, error) {

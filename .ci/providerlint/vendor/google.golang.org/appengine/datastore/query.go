@@ -5,6 +5,7 @@
 package datastore
 
 import (
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
 
 	"google.golang.org/appengine/internal"
 	pb "google.golang.org/appengine/internal/datastore"
@@ -476,7 +476,7 @@ func callNext(c context.Context, res *pb.QueryResult, offset, count int32) error
 // The keys returned by GetAll will be in a 1-1 correspondence with the entities
 // added to dst.
 //
-// If q is a ``keys-only'' query, GetAll ignores dst and only returns the keys.
+// If q is a “keys-only” query, GetAll ignores dst and only returns the keys.
 //
 // The running time and number of API calls made by GetAll scale linearly with
 // the sum of the query's offset and limit. Unless the result count is
@@ -754,7 +754,7 @@ func (c Cursor) String() string {
 	return strings.TrimRight(base64.URLEncoding.EncodeToString(b), "=")
 }
 
-// Decode decodes a cursor from its base-64 string representation.
+// DecodeCursor decodes a cursor from its base-64 string representation.
 func DecodeCursor(s string) (Cursor, error) {
 	if s == "" {
 		return Cursor{&zeroCC}, nil

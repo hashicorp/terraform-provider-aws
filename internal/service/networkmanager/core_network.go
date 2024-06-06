@@ -6,6 +6,7 @@ package networkmanager
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,7 +37,7 @@ const (
 	// Using the following in the FindCoreNetworkPolicyByID function will default to get the latest policy version
 	latestPolicyVersionID = -1
 	// Wait time value for core network policy - the default update for the core network policy of 30 minutes is excessive
-	waitCoreNetworkPolicyCreatedTimeInMinutes = 4
+	waitCoreNetworkPolicyCreatedTimeInMinutes = 5
 )
 
 // @SDKResource("aws_networkmanager_core_network", name="Core Network")
@@ -61,7 +62,7 @@ func ResourceCoreNetwork() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,11 +102,11 @@ func ResourceCoreNetwork() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -147,7 +148,7 @@ func ResourceCoreNetwork() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -159,7 +160,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					},
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,6 +171,8 @@ func ResourceCoreNetwork() *schema.Resource {
 }
 
 func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -179,7 +182,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -202,7 +205,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 
 			policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
 			if err != nil {
-				return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+				return sdkdiag.AppendErrorf(diags, "Formatting Core Network Base Policy: %s", err)
 			}
 			input.PolicyDocument = aws.String(policyDocumentTarget)
 		}
@@ -211,19 +214,21 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.CreateCoreNetworkWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Core Network: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Core Network: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CoreNetwork.CoreNetworkId))
 
 	if _, err := waitCoreNetworkCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Core Network (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCoreNetworkRead(ctx, d, meta)
+	return append(diags, resourceCoreNetworkRead(ctx, d, meta)...)
 }
 
 func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetwork, err := FindCoreNetworkByID(ctx, conn, d.Id())
@@ -231,49 +236,51 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Core Network %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Core Network (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", coreNetwork.CoreNetworkArn)
+	d.Set(names.AttrARN, coreNetwork.CoreNetworkArn)
 	if coreNetwork.CreatedAt != nil {
-		d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
+		d.Set(names.AttrCreatedAt, aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
 	} else {
-		d.Set("created_at", nil)
+		d.Set(names.AttrCreatedAt, nil)
 	}
-	d.Set("description", coreNetwork.Description)
+	d.Set(names.AttrDescription, coreNetwork.Description)
 	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {
-		return diag.Errorf("setting edges: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting edges: %s", err)
 	}
 	d.Set("global_network_id", coreNetwork.GlobalNetworkId)
 	if err := d.Set("segments", flattenCoreNetworkSegments(coreNetwork.Segments)); err != nil {
-		return diag.Errorf("setting segments: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting segments: %s", err)
 	}
-	d.Set("state", coreNetwork.State)
+	d.Set(names.AttrState, coreNetwork.State)
 
 	setTagsOut(ctx, coreNetwork.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
 			CoreNetworkId: aws.String(d.Id()),
-			Description:   aws.String(d.Get("description").(string)),
+			Description:   aws.String(d.Get(names.AttrDescription).(string)),
 		})
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager Core Network (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager Core Network (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -290,25 +297,27 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 			policyDocumentTarget, err := buildCoreNetworkBasePolicyDocument(regions)
 
 			if err != nil {
-				return diag.Errorf("Formatting Core Network Base Policy: %s", err)
+				return sdkdiag.AppendErrorf(diags, "Formatting Core Network Base Policy: %s", err)
 			}
 
 			err = PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
 
 			if err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 
 			if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceCoreNetworkRead(ctx, d, meta)
+	return append(diags, resourceCoreNetworkRead(ctx, d, meta)...)
 }
 
 func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Core Network: %s", d.Id())
@@ -317,18 +326,18 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Core Network (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Core Network (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitCoreNetworkDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Core Network (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Core Network (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindCoreNetworkByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.CoreNetwork, error) {
@@ -436,10 +445,12 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.NetworkMan
 
 func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.CoreNetwork, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.CoreNetworkStateDeleting},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusCoreNetworkState(ctx, conn, id),
+		Pending:    []string{networkmanager.CoreNetworkStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Delay:      5 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Refresh:    statusCoreNetworkState(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -503,7 +514,7 @@ func flattenCoreNetworkSegment(apiObject *networkmanager.CoreNetworkSegment) map
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SharedSegments; v != nil {
@@ -596,14 +607,14 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Netw
 	}
 
 	if output, ok := outputRaw.(*networkmanager.CoreNetworkPolicy); ok {
-		if state, errors := aws.StringValue(output.ChangeSetState), output.PolicyErrors; state == networkmanager.ChangeSetStateFailedGeneration && len(errors) > 0 {
-			var errs *multierror.Error
+		if state, v := aws.StringValue(output.ChangeSetState), output.PolicyErrors; state == networkmanager.ChangeSetStateFailedGeneration && len(v) > 0 {
+			var errs []error
 
-			for _, err := range errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.Message)))
+			for _, err := range v {
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.Message)))
 			}
 
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err
