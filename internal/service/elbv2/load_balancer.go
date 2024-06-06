@@ -39,6 +39,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 // @SDKResource("aws_alb", name="Load Balancer")
 // @SDKResource("aws_lb", name="Load Balancer")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/elbv2;elbv2.LoadBalancer")
 func ResourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoadBalancerCreate,

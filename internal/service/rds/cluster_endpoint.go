@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_rds_cluster_endpoint", name="Cluster Endpoint")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceClusterEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterEndpointCreate,

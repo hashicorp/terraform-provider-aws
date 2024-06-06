@@ -42,7 +42,7 @@ func testAccVerifiedAccessInstance_basic(t *testing.T, semaphore tfsync.Semaphor
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttr(resourceName, "verified_access_trust_providers.#", acctest.Ct0),
 				),
 			},

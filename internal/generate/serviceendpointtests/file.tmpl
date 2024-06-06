@@ -97,7 +97,7 @@ const (
 	packageName = "{{ .PackageName }}"
 	awsEnvVar   = "{{ .AwsEnvVar }}"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "{{ .ConfigParameter }}"
+	configParam = {{ .ConfigParameter }}
 	{{ if ne .TFAWSEnvVar "" -}}
 	tfAwsEnvVar       = "{{ .TFAWSEnvVar }}"
 	{{- end }}

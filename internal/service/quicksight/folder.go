@@ -85,7 +85,7 @@ func ResourceFolder() *schema.Resource {
 				Default:      quicksight.FolderTypeShared,
 				ValidateFunc: validation.StringInSlice(quicksight.FolderType_Values(), false),
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,7 +110,7 @@ func ResourceFolder() *schema.Resource {
 				MaxItems: 64,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -203,7 +203,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("folder_id", out.FolderId)
 	d.Set("folder_type", out.FolderType)
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 
 	if len(out.FolderPath) > 0 {

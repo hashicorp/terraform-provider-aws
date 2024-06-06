@@ -239,7 +239,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -693,7 +693,7 @@ func (r *managedUserPoolClientResource) ImportState(ctx context.Context, request
 	userPoolId := parts[0]
 	clientId := parts[1]
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), userPoolId)...)
 }
 
 func (r *managedUserPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {

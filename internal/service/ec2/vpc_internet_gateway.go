@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_internet_gateway", name="Internet Gateway")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInternetGatewayCreate,

@@ -113,9 +113,9 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 		input.BackupRetentionPeriod = aws.Int32(int32(d.Get("backup_retention_period").(int)))
 	}
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		needsPreConditions = true
-		input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 	}
 
 	if needsPreConditions {

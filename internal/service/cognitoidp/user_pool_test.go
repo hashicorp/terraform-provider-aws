@@ -73,7 +73,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "estimated_number_of_users", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "INACTIVE"),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccCognitoIDPUserPool_deletionProtection(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "ACTIVE"),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccCognitoIDPUserPool_deletionProtection(t *testing.T) {
 				Config: testAccUserPoolConfig_deletionProtection(rName, "INACTIVE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "INACTIVE"),
 				),
 			},
 		},

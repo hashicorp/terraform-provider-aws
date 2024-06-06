@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -63,7 +63,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 
 func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
@@ -92,7 +92,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T, semaphore t
 
 func testAccTransitGatewayPeeringAttachment_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 
@@ -144,7 +144,7 @@ func testAccTransitGatewayPeeringAttachment_tags(t *testing.T, semaphore tfsync.
 
 func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -191,7 +191,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T, semap
 	})
 }
 
-func testAccCheckTransitGatewayPeeringAttachmentExists(ctx context.Context, n string, v *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
+func testAccCheckTransitGatewayPeeringAttachmentExists(ctx context.Context, n string, v *awstypes.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -202,7 +202,7 @@ func testAccCheckTransitGatewayPeeringAttachmentExists(ctx context.Context, n st
 			return fmt.Errorf("No EC2 Transit Gateway Peering Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayPeeringAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -218,7 +218,7 @@ func testAccCheckTransitGatewayPeeringAttachmentExists(ctx context.Context, n st
 
 func testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_peering_attachment" {

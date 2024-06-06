@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opensearch_inbound_connection_accepter")
@@ -28,7 +29,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
-				d.Set("connection_id", d.Id())
+				d.Set(names.AttrConnectionID, d.Id())
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -40,7 +41,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +57,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	connectionID := d.Get("connection_id").(string)
+	connectionID := d.Get(names.AttrConnectionID).(string)
 	input := &opensearchservice.AcceptInboundConnectionInput{
 		ConnectionId: aws.String(connectionID),
 	}
@@ -91,7 +92,7 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("reading OpenSearch Inbound Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("connection_id", connection.ConnectionId)
+	d.Set(names.AttrConnectionID, connection.ConnectionId)
 	d.Set("connection_status", connection.ConnectionStatus.StatusCode)
 	return nil
 }

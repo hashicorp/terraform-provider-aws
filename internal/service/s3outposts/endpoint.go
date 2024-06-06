@@ -46,7 +46,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -145,7 +145,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("access_type", endpoint.AccessType)
 	d.Set(names.AttrARN, endpoint.EndpointArn)
-	d.Set("cidr_block", endpoint.CidrBlock)
+	d.Set(names.AttrCIDRBlock, endpoint.CidrBlock)
 	if endpoint.CreationTime != nil {
 		d.Set(names.AttrCreationTime, aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
 	}

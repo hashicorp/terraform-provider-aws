@@ -50,73 +50,76 @@ func resourcePipe() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-			"desired_state": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          string(awstypes.RequestedPipeStateRunning),
-				ValidateDiagFunc: enum.Validate[awstypes.RequestedPipeState](),
-			},
-			"enrichment": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"enrichment_parameters": enrichmentParametersSchema(),
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
-				),
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
-				),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrSource: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1})?:(\d{12})?:(.+)$`), ""),
-				),
-			},
-			"source_parameters": sourceParametersSchema(),
-			names.AttrTarget: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"target_parameters": targetParametersSchema(),
-			names.AttrTags:      tftags.TagsSchema(),
-			names.AttrTagsAll:   tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "Managed by Terraform",
+				},
+				"desired_state": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          string(awstypes.RequestedPipeStateRunning),
+					ValidateDiagFunc: enum.Validate[awstypes.RequestedPipeState](),
+				},
+				"enrichment": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"enrichment_parameters": enrichmentParametersSchema(),
+				"log_configuration":     logConfigurationSchema(),
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
+					),
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), ""),
+					),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrSource: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						validation.StringMatch(regexache.MustCompile(`^smk://(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}|arn:(aws[0-9A-Za-z-]*):([0-9A-Za-z-]+):([a-z]{2}((-gov)|(-iso(b?)))?-[a-z]+-\d{1})?:(\d{12})?:(.+)$`), ""),
+					),
+				},
+				"source_parameters": sourceParametersSchema(),
+				names.AttrTarget: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"target_parameters": targetParametersSchema(),
+				names.AttrTags:      tftags.TagsSchema(),
+				names.AttrTagsAll:   tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -156,6 +159,10 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("target_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.TargetParameters = expandPipeTargetParameters(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreatePipe(ctx, input)
@@ -198,6 +205,13 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 	} else {
 		d.Set("enrichment_parameters", nil)
+	}
+	if v := output.LogConfiguration; !types.IsZero(v) {
+		if err := d.Set("log_configuration", []interface{}{flattenPipeLogConfiguration(v)}); err != nil {
+			return diag.Errorf("setting log_configuration: %s", err)
+		}
+	} else {
+		d.Set("log_configuration", nil)
 	}
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
@@ -245,6 +259,12 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if d.HasChange("enrichment_parameters") {
 			if v, ok := d.GetOk("enrichment_parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EnrichmentParameters = expandPipeEnrichmentParameters(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("log_configuration") {
+			if v, ok := d.GetOk("log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.LogConfiguration = expandPipeLogConfigurationParameters(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 

@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_db_snapshot_copy", name="DB Snapshot")
 // @Tags(identifierAttribute="db_snapshot_arn")
+// @Testing(tagsTest=false)
 func ResourceSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyCreate,
@@ -41,7 +42,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -208,7 +209,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_snapshot_arn", arn)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)

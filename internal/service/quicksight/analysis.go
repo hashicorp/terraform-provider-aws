@@ -77,7 +77,7 @@ func ResourceAnalysis() *schema.Resource {
 					ForceNew: true,
 				},
 				"definition": quicksightschema.AnalysisDefinitionSchema(),
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -98,7 +98,7 @@ func ResourceAnalysis() *schema.Resource {
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								MinItems: 1,
@@ -220,7 +220,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrARN, out.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Status)
 	d.Set("analysis_id", out.AnalysisId)

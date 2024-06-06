@@ -233,7 +233,7 @@ func DataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"last_updated_time": {
+				names.AttrLastUpdatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -246,7 +246,7 @@ func DataSourceTheme() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -302,7 +302,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
-	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("theme_id", out.ThemeId)

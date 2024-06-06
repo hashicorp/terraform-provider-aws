@@ -44,7 +44,7 @@ func ResourceTaskSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"capacity_provider_strategy": {
+			names.AttrCapacityProviderStrategy: {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
@@ -92,7 +92,7 @@ func ResourceTaskSet() *schema.Resource {
 				ForceNew:      true,
 				Computed:      true,
 				ValidateFunc:  validation.StringInSlice(ecs.LaunchType_Values(), false),
-				ConflictsWith: []string{"capacity_provider_strategy"},
+				ConflictsWith: []string{names.AttrCapacityProviderStrategy},
 			},
 			// If you are using the CodeDeploy or an external deployment controller,
 			// multiple target groups are not supported.
@@ -285,7 +285,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 	}
 
-	if v, ok := d.GetOk("capacity_provider_strategy"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok && v.(*schema.Set).Len() > 0 {
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 
@@ -417,7 +417,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
 
-	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
+	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
 
