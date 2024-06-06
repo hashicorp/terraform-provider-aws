@@ -39,6 +39,10 @@ func resourceAuthorizer() *schema.Resource {
 			StateContext: resourceAuthorizerImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"api_id": {
 				Type:     schema.TypeString,
@@ -259,10 +263,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 Authorizer: %s", d.Id())
-	const (
-		timeout = 30 * time.Minute
-	)
-	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
 			ApiId:        aws.String(d.Get("api_id").(string)),
 			AuthorizerId: aws.String(d.Id()),
