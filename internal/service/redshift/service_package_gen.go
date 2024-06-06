@@ -11,10 +11,10 @@ import (
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"log"
 )
 
 type servicePackage struct{}
@@ -218,18 +218,21 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*redshift_sdkv1.Redshift, error) {
 	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" && sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-		// The SDK doesn't allow setting a custom non-FIPS endpoint *and* enabling UseFIPSEndpoint.
-		// However there are a few cases where this is necessary; some services don't have FIPS endpoints,
-		// and for some services (e.g. CloudFront) the SDK generates the wrong fips endpoint.
-		// While forcing this to disabled may result in the end-user not using a FIPS endpoint as specified
-		// by setting UseFIPSEndpoint=true in the provider, the user also explicitly changed the endpoint, so
-		// here we need to assume the user knows what they're doing.
-		log.Printf("[WARN] UseFIPSEndpoint is enabled but a custom endpoint (%s) is configured, ignoring UseFIPSEndpoint.", endpoint)
-		sess.Config.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+	cfg := aws_sdkv1.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws_sdkv1.String(endpoint)
+
+		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
+			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+		}
 	}
 
-	return redshift_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	return redshift_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
@@ -238,16 +241,13 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return redshift_sdkv2.NewFromConfig(cfg, func(o *redshift_sdkv2.Options) {
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 
 			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
-				// The SDK doesn't allow setting a custom non-FIPS endpoint *and* enabling UseFIPSEndpoint.
-				// However there are a few cases where this is necessary; some services don't have FIPS endpoints,
-				// and for some services (e.g. CloudFront) the SDK generates the wrong fips endpoint.
-				// While forcing this to disabled may result in the end-user not using a FIPS endpoint as specified
-				// by setting UseFIPSEndpoint=true, the user also explicitly changed the endpoint, so
-				// here we need to assume the user knows what they're doing.
-				log.Printf("[WARN] UseFIPSEndpoint is enabled but a custom endpoint (%s) is configured, ignoring UseFIPSEndpoint.", endpoint)
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
 				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
 			}
 		}
