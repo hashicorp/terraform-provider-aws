@@ -26,7 +26,7 @@ import (
 // @SDKResource("aws_ami_from_instance", name="AMI")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceAMIFromInstance() *schema.Resource {
+func resourceAMIFromInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMIFromInstanceCreate,
 		// The remaining operations are shared with the generic aws_ami resource,
