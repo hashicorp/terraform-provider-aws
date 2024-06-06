@@ -7,6 +7,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_customer_gateway: Add `bgp_asn_extended` argument ([#37815](https://github.com/hashicorp/terraform-provider-aws/issues/37815))
+* resource/aws_customer_gateway: Add `bgp_asn_extended` argument ([#37815](https://github.com/hashicorp/terraform-provider-aws/issues/37815))
 * resource/aws_lb: Add support for IPv6-only Application Load Balancers ([#37700](https://github.com/hashicorp/terraform-provider-aws/issues/37700))
 * resource/aws_pipes_pipe: Add `log_configuration` argument ([#37135](https://github.com/hashicorp/terraform-provider-aws/issues/37135))
 * resource/aws_route53_record: Fix `InvalidChangeBatch` errors on resource Delete ([#37850](https://github.com/hashicorp/terraform-provider-aws/issues/37850))
