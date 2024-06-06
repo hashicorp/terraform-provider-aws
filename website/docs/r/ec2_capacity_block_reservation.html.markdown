@@ -20,20 +20,20 @@ Provides an EC2 Capacity Block Reservation. This allows you to purchase capacity
 
 
 data "aws_ec2_capacity_block_offering" "test" {
-    capacity_duration = 24
-    end_date    = "2024-05-30T15:04:05Z"
-    instance_count    = 1
-    instance_platform = "Linux/UNIX"
-    instance_type     = "p4d.24xlarge"
-    start_date  = "2024-04-28T15:04:05Z"
+  capacity_duration = 24
+  end_date          = "2024-05-30T15:04:05Z"
+  instance_count    = 1
+  instance_platform = "Linux/UNIX"
+  instance_type     = "p4d.24xlarge"
+  start_date        = "2024-04-28T15:04:05Z"
 }
 
 resource "aws_ec2_capacity_block_reservation" "test" {
-    capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.id
-    instance_platform = "Linux/UNIX"
-    tags = {
-        "Environment" = "dev"
-    }
+  capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.id
+  instance_platform          = "Linux/UNIX"
+  tags = {
+    "Environment" = "dev"
+  }
 }
 ```
 

@@ -13,13 +13,13 @@ Information about a single EC2 Capacity Block Reservation.
 ## Example Usage
 
 ```terraform
-data "aws_ec2_capacity_block_offering" "test" { 
+data "aws_ec2_capacity_block_offering" "test" {
   capacity_duration_hours = 24
-  end_date_range    = "2024-05-30T15:04:05Z"
-  instance_count    = 1
-  instance_platform = "Linux/UNIX"
-  instance_type     = "p4d.24xlarge"
-  start_date_range  = "2024-04-28T15:04:05Z"
+  end_date_range          = "2024-05-30T15:04:05Z"
+  instance_count          = 1
+  instance_platform       = "Linux/UNIX"
+  instance_type           = "p4d.24xlarge"
+  start_date_range        = "2024-04-28T15:04:05Z"
 }
 ```
 
