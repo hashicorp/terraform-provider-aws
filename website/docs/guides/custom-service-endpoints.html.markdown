@@ -147,6 +147,7 @@ provider "aws" {
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
   <li><code>docdbelastic</code></li>
+  <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>

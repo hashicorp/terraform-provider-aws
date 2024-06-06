@@ -240,6 +240,7 @@ var (
 
 // @SDKResource("aws_sns_topic", name="Topic")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,

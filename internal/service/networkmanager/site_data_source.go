@@ -32,7 +32,7 @@ func DataSourceSite() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -80,11 +80,11 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, site.Description)
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(site.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 	d.Set("site_id", site.SiteId)
 

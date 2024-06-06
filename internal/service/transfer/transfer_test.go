@@ -61,7 +61,8 @@ func TestAccTransfer_serial(t *testing.T) {
 			"Workflow":                                               testAccServer_workflowDetails,
 		},
 		"SSHKey": {
-			acctest.CtBasic: testAccSSHKey_basic,
+			acctest.CtBasic:      testAccSSHKey_basic,
+			acctest.CtDisappears: testAccSSHKey_disappears,
 		},
 		"Tag": {
 			acctest.CtBasic:      testAccTag_basic,

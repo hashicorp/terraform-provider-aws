@@ -118,7 +118,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.LengthBetween(40, 1200),
+					stringvalidator.LengthBetween(40, 4000),
 				},
 			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.

@@ -79,8 +79,8 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"location":        types.StringType,
-						names.AttrRoleARN: types.StringType,
+						names.AttrLocation: types.StringType,
+						names.AttrRoleARN:  types.StringType,
 					},
 				},
 				PlanModifiers: []planmodifier.List{
