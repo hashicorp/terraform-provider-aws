@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,6 +69,7 @@ func DataSourceReservedOffering() *schema.Resource {
 }
 
 func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeReservedDBInstancesOfferingsInput{
@@ -80,15 +82,15 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.DescribeReservedDBInstancesOfferingsWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstanceOffering, "unknown", err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, ResNameReservedInstanceOffering, "unknown", err)
 	}
 
 	if len(resp.ReservedDBInstancesOfferings) == 0 {
-		return diag.Errorf("no %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
+		return sdkdiag.AppendErrorf(diags, "no %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
 	}
 
 	if len(resp.ReservedDBInstancesOfferings) > 1 {
-		return diag.Errorf("More than one %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
+		return sdkdiag.AppendErrorf(diags, "More than one %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
 	}
 
 	offering := resp.ReservedDBInstancesOfferings[0]
@@ -103,5 +105,5 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("product_description", offering.ProductDescription)
 	d.Set("offering_id", offering.ReservedDBInstancesOfferingId)
 
-	return nil
+	return diags
 }
