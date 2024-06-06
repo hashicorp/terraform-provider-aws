@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -67,11 +66,11 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			tflog.Debug(ctx, "setting endpoint", map[string]any{
 				"tf_aws.endpoint": endpoint,
 			})
-			o.BaseEndpoint = aws.String(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
 				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
 			}
 		}
 
