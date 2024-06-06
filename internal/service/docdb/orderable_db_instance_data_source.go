@@ -5,6 +5,7 @@ package docdb
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
@@ -94,7 +95,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	var orderableDBInstance *awstypes.OrderableDBInstanceOption
 	var err error
 	if preferredInstanceClasses := flex.ExpandStringValueList(d.Get("preferred_instance_classes").([]interface{})); len(preferredInstanceClasses) > 0 {
-		var orderableDBInstances []*awstypes.OrderableDBInstanceOption
+		var orderableDBInstances []awstypes.OrderableDBInstanceOption
 
 		orderableDBInstances, err = findOrderableDBInstances(ctx, conn, input)
 		if err == nil {
@@ -102,7 +103,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 			for _, preferredInstanceClass := range preferredInstanceClasses {
 				for _, v := range orderableDBInstances {
 					if preferredInstanceClass == aws.ToString(v.DBInstanceClass) {
-						orderableDBInstance = v
+						orderableDBInstance = &v
 						break PreferredInstanceClassLoop
 					}
 				}
@@ -121,7 +122,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.ToString(orderableDBInstance.DBInstanceClass))
-	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *awstypes.AvailabilityZone) string {
+	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v awstypes.AvailabilityZone) string {
 		return aws.ToString(v.Name)
 	}))
 	d.Set(names.AttrEngine, orderableDBInstance.Engine)
@@ -140,28 +141,24 @@ func findOrderableDBInstance(ctx context.Context, conn *docdb.Client, input *doc
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findOrderableDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.DescribeOrderableDBInstanceOptionsInput) ([]*awstypes.OrderableDBInstanceOption, error) {
-	var output []*awstypes.OrderableDBInstanceOption
+func findOrderableDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.DescribeOrderableDBInstanceOptionsInput) ([]awstypes.OrderableDBInstanceOption, error) {
+	var output []awstypes.OrderableDBInstanceOption
 
-	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(page *docdb.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := docdb.NewDescribeOrderableDBInstanceOptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.OrderableDBInstanceOptions {
-			if v != nil {
+			if !reflect.ValueOf(v).IsZero() {
 				output = append(output, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
