@@ -97,7 +97,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	var engineVersion *awstypes.DBEngineVersion
 	var err error
 	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]interface{})); len(preferredVersions) > 0 {
-		var engineVersions []awstypes.DBEngineVersion
+		var engineVersions []*awstypes.DBEngineVersion
 
 		engineVersions, err = findEngineVersions(ctx, conn, input)
 
@@ -107,7 +107,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 			for _, preferredVersion := range preferredVersions {
 				for _, v := range engineVersions {
 					if preferredVersion == aws.ToString(v.EngineVersion) {
-						engineVersion = &v
+						engineVersion = v
 						break PreferredVersionLoop
 					}
 				}
@@ -148,11 +148,11 @@ func findEngineVersion(ctx context.Context, conn *docdb.Client, input *docdb.Des
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findEngineVersions(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBEngineVersionsInput) ([]awstypes.DBEngineVersion, error) {
-	var output []awstypes.DBEngineVersion
+func findEngineVersions(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBEngineVersionsInput) ([]*awstypes.DBEngineVersion, error) {
+	var output []*awstypes.DBEngineVersion
 
 	pages := docdb.NewDescribeDBEngineVersionsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -162,7 +162,9 @@ func findEngineVersions(ctx context.Context, conn *docdb.Client, input *docdb.De
 			return nil, err
 		}
 
-		output = append(output, page.DBEngineVersions...)
+		for _, v := range page.DBEngineVersions {
+			output = append(output, &v)
+		}
 	}
 
 	return output, nil

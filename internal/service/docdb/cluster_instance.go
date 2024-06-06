@@ -431,9 +431,7 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 			return nil, err
 		}
 
-		for _, v := range page.DBInstances {
-			output = append(output, v)
-		}
+		output = append(output, page.DBInstances...)
 	}
 
 	return output, nil

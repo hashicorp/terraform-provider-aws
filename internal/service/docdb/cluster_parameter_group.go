@@ -291,11 +291,10 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 		}
 
 		for _, v := range page.DBClusterParameterGroups {
-			if !reflect.ValueOf(err).IsZero() {
+			if !reflect.ValueOf(v).IsZero() {
 				output = append(output, v)
 			}
 		}
-
 	}
 
 	return output, nil
