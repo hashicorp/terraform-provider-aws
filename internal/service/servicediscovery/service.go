@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -154,6 +155,7 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -190,15 +192,16 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateServiceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Service Discovery Service (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Discovery Service (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Service.Id))
 
-	return resourceServiceRead(ctx, d, meta)
+	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	service, err := FindServiceByID(ctx, conn, d.Id())
@@ -206,11 +209,11 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery Service (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(service.Arn)
@@ -218,21 +221,21 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrDescription, service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
 		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
-			return diag.Errorf("setting dns_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_config: %s", err)
 		}
 	} else {
 		d.Set("dns_config", nil)
 	}
 	if tfMap := flattenHealthCheckConfig(service.HealthCheckConfig); len(tfMap) > 0 {
 		if err := d.Set("health_check_config", []interface{}{tfMap}); err != nil {
-			return diag.Errorf("setting health_check_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting health_check_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_config", nil)
 	}
 	if tfMap := flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig); len(tfMap) > 0 {
 		if err := d.Set("health_check_custom_config", []interface{}{tfMap}); err != nil {
-			return diag.Errorf("setting health_check_custom_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting health_check_custom_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_custom_config", nil)
@@ -241,10 +244,11 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("namespace_id", service.NamespaceId)
 	d.Set(names.AttrType, service.Type)
 
-	return nil
+	return diags
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -266,20 +270,21 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateServiceWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Service Discovery Service (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Service Discovery Service (%s): %s", d.Id(), err)
 		}
 
 		if output != nil && output.OperationId != nil {
 			if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
-				return diag.Errorf("waiting for Service Discovery Service (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Service (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceServiceRead(ctx, d, meta)
+	return append(diags, resourceServiceRead(ctx, d, meta)...)
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	if d.Get(names.AttrForceDestroy).(bool) {
@@ -313,7 +318,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		err = errors.Join(errs...)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -323,14 +328,14 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeServiceNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Service Discovery Service (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Service Discovery Service (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDNSConfig(tfMap map[string]interface{}) *servicediscovery.DnsConfig {
