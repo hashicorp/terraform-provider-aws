@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_availability_zone")
-func DataSourceAvailabilityZone() *schema.Resource {
+// @SDKDataSource("aws_availability_zone", name="Availability Zone")
+func dataSourceAvailabilityZone() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAvailabilityZoneRead,
 
