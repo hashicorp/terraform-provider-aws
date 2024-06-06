@@ -86,7 +86,6 @@ func (d *dataSourceServerCertificates) Schema(ctx context.Context, req datasourc
 }
 
 func (d *dataSourceServerCertificates) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
 	conn := d.Meta().IAMClient(ctx)
 
 	var data serverCertificatesDataSourceModel
