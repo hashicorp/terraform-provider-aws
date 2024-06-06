@@ -794,10 +794,10 @@ resource "aws_mwaa_environment" "test" {
   max_workers = 20
   min_workers = 15
 
-	max_webservers = 5
+  max_webservers = 5
   min_webservers = 4
-	
-  name        = %[1]q
+
+  name = %[1]q
 
   network_configuration {
     security_group_ids = [aws_security_group.test.id]
@@ -869,6 +869,7 @@ resource "aws_s3_object" "startup_script" {
   key     = "startup.sh"
   content = "airflow db init"
 }
+
 
 `, rName))
 }
