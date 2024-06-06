@@ -976,7 +976,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 
 func testAccCheckClusterRecreated(i, j *awstypes.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+		if aws.ToTime(i.ClusterCreateTime).Equal(aws.ToTime(j.ClusterCreateTime)) {
 			return errors.New("DocumentDB Cluster was not recreated")
 		}
 
