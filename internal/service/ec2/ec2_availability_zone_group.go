@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_availability_zone_group")
-func ResourceAvailabilityZoneGroup() *schema.Resource {
+// @SDKResource("aws_ec2_availability_zone_group", name="Availability Zone Group")
+func resourceAvailabilityZoneGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAvailabilityZoneGroupCreate,
 		ReadWithoutTimeout:   resourceAvailabilityZoneGroupRead,

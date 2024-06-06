@@ -582,8 +582,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAvailabilityZoneGroup,
+			Factory:  resourceAvailabilityZoneGroup,
 			TypeName: "aws_ec2_availability_zone_group",
+			Name:     "Availability Zone Group",
 		},
 		{
 			Factory:  ResourceCapacityReservation,
