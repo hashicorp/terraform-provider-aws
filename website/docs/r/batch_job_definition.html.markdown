@@ -134,6 +134,40 @@ resource "aws_batch_job_definition" "test" {
 }
 ```
 
+### Job Definitionn of type EKS
+
+```terraform
+resource "aws_batch_job_definition" "test" {
+  name = " tf_test_batch_job_definition_ecs"
+  type = "container"
+  ecs_properties {
+    task_properties {
+      host_network = true
+      containers {
+        essential = true
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resource_requirements {
+          value = "1.0"
+          type = "VCPU"
+        }
+        resource_requirements {
+          value = "2048"
+          type = "MEMORY"
+        }
+        environment {
+		  name = "test"
+		  value = "Environment Variable"
+        }
+      }
+    }
+  }
+}
+```
+
 ### Fargate Platform Capability
 
 ```terraform
@@ -255,6 +289,146 @@ The following arguments are optional:
 
 * `secret_name` - The name of the secret. The name must be allowed as a DNS subdomain name.
 * `optional` - (Optional) Specifies whether the secret or the secret's keys must be defined.
+
+### `ecs_properties`
+
+* `task_properties` - The properties of the Amazon ECS task definition on a job. See [`task_properties`](#task_properties) below.
+
+### `task_properties`
+
+* `containers` - The properties of the container. See [containers](#ecs_containers) below.
+* `ephemeral_storage` - (Optional) The ephemeral storage settings for the task. See [ephemeral_storage](#ephemeral_storage) below.
+* `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role that the AWS Batch can assume.
+* `ipc_mode` - (Optional) The IPC resource namespace to use for container in the task. The valid values are `host`, `task`, or `none`.
+* `network_configuration` - (Optional) The network configuration for the Amazon ECS task. See [network_configuration](#network_configuration) below.
+* `pic_mode` - (Optional) The process namespace to use for the container in the task. The valid values are `host` or `task`.
+* `platform_version` - (Optional) The platform version on which to run your task. If one is not specified, the LATEST platform version is used by default.
+* `runtime_platform` - (Optional) The compute environment architecture for AWS Batch job on Fargate. See [runtime_platform](#runtime_platform) below.
+* `task_role_arn` - The Amazon Resource Name (ARN) of the IAM role that the Amazon ECS task..
+* `volume` - (Optional) The volumes to mount on the container in the task. See [volume](#volume) below.
+
+### `containers`
+
+* `image` - The image used to start the container.
+* `command` - (Optional) The command that's passed to the container.
+* `depends_on` - (Optional) The properties of containers that this container depends on. See [depends_on](#depends_on) below.
+* `environment` - (Optional) The environment variables to pass to a container. See [environment](#environment) below.
+* `essential` - (Optional) The parameter this container is essential or not.
+* `linux_parameters` - (Optional) Linux-specific modifications that are applied to the container. See [linux_parameters](#linux_parameters) below.
+* `log_configuration` - (Optional) The log configuration specification for the container. See [log_configuration](#log_configuration) below.
+* `mount_points` - (Optional) The mount points for data volumes in your container. See [mount_points](#mount_points) below.
+* `name` - (Optional) The name of the container.
+* `privileged` - (Optional) When this parameter is true, the container is given elevated privileges on the host container instance.
+* `readonly_root_filesystem` - (Optional) When this parameter is true, the container is given read-only access to its root file system.
+* `repository_credentials` - (Optional) The private repository authentication credentials to use. See [repository_credentials](#repository_credentials) below.
+* `resource_requirements` - (Optional) The type and amount of resources to assign to a container. The supported resources include `GPU`, `MEMORY`, and `VCPU`. See [resource_requirements](#resource_requirements) below.
+* `secrets` - (Optional) The secrets to pass to the container. See [secrets](#secrets) below.
+* `ulimits` - (Optional) A list of `ulimits` to set in the container. This parameter maps to `Ulimits` in the Create a container section of the Docker Remote API and the --ulimit option to docker run. See [ulimits](#ulimits) below.
+* `user` - (Optional) The user to use inside the container. This parameter maps to User in the Create a container section of the Docker Remote API and the --user option to docker run.
+
+### `depends_on`
+
+* `container_name` - The name of a container in the task definition to depend on.
+* `condition` - The dependency condition of the dependent container. The valid values are `START`, `COMPLETE`, `SUCCESS`, and `HEALTHY`.
+
+### `environment`
+
+* `name` - The name of the environment variable.
+* `value` - The value of the environment variable.
+
+### `linux_parameters`
+
+* `devices` - (Optional) Any host devices to expose to the container. This parameter maps to Devices in the Create a container section of the Docker Remote API and the --device option to docker run. See [devices](#devices) below.
+* `init_process_enabled` - (Optional) Whether the init process is enabled in the container. This parameter maps to `init` in the Create a container section of the Docker Remote API and the --init option to docker run.
+* `max_swap` - (Optional) The total amount of swap memory (in MiB) a container can use. This parameter will be translated to the --memory-swap option to docker run where the value would be the sum of the container memory plus the maxSwap value.
+* `shared_memory_size` - (Optional) The value for the size (in MiB) of the `/dev/shm` volume. This parameter maps to `ShmSize` in the Create a container section of the Docker Remote API and the --shm-size option to docker run.
+* `swappiness` - (Optional) This allows you to tune a container's memory swappiness behavior. A swappiness value is a percentage from `0` to `100`.
+* `tmpfs` - (Optional) The container path, mount options, and size (in MiB) of a tmpfs mount. This parameter maps to `Tmpfs` in the Create a container section of the Docker Remote API and the --tmpfs option to docker run. See [tmpfs](#tmpfs) below.
+
+### `devices`
+
+* `host_path` - The path for the device on the host.
+* `container_path` - The path inside the container at which to expose the host device.
+* `permissions` - The explicit permissions to provide to the container for the device. By default, the container has permissions for `read`, `write`, and `mknod` for the device.
+
+### `tmpfs`
+
+* `container_path` - The absolute file path in the container where the tmpfs volume is mounted.
+* `size` - The size (in MiB) of the tmpfs volume.
+* `mount_options` - (Optional) The list of tmpfs volume mount options.
+
+### `log_configuration`
+
+* `log_driver` - The log driver to use for the container. The valid values listed for this parameter are log drivers that the Amazon ECS container agent can communicate with by default.
+* `options` - The configuration options to send to the log driver. This parameter requires a map of key-value pairs.
+* `secret_options` - The secrets to pass to the log configuration. See [secret_options](#secret_options) below.
+
+### `secret_options`
+
+* `name` - The name of the secret.
+* `value_from` - The value to assign to the secret.
+
+### `mount_points`
+
+* `container_path` - The path in the container at which to mount the host volume.
+* `read_only` - If this value is `true`, the container has read-only access to the volume. If this value is `false`, then the container can write to the volume. The default value is `false`.
+* `source_volume` - The name of the volume to mount.
+
+### `repository_credentials`
+
+* `credentials_parameter` - The Amazon Resource Name (ARN) or name of the secret in Secrets Manager that stores the private repository authentication credentials.
+
+### `resource_requirements`
+
+* `type` - The type of resource to assign to a container. The supported resources include `GPU`, `MEMORY`, and `VCPU`.
+* `value` - The value for the specified resource type.
+
+### `secrets`
+
+* `name` - The name of the secret.
+* `value_from` - The value to assign to the secret.
+
+### `ulimits`
+
+* `hard_limit` - The hard limit for the ulimit type.
+* `name` - The type of the ulimit. For valid values, see the [ulimit](https://docs.docker.com/engine/reference/run/#ulimit) documentation.
+* `soft_limit` - The soft limit for the ulimit type.
+
+### `ephemeral_storage`
+
+* `size_in_gib` - The size (in GiB) of the ephemeral storage volume.
+
+### `network_configuration`
+
+* `assign_public_ip` - (Optional) Assign a public IP address to the Amazon ECS task. The default value is `DISABLED`.
+
+### `runtime_platform`
+
+* `cpu_architecture` - The CPU architecture to use for the task. The valid values are `X86_64` and `ARM64`.
+* `operating_system_family` - The operating system family to use for the task. The valid values are `LINUX` and `WINDOWS`.
+
+### `volume`
+
+* `efs_volume_configuration` - (Optional) The Amazon Elastic File System (Amazon EFS) volume configuration to use for the Amazon ECS task. See [efs_volume_configuration](#efs_volume_configuration) below.
+* `host` - (Optional) The host volume configuration to use for the Amazon ECS task. See [host](#host) below.
+* `name` - The name of the volume.
+
+### `efs_volume_configuration`
+
+* `file_system_id` - The Amazon EFS file system ID to use.
+* `authorization_config` - (Optional) The authorization configuration details for the Amazon EFS file system. See [authorization_config](#authorization_config) below.
+* `root_directory` - (Optional) The root directory to mount to the Amazon ECS task.
+* `transit_encryption` - (Optional) Whether to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. The default value is `ENABLED`.
+* `transit_encryption_port` - (Optional) The port to use when sending encrypted data between the Amazon ECS host and the Amazon EFS server. The default value is `PORT_443`.
+
+### `authorization_config`
+
+* `access_point_id` - The Amazon EFS access point ID to use.
+* `iam` - The Amazon EFS authorization method to use.
+
+### `host`
+
+* `source_path` - The path on the host container instance that's presented to the container. If this parameter is empty, then the Docker daemon has assigned a host path for you.
 
 ### `retry_strategy`
 
