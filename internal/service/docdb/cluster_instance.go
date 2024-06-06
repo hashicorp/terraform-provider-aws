@@ -12,13 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/docdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -197,7 +197,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(identifier),
 		Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
-		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
+		PromotionTier:           aws.Int32(int32(d.Get("promotion_tier").(int))),
 		Tags:                    getTagsIn(ctx),
 	}
 
@@ -292,7 +292,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
 	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
-	if v := tfslices.Filter(dbc.DBClusterMembers, func(v *awstypes.DBClusterMember) bool {
+	if v := tfslices.Filter(dbc.DBClusterMembers, func(v awstypes.DBClusterMember) bool {
 		return aws.ToString(v.DBInstanceIdentifier) == d.Id()
 	}); len(v) == 1 {
 		d.Set("writer", v[0].IsClusterWriter)
@@ -340,7 +340,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		if d.HasChange("promotion_tier") {
-			input.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+			input.PromotionTier = aws.Int32(int32(d.Get("promotion_tier").(int)))
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
@@ -406,35 +406,30 @@ func findDBInstance(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBInstancesInput) ([]*awstypes.DBInstance, error) {
-	var output []*awstypes.DBInstance
+func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBInstancesInput) ([]awstypes.DBInstance, error) {
+	var output []awstypes.DBInstance
 
-	err := conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := docdb.NewDescribeDBInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DBInstances {
-			if v != nil {
-				output = append(output, v)
+		if errs.IsA[*awstypes.DBInstanceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastRequest: input,
+				LastError:   err,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.DBInstances {
+			output = append(output, v)
+		}
 	}
 
 	return output, nil
