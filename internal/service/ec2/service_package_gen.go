@@ -480,8 +480,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAMILaunchPermission,
+			Factory:  resourceAMILaunchPermission,
 			TypeName: "aws_ami_launch_permission",
+			Name:     "AMI Launch Permission",
 		},
 		{
 			Factory:  resourceCustomerGateway,

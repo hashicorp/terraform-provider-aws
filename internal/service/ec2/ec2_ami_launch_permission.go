@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ami_launch_permission")
-func ResourceAMILaunchPermission() *schema.Resource {
+// @SDKResource("aws_ami_launch_permission", name="AMI Launch Permission")
+func resourceAMILaunchPermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMILaunchPermissionCreate,
 		ReadWithoutTimeout:   resourceAMILaunchPermissionRead,
