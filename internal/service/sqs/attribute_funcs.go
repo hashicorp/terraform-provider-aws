@@ -60,7 +60,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attribute (%s) create: %s", d.Id(), h.AttributeName, err)
 	}
 
-	return h.Read(ctx, d, meta)
+	return append(diags, h.Read(ctx, d, meta)...)
 }
 
 func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
