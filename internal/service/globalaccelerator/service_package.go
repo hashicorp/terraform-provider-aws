@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -17,7 +18,15 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return globalaccelerator.NewFromConfig(cfg, func(o *globalaccelerator.Options) {
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+			}
 		} else if config["partition"].(string) == names.StandardPartitionID {
 			// Global Accelerator endpoint is only available in AWS Commercial us-west-2 Region.
 			o.Region = names.USWest2RegionID

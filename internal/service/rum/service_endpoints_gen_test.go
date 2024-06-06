@@ -255,6 +255,23 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			},
 			expected: expectBaseConfigFileEndpoint(),
 		},
+
+		// Use FIPS endpoint on Config
+
+		"use fips config": {
+			with: []setupFunc{
+				withUseFIPSInConfig,
+			},
+			expected: expectDefaultFIPSEndpoint(region),
+		},
+
+		"use fips config with package name endpoint config": {
+			with: []setupFunc{
+				withUseFIPSInConfig,
+				withPackageNameEndpointInConfig,
+			},
+			expected: expectPackageNameConfigEndpoint(),
+		},
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
@@ -270,6 +287,25 @@ func defaultEndpoint(region string) string {
 	r := endpoints.DefaultResolver()
 
 	ep, err := r.EndpointFor(cloudwatchrum_sdkv1.EndpointsID, region)
+	if err != nil {
+		return err.Error()
+	}
+
+	url, _ := url.Parse(ep.URL)
+
+	if url.Path == "" {
+		url.Path = "/"
+	}
+
+	return url.String()
+}
+
+func defaultFIPSEndpoint(region string) string {
+	r := endpoints.DefaultResolver()
+
+	ep, err := r.EndpointFor(cloudwatchrum_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
+		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
+	})
 	if err != nil {
 		return err.Error()
 	}
@@ -346,9 +382,19 @@ func withBaseEndpointInConfigFile(setup *caseSetup) {
 	setup.configFile.baseUrl = baseConfigFileEndpoint
 }
 
+func withUseFIPSInConfig(setup *caseSetup) {
+	setup.config["use_fips_endpoint"] = true
+}
+
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
+	}
+}
+
+func expectDefaultFIPSEndpoint(region string) caseExpectations {
+	return caseExpectations{
+		endpoint: defaultFIPSEndpoint(region),
 	}
 }
 

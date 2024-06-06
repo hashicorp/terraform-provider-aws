@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -17,7 +18,15 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return route53.NewFromConfig(cfg, func(o *route53.Options) {
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+			}
 		} else {
 			switch config["partition"].(string) {
 			case names.StandardPartitionID:

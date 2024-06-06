@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -18,7 +19,15 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return chatbot.NewFromConfig(cfg, func(o *chatbot.Options) {
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+			}
 		} else if config["partition"].(string) == names.StandardPartitionID {
 			// Chatbot endpoint is available only in the 4 regions us-east-2, us-west-2, eu-west-1, and ap-southeast-1.
 			// If the region from the context is one of those four, then use that region. If not default to us-west-2

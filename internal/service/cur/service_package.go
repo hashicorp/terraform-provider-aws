@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -16,7 +17,15 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return costandusagereportservice.NewFromConfig(cfg, func(o *costandusagereportservice.Options) {
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+			}
 		} else if config["partition"].(string) == names.StandardPartitionID {
 			// AWS Cost and Usage Reports is only available in AWS Commercial us-east-1 Region.
 			// https://docs.aws.amazon.com/general/latest/gr/billing.html.
