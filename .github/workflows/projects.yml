@@ -13,38 +13,16 @@ on:
       - labeled
       - opened
 
+env:
+  ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+
 jobs:
-  community_check:
-    name: Community Check
-    runs-on: ubuntu-latest
-
-    outputs:
-      author_is_maintainer: ${{ steps.check.outputs.author_is_maintainer }}
-      assignee_is_maintainer: ${{ steps.check.outputs.assignee_is_maintainer }}
-
-    steps:
-      - name: Compare Logins to Lists
-        id: check
-        env:
-          ASSIGNEE_LOGIN: ${{ github.event.assignee.login }}
-          AUTHOR_LOGIN: ${{ github.event.issue.user.login || github.event.pull_request.user.login }}
-        run: |
-          echo "author_is_maintainer=$(echo ${{ secrets.MAINTAINERS }} | base64 --decode | jq --arg u $AUTHOR_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
-
-          # If the environment variable is unset, passing it as a jq arg throws an error
-          if [ -n "$ASSIGNEE_LOGIN" ]; then
-            echo "assignee_is_maintainer=$(echo ${{ secrets.MAINTAINERS }} | base64 --decode | jq --arg u $ASSIGNEE_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
-          fi
-
   team_board:
     name: Provider Team Project
     needs: community_check
     runs-on: ubuntu-latest
 
     env:
-      AUTHOR_IS_MAINTAINER: ${{ needs.community_check.outputs.author_is_maintainer }}
-      ASSIGNEE_IS_MAINTAINER: ${{ needs.community_check.outputs.assignee_is_maintainer }}
-      ISSUE_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
       PROJECT_ID: PVT_kwDOAAuecM4AF-7h
       PROJECT_NUMBER: 196
       STATUS_FIELD_ID: PVTSSF_lADOAAuecM4AF-7hzgDcsQA
@@ -55,7 +33,7 @@ jobs:
       VIEW_WORKING_BOARD: ${{ vars.team_project_view_working_board }}
 
     steps:
-      - name: Generate GitHub Auth Token
+      - name: Generate GitHub Authentication Token
         id: token
         uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
         with:
@@ -68,11 +46,19 @@ jobs:
               "organization_projects": "write"
             }
 
+      - name: Check if Author is Maintainer
+        id: author
+        if: github.event.action == 'opened'
+        env:
+          MAINTAINERS: ${{ secrets.MAINTAINERS }}
+          AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
+        run: |
+          echo "is_maintainer=$(echo $MAINTAINERS | base64 --decode | jq --arg u $AUTHOR_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
+
       - name: Maintainer Pull Requests
         if: |
-          github.event.name == 'pull_request_target'
-          && github.event.action == 'opened'
-          && fromJSON(env.AUTHOR_IS_MAINTAINER)
+          steps.author.conclusion != 'skipped'
+          && fromJSON(steps.author.outputs.is_maintainer)
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
@@ -90,10 +76,19 @@ jobs:
             --field-id "$VIEW_FIELD_ID" \
             --single-select-option-id "$VIEW_WORKING_BOARD"
 
+      - name: Check if Assignee is Maintainer
+        id: assignee
+        if: github.event.action == 'assigned'
+        env:
+          MAINTAINERS: ${{ secrets.MAINTAINERS }}
+          ASSIGNEE_LOGIN: ${{ github.event.assignee.login }}
+        run: |
+          echo "is_maintainer=$(echo $MAINTAINERS | base64 --decode | jq --arg u $ASSIGNEE_LOGIN '. | contains([$u])')" >> "$GITHUB_OUTPUT"
+
       - name: Maintainer Assignments
         if: |
-          github.event.action == 'assigned'
-          && fromJSON(env.ASSIGNEE_IS_MAINTAINER)
+          steps.author.conclusion != 'skipped'
+          && fromJSON(steps.assignee.outputs.is_maintainer)
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
