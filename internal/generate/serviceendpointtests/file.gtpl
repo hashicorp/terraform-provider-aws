@@ -114,6 +114,10 @@ const (
 	{{ end }}
 )
 
+const (
+	expectedCallRegion = {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }} //lintignore:AWSAT003
+)
+
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	const providerRegion = "{{ .Region }}" //lintignore:AWSAT003
 	{{ if .OverrideRegionRegionalEndpoint -}}
@@ -713,7 +717,7 @@ func withUseFIPSInConfig(setup *caseSetup) {
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 
@@ -727,17 +731,15 @@ func expectDefaultFIPSEndpoint(region string) caseExpectations {
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 
-{{ $region := .Region }}
-{{ if .OverrideRegion }}{{ $region = .OverrideRegion }}{{ end }}
 {{ range $i, $alias := .Aliases }}
 func expectAliasName{{ $i }}ConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: aliasName{{ $i }}ConfigEndpoint,
-		region:   "{{ $region }}",
+		region:   expectedCallRegion,
 	}
 }
 {{ end }}
@@ -745,14 +747,14 @@ func expectAliasName{{ $i }}ConfigEndpoint() caseExpectations {
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 
@@ -763,7 +765,7 @@ func expectTfAwsEnvVarEndpoint() caseExpectations {
 		diags: diag.Diagnostics{
 			provider.DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar),
 		},
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 {{ end }}
@@ -775,7 +777,7 @@ func expectDeprecatedEnvVarEndpoint() caseExpectations {
 		diags: diag.Diagnostics{
 			provider.DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar),
 		},
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 {{ end }}
@@ -783,14 +785,14 @@ func expectDeprecatedEnvVarEndpoint() caseExpectations {
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 

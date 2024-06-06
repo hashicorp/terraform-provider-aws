@@ -78,6 +78,10 @@ const (
 	configParam = "redshift_serverless"
 )
 
+const (
+	expectedCallRegion = "us-west-2" //lintignore:AWSAT003
+)
+
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 	const providerRegion = "us-west-2" //lintignore:AWSAT003
 	const expectedEndpointRegion = providerRegion
@@ -364,7 +368,7 @@ func withUseFIPSInConfig(setup *caseSetup) {
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
-		region:   "us-west-2",
+		region:   expectedCallRegion,
 	}
 }
 
@@ -378,35 +382,35 @@ func expectDefaultFIPSEndpoint(region string) caseExpectations {
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
-		region:   "us-west-2",
+		region:   expectedCallRegion,
 	}
 }
 
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
-		region:   "us-west-2",
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
-		region:   "us-west-2",
+		region:   expectedCallRegion,
 	}
 }
 
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
-		region:   "us-west-2",
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
-		region:   "us-west-2",
+		region:   expectedCallRegion,
 	}
 }
 
