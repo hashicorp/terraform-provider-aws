@@ -242,7 +242,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	db, err := FindDBInstanceByID(ctx, conn, d.Id())
+	db, err := findDBInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster Instance (%s) not found, removing from state", d.Id())
@@ -255,7 +255,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	clusterID := aws.ToString(db.DBClusterIdentifier)
-	dbc, err := FindDBClusterByID(ctx, conn, clusterID)
+	dbc, err := findDBClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s): %s", clusterID, err)
@@ -383,7 +383,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindDBInstanceByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBInstance, error) {
+func findDBInstanceByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBInstance, error) {
 	input := &docdb.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
@@ -441,7 +441,7 @@ func findDBInstances(ctx context.Context, conn *docdb.Client, input *docdb.Descr
 
 func statusDBInstance(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(ctx, conn, id)
+		output, err := findDBInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

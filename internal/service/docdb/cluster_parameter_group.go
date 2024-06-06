@@ -138,7 +138,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	dbClusterParameterGroup, err := FindDBClusterParameterGroupByName(ctx, conn, d.Id())
+	dbClusterParameterGroup, err := findDBClusterParameterGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster Parameter Group (%s) not found, removing from state", d.Id())
@@ -211,7 +211,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (interface{}, error) {
-		return FindDBClusterParameterGroupByName(ctx, conn, d.Id())
+		return findDBClusterParameterGroupByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -242,7 +242,7 @@ func modifyClusterParameterGroupParameters(ctx context.Context, conn *docdb.Clie
 	return nil
 }
 
-func FindDBClusterParameterGroupByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.DBClusterParameterGroup, error) {
+func findDBClusterParameterGroupByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.DBClusterParameterGroup, error) {
 	input := &docdb.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(name),
 	}

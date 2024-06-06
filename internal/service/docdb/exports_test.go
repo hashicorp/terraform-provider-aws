@@ -4,3 +4,12 @@
 package docdb
 
 // Exports for use in tests only.
+var (
+	FindDBClusterByID                 = findDBClusterByID
+	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
+	FindDBSubnetGroupByName           = findDBSubnetGroupByName
+	FindClusterSnapshotByID           = findClusterSnapshotByID
+	FindDBInstanceByID                = findDBInstanceByID
+	FindEventSubscriptionByName       = findEventSubscriptionByName
+	FindGlobalClusterByID             = findGlobalClusterByID
+)

@@ -147,7 +147,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	output, err := FindEventSubscriptionByName(ctx, conn, d.Id())
+	output, err := findEventSubscriptionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Event Subscription (%s) not found, removing from state", d.Id())
@@ -279,7 +279,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindEventSubscriptionByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.EventSubscription, error) {
+func findEventSubscriptionByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.EventSubscription, error) {
 	input := &docdb.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
@@ -339,7 +339,7 @@ func findEventSubscriptions(ctx context.Context, conn *docdb.Client, input *docd
 
 func statusEventSubscription(ctx context.Context, conn *docdb.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEventSubscriptionByName(ctx, conn, name)
+		output, err := findEventSubscriptionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -128,7 +128,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	snapshot, err := FindClusterSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findClusterSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster Snapshot (%s) not found, removing from state", d.Id())
@@ -177,7 +177,7 @@ func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindClusterSnapshotByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBClusterSnapshot, error) {
+func findClusterSnapshotByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBClusterSnapshot, error) {
 	input := &docdb.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
@@ -237,7 +237,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 
 func statusClusterSnapshot(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterSnapshotByID(ctx, conn, id)
+		output, err := findClusterSnapshotByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -105,7 +105,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	subnetGroup, err := FindDBSubnetGroupByName(ctx, conn, d.Id())
+	subnetGroup, err := findDBSubnetGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Subnet Group (%s) not found, removing from state", d.Id())
@@ -169,7 +169,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, 10*time.Minute, func() (interface{}, error) {
-		return FindDBSubnetGroupByName(ctx, conn, d.Id())
+		return findDBSubnetGroupByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -179,7 +179,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindDBSubnetGroupByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.DBSubnetGroup, error) {
+func findDBSubnetGroupByName(ctx context.Context, conn *docdb.Client, name string) (*awstypes.DBSubnetGroup, error) {
 	input := &docdb.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}

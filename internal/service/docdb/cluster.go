@@ -476,7 +476,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBClient(ctx)
 
-	dbc, err := FindDBClusterByID(ctx, conn, d.Id())
+	dbc, err := findDBClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DocumentDB Cluster (%s) not found, removing from state", d.Id())
@@ -759,7 +759,7 @@ func removeClusterFromGlobalCluster(ctx context.Context, conn *docdb.Client, clu
 	return nil
 }
 
-func FindDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBCluster, error) {
+func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*awstypes.DBCluster, error) {
 	input := &docdb.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
@@ -827,7 +827,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 
 func statusDBCluster(ctx context.Context, conn *docdb.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBClusterByID(ctx, conn, id)
+		output, err := findDBClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
