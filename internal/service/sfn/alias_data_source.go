@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,9 +69,10 @@ const (
 )
 
 func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
-	aliasArn := ""
 
+	aliasArn := ""
 	in := &sfn.ListStateMachineAliasesInput{
 		StateMachineArn: aws.String(d.Get("statemachine_arn").(string)),
 	}
@@ -78,11 +80,11 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	out, err := conn.ListStateMachineAliasesWithContext(ctx, in)
 
 	if err != nil {
-		return diag.Errorf("listing Step Functions State Machines: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machines: %s", err)
 	}
 
 	if n := len(out.StateMachineAliases); n == 0 {
-		return diag.Errorf("no Step Functions State Machine Aliases matched")
+		return sdkdiag.AppendErrorf(diags, "no Step Functions State Machine Aliases matched")
 	}
 
 	for _, in := range out.StateMachineAliases {
@@ -92,13 +94,13 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if aliasArn == "" {
-		return diag.Errorf("no Step Functions State Machine Aliases matched")
+		return sdkdiag.AppendErrorf(diags, "no Step Functions State Machine Aliases matched")
 	}
 
 	output, err := FindAliasByARN(ctx, conn, aliasArn)
 
 	if err != nil {
-		return diag.Errorf("reading Step Functions State Machine Alias (%s): %s", aliasArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine Alias (%s): %s", aliasArn, err)
 	}
 
 	d.SetId(aliasArn)
@@ -108,8 +110,8 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(output.RoutingConfiguration)); err != nil {
-		return create.DiagError(names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
