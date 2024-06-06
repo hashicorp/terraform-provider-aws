@@ -131,8 +131,9 @@ func (d *dataSourceServerCertificates) Read(ctx context.Context, req datasource.
 			}
 		}
 	}
-
-	sort.Sort(CertificateByExpiration(out.ServerCertificateMetadataList))
+	if data.Latest.ValueBool() {
+		sort.Sort(CertificateByExpiration(out.ServerCertificateMetadataList))
+	}
 
 	res := flex.Flatten(ctx, out, &data)
 	resp.Diagnostics.Append(res...)
