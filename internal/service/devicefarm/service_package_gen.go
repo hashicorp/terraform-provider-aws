@@ -30,7 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDevicePool,
+			Factory:  resourceDevicePool,
 			TypeName: "aws_devicefarm_device_pool",
 			Name:     "Device Pool",
 			Tags: &types.ServicePackageResourceTags{
@@ -38,7 +38,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstanceProfile,
+			Factory:  resourceInstanceProfile,
 			TypeName: "aws_devicefarm_instance_profile",
 			Name:     "Instance Profile",
 			Tags: &types.ServicePackageResourceTags{
@@ -46,7 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNetworkProfile,
+			Factory:  resourceNetworkProfile,
 			TypeName: "aws_devicefarm_network_profile",
 			Name:     "Network Profile",
 			Tags: &types.ServicePackageResourceTags{
@@ -54,7 +54,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProject,
+			Factory:  resourceProject,
 			TypeName: "aws_devicefarm_project",
 			Name:     "Project",
 			Tags: &types.ServicePackageResourceTags{
@@ -62,7 +62,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTestGridProject,
+			Factory:  resourceTestGridProject,
 			TypeName: "aws_devicefarm_test_grid_project",
 			Name:     "Test Grid Project",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,8 +70,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUpload,
+			Factory:  resourceUpload,
 			TypeName: "aws_devicefarm_upload",
+			Name:     "Upload",
 		},
 	}
 }

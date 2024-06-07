@@ -89,6 +89,7 @@ const (
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
+	SchemasEndpointID                    = "schemas"
 	SchedulerEndpointID                  = "scheduler"
 	ServiceQuotasEndpointID              = "servicequotas"
 	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
