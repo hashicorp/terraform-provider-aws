@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/schemas"
-	"github.com/aws/aws-sdk-go/service/schemas/schemasiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/schemas"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/schemas/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +19,12 @@ import (
 // listTags lists schemas service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn schemasiface.SchemasAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *schemas.Client, identifier string, optFns ...func(*schemas.Options)) (tftags.KeyValueTags, error) {
 	input := &schemas.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +36,7 @@ func listTags(ctx context.Context, conn schemasiface.SchemasAPI, identifier stri
 // ListTags lists schemas service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).SchemasConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).SchemasClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -83,7 +83,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 // updateTags updates schemas service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn schemasiface.SchemasAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *schemas.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*schemas.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -94,10 +94,10 @@ func updateTags(ctx context.Context, conn schemasiface.SchemasAPI, identifier st
 	if len(removedTags) > 0 {
 		input := &schemas.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -112,7 +112,7 @@ func updateTags(ctx context.Context, conn schemasiface.SchemasAPI, identifier st
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -125,5 +125,5 @@ func updateTags(ctx context.Context, conn schemasiface.SchemasAPI, identifier st
 // UpdateTags updates schemas service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).SchemasConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).SchemasClient(ctx), identifier, oldTags, newTags)
 }
