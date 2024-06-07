@@ -42,7 +42,7 @@ func TestAccSchemasRegistryPolicy_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"policy"},
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 		},
 	})
