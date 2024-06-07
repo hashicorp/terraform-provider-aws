@@ -142,6 +142,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceHost,
 			TypeName: "aws_ec2_host",
 			Name:     "Host",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceInstanceType,
@@ -321,8 +322,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "EIPs",
 		},
 		{
-			Factory:  DataSourceInstance,
+			Factory:  dataSourceInstance,
 			TypeName: "aws_instance",
+			Name:     "Instance",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceInstances,

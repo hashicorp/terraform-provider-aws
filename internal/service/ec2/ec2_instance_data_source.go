@@ -25,8 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_instance")
-func DataSourceInstance() *schema.Resource {
+// @SDKDataSource("aws_instance", name="Instance")
+// @Tags
+func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
@@ -545,10 +546,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
+	setTagsOutV2(ctx, instance.Tags)
 
 	// Security Groups
 	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
