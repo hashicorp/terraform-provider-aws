@@ -470,11 +470,12 @@ func waitDBInstanceAvailable(ctx context.Context, conn *docdb.Client, id string,
 			"storage-optimization",
 			"upgrading",
 		},
-		Target:     []string{"available"},
-		Refresh:    statusDBInstance(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Target:                    []string{"available"},
+		Refresh:                   statusDBInstance(ctx, conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
