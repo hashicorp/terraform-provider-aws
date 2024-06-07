@@ -59,12 +59,13 @@ const (
 )
 
 func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	registryName := d.Get("registry_name").(string)
 	policy, err := structure.ExpandJsonFromString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return create.DiagError(names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
+		return create.AppendDiagError(diags, names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
 	}
 
 	input := &schemas.PutResourcePolicyInput{
@@ -76,15 +77,16 @@ func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err = conn.PutResourcePolicyWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
+		return create.AppendDiagError(diags, names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
 	}
 
 	d.SetId(registryName)
 
-	return resourceRegistryPolicyRead(ctx, d, meta)
+	return append(diags, resourceRegistryPolicyRead(ctx, d, meta)...)
 }
 
 func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	output, err := FindRegistryPolicyByName(ctx, conn, d.Id())
@@ -92,30 +94,31 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Registry Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
 	}
 
 	policy, err := structure.FlattenJsonToString(output.Policy)
 	if err != nil {
-		return create.DiagError(names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
 	}
 
 	d.Set(names.AttrPolicy, policy)
 	d.Set("registry_name", d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	policy, err := structure.ExpandJsonFromString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return create.DiagError(names.Schemas, create.ErrActionUpdating, ResNameRegistryPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Schemas, create.ErrActionUpdating, ResNameRegistryPolicy, d.Id(), err)
 	}
 
 	if d.HasChanges(names.AttrPolicy) {
@@ -128,14 +131,15 @@ func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := conn.PutResourcePolicyWithContext(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.Schemas, create.ErrActionUpdating, ResNameRegistryPolicy, d.Id(), err)
+			return create.AppendDiagError(diags, names.Schemas, create.ErrActionUpdating, ResNameRegistryPolicy, d.Id(), err)
 		}
 	}
 
-	return resourceRegistryPolicyRead(ctx, d, meta)
+	return append(diags, resourceRegistryPolicyRead(ctx, d, meta)...)
 }
 
 func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry Policy (%s)", d.Id())
@@ -144,12 +148,12 @@ func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Schemas, create.ErrActionDeleting, ResNameRegistryPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Schemas, create.ErrActionDeleting, ResNameRegistryPolicy, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

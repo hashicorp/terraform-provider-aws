@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,6 +54,7 @@ func DataSourceDNSNamespace() *schema.Resource {
 }
 
 func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -61,7 +63,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, nsType)
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
 	}
 
 	namespaceID := aws.StringValue(nsSummary.Id)
@@ -69,7 +71,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", nsType, namespaceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery %s Namespace (%s): %s", nsType, namespaceID, err)
 	}
 
 	d.SetId(namespaceID)
@@ -86,12 +88,12 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Service Discovery %s Namespace (%s): %s", nsType, arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Service Discovery %s Namespace (%s): %s", nsType, arn, err)
 	}
 
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

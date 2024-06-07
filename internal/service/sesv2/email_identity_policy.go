@@ -108,7 +108,7 @@ func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData
 
 	emailIdentity, policyName, err := ParseEmailIdentityPolicyID(d.Id())
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
 	}
 
 	policy, err := FindEmailIdentityPolicyByID(ctx, conn, d.Id())
@@ -165,13 +165,14 @@ func resourceEmailIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceEmailIdentityPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 EmailIdentityPolicy %s", d.Id())
 
 	emailIdentity, policyName, err := ParseEmailIdentityPolicyID(d.Id())
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
 	}
 
 	_, err = conn.DeleteEmailIdentityPolicy(ctx, &sesv2.DeleteEmailIdentityPolicyInput{
@@ -182,13 +183,13 @@ func resourceEmailIdentityPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameEmailIdentityPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameEmailIdentityPolicy, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindEmailIdentityPolicyByID(ctx context.Context, conn *sesv2.Client, id string) (string, error) {
