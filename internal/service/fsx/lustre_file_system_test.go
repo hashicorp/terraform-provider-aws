@@ -788,6 +788,7 @@ func TestAccFSxLustreFileSystem_metadataConfig(t *testing.T) {
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "AUTOMATIC"),
+					resource.TestCheckResourceAttrSet(resourceName, "metadata_configuration.0.iops"),
 				),
 			},
 			{
