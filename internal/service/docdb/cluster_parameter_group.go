@@ -279,7 +279,7 @@ func findDBClusterParameterGroups(ctx context.Context, conn *docdb.Client, input
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.DBClusterParameterGroupNotFoundFault](err) {
+		if errs.IsA[*awstypes.DBParameterGroupNotFoundFault](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
