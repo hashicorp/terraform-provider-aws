@@ -176,6 +176,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.55.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/schemas v1.24.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.8 // indirect
