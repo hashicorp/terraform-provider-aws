@@ -8,8 +8,12 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_customer_gateway: Add `bgp_asn_extended` argument ([#37815](https://github.com/hashicorp/terraform-provider-aws/issues/37815))
+* data-source/aws_rds_engine_version: Add `supports_limitless_database` attribute ([#37271](https://github.com/hashicorp/terraform-provider-aws/issues/37271))
+* provider: The `use_fips_endpoint` flag is now ignored for any service with a custom endpoint configured in `endpoints`. ([#34233](https://github.com/hashicorp/terraform-provider-aws/issues/34233))
+* resource/aws_apigatewayv2_authorizer: Add configurable `delete` timeout ([#37732](https://github.com/hashicorp/terraform-provider-aws/issues/37732))
 * resource/aws_customer_gateway: Add `bgp_asn_extended` argument ([#37815](https://github.com/hashicorp/terraform-provider-aws/issues/37815))
 * resource/aws_lb: Add support for IPv6-only Application Load Balancers ([#37700](https://github.com/hashicorp/terraform-provider-aws/issues/37700))
+* resource/aws_mwaa_environment: Add `max_webservers` and `min_webservers` attributes ([#37632](https://github.com/hashicorp/terraform-provider-aws/issues/37632))
 * resource/aws_pipes_pipe: Add `log_configuration` argument ([#37135](https://github.com/hashicorp/terraform-provider-aws/issues/37135))
 * resource/aws_route53_record: Fix `InvalidChangeBatch` errors on resource Delete ([#37850](https://github.com/hashicorp/terraform-provider-aws/issues/37850))
 * resource/aws_s3_bucket: Ignore `UnsupportedOperation` errors when reading `acceleration_status`, `server_side_encryption_configuration` and `tags` ([#37801](https://github.com/hashicorp/terraform-provider-aws/issues/37801))
@@ -17,6 +21,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_apigatewayv2_authorizer: Fix `ConflictException` errors on resource Delete ([#37732](https://github.com/hashicorp/terraform-provider-aws/issues/37732))
 * resource/aws_bedrockagent_agent: Increase `instruction` max length for validation to 4000 ([#37758](https://github.com/hashicorp/terraform-provider-aws/issues/37758))
 * resource/aws_cloudwatch_log_group: Correctly handles tag updates with empty string tags ([#37668](https://github.com/hashicorp/terraform-provider-aws/issues/37668))
 * resource/aws_kms_external_key: Fixes timeout error on creation when `ignore_tags` matches tag assigned to resource ([#37818](https://github.com/hashicorp/terraform-provider-aws/issues/37818))
@@ -28,6 +33,13 @@ BUG FIXES:
 * resource/aws_secretsmanager_secret: Tags with empty values no longer remove all tags. ([#37743](https://github.com/hashicorp/terraform-provider-aws/issues/37743))
 * resource/aws_ssm_parameter: Fix `Cannot import non-existent remote object` errors when importing resources with version ([#37832](https://github.com/hashicorp/terraform-provider-aws/issues/37832))
 * resource/aws_vpc_endpoint: Restore pre-v5.51.0 default of `false` for `private_dns_enabled` ([#37715](https://github.com/hashicorp/terraform-provider-aws/issues/37715))
+* service/chatbot: Correctly overrides region when using custom endpoint. ([#37851](https://github.com/hashicorp/terraform-provider-aws/issues/37851))
+* service/costoptimizationhub: Correctly overrides region when using custom endpoint. ([#37851](https://github.com/hashicorp/terraform-provider-aws/issues/37851))
+* service/cur: Correctly overrides region when using custom endpoint. ([#37851](https://github.com/hashicorp/terraform-provider-aws/issues/37851))
+* service/globalaccelerator: Correctly overrides region when using custom endpoint. ([#37851](https://github.com/hashicorp/terraform-provider-aws/issues/37851))
+* service/route53: Correctly overrides region when using custom endpoint. ([#37851](https://github.com/hashicorp/terraform-provider-aws/issues/37851))
+* service/route53domains: Correctly overrides region when using custom endpoint. ([#37851](https://github.com/hashicorp/terraform-provider-aws/issues/37851))
+* service/shield: Correctly overrides region when using custom endpoint. ([#37851](https://github.com/hashicorp/terraform-provider-aws/issues/37851))
 
 ## 5.52.0 (May 30, 2024)
 
