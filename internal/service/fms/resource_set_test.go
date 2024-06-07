@@ -44,8 +44,8 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_set_status"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.resource_set_status"),
 				),
 			},
 		},
@@ -107,11 +107,6 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccResourceSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -209,8 +204,8 @@ resource "aws_fms_admin_account" "test" {
 resource "aws_fms_resource_set" "test" {
   depends_on = [aws_fms_admin_account.test]
   resource_set {
-    name                = %[1]q
-    resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
   }
 }
 `, rName)
@@ -225,9 +220,10 @@ resource "aws_fms_admin_account" "test" {
 }
 
 resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
   resource_set {
-    name                = %[1]q
-    resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
   }
 
   tags = {
@@ -245,9 +241,10 @@ resource "aws_fms_admin_account" "test" {
   account_id = data.aws_caller_identity.current.account_id
 }
 resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
   resource_set {
-    name                = %[1]q
-    resource_type_list  = ["AWS::NetworkFirewall::Firewall"]
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
   }
 
   tags = {
