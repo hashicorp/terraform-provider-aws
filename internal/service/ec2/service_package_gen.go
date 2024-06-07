@@ -347,8 +347,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceLaunchTemplate,
+			Factory:  dataSourceLaunchTemplate,
 			TypeName: "aws_launch_template",
+			Name:     "Launch Template",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceNATGateway,

@@ -21,8 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_launch_template")
-func DataSourceLaunchTemplate() *schema.Resource {
+// @SDKDataSource("aws_launch_template", name="Launch Template")
+// @Tags
+func dataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchTemplateRead,
 
@@ -782,7 +783,6 @@ func DataSourceLaunchTemplate() *schema.Resource {
 func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeLaunchTemplatesInput{}
 
@@ -838,9 +838,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "settings tags: %s", err)
-	}
+	setTagsOutV2(ctx, lt.Tags)
 
 	return diags
 }
