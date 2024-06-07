@@ -27,7 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDiscoverer,
+			Factory:  resourceDiscoverer,
 			TypeName: "aws_schemas_discoverer",
 			Name:     "Discoverer",
 			Tags: &types.ServicePackageResourceTags{

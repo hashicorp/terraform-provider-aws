@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDiscovererByID(ctx context.Context, conn *schemas.Schemas, id string) (*schemas.DescribeDiscovererOutput, error) {
-	input := &schemas.DescribeDiscovererInput{
-		DiscovererId: aws.String(id),
-	}
-
-	output, err := conn.DescribeDiscovererWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindRegistryByName(ctx context.Context, conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
 	input := &schemas.DescribeRegistryInput{
 		RegistryName: aws.String(name),
