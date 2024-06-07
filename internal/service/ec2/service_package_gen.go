@@ -150,8 +150,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Instance Type",
 		},
 		{
-			Factory:  DataSourceInstanceTypeOffering,
+			Factory:  dataSourceInstanceTypeOffering,
 			TypeName: "aws_ec2_instance_type_offering",
+			Name:     "Instance Type Offering",
 		},
 		{
 			Factory:  DataSourceInstanceTypeOfferings,
