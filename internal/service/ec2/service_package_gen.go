@@ -627,7 +627,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Client VPN Route",
 		},
 		{
-			Factory:  ResourceFleet,
+			Factory:  resourceFleet,
 			TypeName: "aws_ec2_fleet",
 			Name:     "Fleet",
 			Tags: &types.ServicePackageResourceTags{

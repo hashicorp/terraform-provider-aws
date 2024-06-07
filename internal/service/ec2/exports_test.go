@@ -65,6 +65,7 @@ var (
 	ResourceAMILaunchPermission                      = resourceAMILaunchPermission
 	ResourceAvailabilityZoneGroup                    = resourceAvailabilityZoneGroup
 	ResourceCapacityReservation                      = resourceCapacityReservation
+	ResourceFleet                                    = resourceFleet
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
