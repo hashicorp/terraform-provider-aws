@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.4
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.23
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.7
-	github.com/aws/aws-sdk-go-v2/service/account v1.16.9
+	github.com/aws/aws-sdk-go-v2/service/account v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/amp v1.25.9
@@ -93,7 +93,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.9
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.6
-	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.11
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/fms v1.33.6
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.9
@@ -162,8 +162,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/shield v1.25.9
 	github.com/aws/aws-sdk-go-v2/service/signer v1.22.12
-	github.com/aws/aws-sdk-go-v2/service/sns v1.29.9
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.32.4
+	github.com/aws/aws-sdk-go-v2/service/sns v1.29.10
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.32.5
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.50.5
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.22.9
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.30.9
