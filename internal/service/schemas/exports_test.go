@@ -5,7 +5,9 @@ package schemas
 
 // Exports for use in tests only.
 var (
-	ResourceDiscoverer = resourceDiscoverer
+	ResourceDiscoverer     = resourceDiscoverer
+	ResourceRegistryPolicy = resourceRegistryPolicy
 
-	FindDiscovererByID = findDiscovererByID
+	FindDiscovererByID       = findDiscovererByID
+	FindRegistryPolicyByName = findRegistryPolicyByName
 )

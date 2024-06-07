@@ -63,28 +63,3 @@ func FindSchemaByNameAndRegistryName(ctx context.Context, conn *schemas.Schemas,
 
 	return output, nil
 }
-
-func FindRegistryPolicyByName(ctx context.Context, conn *schemas.Schemas, name string) (*schemas.GetResourcePolicyOutput, error) {
-	input := &schemas.GetResourcePolicyInput{
-		RegistryName: aws.String(name),
-	}
-
-	output, err := conn.GetResourcePolicyWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
