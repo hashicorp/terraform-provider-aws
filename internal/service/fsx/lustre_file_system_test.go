@@ -53,7 +53,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
@@ -786,7 +786,7 @@ func TestAccFSxLustreFileSystem_metadataConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "AUTOMATIC"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata_configuration.0.iops"),
 				),
@@ -802,7 +802,7 @@ func TestAccFSxLustreFileSystem_metadataConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "1500"),
 				),
@@ -827,7 +827,7 @@ func TestAccFSxLustreFileSystem_metadataConfig_increase(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 1500),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "1500"),
 				),
@@ -843,7 +843,7 @@ func TestAccFSxLustreFileSystem_metadataConfig_increase(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "3000"),
 				),
@@ -868,7 +868,7 @@ func TestAccFSxLustreFileSystem_metadataConfig_decrease(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_metadata_iops(rName, "USER_PROVISIONED", 3000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "3000"),
 				),
@@ -884,7 +884,7 @@ func TestAccFSxLustreFileSystem_metadataConfig_decrease(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.iops", "1500"),
 				),

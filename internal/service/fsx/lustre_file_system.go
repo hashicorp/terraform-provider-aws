@@ -186,13 +186,13 @@ func resourceLustreFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(fsx.MetadataConfigurationMode_Values(), false)),
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -354,8 +354,8 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 				}
 
 				if len(metaNew) > 0 && len(metaOld) > 0 {
-					if metaNew["iops"].(int) < metaOld["iops"].(int) {
-						log.Printf("[DEBUG] Forcing new due to metadata iops decrease. old iops: %d new iops: %d", metaOld["iops"].(int), metaNew["iops"].(int))
+					if metaNew[names.AttrIOPS].(int) < metaOld[names.AttrIOPS].(int) {
+						log.Printf("[DEBUG] Forcing new due to metadata iops decrease. old iops: %d new iops: %d", metaOld[names.AttrIOPS].(int), metaNew[names.AttrIOPS].(int))
 						if err := d.ForceNew("metadata_configuration.0.iops"); err != nil {
 							return err
 						}
@@ -738,10 +738,10 @@ func expandLustreMetadataCreateConfiguration(l []interface{}) *fsx.CreateFileSys
 
 	data := l[0].(map[string]interface{})
 	req := &fsx.CreateFileSystemLustreMetadataConfiguration{
-		Mode: aws.String(data["mode"].(string)),
+		Mode: aws.String(data[names.AttrMode].(string)),
 	}
 
-	if v, ok := data["iops"].(int); ok && v != 0 {
+	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
 		req.Iops = aws.Int64(int64(v))
 	}
 
@@ -755,10 +755,10 @@ func expandLustreMetadataUpdateConfiguration(l []interface{}) *fsx.UpdateFileSys
 
 	data := l[0].(map[string]interface{})
 	req := &fsx.UpdateFileSystemLustreMetadataConfiguration{
-		Mode: aws.String(data["mode"].(string)),
+		Mode: aws.String(data[names.AttrMode].(string)),
 	}
 
-	if v, ok := data["iops"].(int); ok && v != 0 {
+	if v, ok := data[names.AttrIOPS].(int); ok && v != 0 {
 		req.Iops = aws.Int64(int64(v))
 	}
 
@@ -771,11 +771,11 @@ func flattenLustreMetadataConfiguration(adopts *fsx.FileSystemLustreMetadataConf
 	}
 
 	m := map[string]interface{}{
-		"mode": aws.StringValue(adopts.Mode),
+		names.AttrMode: aws.StringValue(adopts.Mode),
 	}
 
 	if adopts.Iops != nil {
-		m["iops"] = aws.Int64Value(adopts.Iops)
+		m[names.AttrIOPS] = aws.Int64Value(adopts.Iops)
 	}
 
 	return []map[string]interface{}{m}
