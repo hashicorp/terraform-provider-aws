@@ -48,7 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Registry Policy",
 		},
 		{
-			Factory:  ResourceSchema,
+			Factory:  resourceSchema,
 			TypeName: "aws_schemas_schema",
 			Name:     "Schema",
 			Tags: &types.ServicePackageResourceTags{

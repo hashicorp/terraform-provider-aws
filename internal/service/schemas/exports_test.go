@@ -8,8 +8,10 @@ var (
 	ResourceDiscoverer     = resourceDiscoverer
 	ResourceRegistry       = resourceRegistry
 	ResourceRegistryPolicy = resourceRegistryPolicy
+	ResourceSchema         = resourceSchema
 
 	FindDiscovererByID       = findDiscovererByID
 	FindRegistryByName       = findRegistryByName
 	FindRegistryPolicyByName = findRegistryPolicyByName
+	FindSchemaByTwoPartKey   = findSchemaByTwoPartKey
 )

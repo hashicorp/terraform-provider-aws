@@ -165,7 +165,7 @@ func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 
 					r := ResourceSchema()
 					d := r.Data(nil)
-					d.SetId(SchemaCreateResourceID(schemaName, registryName))
+					d.SetId(schemaCreateResourceID(schemaName, registryName))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
