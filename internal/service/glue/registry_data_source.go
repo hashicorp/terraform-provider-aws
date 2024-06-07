@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,59 +33,20 @@ func (d *dataSourceRegistry) Metadata(_ context.Context, req datasource.Metadata
 	resp.TypeName = "aws_glue_registry"
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the arguments and attributes in snake
-// case (e.g., delete_automated_backups).
-// * Alphabetize arguments to make them easier to find.
-// * Do not add a blank line between arguments/attributes.
-//
-// Users can configure argument values while attribute values cannot be
-// configured and are used as output. Arguments have either:
-// Required: true,
-// Optional: true,
-//
-// All attributes will be computed and some arguments. If users will
-// want to read updated information or detect drift for an argument,
-// it should be computed:
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (d *dataSourceRegistry) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
-			"type": schema.StringAttribute{
+			"registry_name": schema.StringAttribute{
 				Computed: true,
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"complex_argument": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						// TIP: Attributes that are required on a corresponding resource will be
-						// computed on the data source (unless required as part of the search criteria).
-						"nested_required": schema.StringAttribute{
-							Computed: true,
-						},
-						"nested_computed": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }
@@ -113,7 +75,8 @@ func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	// TIP: -- 3. Get information about a resource from AWS
-	out, err := findRegistryByName(ctx, conn, data.Name.ValueString())
+	out, err := FindRegistryByID(ctx, conn, data.ID.ValueString())
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, DSNameRegistry, data.Name.String(), err),
@@ -163,15 +126,9 @@ func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadReques
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type dataSourceRegistryData struct {
-	ARN             types.String `tfsdk:"arn"`
-	ComplexArgument types.List   `tfsdk:"complex_argument"`
-	Description     types.String `tfsdk:"description"`
-	ID              types.String `tfsdk:"id"`
-	Name            types.String `tfsdk:"name"`
-	Type            types.String `tfsdk:"type"`
-}
-
-type complexArgumentData struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
+	ARN         types.String `tfsdk:"arn"`
+	Description types.String `tfsdk:"description"`
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	Type        types.String `tfsdk:"type"`
 }
