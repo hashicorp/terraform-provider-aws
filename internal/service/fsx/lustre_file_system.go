@@ -333,11 +333,7 @@ func resourceLustreFileSystemMetadataConfigCustomizeDiff(_ context.Context, d *s
 	// we want to force a new resource if the new Iops is less than the old one
 	if d.HasChange("metadata_configuration") {
 		if v, ok := d.GetOk("metadata_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-
-			o, nil := d.GetChange("metadata_configuration.0.mode")
-
-			if o == fsx.MetadataConfigurationModeUserProvisioned {
-
+			if mode := d.Get("metadata_configuration.0.mode"); mode == fsx.MetadataConfigurationModeUserProvisioned {
 				o, n := d.GetChange("metadata_configuration")
 
 				oldV := o.([]interface{})
