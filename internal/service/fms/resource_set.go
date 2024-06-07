@@ -325,7 +325,7 @@ func waitResourceSetUpdated(ctx context.Context, conn *fms.Client, id string, ti
 
 func waitResourceSetDeleted(ctx context.Context, conn *fms.Client, id string, timeout time.Duration) (*fms.GetResourceSetOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.ResourceSetStatusOutOfAdminScope)},
+		Pending: enum.Slice(awstypes.ResourceSetStatusOutOfAdminScope),
 		Target:  []string{},
 		Refresh: statusResourceSet(ctx, conn, id),
 		Timeout: timeout,

@@ -33,7 +33,6 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
-			// testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -43,7 +42,7 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 				Config: testAccResourceSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_set.0.resource_set_status"),
 				),
@@ -176,20 +175,6 @@ func testAccCheckResourceSetExists(ctx context.Context, name string, resourceset
 		*resourceset = *resp
 
 		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
-
-	input := &fms.ListResourceSetsInput{}
-	_, err := conn.ListResourceSets(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
