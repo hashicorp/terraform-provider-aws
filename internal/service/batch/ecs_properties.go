@@ -8,11 +8,25 @@ import (
 )
 
 const (
-	IpcModeHost = "host"
-	IpcModeTask = "task"
-	IpcModeNone = "none"
-	PicModeHost = "host"
-	PicModeTask = "task"
+	IpcModeHost                                  = "host"
+	IpcModeTask                                  = "task"
+	IpcModeNone                                  = "none"
+	PicModeHost                                  = "host"
+	PicModeTask                                  = "task"
+	ResourceRequirementTypeGPU                   = "GPU"
+	ResourceRequirementTypeVCPU                  = "VCPU"
+	ResourceRequirementTypeMEMORY                = "MEMORY"
+	RunTimePlatFormCpuArchX86_64                 = "X86_64"
+	RunTimePlatFormCpuArchARM64                  = "ARM64"
+	RunTimePlatformOSFamilyLinux                 = "LINUX"
+	RunTimePlatformOSFamilyWindowsServer2019Core = "WINDOWS_SERVER_2019_CORE"
+	RunTimePlatformOSFamilyWindowsServer2019Full = "WINDOWS_SERVER_2019_FULL"
+	RunTimePlatformOSFamilyWindowsServer2022Core = "WINDOWS_SERVER_2022_CORE"
+	RunTimePlatformOSFamilyWindowsServer2022Full = "WINDOWS_SERVER_2022_FULL"
+	EFSVolumeTransitEncryptionEnabled            = "ENABLED"
+	EFSVolumeTransitEncryptionDisabled           = "DISABLED"
+	NetworkConfigurationAssignPublicIpEnabled    = "ENABLED"
+	NetworkConfigurationAssignPublicIpDisabled   = "DISABLED"
 )
 
 func IpcMode_Values() []string {
@@ -21,6 +35,32 @@ func IpcMode_Values() []string {
 
 func PidMode_Values() []string {
 	return []string{PicModeHost, PicModeTask}
+}
+
+func ResourceRequirementType_Values() []string {
+	return []string{ResourceRequirementTypeGPU, ResourceRequirementTypeVCPU, ResourceRequirementTypeMEMORY}
+}
+
+func RunTimePlatFormCpuArch_Values() []string {
+	return []string{RunTimePlatFormCpuArchX86_64, RunTimePlatFormCpuArchARM64}
+}
+
+func RunTimePlatformOSFamily_Values() []string {
+	return []string{
+		RunTimePlatformOSFamilyLinux,
+		RunTimePlatformOSFamilyWindowsServer2019Core,
+		RunTimePlatformOSFamilyWindowsServer2019Full,
+		RunTimePlatformOSFamilyWindowsServer2022Core,
+		RunTimePlatformOSFamilyWindowsServer2022Full,
+	}
+}
+
+func EFSVolumeTransitEncryption_Values() []string {
+	return []string{EFSVolumeTransitEncryptionEnabled, EFSVolumeTransitEncryptionDisabled}
+}
+
+func NetworkConfigurationAssignPublicIp_Values() []string {
+	return []string{NetworkConfigurationAssignPublicIpEnabled, NetworkConfigurationAssignPublicIpDisabled}
 }
 
 func expandECSTaskProperties(taskPropsMap map[string]interface{}) *batch.EcsTaskProperties {

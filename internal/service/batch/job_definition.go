@@ -542,8 +542,9 @@ func ResourceJobDefinition() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"type": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(ResourceRequirementType_Values(), false),
 															},
 															"value": {
 																Type:     schema.TypeString,
@@ -624,8 +625,9 @@ func ResourceJobDefinition() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"assign_public_ip": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(NetworkConfigurationAssignPublicIp_Values(), false),
 												},
 											},
 										},
@@ -647,12 +649,14 @@ func ResourceJobDefinition() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cpu_architecture": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(RunTimePlatFormCpuArch_Values(), false),
 												},
 												"operating_system_family": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(RunTimePlatformOSFamily_Values(), false),
 												},
 											},
 										},
@@ -698,8 +702,9 @@ func ResourceJobDefinition() *schema.Resource {
 																Optional: true,
 															},
 															"transit_encryption": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																ValidateFunc: validation.StringInSlice(EFSVolumeTransitEncryption_Values(), false),
 															},
 															"transit_encryption_port": {
 																Type:     schema.TypeInt,
