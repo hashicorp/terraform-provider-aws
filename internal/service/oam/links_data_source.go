@@ -35,9 +35,10 @@ const (
 )
 
 func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
-	listLinksInput := &oam.ListLinksInput{}
 
+	listLinksInput := &oam.ListLinksInput{}
 	paginator := oam.NewListLinksPaginator(conn, listLinksInput)
 	var arns []string
 
@@ -45,7 +46,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameLinks, "", err)
+			return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameLinks, "", err)
 		}
 
 		for _, listLinksItem := range page.Items {
