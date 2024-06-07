@@ -68,6 +68,7 @@ var (
 	ResourceFleet                                    = resourceFleet
 	ResourceHost                                     = resourceHost
 	ResourceImageBlockPublicAccess                   = resourceImageBlockPublicAccess
+	ResourceInstanceState                            = resourceInstanceState
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

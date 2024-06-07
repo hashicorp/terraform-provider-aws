@@ -652,8 +652,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Image Block Public Access",
 		},
 		{
-			Factory:  ResourceInstanceState,
+			Factory:  resourceInstanceState,
 			TypeName: "aws_ec2_instance_state",
+			Name:     "Instance State",
 		},
 		{
 			Factory:  ResourceLocalGatewayRoute,
