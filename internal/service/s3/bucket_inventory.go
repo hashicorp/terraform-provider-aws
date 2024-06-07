@@ -225,7 +225,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Inventory: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Inventory: %s", bucket, err)
 	}
 
 	if d.IsNewResource() {
@@ -257,11 +257,11 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Inventory (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Inventory (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Inventory (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, bucket)

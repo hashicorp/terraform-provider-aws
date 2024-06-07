@@ -94,6 +94,7 @@ const (
 )
 
 func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	in := &oam.CreateLinkInput{
@@ -105,19 +106,20 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateLink(ctx, in)
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), err)
 	}
 
 	if out == nil || out.Id == nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameLink, d.Get("sink_identifier").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
 
-	return resourceLinkRead(ctx, d, meta)
+	return append(diags, resourceLinkRead(ctx, d, meta)...)
 }
 
 func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findLinkByID(ctx, conn, d.Id())
@@ -129,7 +131,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameLink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, ResNameLink, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -144,6 +146,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	update := false
@@ -161,14 +164,15 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] Updating ObservabilityAccessManager Link (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateLink(ctx, in)
 		if err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameLink, d.Id(), err)
+			return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionUpdating, ResNameLink, d.Id(), err)
 		}
 	}
 
-	return resourceLinkRead(ctx, d, meta)
+	return append(diags, resourceLinkRead(ctx, d, meta)...)
 }
 
 func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	log.Printf("[INFO] Deleting ObservabilityAccessManager Link %s", d.Id())
@@ -183,7 +187,7 @@ func resourceLinkDelete(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil
 		}
 
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionDeleting, ResNameLink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionDeleting, ResNameLink, d.Id(), err)
 	}
 
 	return nil

@@ -56,6 +56,7 @@ func main() {
 		g.Infof("Generating internal/service/%s/%s", packageName, filename)
 
 		td := TemplateData{
+			HumanFriendly:     l.HumanFriendly(),
 			PackageName:       packageName,
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
@@ -66,13 +67,11 @@ func main() {
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
 			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),
+			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
 		if l.ClientSDKV1() {
 			td.GoV1Package = l.GoV1Package()
 
-			if strings.Contains(td.APICallParams, "aws_sdkv1") {
-				td.ImportAWS_V1 = true
-			}
 			switch packageName {
 			case "imagebuilder",
 				"globalaccelerator",
@@ -93,9 +92,21 @@ func main() {
 			}
 		}
 
-		switch packageName {
-		case "costoptimizationhub", "cur", "route53domains":
+		if td.OverrideRegion == "us-west-2" {
 			td.Region = "us-east-1"
+		}
+
+		switch packageName {
+		// TODO: This case should be handled in service data
+		case "costoptimizationhub", "cur", "globalaccelerator", "route53domains":
+			td.OverrideRegionRegionalEndpoint = true
+
+		case "chatbot":
+			// chatbot is available in `us-east-2`, `us-west-2`, `eu-west-1`, and `ap-southeast-1`
+			// If the service is called from any other region, it defaults to `us-west-2`
+			td.Region = "us-east-1"
+			td.OverrideRegion = "us-west-2"
+			td.OverrideRegionRegionalEndpoint = true
 		}
 
 		if td.APICall == "" {
@@ -115,6 +126,7 @@ func main() {
 }
 
 type TemplateData struct {
+	HumanFriendly                     string
 	PackageName                       string
 	GoV1Package                       string
 	GoV2Package                       string
@@ -129,8 +141,10 @@ type TemplateData struct {
 	V1NameResolverNeedsUnknownService bool
 	V1AlternateInputPackage           string
 	Aliases                           []string
-	ImportAWS_V1                      bool
 	ImportAwsTypes                    bool
+	OverrideRegion                    string
+	// The provider switches to the required region, but the service has a regional endpoint
+	OverrideRegionRegionalEndpoint bool
 }
 
 //go:embed file.gtpl

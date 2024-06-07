@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -113,6 +114,7 @@ func DataSourceService() *schema.Resource {
 }
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -120,7 +122,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	serviceSummary, err := findServiceByNameAndNamespaceID(ctx, conn, name, d.Get("namespace_id").(string))
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery Service (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery Service (%s): %s", name, err)
 	}
 
 	serviceID := aws.StringValue(serviceSummary.Id)
@@ -128,7 +130,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	service, err := FindServiceByID(ctx, conn, serviceID)
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery Service (%s): %s", serviceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery Service (%s): %s", serviceID, err)
 	}
 
 	d.SetId(serviceID)
@@ -137,21 +139,21 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrDescription, service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
 		if err := d.Set("dns_config", []interface{}{tfMap}); err != nil {
-			return diag.Errorf("setting dns_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_config: %s", err)
 		}
 	} else {
 		d.Set("dns_config", nil)
 	}
 	if tfMap := flattenHealthCheckConfig(service.HealthCheckConfig); len(tfMap) > 0 {
 		if err := d.Set("health_check_config", []interface{}{tfMap}); err != nil {
-			return diag.Errorf("setting health_check_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting health_check_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_config", nil)
 	}
 	if tfMap := flattenHealthCheckCustomConfig(service.HealthCheckCustomConfig); len(tfMap) > 0 {
 		if err := d.Set("health_check_custom_config", []interface{}{tfMap}); err != nil {
-			return diag.Errorf("setting health_check_custom_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting health_check_custom_config: %s", err)
 		}
 	} else {
 		d.Set("health_check_custom_config", nil)
@@ -162,12 +164,12 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Service Discovery Service (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Service Discovery Service (%s): %s", arn, err)
 	}
 
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

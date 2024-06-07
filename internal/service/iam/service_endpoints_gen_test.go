@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
@@ -47,11 +48,17 @@ type configFile struct {
 type caseExpectations struct {
 	diags    diag.Diagnostics
 	endpoint string
+	region   string
+}
+
+type apiCallParams struct {
+	endpoint string
+	region   string
 }
 
 type setupFunc func(setup *caseSetup)
 
-type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) string
+type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams
 
 const (
 	packageNameConfigEndpoint = "https://packagename-config.endpoint.test/"
@@ -72,13 +79,18 @@ const (
 	deprecatedEnvVar = "AWS_IAM_ENDPOINT"
 )
 
+const (
+	expectedCallRegion = "us-west-2" //lintignore:AWSAT003
+)
+
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
-	const region = "us-west-2" //lintignore:AWSAT003
+	const providerRegion = "us-west-2" //lintignore:AWSAT003
+	const expectedEndpointRegion = providerRegion
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(region),
+			expected: expectDefaultEndpoint(expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -318,7 +330,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			with: []setupFunc{
 				withUseFIPSInConfig,
 			},
-			expected: expectDefaultFIPSEndpoint(region),
+			expected: expectDefaultFIPSEndpoint(expectedEndpointRegion),
 		},
 
 		"use fips config with package name endpoint config": {
@@ -334,7 +346,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, region, testcase, callService)
+			testEndpointCase(t, providerRegion, testcase, callService)
 		})
 	}
 }
@@ -374,17 +386,18 @@ func defaultFIPSEndpoint(region string) string {
 	return ep.URI.String()
 }
 
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	var endpoint string
-
 	client := meta.IAMClient(ctx)
+
+	var result apiCallParams
 
 	_, err := client.ListRoles(ctx, &iam_sdkv2.ListRolesInput{},
 		func(opts *iam_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
-				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
+				addRetrieveRegionMiddleware(&result.region),
 				addCancelRequestMiddleware(),
 			)
 		},
@@ -395,7 +408,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 		t.Fatalf("Unexpected error: %s", err)
 	}
 
-	return endpoint
+	return result
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -443,30 +456,35 @@ func withUseFIPSInConfig(setup *caseSetup) {
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
+		region:   expectedCallRegion,
 	}
 }
 
 func expectDefaultFIPSEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultFIPSEndpoint(region),
+		region:   expectedCallRegion,
 	}
 }
 
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
@@ -476,6 +494,7 @@ func expectTfAwsEnvVarEndpoint() caseExpectations {
 		diags: diag.Diagnostics{
 			provider.DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar),
 		},
+		region: expectedCallRegion,
 	}
 }
 
@@ -485,18 +504,21 @@ func expectDeprecatedEnvVarEndpoint() caseExpectations {
 		diags: diag.Diagnostics{
 			provider.DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar),
 		},
+		region: expectedCallRegion,
 	}
 }
 
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
@@ -560,10 +582,14 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	endpoint := callF(ctx, t, meta)
+	callParams := callF(ctx, t, meta)
 
-	if endpoint != testcase.expected.endpoint {
-		t.Errorf("expected endpoint %q, got %q", testcase.expected.endpoint, endpoint)
+	if e, a := testcase.expected.endpoint, callParams.endpoint; e != a {
+		t.Errorf("expected endpoint %q, got %q", e, a)
+	}
+
+	if e, a := testcase.expected.region, callParams.region; e != a {
+		t.Errorf("expected region %q, got %q", e, a)
 	}
 }
 
@@ -595,6 +621,26 @@ func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.Fi
 
 			return next.HandleFinalize(ctx, in)
 		})
+}
+
+func addRetrieveRegionMiddleware(region *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Serialize.Add(
+			retrieveRegionMiddleware(region),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
+	return middleware.SerializeMiddlewareFunc(
+		"Test: Retrieve Region",
+		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+			*region = awsmiddleware.GetRegion(ctx)
+
+			return next.HandleSerialize(ctx, in)
+		},
+	)
 }
 
 var errCancelOperation = fmt.Errorf("Test: Canceling request")

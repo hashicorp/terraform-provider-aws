@@ -17,6 +17,22 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return route53.NewFromConfig(cfg, func(o *route53.Options) {
+		// Always override the service region
+		switch config["partition"].(string) {
+		case names.StandardPartitionID:
+			// https://docs.aws.amazon.com/general/latest/gr/r53.html Setting default to us-east-1.
+			o.Region = names.USEast1RegionID
+		case names.ChinaPartitionID:
+			// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
+			// This can likely be removed in the future.
+			if aws.ToString(o.BaseEndpoint) == "" {
+				o.BaseEndpoint = aws.String("https://api.route53.cn")
+			}
+			o.Region = names.CNNorthwest1RegionID
+		case names.USGovCloudPartitionID:
+			o.Region = names.USGovWest1RegionID
+		}
+
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			tflog.Debug(ctx, "setting endpoint", map[string]any{
 				"tf_aws.endpoint": endpoint,
@@ -26,21 +42,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
 				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
 				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
-			}
-		} else {
-			switch config["partition"].(string) {
-			case names.StandardPartitionID:
-				// https://docs.aws.amazon.com/general/latest/gr/r53.html Setting default to us-east-1.
-				o.Region = names.USEast1RegionID
-			case names.ChinaPartitionID:
-				// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
-				// This can likely be removed in the future.
-				if aws.ToString(o.BaseEndpoint) == "" {
-					o.BaseEndpoint = aws.String("https://api.route53.cn")
-				}
-				o.Region = names.CNNorthwest1RegionID
-			case names.USGovCloudPartitionID:
-				o.Region = names.USGovWest1RegionID
 			}
 		}
 	}), nil
