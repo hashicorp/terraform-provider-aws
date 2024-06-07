@@ -214,32 +214,45 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_spot_price",
 		},
 		{
-			Factory:  DataSourceTransitGateway,
+			Factory:  dataSourceTransitGateway,
 			TypeName: "aws_ec2_transit_gateway",
+			Name:     "Transit Gateway",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayAttachment,
+			Factory:  dataSourceTransitGatewayAttachment,
 			TypeName: "aws_ec2_transit_gateway_attachment",
+			Name:     "Transit Gateway Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayAttachments,
+			Factory:  dataSourceTransitGatewayAttachments,
 			TypeName: "aws_ec2_transit_gateway_attachments",
+			Name:     "Transit Gateway Attachments",
 		},
 		{
-			Factory:  DataSourceTransitGatewayConnect,
+			Factory:  dataSourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
+			Name:     "Transit Gateway Connect",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayConnectPeer,
+			Factory:  dataSourceTransitGatewayConnectPeer,
 			TypeName: "aws_ec2_transit_gateway_connect_peer",
+			Name:     "Transit Gateway Connect Peer",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayDxGatewayAttachment,
+			Factory:  dataSourceTransitGatewayDxGatewayAttachment,
 			TypeName: "aws_ec2_transit_gateway_dx_gateway_attachment",
+			Name:     "Transit Gateway Direct Connect Gateway Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayMulticastDomain,
+			Factory:  dataSourceTransitGatewayMulticastDomain,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
+			Name:     "Transit Gateway Multicast Domain",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceTransitGatewayPeeringAttachment,
@@ -248,36 +261,47 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTable,
+			Factory:  dataSourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
+			Name:     "Transit Gateway Route Table",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTableAssociations,
+			Factory:  dataSourceTransitGatewayRouteTableAssociations,
 			TypeName: "aws_ec2_transit_gateway_route_table_associations",
+			Name:     "Transit Gateway Route Table Associations",
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTablePropagations,
+			Factory:  dataSourceTransitGatewayRouteTablePropagations,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
+			Name:     "Transit Gateway Route Table Propagations",
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTableRoutes,
+			Factory:  dataSourceTransitGatewayRouteTableRoutes,
 			TypeName: "aws_ec2_transit_gateway_route_table_routes",
+			Name:     "Transit Gateway Route Table Routes",
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTables,
+			Factory:  dataSourceTransitGatewayRouteTables,
 			TypeName: "aws_ec2_transit_gateway_route_tables",
+			Name:     "Transit Gateway Route Tables",
 		},
 		{
-			Factory:  DataSourceTransitGatewayVPCAttachment,
+			Factory:  dataSourceTransitGatewayVPCAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment",
+			Name:     "Transit Gateway VPC Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayVPCAttachments,
+			Factory:  dataSourceTransitGatewayVPCAttachments,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachments",
+			Name:     "Transit Gateway VPC Attachments",
 		},
 		{
-			Factory:  DataSourceTransitGatewayVPNAttachment,
+			Factory:  dataSourceTransitGatewayVPNAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpn_attachment",
+			Name:     "Transit Gateway VPN Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceEIP,
@@ -703,7 +727,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGateway,
+			Factory:  resourceTransitGateway,
 			TypeName: "aws_ec2_transit_gateway",
 			Name:     "Transit Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -711,7 +735,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayConnect,
+			Factory:  resourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
 			Name:     "Transit Gateway Connect",
 			Tags: &types.ServicePackageResourceTags{
@@ -719,7 +743,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayConnectPeer,
+			Factory:  resourceTransitGatewayConnectPeer,
 			TypeName: "aws_ec2_transit_gateway_connect_peer",
 			Name:     "Transit Gateway Connect Peer",
 			Tags: &types.ServicePackageResourceTags{
@@ -727,7 +751,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastDomain,
+			Factory:  resourceTransitGatewayMulticastDomain,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
 			Name:     "Transit Gateway Multicast Domain",
 			Tags: &types.ServicePackageResourceTags{
@@ -735,16 +759,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastDomainAssociation,
+			Factory:  resourceTransitGatewayMulticastDomainAssociation,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain_association",
+			Name:     "Transit Gateway Multicast Domain Association",
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastGroupMember,
+			Factory:  resourceTransitGatewayMulticastGroupMember,
 			TypeName: "aws_ec2_transit_gateway_multicast_group_member",
+			Name:     "Transit Gateway Multicast Group Member",
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastGroupSource,
+			Factory:  resourceTransitGatewayMulticastGroupSource,
 			TypeName: "aws_ec2_transit_gateway_multicast_group_source",
+			Name:     "Transit Gateway Multicast Group Source",
 		},
 		{
 			Factory:  resourceTransitGatewayPeeringAttachment,
@@ -755,15 +782,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayPeeringAttachmentAccepter,
+			Factory:  resourceTransitGatewayPeeringAttachmentAccepter,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment_accepter",
-			Name:     "Transit Gateway Peering Attachment",
+			Name:     "Transit Gateway Peering Attachment Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayPolicyTable,
+			Factory:  resourceTransitGatewayPolicyTable,
 			TypeName: "aws_ec2_transit_gateway_policy_table",
 			Name:     "Transit Gateway Policy Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -771,19 +798,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayPolicyTableAssociation,
+			Factory:  resourceTransitGatewayPolicyTableAssociation,
 			TypeName: "aws_ec2_transit_gateway_policy_table_association",
+			Name:     "Transit Gateway Policy Table Association",
 		},
 		{
-			Factory:  ResourceTransitGatewayPrefixListReference,
+			Factory:  resourceTransitGatewayPrefixListReference,
 			TypeName: "aws_ec2_transit_gateway_prefix_list_reference",
+			Name:     "Transit Gateway Prefix List Reference",
 		},
 		{
-			Factory:  ResourceTransitGatewayRoute,
+			Factory:  resourceTransitGatewayRoute,
 			TypeName: "aws_ec2_transit_gateway_route",
+			Name:     "Transit Gateway Route",
 		},
 		{
-			Factory:  ResourceTransitGatewayRouteTable,
+			Factory:  resourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
 			Name:     "Transit Gateway Route Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -791,15 +821,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayRouteTableAssociation,
+			Factory:  resourceTransitGatewayRouteTableAssociation,
 			TypeName: "aws_ec2_transit_gateway_route_table_association",
+			Name:     "Transit Gateway Route Table Association",
 		},
 		{
-			Factory:  ResourceTransitGatewayRouteTablePropagation,
+			Factory:  resourceTransitGatewayRouteTablePropagation,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagation",
+			Name:     "Transit Gateway Route Table Propagation",
 		},
 		{
-			Factory:  ResourceTransitGatewayVPCAttachment,
+			Factory:  resourceTransitGatewayVPCAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment",
 			Name:     "Transit Gateway VPC Attachment",
 			Tags: &types.ServicePackageResourceTags{
@@ -807,9 +839,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayVPCAttachmentAccepter,
+			Factory:  resourceTransitGatewayVPCAttachmentAccepter,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment_accepter",
-			Name:     "Transit Gateway VPC Attachment",
+			Name:     "Transit Gateway VPC Attachment Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},

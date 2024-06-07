@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,6 +58,7 @@ func ResourceMetricsDestination() *schema.Resource {
 }
 
 func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	name := d.Get("app_monitor_name").(string)
@@ -76,17 +78,18 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 	_, err := conn.PutRumMetricsDestinationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch RUM Metrics Destination (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch RUM Metrics Destination (%s): %s", name, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(name)
 	}
 
-	return resourceMetricsDestinationRead(ctx, d, meta)
+	return append(diags, resourceMetricsDestinationRead(ctx, d, meta)...)
 }
 
 func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	dest, err := FindMetricsDestinationByName(ctx, conn, d.Id())
@@ -94,11 +97,11 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch RUM Metrics Destination %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch RUM Metrics Destination (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch RUM Metrics Destination (%s): %s", d.Id(), err)
 	}
 
 	d.Set("app_monitor_name", d.Id())
@@ -106,10 +109,11 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrDestinationARN, dest.DestinationArn)
 	d.Set(names.AttrIAMRoleARN, dest.IamRoleArn)
 
-	return nil
+	return diags
 }
 
 func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	input := &cloudwatchrum.DeleteRumMetricsDestinationInput{
@@ -125,14 +129,14 @@ func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.DeleteRumMetricsDestinationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch RUM Metrics Destination (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch RUM Metrics Destination (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindMetricsDestinationByName(ctx context.Context, conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.MetricDestinationSummary, error) {
