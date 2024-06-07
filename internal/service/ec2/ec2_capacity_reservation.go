@@ -28,12 +28,13 @@ import (
 // @SDKResource("aws_ec2_capacity_reservation", name="Capacity Reservation")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceCapacityReservation() *schema.Resource {
+func resourceCapacityReservation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCapacityReservationCreate,
 		ReadWithoutTimeout:   resourceCapacityReservationRead,
 		UpdateWithoutTimeout: resourceCapacityReservationUpdate,
 		DeleteWithoutTimeout: resourceCapacityReservationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
