@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindRegistryByName(ctx context.Context, conn *schemas.Schemas, name string) (*schemas.DescribeRegistryOutput, error) {
-	input := &schemas.DescribeRegistryInput{
-		RegistryName: aws.String(name),
-	}
-
-	output, err := conn.DescribeRegistryWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindSchemaByNameAndRegistryName(ctx context.Context, conn *schemas.Schemas, name, registryName string) (*schemas.DescribeSchemaOutput, error) {
 	input := &schemas.DescribeSchemaInput{
 		RegistryName: aws.String(registryName),
