@@ -207,7 +207,6 @@ func (r *resourceResourceSet) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	if !plan.ResourceSet.Equal(state.ResourceSet) {
-
 		in := &fms.PutResourceSetInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
