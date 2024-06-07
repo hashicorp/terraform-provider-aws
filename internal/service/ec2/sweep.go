@@ -1036,7 +1036,7 @@ func sweepInstances(region string) error {
 					log.Printf("[INFO] EC2 Instance (%s): %s", id, err)
 				}
 
-				r := ResourceInstance()
+				r := resourceInstance()
 				d := r.Data(nil)
 				d.SetId(id)
 

@@ -68,6 +68,7 @@ var (
 	ResourceFleet                                    = resourceFleet
 	ResourceHost                                     = resourceHost
 	ResourceImageBlockPublicAccess                   = resourceImageBlockPublicAccess
+	ResourceInstance                                 = resourceInstance
 	ResourceInstanceState                            = resourceInstanceState
 
 	CustomFiltersSchema                                        = customFiltersSchema
