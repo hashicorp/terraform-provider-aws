@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_host")
-func DataSourceHost() *schema.Resource {
+// @SDKDataSource("aws_ec2_host", name="Host")
+func dataSourceHost() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHostRead,
 
@@ -92,7 +92,6 @@ func DataSourceHost() *schema.Resource {
 func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeHostsInput{
 		Filter: newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set)),
@@ -114,7 +113,6 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(aws.ToString(host.HostId))
-
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   names.EC2,
@@ -136,9 +134,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, host.Tags)
 
 	return diags
 }
