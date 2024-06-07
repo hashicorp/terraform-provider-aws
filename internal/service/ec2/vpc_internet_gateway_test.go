@@ -20,10 +20,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCDefaultInternetGateway_basic(t *testing.T) {
+func TestAccVPCInternetGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.InternetGateway
-	resourceName := "aws_default_internet_gateway.test"
+	resourceName := "aws_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -50,10 +50,10 @@ func TestAccVPCDefaultInternetGateway_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCDefaultInternetGateway_disappears(t *testing.T) {
+func TestAccVPCInternetGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.InternetGateway
-	resourceName := "aws_default_internet_gateway.test"
+	resourceName := "aws_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -73,10 +73,10 @@ func TestAccVPCDefaultInternetGateway_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCDefaultInternetGateway_Attachment(t *testing.T) {
+func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.InternetGateway
-	resourceName := "aws_default_internet_gateway.test"
+	resourceName := "aws_internet_gateway.test"
 	vpc1ResourceName := "aws_vpc.test1"
 	vpc2ResourceName := "aws_vpc.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,10 +110,10 @@ func TestAccVPCDefaultInternetGateway_Attachment(t *testing.T) {
 	})
 }
 
-func TestAccVPCDefaultInternetGateway_Tags(t *testing.T) {
+func TestAccVPCInternetGateway_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.InternetGateway
-	resourceName := "aws_default_internet_gateway.test"
+	resourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -156,12 +156,12 @@ func TestAccVPCDefaultInternetGateway_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDefaultInternetGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckInternetGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_default_internet_gateway" {
+			if rs.Type != "aws_internet_gateway" {
 				continue
 			}
 
@@ -182,7 +182,7 @@ func testAccCheckDefaultInternetGatewayDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckDefaultInternetGatewayExists(ctx context.Context, n string, v *ec2.InternetGateway) resource.TestCheckFunc {
+func testAccCheckInternetGatewayExists(ctx context.Context, n string, v *ec2.InternetGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -207,11 +207,11 @@ func testAccCheckDefaultInternetGatewayExists(ctx context.Context, n string, v *
 	}
 }
 
-const testAccVPCDefaultInternetGatewayConfig_basic = `
-resource "aws_default_internet_gateway" "test" {}
+const testAccVPCInternetGatewayConfig_basic = `
+resource "aws_internet_gateway" "test" {}
 `
 
-func testAccVPCDefaultInternetGatewayConfig_attachment(rName string) string {
+func testAccVPCInternetGatewayConfig_attachment(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -229,7 +229,7 @@ resource "aws_vpc" "test2" {
   }
 }
 
-resource "aws_default_internet_gateway" "test" {
+resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test1.id
 
   tags = {
@@ -239,7 +239,7 @@ resource "aws_default_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccVPCDefaultInternetGatewayConfig_attachmentUpdated(rName string) string {
+func testAccVPCInternetGatewayConfig_attachmentUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "10.1.0.0/16"
@@ -257,7 +257,7 @@ resource "aws_vpc" "test2" {
   }
 }
 
-resource "aws_default_internet_gateway" "test" {
+resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test2.id
 
   tags = {
@@ -267,9 +267,9 @@ resource "aws_default_internet_gateway" "test" {
 `, rName)
 }
 
-func testAccVPCDefaultInternetGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccVPCInternetGatewayConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_default_internet_gateway" "test" {
+resource "aws_internet_gateway" "test" {
   tags = {
     %[2]q = %[3]q
   }
@@ -277,9 +277,9 @@ resource "aws_default_internet_gateway" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccVPCDefaultInternetGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCInternetGatewayConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_default_internet_gateway" "test" {
+resource "aws_internet_gateway" "test" {
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
