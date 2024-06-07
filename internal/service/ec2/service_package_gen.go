@@ -90,8 +90,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Availability Zone",
 		},
 		{
-			Factory:  DataSourceAvailabilityZones,
+			Factory:  dataSourceAvailabilityZones,
 			TypeName: "aws_availability_zones",
+			Name:     "Availability Zones",
 		},
 		{
 			Factory:  dataSourceCustomerGateway,
