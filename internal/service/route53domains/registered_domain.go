@@ -182,6 +182,11 @@ func resourceRegisteredDomain() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"duration_in_years": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  1,
+				},
 				"name_server": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -208,6 +213,11 @@ func resourceRegisteredDomain() *schema.Resource {
 							},
 						},
 					},
+				},
+				"register": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
 				"registrant_contact": contactSchema(),
 				"registrant_privacy": {
@@ -265,57 +275,68 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
-	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Route 53 Domains Domain (%s): %s", domainName, err)
-	}
-
-	d.SetId(aws.ToString(domainDetail.DomainName))
+	registrationDuration := d.Get("duration_in_years").(int)
+	autoRenew := d.Get("auto_renew").(bool)
+	adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool)
 
 	var adminContact, billingContact, registrantContact, techContact *types.ContactDetail
 
 	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.AdminContact) {
-			adminContact = v
-		}
+		adminContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("billing_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.BillingContact) {
-			billingContact = v
-		}
+		billingContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("registrant_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.RegistrantContact) {
-			registrantContact = v
-		}
+		registrantContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("tech_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.TechContact) {
-			techContact = v
+		techContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if tfresource.NotFound(err) {
+		if !d.Get("register").(bool) {
+			return sdkdiag.AppendErrorf(diags, "Route 53 Domains (%s) purchase is not enabled", domainName)
+		}
+
+		if err := registerDomain(ctx, conn, domainName, registrationDuration, autoRenew, adminContact, billingContact, registrantContact, techContact, adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		// Re-fetch the domain detail after registration so we can apply the rest of the updates if needed
+		domainDetail, err = findDomainDetailByName(ctx, conn, domainName)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Route 53 Domains Domain (%s): %s", domainName, err)
+		}
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Route 53 Domains Domain (%s): %s", domainName, err)
+	} else {
+		if !reflect.DeepEqual(adminContact, domainDetail.AdminContact) || !reflect.DeepEqual(billingContact, domainDetail.BillingContact) || !reflect.DeepEqual(registrantContact, domainDetail.RegistrantContact) || !reflect.DeepEqual(techContact, domainDetail.TechContact) {
+			if err := modifyDomainContact(ctx, conn, domainName, adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		if adminPrivacy != aws.ToBool(domainDetail.AdminPrivacy) || billingPrivacy != aws.ToBool(domainDetail.BillingPrivacy) || registrantPrivacy != aws.ToBool(domainDetail.RegistrantPrivacy) || techPrivacy != aws.ToBool(domainDetail.TechPrivacy) {
+			if err := modifyDomainContactPrivacy(ctx, conn, domainName, adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
+		if autoRenew != aws.ToBool(domainDetail.AutoRenew) {
+			if err := modifyDomainAutoRenew(ctx, conn, domainName, autoRenew); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
 		}
 	}
 
-	if adminContact != nil || billingContact != nil || registrantContact != nil || techContact != nil {
-		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.ToBool(domainDetail.AdminPrivacy) || billingPrivacy != aws.ToBool(domainDetail.BillingPrivacy) || registrantPrivacy != aws.ToBool(domainDetail.RegistrantPrivacy) || techPrivacy != aws.ToBool(domainDetail.TechPrivacy) {
-		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if v := d.Get("auto_renew").(bool); v != aws.ToBool(domainDetail.AutoRenew) {
-		if err := modifyDomainAutoRenew(ctx, conn, d.Id(), v); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
+	d.SetId(aws.ToString(domainDetail.DomainName))
 
 	if v, ok := d.GetOk("name_server"); ok && len(v.([]interface{})) > 0 {
 		nameservers := expandNameservers(v.([]interface{}))
@@ -503,6 +524,33 @@ func hasDomainTransferLock(statusList []string) bool {
 		eppStatusClientTransferProhibited = "clientTransferProhibited"
 	)
 	return slices.Contains(statusList, eppStatusClientTransferProhibited)
+}
+
+func registerDomain(ctx context.Context, conn *route53domains.Client, domainName string, durationInYears int, autoRenew bool, adminContact, billingContact, registrantContact, techContact *types.ContactDetail, adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy bool, timeout time.Duration) error {
+	input := &route53domains.RegisterDomainInput{
+		AdminContact:                    adminContact,
+		PrivacyProtectAdminContact:      aws.Bool(adminPrivacy),
+		AutoRenew:                       aws.Bool(autoRenew),
+		BillingContact:                  billingContact,
+		PrivacyProtectBillingContact:    aws.Bool(billingPrivacy),
+		DomainName:                      aws.String(domainName),
+		DurationInYears:                 aws.Int32(int32(durationInYears)),
+		RegistrantContact:               registrantContact,
+		PrivacyProtectRegistrantContact: aws.Bool(registrantPrivacy),
+		TechContact:                     techContact,
+		PrivacyProtectTechContact:       aws.Bool(techPrivacy),
+	}
+
+	output, err := conn.RegisterDomain(ctx, input)
+	if err != nil {
+		return fmt.Errorf("registering Route 53 Domains Domain (%s): %w", domainName, err)
+	}
+
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), timeout); err != nil {
+		return fmt.Errorf("waiting for Route 53 Domains Domain (%s) registration: %w", domainName, err)
+	}
+
+	return nil
 }
 
 func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, domainName string, autoRenew bool) error {
