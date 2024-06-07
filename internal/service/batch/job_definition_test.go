@@ -858,8 +858,29 @@ func TestAccBatchJobDefinition_ECSProperties_basic(t *testing.T) {
 				Config: testAccJobDefinitionConfig_ECSProperties_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.command.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.command.0", "sleep"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.command.1", "60"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.depends_on.0.container_name", "container_b"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.depends_on.0.condition", "COMPLETE"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.secrets.0.name", "TEST"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.secrets.0.value_from", "DUMMY"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.0.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.0.value", "Environment Variable"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.log_configuration.0.log_driver", "awslogs"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.log_configuration.0.options.awslogs-group", rName),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.log_configuration.0.options.awslogs-region", "ap-northeast-1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.log_configuration.0.options.awslogs-stream-prefix", "ecs"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.name", "container_a"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.privileged", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.readonly_root_filesystem", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.resource_requirements.0.type", "MEMORY"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.resource_requirements.0.value", "2048"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.resource_requirements.1.type", "VCPU"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.resource_requirements.1.value", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.1.name", "container_b"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
@@ -898,10 +919,12 @@ func TestAccBatchJobDefinition_ECSProperties_update(t *testing.T) {
 				Config: testAccJobDefinitionConfig_ECSProperties_advancedUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.0.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.0.value", "Environment Variable"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.1.name", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_properties.0.task_properties.0.containers.0.environment.1.value", "Environment Variable 2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
@@ -1789,12 +1812,32 @@ resource "aws_batch_job_definition" "test" {
     task_properties {
       execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
       containers {
-        essential = true
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
-        command = [
-          "sleep",
-          "60"
-        ]
+        command = ["sleep", "60"]
+        depends_on {
+          container_name = "container_b"
+          condition      = "COMPLETE"
+        }
+        secrets {
+          name = "TEST"
+          value_from = "DUMMY"
+        }
+        environment {
+		  name = "test"
+		  value = "Environment Variable"
+        }
+        essential = true
+        log_configuration {
+          log_driver = "awslogs"
+          options = {
+            awslogs-group         = %[1]q
+            awslogs-region        = "ap-northeast-1"
+            awslogs-stream-prefix = "ecs"
+          }
+        }
+        name = "container_a"
+        privileged = false
+        readonly_root_filesystem = false
         resource_requirements {
           value = "1.0"
           type = "VCPU"
@@ -1803,13 +1846,19 @@ resource "aws_batch_job_definition" "test" {
           value = "2048"
           type = "MEMORY"
         }
-        log_configuration {
-          log_driver = "awslogs"
-          options = {
-            awslogs-group         = %[1]q
-            awslogs-region        = "ap-northeast-1"
-            awslogs-stream-prefix = "ecs"
-          }
+      }
+
+      containers {
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = ["sleep", "360"]
+        name = "container_b"
+        resource_requirements {
+          value = "1.0"
+          type = "VCPU"
+        }
+        resource_requirements {
+          value = "2048"
+          type = "MEMORY"
         }
       }
     }
@@ -1851,12 +1900,36 @@ resource "aws_batch_job_definition" "test" {
     task_properties {
       execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
       containers {
-        essential = true
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
-        command = [
-          "sleep",
-          "60"
-        ]
+        command = ["sleep", "60"]
+        depends_on {
+          container_name = "container_b"
+          condition      = "COMPLETE"
+        }
+         secrets {
+          name = "TEST"
+          value_from = "DUMMY"
+        }
+        environment {
+		  name = "test"
+		  value = "Environment Variable"
+        }
+        environment {
+		  name = "test2"
+		  value = "Environment Variable 2"
+        }
+        essential = true
+        log_configuration {
+          log_driver = "awslogs"
+          options = {
+            awslogs-group         = %[1]q
+            awslogs-region        = "ap-northeast-1"
+            awslogs-stream-prefix = "ecs"
+          }
+        }
+        name = "container_a"
+        privileged = false
+        readonly_root_filesystem = false
         resource_requirements {
           value = "1.0"
           type = "VCPU"
@@ -1865,9 +1938,19 @@ resource "aws_batch_job_definition" "test" {
           value = "2048"
           type = "MEMORY"
         }
-        environment {
-		  name = "test"
-		  value = "Environment Variable"
+      }
+
+      containers {
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = ["sleep", "360"]
+        name = "container_b"
+        resource_requirements {
+          value = "1.0"
+          type = "VCPU"
+        }
+        resource_requirements {
+          value = "2048"
+          type = "MEMORY"
         }
       }
     }
