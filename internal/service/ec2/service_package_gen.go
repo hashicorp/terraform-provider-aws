@@ -332,8 +332,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceInstances,
+			Factory:  dataSourceInstances,
 			TypeName: "aws_instances",
+			Name:     "Instances",
 		},
 		{
 			Factory:  DataSourceInternetGateway,
