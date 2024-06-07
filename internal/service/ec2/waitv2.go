@@ -1199,6 +1199,18 @@ func waitImageDeleted(ctx context.Context, conn *ec2.Client, id string, timeout 
 	return nil, err
 }
 
+func waitImageBlockPublicAccessState(ctx context.Context, conn *ec2.Client, target string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Target:  []string{target},
+		Refresh: statusImageBlockPublicAccess(ctx, conn),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
 func waitVPNConnectionCreated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConnection, error) {
 	const (
 		timeout = 40 * time.Minute

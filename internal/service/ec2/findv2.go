@@ -3183,6 +3183,21 @@ func findImageAttribute(ctx context.Context, conn *ec2.Client, input *ec2.Descri
 	return output, nil
 }
 
+func findImageBlockPublicAccessState(ctx context.Context, conn *ec2.Client) (*string, error) {
+	input := &ec2.GetImageBlockPublicAccessStateInput{}
+	output, err := conn.GetImageBlockPublicAccessState(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ImageBlockPublicAccessState == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ImageBlockPublicAccessState, nil
+}
+
 func findImageLaunchPermissionsByID(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.LaunchPermission, error) {
 	input := &ec2.DescribeImageAttributeInput{
 		Attribute: awstypes.ImageAttributeNameLaunchPermission,

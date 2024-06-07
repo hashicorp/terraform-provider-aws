@@ -3087,21 +3087,6 @@ func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2_sdkv2.Cl
 	return output, nil
 }
 
-func FindImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client) (*string, error) {
-	input := &ec2_sdkv2.GetImageBlockPublicAccessStateInput{}
-	output, err := conn.GetImageBlockPublicAccessState(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.ImageBlockPublicAccessState == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.ImageBlockPublicAccessState, nil
-}
-
 func FindVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessEndpointsInput) (*awstypes.VerifiedAccessEndpoint, error) {
 	output, err := FindVerifiedAccessEndpoints(ctx, conn, input)
 

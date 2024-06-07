@@ -644,7 +644,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceImageBlockPublicAccess,
+			Factory:  resourceImageBlockPublicAccess,
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
 		},

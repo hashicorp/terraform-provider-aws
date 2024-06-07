@@ -677,7 +677,7 @@ func sweepFleets(region string) error {
 				continue
 			}
 
-			r := ResourceFleet()
+			r := resourceFleet()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(fleet.FleetId))
 			d.Set("terminate_instances", true)
@@ -983,7 +983,7 @@ func sweepHosts(region string) error {
 		}
 
 		for _, host := range page.Hosts {
-			r := ResourceHost()
+			r := resourceHost()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(host.HostId))
 

@@ -563,22 +563,6 @@ func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, 
 	}
 }
 
-func StatusImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindImageBlockPublicAccessState(ctx, conn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws_sdkv2.ToString(output), nil
-	}
-}
-
 func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVerifiedAccessEndpointByID(ctx, conn, id)

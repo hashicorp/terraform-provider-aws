@@ -868,6 +868,22 @@ func statusImageState(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
+func statusImageBlockPublicAccess(ctx context.Context, conn *ec2.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findImageBlockPublicAccessState(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output), nil
+	}
+}
+
 func statusTransitGatewayState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayByID(ctx, conn, id)
