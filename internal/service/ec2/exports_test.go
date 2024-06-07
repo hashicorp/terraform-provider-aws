@@ -66,6 +66,7 @@ var (
 	ResourceAvailabilityZoneGroup                    = resourceAvailabilityZoneGroup
 	ResourceCapacityReservation                      = resourceCapacityReservation
 	ResourceFleet                                    = resourceFleet
+	ResourceHost                                     = resourceHost
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

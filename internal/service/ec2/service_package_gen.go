@@ -636,7 +636,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHost,
+			Factory:  resourceHost,
 			TypeName: "aws_ec2_host",
 			Name:     "Host",
 			Tags: &types.ServicePackageResourceTags{

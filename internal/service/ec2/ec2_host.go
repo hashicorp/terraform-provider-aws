@@ -29,7 +29,7 @@ import (
 // @SDKResource("aws_ec2_host", name="Host")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceHost() *schema.Resource {
+func resourceHost() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHostCreate,
 		ReadWithoutTimeout:   resourceHostRead,
