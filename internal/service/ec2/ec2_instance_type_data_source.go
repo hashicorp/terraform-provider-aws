@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_instance_type")
-func DataSourceInstanceType() *schema.Resource {
+// @SDKDataSource("aws_ec2_instance_type", name="Instance Type")
+func dataSourceInstanceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceTypeRead,
 
