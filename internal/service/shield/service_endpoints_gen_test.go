@@ -345,7 +345,7 @@ func expectDefaultEndpoint(region string) caseExpectations {
 func expectDefaultFIPSEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultFIPSEndpoint(region),
-		region:   "us-east-1",
+		region:   expectedCallRegion,
 	}
 }
 

@@ -726,7 +726,7 @@ func expectDefaultEndpoint(region string) caseExpectations {
 func expectDefaultFIPSEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultFIPSEndpoint(region),
-		region:   {{ if .OverrideRegion }}"{{ .OverrideRegion }}"{{ else }}"{{ .Region }}"{{ end }},
+		region:   expectedCallRegion,
 	}
 }
 
