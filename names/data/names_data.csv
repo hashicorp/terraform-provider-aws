@@ -175,7 +175,7 @@ globalaccelerator,globalaccelerator,globalaccelerator,globalaccelerator,,globala
 glue,glue,glue,glue,,glue,,,Glue,Glue,,1,,,aws_glue_,,glue_,Glue,AWS,,,,,,,Glue,ListRegistries,,,
 databrew,databrew,gluedatabrew,databrew,,databrew,,gluedatabrew,DataBrew,GlueDataBrew,,1,,,aws_databrew_,,databrew_,Glue DataBrew,AWS,,x,,,,,DataBrew,,,,
 groundstation,groundstation,groundstation,groundstation,,groundstation,,,GroundStation,GroundStation,,,2,,aws_groundstation_,,groundstation_,Ground Station,AWS,,,,,,,GroundStation,ListConfigs,,,
-guardduty,guardduty,guardduty,guardduty,,guardduty,,,GuardDuty,GuardDuty,,1,,,aws_guardduty_,,guardduty_,GuardDuty,Amazon,,,,,,,GuardDuty,ListDetectors,,,
+guardduty,guardduty,guardduty,guardduty,,guardduty,,,GuardDuty,GuardDuty,,1,2,,aws_guardduty_,,guardduty_,GuardDuty,Amazon,,,,,,,GuardDuty,ListDetectors,,,
 health,health,health,health,,health,,,Health,Health,,1,,,aws_health_,,health_,Health,AWS,,x,,,,,Health,,,,
 healthlake,healthlake,healthlake,healthlake,,healthlake,,,HealthLake,HealthLake,,,2,,aws_healthlake_,,healthlake_,HealthLake,Amazon,,,,,,,HealthLake,ListFHIRDatastores,,,
 honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,,aws_honeycode_,,honeycode_,Honeycode,Amazon,,x,,,,,Honeycode,,,,
