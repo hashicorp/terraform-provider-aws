@@ -33,7 +33,7 @@ import (
 )
 
 // @SDKResource("aws_route53_zone", name="Hosted Zone")
-// @Tags(identifierAttribute="id", resourceType="hostedzone")
+// @Tags(identifierAttribute="zone_id", resourceType="hostedzone")
 func resourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
