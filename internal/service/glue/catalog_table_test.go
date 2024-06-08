@@ -196,6 +196,7 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment"),
@@ -256,6 +257,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment"),
@@ -305,6 +307,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test table from terraform2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner2"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations2"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_12"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "date"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment2"),
@@ -850,7 +853,7 @@ resource "aws_glue_catalog_table" "test" {
       "bucket_column_12",
       "bucket_column_2",
     ]
-
+    additional_locations      = ["my_additional_locations2"]
     compressed                = true
     input_format              = "TextInputFormat"
     location                  = "my_location2"
