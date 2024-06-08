@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,6 +53,7 @@ func dataSourceLedger() *schema.Resource {
 }
 
 func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -59,7 +61,7 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	ledger, err := findLedgerByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("reading QLDB Ledger (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading QLDB Ledger (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(ledger.Name))
@@ -76,12 +78,12 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
-		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -149,6 +150,7 @@ func ResourceAppMonitor() *schema.Resource {
 }
 
 func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -170,15 +172,16 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	_, err := conn.CreateAppMonitorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch RUM App Monitor (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch RUM App Monitor (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceAppMonitorRead(ctx, d, meta)
+	return append(diags, resourceAppMonitorRead(ctx, d, meta)...)
 }
 
 func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	appMon, err := FindAppMonitorByName(ctx, conn, d.Id())
@@ -186,19 +189,19 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch RUM App Monitor %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("app_monitor_configuration", []interface{}{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
-		return diag.Errorf("setting app_monitor_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting app_monitor_configuration: %s", err)
 	}
 
 	if err := d.Set("custom_events", []interface{}{flattenCustomEvents(appMon.CustomEvents)}); err != nil {
-		return diag.Errorf("setting custom_events: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting custom_events: %s", err)
 	}
 
 	d.Set("app_monitor_id", appMon.Id)
@@ -217,10 +220,11 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	setTagsOut(ctx, appMon.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -247,14 +251,15 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err := conn.UpdateAppMonitorWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceAppMonitorRead(ctx, d, meta)
+	return append(diags, resourceAppMonitorRead(ctx, d, meta)...)
 }
 
 func resourceAppMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch RUM App Monitor: %s", d.Id())
@@ -263,14 +268,14 @@ func resourceAppMonitorDelete(ctx context.Context, d *schema.ResourceData, meta 
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch RUM App Monitor (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindAppMonitorByName(ctx context.Context, conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.AppMonitor, error) {

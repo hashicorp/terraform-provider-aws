@@ -60,6 +60,45 @@ func TestAccVPCEndpointPrivateDNS_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccVPCEndpointPrivateDNS_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var endpoint awstypes.VpcEndpoint
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_endpoint_private_dns.test"
+	endpointResourceName := "aws_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.EC2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointPrivateDNSConfig_disabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
+					testAccCheckVPCEndpointPrivateDNSDisabled(ctx, endpointResourceName),
+					resource.TestCheckResourceAttrPair(endpointResourceName, names.AttrID, resourceName, names.AttrVPCEndpointID),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccVPCEndpointPrivateDNSImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrVPCEndpointID,
+			},
+		},
+	})
+}
 
 func TestAccVPCEndpointPrivateDNS_disappears_Endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -234,4 +273,33 @@ resource "aws_vpc_endpoint_private_dns" "test" {
   private_dns_enabled = %[2]t
 }
 `, rName, enabled)
+}
+
+func testAccVPCEndpointPrivateDNSConfig_disabled(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_endpoint_private_dns" "test" {
+  vpc_endpoint_id     = aws_vpc_endpoint.test.id
+  private_dns_enabled = false
+}
+`, rName)
 }

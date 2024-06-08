@@ -2002,7 +2002,7 @@ func sweepTransitGateways(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGateway()
+			r := resourceTransitGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayId))
 
@@ -2050,7 +2050,7 @@ func sweepTransitGatewayConnectPeers(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayConnectPeer()
+			r := resourceTransitGatewayConnectPeer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayConnectPeerId))
 
@@ -2098,7 +2098,7 @@ func sweepTransitGatewayConnects(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayConnect()
+			r := resourceTransitGatewayConnect()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
@@ -2146,7 +2146,7 @@ func sweepTransitGatewayMulticastDomains(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayMulticastDomain()
+			r := resourceTransitGatewayMulticastDomain()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
 
@@ -2242,7 +2242,7 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayVPCAttachment()
+			r := resourceTransitGatewayVPCAttachment()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
@@ -2369,7 +2369,7 @@ func sweepVPCEndpoints(region string) error {
 				continue
 			}
 
-			r := ResourceVPCEndpoint()
+			r := resourceVPCEndpoint()
 			d := r.Data(nil)
 			d.SetId(id)
 

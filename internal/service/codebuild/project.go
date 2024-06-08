@@ -66,7 +66,7 @@ func resourceProject() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -198,7 +198,7 @@ func resourceProject() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -323,7 +323,7 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -390,7 +390,7 @@ func resourceProject() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									"location": {
+									names.AttrLocation: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validProjectS3LogsLocation,
@@ -465,7 +465,7 @@ func resourceProject() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -551,7 +551,7 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -642,7 +642,7 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1199,8 +1199,8 @@ func expandProjectFileSystemLocation(tfMap map[string]interface{}) *types.Projec
 		apiObject.Identifier = aws.String(tfMap[names.AttrIdentifier].(string))
 	}
 
-	if tfMap["location"].(string) != "" {
-		apiObject.Location = aws.String(tfMap["location"].(string))
+	if tfMap[names.AttrLocation].(string) != "" {
+		apiObject.Location = aws.String(tfMap[names.AttrLocation].(string))
 	}
 
 	if tfMap["mount_options"].(string) != "" {
@@ -1263,7 +1263,7 @@ func expandProjectArtifacts(tfMap map[string]interface{}) *types.ProjectArtifact
 		apiObject.BucketOwnerAccess = types.BucketOwnerAccess(v)
 	}
 
-	if v, ok := tfMap["location"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
 		apiObject.Location = aws.String(v)
 	}
 
@@ -1300,7 +1300,7 @@ func expandProjectCache(tfMap map[string]interface{}) *types.ProjectCache {
 		Type: cacheType,
 	}
 
-	if v, ok := tfMap["location"]; ok {
+	if v, ok := tfMap[names.AttrLocation]; ok {
 		apiObject.Location = aws.String(v.(string))
 	}
 
@@ -1454,7 +1454,7 @@ func expandS3LogsConfig(tfMap map[string]interface{}) *types.S3LogsConfig {
 		apiObject.BucketOwnerAccess = types.BucketOwnerAccess(v)
 	}
 
-	if v, ok := tfMap["location"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
 		apiObject.Location = aws.String(v)
 	}
 
@@ -1555,7 +1555,7 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 		Type:          sourceType,
 	}
 
-	if v, ok := tfMap["location"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
 		apiObject.Location = aws.String(v)
 	}
 
@@ -1629,7 +1629,7 @@ func flattenProjectFileSystemLocation(apiObject types.ProjectFileSystemLocation)
 	}
 
 	if v := apiObject.Location; v != nil {
-		tfMap["location"] = aws.ToString(v)
+		tfMap[names.AttrLocation] = aws.ToString(v)
 	}
 
 	if v := apiObject.MountOptions; v != nil {
@@ -1678,7 +1678,7 @@ func flattenS3Logs(apiObject *types.S3LogsConfig) []interface{} {
 	} else {
 		tfMap["bucket_owner_access"] = apiObject.BucketOwnerAccess
 		tfMap["encryption_disabled"] = aws.ToBool(apiObject.EncryptionDisabled)
-		tfMap["location"] = aws.ToString(apiObject.Location)
+		tfMap[names.AttrLocation] = aws.ToString(apiObject.Location)
 		tfMap[names.AttrStatus] = apiObject.Status
 	}
 
@@ -1715,7 +1715,7 @@ func flattenProjectArtifacts(apiObject *types.ProjectArtifacts) map[string]inter
 	}
 
 	if apiObject.Location != nil {
-		tfMap["location"] = aws.ToString(apiObject.Location)
+		tfMap[names.AttrLocation] = aws.ToString(apiObject.Location)
 	}
 
 	if apiObject.OverrideArtifactName != nil {
@@ -1749,7 +1749,7 @@ func resourceProjectArtifactsHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
 	}
 
-	if v, ok := tfMap["location"]; ok {
+	if v, ok := tfMap[names.AttrLocation]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -1782,9 +1782,9 @@ func flattenProjectCache(apiObject *types.ProjectCache) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"location":     aws.ToString(apiObject.Location),
-		"modes":        apiObject.Modes,
-		names.AttrType: apiObject.Type,
+		names.AttrLocation: aws.ToString(apiObject.Location),
+		"modes":            apiObject.Modes,
+		names.AttrType:     apiObject.Type,
 	}
 
 	return []interface{}{tfMap}
@@ -1839,7 +1839,7 @@ func flattenProjectSource(apiObject *types.ProjectSource) map[string]interface{}
 
 	tfMap := map[string]interface{}{
 		"buildspec":           aws.ToString(apiObject.Buildspec),
-		"location":            aws.ToString(apiObject.Location),
+		names.AttrLocation:    aws.ToString(apiObject.Location),
 		"git_clone_depth":     aws.ToInt32(apiObject.GitCloneDepth),
 		"insecure_ssl":        aws.ToBool(apiObject.InsecureSsl),
 		"report_build_status": aws.ToBool(apiObject.ReportBuildStatus),
