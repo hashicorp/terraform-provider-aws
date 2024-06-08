@@ -75,6 +75,7 @@ var (
 	ResourceSpotDataFeedSubscription                 = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                         = resourceSpotFleetRequest
 	ResourceSpotInstanceRequest                      = resourceSpotInstanceRequest
+	ResourceEBSDefaultKMSKey                         = resourceEBSDefaultKMSKey
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

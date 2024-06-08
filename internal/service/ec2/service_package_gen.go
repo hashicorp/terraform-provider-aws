@@ -559,8 +559,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEBSDefaultKMSKey,
+			Factory:  resourceEBSDefaultKMSKey,
 			TypeName: "aws_ebs_default_kms_key",
+			Name:     "EBS Default KMS Key",
 		},
 		{
 			Factory:  ResourceEBSEncryptionByDefault,
