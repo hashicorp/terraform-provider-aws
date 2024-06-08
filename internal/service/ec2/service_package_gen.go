@@ -219,8 +219,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Public IPv4 Pools",
 		},
 		{
-			Factory:  DataSourceSerialConsoleAccess,
+			Factory:  dataSourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
+			Name:     "Serial Console Access",
 		},
 		{
 			Factory:  DataSourceSpotPrice,
