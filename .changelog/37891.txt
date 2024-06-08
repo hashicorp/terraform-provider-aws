@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `additional_locations` argument in `storage_descriptor`
+```
