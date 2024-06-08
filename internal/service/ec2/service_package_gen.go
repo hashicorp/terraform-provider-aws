@@ -224,8 +224,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Serial Console Access",
 		},
 		{
-			Factory:  DataSourceSpotPrice,
+			Factory:  dataSourceSpotPrice,
 			TypeName: "aws_ec2_spot_price",
+			Name:     "Spot Price",
 		},
 		{
 			Factory:  dataSourceTransitGateway,

@@ -837,7 +837,7 @@ func findSpotInstanceRequestByID(ctx context.Context, conn *ec2.Client, id strin
 	return output, nil
 }
 
-func findSpotPriceHistory(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotPriceHistoryInput) ([]awstypes.SpotPrice, error) {
+func findSpotPrices(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotPriceHistoryInput) ([]awstypes.SpotPrice, error) {
 	var output []awstypes.SpotPrice
 	pages := ec2.NewDescribeSpotPriceHistoryPaginator(conn, input)
 
@@ -852,6 +852,16 @@ func findSpotPriceHistory(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	}
 
 	return output, nil
+}
+
+func findSpotPrice(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotPriceHistoryInput) (*awstypes.SpotPrice, error) {
+	output, err := findSpotPrices(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findSubnetsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {

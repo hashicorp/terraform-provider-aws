@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_spot_price")
-func DataSourceSpotPrice() *schema.Resource {
+// @SDKDataSource("aws_ec2_spot_price", name="Spot Price")
+func dataSourceSpotPrice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSpotPriceRead,
 
@@ -72,21 +73,11 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
-	output, err := findSpotPriceHistory(ctx, conn, input)
+	resultSpotPrice, err := findSpotPrice(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Price History (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Spot Price", err))
 	}
-
-	if len(output) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no EC2 Spot Price History found matching criteria; try different search")
-	}
-
-	if len(output) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple EC2 Spot Price History results found matching criteria; try different search")
-	}
-
-	resultSpotPrice := output[0]
 
 	d.Set("spot_price", resultSpotPrice.SpotPrice)
 	d.Set("spot_price_timestamp", (*resultSpotPrice.Timestamp).Format(time.RFC3339))
