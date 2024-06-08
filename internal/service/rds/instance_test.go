@@ -232,7 +232,7 @@ func TestAccRDSInstance_engineLifecycleSupport_disabled(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_engineLifecycleSupport_disabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
