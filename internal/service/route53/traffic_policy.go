@@ -63,7 +63,7 @@ func resourceTrafficPolicy() *schema.Resource {
 			"document": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validation.StringLenBetween(0, 102400),
 			},
 			names.AttrName: {
