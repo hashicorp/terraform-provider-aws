@@ -1022,8 +1022,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_snapshot_create_volume_permission",
 		},
 		{
-			Factory:  ResourceSpotDataFeedSubscription,
+			Factory:  resourceSpotDataFeedSubscription,
 			TypeName: "aws_spot_datafeed_subscription",
+			Name:     "Spot Datafeed Subscription",
 		},
 		{
 			Factory:  ResourceSpotFleetRequest,

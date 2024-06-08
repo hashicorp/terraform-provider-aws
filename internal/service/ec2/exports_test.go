@@ -72,6 +72,7 @@ var (
 	ResourceInstanceState                            = resourceInstanceState
 	ResourceLaunchTemplate                           = resourceLaunchTemplate
 	ResourcePlacementGroup                           = resourcePlacementGroup
+	ResourceSpotDataFeedSubscription                 = resourceSpotDataFeedSubscription
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

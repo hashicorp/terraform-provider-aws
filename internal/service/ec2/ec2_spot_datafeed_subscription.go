@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_spot_datafeed_subscription")
-func ResourceSpotDataFeedSubscription() *schema.Resource {
+// @SDKResource("aws_spot_datafeed_subscription", name="Spot Datafeed Subscription")
+func resourceSpotDataFeedSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotDataFeedSubscriptionCreate,
 		ReadWithoutTimeout:   resourceSpotDataFeedSubscriptionRead,
