@@ -1419,10 +1419,10 @@ func sweepPlacementGroups(region string) error {
 		return fmt.Errorf("error listing EC2 Placement Groups (%s): %w", region, err)
 	}
 
-	for _, placementGroup := range output.PlacementGroups {
-		r := ResourcePlacementGroup()
+	for _, v := range output.PlacementGroups {
+		r := resourcePlacementGroup()
 		d := r.Data(nil)
-		d.SetId(aws.ToString(placementGroup.GroupName))
+		d.SetId(aws.ToString(v.GroupName))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}

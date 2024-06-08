@@ -977,7 +977,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_network_interface_sg_attachment",
 		},
 		{
-			Factory:  ResourcePlacementGroup,
+			Factory:  resourcePlacementGroup,
 			TypeName: "aws_placement_group",
 			Name:     "Placement Group",
 			Tags: &types.ServicePackageResourceTags{

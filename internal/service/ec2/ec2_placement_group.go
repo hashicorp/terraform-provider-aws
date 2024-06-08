@@ -29,7 +29,7 @@ import (
 // @SDKResource("aws_placement_group", name="Placement Group")
 // @Tags(identifierAttribute="placement_group_id")
 // @Testing(tagsTest=false)
-func ResourcePlacementGroup() *schema.Resource {
+func resourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePlacementGroupCreate,
 		ReadWithoutTimeout:   resourcePlacementGroupRead,
