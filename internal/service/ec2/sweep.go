@@ -1196,7 +1196,7 @@ func sweepLaunchTemplates(region string) error {
 		}
 
 		for _, v := range page.LaunchTemplates {
-			r := ResourceLaunchTemplate()
+			r := resourceLaunchTemplate()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.LaunchTemplateId))
 

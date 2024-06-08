@@ -70,6 +70,7 @@ var (
 	ResourceImageBlockPublicAccess                   = resourceImageBlockPublicAccess
 	ResourceInstance                                 = resourceInstance
 	ResourceInstanceState                            = resourceInstanceState
+	ResourceLaunchTemplate                           = resourceLaunchTemplate
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

@@ -35,7 +35,7 @@ import (
 // @SDKResource("aws_launch_template", name="Launch Template")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceLaunchTemplate() *schema.Resource {
+func resourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchTemplateCreate,
 		ReadWithoutTimeout:   resourceLaunchTemplateRead,
