@@ -230,6 +230,63 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccEMRServerlessApplication_interactiveConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application types.Application
+	resourceName := "aws_emrserverless_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_interactiveConfiguration(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.livy_endpoint_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "interactive_configuration.0.studio_enabled.#", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application types.Application
@@ -458,6 +515,20 @@ resource "aws_emrserverless_application" "test" {
   }
 }
 `, rName, cpu)
+}
+
+func testAccApplicationConfig_interactiveConfiguration(rName string, livyEndpointEnabled, studioEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_emrserverless_application" "test" {
+  name          = %[1]q
+  release_label = "emr-6.6.0"
+  type          = "hive"
+  interactive_configuration {
+    livy_endpoint_enabled = %[2]t
+    studio_enabled        = %[3]t
+  }
+}
+`, rName, livyEndpointEnabled, studioEnabled)
 }
 
 func testAccApplicationConfig_maxCapacity(rName, cpu string) string {
