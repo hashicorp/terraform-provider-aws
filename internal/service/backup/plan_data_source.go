@@ -34,6 +34,92 @@ func DataSourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrRule: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"completion_window": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"copy_action": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_vault_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"lifecycle": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cold_storage_after": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"delete_after": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"opt_in_to_archive_for_supported_resources": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"enable_continuous_backup": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"lifecycle": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cold_storage_after": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"delete_after": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"opt_in_to_archive_for_supported_resources": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"recovery_point_tags": tftags.TagsSchema(),
+						"rule_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrSchedule: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"start_window": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"target_vault_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Set: planHash,
+			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			names.AttrVersion: {
 				Type:     schema.TypeString,
@@ -61,6 +147,9 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, resp.BackupPlanArn)
 	d.Set(names.AttrName, resp.BackupPlan.BackupPlanName)
 	d.Set(names.AttrVersion, resp.VersionId)
+	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, resp.BackupPlan.Rules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	}
 
 	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
 	if err != nil {
