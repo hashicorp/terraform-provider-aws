@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_serial_console_access")
-func ResourceSerialConsoleAccess() *schema.Resource {
+// @SDKResource("aws_ec2_serial_console_access", name="Serial Console Access")
+func resourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSerialConsoleAccessCreate,
 		ReadWithoutTimeout:   resourceSerialConsoleAccessRead,

@@ -706,8 +706,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSerialConsoleAccess,
+			Factory:  resourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
+			Name:     "Serial Console Access",
 		},
 		{
 			Factory:  ResourceSubnetCIDRReservation,
