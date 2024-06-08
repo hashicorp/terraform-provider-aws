@@ -1722,13 +1722,11 @@ func sweepSpotInstanceRequests(region string) error {
 			return nil
 		}
 
-		for _, config := range page.SpotInstanceRequests {
-			id := aws.ToString(config.SpotInstanceRequestId)
-
-			r := ResourceSpotInstanceRequest()
+		for _, v := range page.SpotInstanceRequests {
+			r := resourceSpotInstanceRequest()
 			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("spot_instance_id", config.InstanceId)
+			d.SetId(aws.ToString(v.SpotInstanceRequestId))
+			d.Set("spot_instance_id", v.InstanceId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

@@ -74,6 +74,7 @@ var (
 	ResourcePlacementGroup                           = resourcePlacementGroup
 	ResourceSpotDataFeedSubscription                 = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                         = resourceSpotFleetRequest
+	ResourceSpotInstanceRequest                      = resourceSpotInstanceRequest
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

@@ -30,7 +30,7 @@ import (
 // @SDKResource("aws_spot_instance_request", name="Spot Instance Request")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceSpotInstanceRequest() *schema.Resource {
+func resourceSpotInstanceRequest() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotInstanceRequestCreate,
 		ReadWithoutTimeout:   resourceSpotInstanceRequestRead,

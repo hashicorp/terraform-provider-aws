@@ -1035,7 +1035,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSpotInstanceRequest,
+			Factory:  resourceSpotInstanceRequest,
 			TypeName: "aws_spot_instance_request",
 			Name:     "Spot Instance Request",
 			Tags: &types.ServicePackageResourceTags{
