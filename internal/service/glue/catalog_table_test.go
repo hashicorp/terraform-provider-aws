@@ -116,6 +116,7 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment"),
@@ -754,6 +755,7 @@ resource "aws_glue_catalog_table" "test" {
   view_original_text = "view_original_text_1"
 
   storage_descriptor {
+    additional_locations      = ["my_additional_locations"]
     bucket_columns            = ["bucket_column_1"]
     compressed                = false
     input_format              = "SequenceFileInputFormat"
