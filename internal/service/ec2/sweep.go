@@ -1673,12 +1673,10 @@ func sweepSpotFleetRequests(region string) error {
 			return nil
 		}
 
-		for _, config := range page.SpotFleetRequestConfigs {
-			id := aws.ToString(config.SpotFleetRequestId)
-
-			r := ResourceSpotFleetRequest()
+		for _, v := range page.SpotFleetRequestConfigs {
+			r := resourceSpotFleetRequest()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.ToString(v.SpotFleetRequestId))
 			d.Set("terminate_instances_with_expiration", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

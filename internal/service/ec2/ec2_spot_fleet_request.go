@@ -34,7 +34,7 @@ import (
 // @SDKResource("aws_spot_fleet_request", name="Spot Fleet Request")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceSpotFleetRequest() *schema.Resource {
+func resourceSpotFleetRequest() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotFleetRequestCreate,

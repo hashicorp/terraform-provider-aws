@@ -1027,7 +1027,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Spot Datafeed Subscription",
 		},
 		{
-			Factory:  ResourceSpotFleetRequest,
+			Factory:  resourceSpotFleetRequest,
 			TypeName: "aws_spot_fleet_request",
 			Name:     "Spot Fleet Request",
 			Tags: &types.ServicePackageResourceTags{
