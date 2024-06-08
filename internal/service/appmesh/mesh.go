@@ -25,6 +25,8 @@ import (
 
 // @SDKResource("aws_appmesh_mesh", name="Service Mesh")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.MeshData")
+// @Testing(serialize=true)
 func resourceMesh() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMeshCreate,

@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_verifiedaccess_endpoint", name="Verified Access Endpoint")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVerifiedAccessEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessEndpointCreate,

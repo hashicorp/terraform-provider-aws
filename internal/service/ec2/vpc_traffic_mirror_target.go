@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_ec2_traffic_mirror_target", name="Traffic Mirror Target")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTrafficMirrorTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorTargetCreate,

@@ -8,12 +8,16 @@ import (
 {{if not .SkipClientGenerate }}
 	{{- if eq .SDKVersion "1" "1,2" }}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
 	{{- end }}
 	{{- if eq .SDKVersion "2" "1,2" }}
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- end }}
+	{{- if .SDKVersion }}
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	{{- end }}
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -133,7 +137,21 @@ func (p *servicePackage) ServicePackageName() string {
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
 	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	cfg := aws_sdkv1.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws_sdkv1.String(endpoint)
+
+		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
+			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+		}
+	}
+
+	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&cfg)), nil
 }
 	{{- end }}
 
@@ -144,7 +162,15 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg, func(o *{{ .GoV2Package }}_sdkv2.Options) {
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+
+			if (o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled) {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
 		}
 	}), nil
 }

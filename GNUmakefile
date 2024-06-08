@@ -1,21 +1,27 @@
 SHELL := /bin/bash
 
-SWEEP                        ?= us-west-2,us-east-1,us-east-2,us-west-1
-TEST                         ?= ./...
-SWEEP_DIR                    ?= ./internal/sweep
-PKG_NAME                     ?= internal
-SVC_DIR                      ?= ./internal/service
-TEST_COUNT                   ?= 1
-ACCTEST_TIMEOUT              ?= 360m
 ACCTEST_PARALLELISM          ?= 20
-P                            ?= 20
-GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
-SWEEP_TIMEOUT                ?= 360m
-SEMGREP_ARGS                 ?= --error
-SEMGREP_SEND_METRICS         ?= off
-SEMGREP_ENABLE_VERSION_CHECK ?= false
-SEMGREP_TIMEOUT              ?= 900 # 15 minutes, some runs go over 5 minutes
+ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
+GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
+P                            ?= 20
+PKG_NAME                     ?= internal
+SEMGREP_ARGS                 ?= --error
+SEMGREP_ENABLE_VERSION_CHECK ?= false
+SEMGREP_SEND_METRICS         ?= off
+SEMGREP_TIMEOUT              ?= 900 # 15 minutes, some runs go over 5 minutes
+SVC_DIR                      ?= ./internal/service
+SWEEP                        ?= us-west-2,us-east-1,us-east-2,us-west-1
+SWEEP_DIR                    ?= ./internal/sweep
+SWEEP_TIMEOUT                ?= 360m
+TEST                         ?= ./...
+TEST_COUNT                   ?= 1
+
+# NOTE:
+# 1. Keep targets in alphabetical order
+# 2. For any changes, also update:
+#    - docs/makefile-cheat-sheet.md
+#    - docs/continuous-integration.md
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
@@ -39,6 +45,10 @@ endif
 
 ifneq ($(origin SWEEPERS), undefined)
 	SWEEPARGS = -sweep-run='$(SWEEPERS)'
+endif
+
+ifeq ($(origin CURDIR), undefined)
+	CURDIR = $(PWD)
 endif
 
 ifeq ($(PKG_NAME), internal/service/ebs)
@@ -89,8 +99,6 @@ endif
 
 default: build ## build
 
-# Please keep targets in alphabetical order
-
 acctest-lint: testacc-lint testacc-tflint ## [CI] Run all CI acceptance test checks
 
 awssdkpatch: prereq-go ## Install awssdkpatch
@@ -111,6 +119,10 @@ awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 build: prereq-go fmt-check ## Build provider
 	@echo "make: Building provider..."
 	@$(GO_VER) install
+
+changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
+	@echo "make: CHANGELOG Misspell / misspell..."
+	@misspell -error -source text CHANGELOG.md .changelog
 
 ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## [CI] Run all CI checks
 
@@ -148,6 +160,7 @@ clean-make-tests: ## Clean up artifacts from make tests
 clean-tidy: prereq-go ## Clean up tidy
 	@echo "make: Tidying Go mods..."
 	@gover="$(GO_VER)" ; \
+	echo "make: tidying with $$gover" ; \
 	if [ "$$gover" = "go" ] ; then \
 		gover=go`cat .go-version | xargs` ; \
 		echo "make: WARNING: no version provided so tidying with $$gover" ; \
@@ -258,6 +271,7 @@ fmt: ## Fix Go source formatting
 
 # Currently required by tf-deploy compile
 fmt-check: ## Verify Go source is formatted
+	@echo "make: Verifying source code with gofmt..."
 	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
@@ -274,7 +288,7 @@ gen: prereq-go ## Run all Go generators
 gen-check: gen ## [CI] Provider Checks / go_generate
 	@echo "make: Provider Checks / go_generate..."
 	@echo "make: NOTE: commit any changes before running this check"
-	@git diff --compact-summary --exit-code || \
+	@git diff origin/$(BASE_REF) --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
 generate-changelog: ## Generate changelog
@@ -319,13 +333,9 @@ install: build ## build
 
 lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 
-lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
+lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix acceptance test, website, and docs linter findings
 
 misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
-
-changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
-	@echo "make: CHANGELOG Misspell / misspell..."
-	@misspell -error -source text CHANGELOG.md .changelog
 
 preferred-lib: ## [CI] Preferred Library Version Check / diffgrep
 	@echo "make: Preferred Library Version Check / diffgrep..."
@@ -492,11 +502,11 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml
 
-semgrep-docker: semgrep-validate ## Run semgrep (Legacy, use caution)
+semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
 
-semgrep-fix: semgrep-validate ## Run semgrep on all files
+semgrep-fix: semgrep-validate ## Fix Semgrep issues that have fixes
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)..."
 	@echo "make: Applying fixes with --autofix"
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
@@ -543,7 +553,7 @@ semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name S
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml
 
-semgrep-validate: ## Validate semgrep configuration files
+semgrep-validate: ## Validate Semgrep configuration files
 	@echo "make: Validating Semgrep configuration files..."
 	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
 		--config .ci/.semgrep.yml \
@@ -596,12 +606,12 @@ sweeper-unlinked: go-build ## [CI] Provider Checks / Sweeper Functions Not Linke
 	[ $$count -eq 0 ] || \
         (echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
-t: prereq-go fmt-check ## Run acceptance tests
+t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 test: prereq-go fmt-check ## Run unit tests
 	@echo "make: Running unit tests..."
-	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
+	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=5m
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \

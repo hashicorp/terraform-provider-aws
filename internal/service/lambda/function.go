@@ -42,6 +42,8 @@ const (
 
 // @SDKResource("aws_lambda_function", name="Function")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/lambda;lambda.GetFunctionOutput")
+// @Testing(importIgnore="filename;last_modified;publish")
 func resourceFunction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionCreate,

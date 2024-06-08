@@ -53,7 +53,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -142,7 +142,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.DatabaseName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.Bool(v.(bool))
 	}
 
@@ -206,7 +206,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
 	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
-	d.Set("deletion_protection", globalCluster.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
 	d.Set(names.AttrEngine, globalCluster.Engine)
 	d.Set("engine_lifecycle_support", globalCluster.EngineLifecycleSupport)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
@@ -240,7 +240,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.ModifyGlobalClusterInput{
-		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+		DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		GlobalClusterIdentifier: aws.String(d.Id()),
 	}
 

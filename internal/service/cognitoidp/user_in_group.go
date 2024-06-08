@@ -30,7 +30,7 @@ func resourceUserInGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validUserGroupName,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -56,7 +56,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.GroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("user_pool_id"); ok {
+	if v, ok := d.GetOk(names.AttrUserPoolID); ok {
 		input.UserPoolId = aws.String(v.(string))
 	}
 
@@ -81,7 +81,7 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	groupName := d.Get(names.AttrGroupName).(string)
-	userPoolId := d.Get("user_pool_id").(string)
+	userPoolId := d.Get(names.AttrUserPoolID).(string)
 	username := d.Get(names.AttrUsername).(string)
 
 	found, err := FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
@@ -102,7 +102,7 @@ func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	groupName := d.Get(names.AttrGroupName).(string)
-	userPoolID := d.Get("user_pool_id").(string)
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
 	username := d.Get(names.AttrUsername).(string)
 
 	input := &cognitoidentityprovider.AdminRemoveUserFromGroupInput{

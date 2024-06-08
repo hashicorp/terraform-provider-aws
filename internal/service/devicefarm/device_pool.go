@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,7 +29,7 @@ import (
 
 // @SDKResource("aws_devicefarm_device_pool", name="Device Pool")
 // @Tags(identifierAttribute="arn")
-func ResourceDevicePool() *schema.Resource {
+func resourceDevicePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDevicePoolCreate,
 		ReadWithoutTimeout:   resourceDevicePoolRead,
@@ -134,7 +135,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	devicePool, err := FindDevicePoolByARN(ctx, conn, d.Id())
+	devicePool, err := findDevicePoolByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Device Pool (%s) not found, removing from state", d.Id())
@@ -223,6 +224,30 @@ func resourceDevicePoolDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func findDevicePoolByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.DevicePool, error) {
+	input := &devicefarm.GetDevicePoolInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetDevicePool(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DevicePool == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DevicePool, nil
 }
 
 func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {

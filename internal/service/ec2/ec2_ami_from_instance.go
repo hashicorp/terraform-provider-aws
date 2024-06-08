@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_ami_from_instance", name="AMI")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceAMIFromInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMIFromInstanceCreate,
@@ -137,7 +138,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -147,7 +148,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},

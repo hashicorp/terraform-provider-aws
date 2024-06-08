@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_spot_fleet_request", name="Spot Fleet Request")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceSpotFleetRequest() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -211,7 +212,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"virtual_name": {
+									names.AttrVirtualName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1385,7 +1386,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			})
 		}
 	}
@@ -2020,7 +2021,7 @@ func ephemeralBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping) *schema.Set {
 	for _, val := range bdm {
 		if val.VirtualName != nil {
 			m := make(map[string]interface{})
-			m["virtual_name"] = aws.StringValue(val.VirtualName)
+			m[names.AttrVirtualName] = aws.StringValue(val.VirtualName)
 
 			if val.DeviceName != nil {
 				m[names.AttrDeviceName] = aws.StringValue(val.DeviceName)
@@ -2080,7 +2081,7 @@ func hashEphemeralBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 	return create.StringHashcode(buf.String())
 }
 

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -62,6 +63,7 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 }
 
 func resourceFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -74,15 +76,16 @@ func resourceFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData
 	output, err := conn.CreateFirewallRuleGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Firewall Rule Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Firewall Rule Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.FirewallRuleGroup.Id))
 
-	return resourceFirewallRuleGroupRead(ctx, d, meta)
+	return append(diags, resourceFirewallRuleGroupRead(ctx, d, meta)...)
 }
 
 func resourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ruleGroup, err := FindFirewallRuleGroupByID(ctx, conn, d.Id())
@@ -90,11 +93,11 @@ func resourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Rule Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule Group (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(ruleGroup.Arn)
@@ -103,7 +106,7 @@ func resourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrOwnerID, ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)
 
-	return nil
+	return diags
 }
 
 func resourceFirewallRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -112,6 +115,7 @@ func resourceFirewallRuleGroupUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceFirewallRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule Group: %s", d.Id())
@@ -120,14 +124,14 @@ func resourceFirewallRuleGroupDelete(ctx context.Context, d *schema.ResourceData
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Firewall Rule Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Firewall Rule Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFirewallRuleGroupByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallRuleGroup, error) {

@@ -338,7 +338,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 				),
 			},
 			{
@@ -346,7 +346,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
-					resource.TestMatchResourceAttr(resourceName, "connection_id", regexache.MustCompile("^[0-9a-z]+$")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrConnectionID, regexache.MustCompile("^[0-9a-z]+$")),
 				),
 			},
 			{
@@ -354,7 +354,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 				),
 			},
 			{

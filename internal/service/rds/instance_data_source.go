@@ -29,7 +29,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -253,7 +253,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(instance.DBInstanceIdentifier))
-	d.Set("allocated_storage", instance.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
 	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set("backup_retention_period", instance.BackupRetentionPeriod)
