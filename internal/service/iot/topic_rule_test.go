@@ -373,7 +373,7 @@ func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
-						"batch_mode":           "true",
+						"batch_mode":           acctest.CtTrue,
 						names.AttrLogGroupName: "mylogs1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", acctest.Ct0),
