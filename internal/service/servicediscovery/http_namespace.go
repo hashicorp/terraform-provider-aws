@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -35,11 +36,11 @@ func ResourceHTTPNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -48,7 +49,7 @@ func ResourceHTTPNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,16 +64,17 @@ func ResourceHTTPNamespace() *schema.Resource {
 }
 
 func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &servicediscovery.CreateHttpNamespaceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -80,27 +82,28 @@ func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateHttpNamespaceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Service Discovery HTTP Namespace (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
 	operation, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
-		return diag.Errorf("waiting for Service Discovery HTTP Namespace (%s) create: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery HTTP Namespace (%s) create: %s", name, err)
 	}
 
 	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
 
 	if !ok {
-		return diag.Errorf("creating Service Discovery HTTP Namespace (%s): operation response missing Namespace ID", name)
+		return sdkdiag.AppendErrorf(diags, "creating Service Discovery HTTP Namespace (%s): operation response missing Namespace ID", name)
 	}
 
 	d.SetId(aws.StringValue(namespaceID))
 
-	return resourceHTTPNamespaceRead(ctx, d, meta)
+	return append(diags, resourceHTTPNamespaceRead(ctx, d, meta)...)
 }
 
 func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	ns, err := FindNamespaceByID(ctx, conn, d.Id())
@@ -108,24 +111,24 @@ func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery HTTP Namespace %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(ns.Arn)
-	d.Set("arn", arn)
-	d.Set("description", ns.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, ns.Description)
 	if ns.Properties != nil && ns.Properties.HttpProperties != nil {
 		d.Set("http_name", ns.Properties.HttpProperties.HttpName)
 	} else {
 		d.Set("http_name", nil)
 	}
-	d.Set("name", ns.Name)
+	d.Set(names.AttrName, ns.Name)
 
-	return nil
+	return diags
 }
 
 func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -134,6 +137,7 @@ func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	log.Printf("[INFO] Deleting Service Discovery HTTP Namespace: %s", d.Id())
@@ -144,18 +148,18 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 	}, servicediscovery.ErrCodeResourceInUse)
 
 	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Service Discovery HTTP Namespace (%s): %s", d.Id(), err)
 	}
 
 	if output := outputRaw.(*servicediscovery.DeleteNamespaceOutput); output != nil && output.OperationId != nil {
 		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
-			return diag.Errorf("waiting for Service Discovery HTTP Namespace (%s) delete: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery HTTP Namespace (%s) delete: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }

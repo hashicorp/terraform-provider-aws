@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_infrastructure_configurations")
@@ -20,13 +21,13 @@ func DataSourceInfrastructureConfigurations() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInfrastructureConfigurationsRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
-			"names": {
+			names.AttrFilter: namevaluesfilters.Schema(),
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -41,7 +42,7 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
@@ -67,16 +68,16 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configurations: %s", err)
 	}
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, r := range results {
 		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+		nms = append(nms, aws.StringValue(r.Name))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
+	d.Set(names.AttrARNs, arns)
+	d.Set(names.AttrNames, nms)
 
 	return diags
 }

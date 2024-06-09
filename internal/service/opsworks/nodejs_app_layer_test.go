@@ -31,7 +31,7 @@ func TestAccOpsWorksNodejsAppLayer_basic(t *testing.T) {
 				Config: testAccNodejsAppLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", "Node.js App Server"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Node.js App Server"),
 					resource.TestCheckResourceAttr(resourceName, "nodejs_version", "0.10.38"),
 				),
 			},

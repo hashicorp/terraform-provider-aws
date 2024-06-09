@@ -121,7 +121,7 @@ This resource supports the following arguments:
 
 `filter` supports the following:
 
-* `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`, `COMMIT_MESSAGE`. At least one filter group must specify `EVENT` as its type.
+* `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`, `COMMIT_MESSAGE`, `WORKFLOW_NAME`, `TAG_NAME`, `RELEASE_NAME`. At least one filter group must specify `EVENT` as its type.
 * `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_MERGED` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
 * `excludeMatchedPattern` - (Optional) If set to `true`, the specified filter does *not* trigger a build. Defaults to `false`.
 
@@ -164,4 +164,4 @@ Using `terraform import`, import CodeBuild Webhooks using the CodeBuild Project 
 % terraform import aws_codebuild_webhook.example MyProjectName
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cf2c7457e01d223f33713530c0bde71a1f3d519e66df2997191b2c29539aab1a -->
+<!-- cache-key: cdktf-0.20.1 input-176710fbaa20ebf796f2a3e8342f08dc104127e51ddfb2a62f6e1740e4b9cacf -->

@@ -38,11 +38,11 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "comment"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -99,7 +99,7 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_comment(rName, comment1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, comment1),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 				Config: testAccKeyValueStoreConfig_comment(rName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, comment2),
 				),
 			},
 		},

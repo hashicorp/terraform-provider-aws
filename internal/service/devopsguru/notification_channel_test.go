@@ -43,8 +43,8 @@ func testAccNotificationChannel_basic(t *testing.T) {
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -91,7 +91,6 @@ func testAccNotificationChannel_filters(t *testing.T) {
 	resourceName := "aws_devopsguru_notification_channel.test"
 	snsTopicResourceName := "aws_sns_topic.test"
 	messageType := string(types.NotificationMessageTypeNewInsight)
-	severity := string(types.InsightSeverityHigh)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -104,16 +103,15 @@ func testAccNotificationChannel_filters(t *testing.T) {
 		CheckDestroy:             testAccCheckNotificationChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationChannelConfig_filters(rName, messageType, severity),
+				Config: testAccNotificationChannelConfig_filters(rName, messageType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "sns.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.0", messageType),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.0", severity),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", acctest.Ct3),
 				),
 			},
 			{
@@ -187,7 +185,7 @@ resource "aws_devopsguru_notification_channel" "test" {
 `, rName)
 }
 
-func testAccNotificationChannelConfig_filters(rName, messageType, severity string) string {
+func testAccNotificationChannelConfig_filters(rName, messageType string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -200,8 +198,8 @@ resource "aws_devopsguru_notification_channel" "test" {
 
   filters {
     message_types = [%[2]q]
-    severities    = [%[3]q]
+    severities    = ["LOW", "MEDIUM", "HIGH"]
   }
 }
-`, rName, messageType, severity)
+`, rName, messageType)
 }

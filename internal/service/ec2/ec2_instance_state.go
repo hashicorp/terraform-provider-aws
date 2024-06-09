@@ -44,12 +44,12 @@ func ResourceInstanceState() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped}, false),
@@ -62,7 +62,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 
 	instance, instanceErr := waitInstanceReady(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
 
@@ -70,13 +70,13 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, instanceId, instanceErr)
 	}
 
-	err := updateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get("state").(string), d.Get("force").(bool))
+	err := updateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get(names.AttrState).(string), d.Get("force").(bool))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(d.Get("instance_id").(string))
+	d.SetId(d.Get(names.AttrInstanceID).(string))
 
 	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
@@ -98,8 +98,8 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstanceState, d.Id(), err)
 	}
 
-	d.Set("instance_id", d.Id())
-	d.Set("state", state.Name)
+	d.Set(names.AttrInstanceID, d.Id())
+	d.Set(names.AttrState, state.Name)
 	d.Set("force", d.Get("force").(bool))
 
 	return diags
@@ -116,8 +116,8 @@ func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
 	}
 
-	if d.HasChange("state") {
-		o, n := d.GetChange("state")
+	if d.HasChange(names.AttrState) {
+		o, n := d.GetChange(names.AttrState)
 		err := updateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool))
 
 		if err != nil {

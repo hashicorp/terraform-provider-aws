@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_storagegateway_local_disk")
-func DataSourceLocalDisk() *schema.Resource {
+// @SDKDataSource("aws_storagegateway_local_disk", name="Local Disk")
+func dataSourceLocalDisk() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalDiskRead,
 

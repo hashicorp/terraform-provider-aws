@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -16,11 +17,21 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		} else if config["partition"].(string) == names.StandardPartitionID {
+		if config["partition"].(string) == names.StandardPartitionID {
 			// Cost Optimization Hub endpoint is available only in us-east-1 Region.
 			o.Region = names.USEast1RegionID
+		}
+
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
+			o.BaseEndpoint = aws.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+			}
 		}
 	}), nil
 }
