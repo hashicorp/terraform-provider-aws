@@ -5,8 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	ec2v2 "github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go/aws"
+
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -82,41 +83,53 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 			},
 		),
 	}
-	_, err := findVPCV2(ctx, ec2Client, input)
-
+	vpc, err := findVPCV2(ctx, ec2Client, input)
 	if err == nil {
+
 		// Check if there is an IGW assigned to the default VPC
 		input := &ec2.DescribeInternetGatewaysInput{}
 		input.Filters = newAttributeFilterList(map[string]string{
-			"attachment.vpc-id": d.Get(names.AttrVPCID).(string),
+			"attachment.vpc-id": *vpc.VpcId,
 		})
 
 		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-		_, err := FindInternetGateway(ctx, conn, input)
+		igw, err := FindInternetGateway(ctx, conn, input)
+		log.Printf("found igw with ID: %s", igw)
 
-		// Attached IGW not found, so we create one
-		if err != nil {
+		if err == nil {
+			d.SetId(aws.ToString(igw.InternetGatewayId))
+			d.Set("existing_default_internet_gateway", true)
 
-			input := &ec2.CreateInternetGatewayInput{
-				TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
-			}
+		} else if tfresource.NotFound(err) {
+			log.Printf("not implemented yet")
+		} else {
+			log.Printf("some error")
 
-			log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
-			output, err := conn.CreateInternetGatewayWithContext(ctx, input)
-
+		}
+		/*
+			// Attached IGW not found, so we create one
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
-			}
+				log.Print("creating default igw")
+				input := &ec2.CreateInternetGatewayInput{
+					TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
+				}
 
-			d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
+				//log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
+				//output, err := conn.CreateInternetGatewayWithContext(ctx, input)
 
-			if v, ok := d.GetOk(names.AttrVPCID); ok {
-				if err := attachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
 				}
-			}
-		}
+
+				//d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
+
+				if v, ok := d.GetOk(names.AttrVPCID); ok {
+					if err := attachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
+					}
+				}
+			}*/
 	}
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
 }
