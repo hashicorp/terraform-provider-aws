@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dynamodb_table_replica: Correctly set `kms_key_arn` on Read
+```

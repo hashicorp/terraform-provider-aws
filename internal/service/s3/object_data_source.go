@@ -32,7 +32,7 @@ func dataSourceObject() *schema.Resource {
 		ReadWithoutTimeout: dataSourceObjectRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +40,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -89,7 +89,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -142,11 +142,11 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"version_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -166,7 +166,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var optFns []func(*s3.Options)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -174,7 +174,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
-	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -199,7 +199,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
 	}
 
-	id := bucket + "/" + d.Get("key").(string)
+	id := bucket + "/" + d.Get(names.AttrKey).(string)
 	if v, ok := d.GetOk("version_id"); ok {
 		id += "@" + v.(string)
 	}
@@ -209,7 +209,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
@@ -221,15 +221,11 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
 	d.Set("content_length", output.ContentLength)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("expiration", output.Expiration)
-	if output.Expires != nil {
-		d.Set("expires", output.Expires.Format(time.RFC1123))
-	} else {
-		d.Set("expires", nil)
-	}
+	d.Set("expires", output.ExpiresString) // formatted in RFC1123
 	if output.LastModified != nil {
 		d.Set("last_modified", output.LastModified.Format(time.RFC1123))
 	} else {
@@ -243,9 +239,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("sse_kms_key_id", output.SSEKMSKeyId)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
@@ -272,7 +268,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
-		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.

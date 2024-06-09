@@ -16,7 +16,9 @@ import (
 )
 
 // expandOperations provides a uniform approach for handling lightsail operations and errors.
-func expandOperations(ctx context.Context, conn *lightsail.Client, operations []types.Operation, action types.OperationType, resource string, id string) (diags diag.Diagnostics) {
+func expandOperations(ctx context.Context, conn *lightsail.Client, operations []types.Operation, action types.OperationType, resource string, id string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if len(operations) == 0 {
 		return create.AppendDiagError(diags, names.Lightsail, string(action), resource, id, errors.New("no operations found for request"))
 	}
@@ -50,7 +52,7 @@ func flattenResourceLocation(apiObject *types.ResourceLocation) map[string]inter
 	m := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		m["availability_zone"] = aws.ToString(v)
+		m[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
 	if v := apiObject.RegionName; string(v) != "" {

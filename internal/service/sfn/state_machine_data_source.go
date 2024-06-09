@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sfn_state_machine")
@@ -20,11 +22,11 @@ func DataSourceStateMachine() *schema.Resource {
 		ReadWithoutTimeout: dataSourceStateMachineRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,15 +34,15 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +50,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,9 +59,10 @@ func DataSourceStateMachine() *schema.Resource {
 }
 
 func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	var arns []string
 
 	err := conn.ListStateMachinesPagesWithContext(ctx, &sfn.ListStateMachinesInput{}, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
@@ -77,31 +80,31 @@ func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Step Functions State Machines: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machines: %s", err)
 	}
 
 	if n := len(arns); n == 0 {
-		return diag.Errorf("no Step Functions State Machines matched")
+		return sdkdiag.AppendErrorf(diags, "no Step Functions State Machines matched")
 	} else if n > 1 {
-		return diag.Errorf("%d Step Functions State Machines matched; use additional constraints to reduce matches to a single State Machine", n)
+		return sdkdiag.AppendErrorf(diags, "%d Step Functions State Machines matched; use additional constraints to reduce matches to a single State Machine", n)
 	}
 
 	arn := arns[0]
 	output, err := FindStateMachineByARN(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("reading Step Functions State Machine (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine (%s): %s", arn, err)
 	}
 
 	d.SetId(arn)
-	d.Set("arn", output.StateMachineArn)
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.StateMachineArn)
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("definition", output.Definition)
-	d.Set("name", output.Name)
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 
-	return nil
+	return diags
 }

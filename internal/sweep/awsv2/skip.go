@@ -45,6 +45,14 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
 		return true
 	}
+	// Example (lightsail): InvalidInputException: Distribution-related APIs are only available in the us-east-1 Region
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Distribution-related APIs are only available in the us-east-1 Region") {
+		return true
+	}
+	// Example (lightsail): InvalidInputException: Domain-related APIs are only available in the us-east-1 Region
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Domain-related APIs are only available in the us-east-1 Region") {
+		return true
+	}
 
 	return false
 }

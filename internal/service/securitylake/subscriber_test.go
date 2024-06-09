@@ -49,29 +49,29 @@ func testAccSubscriber_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
 					func(s *terraform.State) error {
 						id := aws.ToString(subscriber.SubscriberId)
-						return acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "securitylake", fmt.Sprintf("subscriber/%s", id))(s)
+						return acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "securitylake", fmt.Sprintf("subscriber/%s", id))(s)
 					},
 					resource.TestCheckResourceAttr(resourceName, "resource_share_arn", ""),
 					func(s *terraform.State) error {
 						id := aws.ToString(subscriber.SubscriberId)
-						return acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/AmazonSecurityLake-%s", id))(s)
+						return acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/AmazonSecurityLake-%s", id))(s)
 					},
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "s3_bucket_arn", "s3", regexache.MustCompile(fmt.Sprintf(`aws-security-data-lake-%s-[a-z0-9]{30}$`, acctest.Region()))),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					func(s *terraform.State) error {
 						id := aws.ToString(subscriber.SubscriberId)
-						return resource.TestCheckResourceAttr(resourceName, "id", id)(s)
+						return resource.TestCheckResourceAttr(resourceName, names.AttrID, id)(s)
 					},
 					resource.TestCheckNoResourceAttr(resourceName, "subscriber_description"),
 					resource.TestCheckNoResourceAttr(resourceName, "resource_share_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "subscriber_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "2.0"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -133,8 +133,8 @@ func testAccSubscriber_customLogSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.custom_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_log_source_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.custom_log_source_resource.0.source_name", "aws_securitylake_custom_log_source.test", "source_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.custom_log_source_resource.0.source_version", "aws_securitylake_custom_log_source.test", "source_version"),
 				),
@@ -198,11 +198,11 @@ func testAccSubscriber_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriberConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSubscriberConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -211,20 +211,20 @@ func testAccSubscriber_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubscriberConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSubscriberConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSubscriberConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSubscriberConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -253,10 +253,10 @@ func testAccSubscriber_update(t *testing.T) {
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
 				),
 			},
@@ -271,10 +271,10 @@ func testAccSubscriber_update(t *testing.T) {
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "VPC_FLOW"),
-					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "updated"),
 				),
 			},
@@ -311,7 +311,7 @@ func testAccSubscriber_multipleSources(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{
@@ -355,7 +355,7 @@ func testAccSubscriber_multipleSources(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{
@@ -382,7 +382,7 @@ func testAccSubscriber_multipleSources(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{
@@ -439,13 +439,13 @@ func testAccSubscriber_migrate_source(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{

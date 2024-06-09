@@ -45,7 +45,7 @@ func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request dataso
 			"cidr_ipv6": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"from_port": schema.Int64Attribute{
@@ -77,7 +77,7 @@ func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request dataso
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"filter": customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(),
 		},
 	}
 }

@@ -40,7 +40,7 @@ func TestAccDataZoneEnvironmentBlueprintDataSource_basic(t *testing.T) {
 				Config: testAccEnvironmentBlueprintDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintExists(ctx, dataSourceName, &environmentblueprint),
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "blueprint_provider"),
 				),
 			},
@@ -62,7 +62,7 @@ func testAccCheckEnvironmentBlueprintExists(ctx context.Context, name string, en
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataZoneClient(ctx)
 		resp, err := conn.GetEnvironmentBlueprint(ctx, &datazone.GetEnvironmentBlueprintInput{
 			DomainIdentifier: aws.String(rs.Primary.Attributes["domain_id"]),
-			Identifier:       aws.String(rs.Primary.Attributes["id"]),
+			Identifier:       aws.String(rs.Primary.Attributes[names.AttrID]),
 		})
 
 		if err != nil {
@@ -86,7 +86,7 @@ func testAccCheckEnvironmentBlueprintDestroy(ctx context.Context) resource.TestC
 
 			_, err := conn.GetEnvironmentBlueprint(ctx, &datazone.GetEnvironmentBlueprintInput{
 				DomainIdentifier: aws.String(rs.Primary.Attributes["domain_id"]),
-				Identifier:       aws.String(rs.Primary.Attributes["id"]),
+				Identifier:       aws.String(rs.Primary.Attributes[names.AttrID]),
 			})
 			if tfdatazone.IsResourceMissing(err) {
 				return nil

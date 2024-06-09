@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_public_ipv4_pool")
@@ -21,7 +22,7 @@ func DataSourcePublicIPv4Pool() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolRead,
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,7 +58,7 @@ func DataSourcePublicIPv4Pool() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"total_address_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -83,12 +84,12 @@ func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(poolID)
-	d.Set("description", pool.Description)
+	d.Set(names.AttrDescription, pool.Description)
 	d.Set("network_border_group", pool.NetworkBorderGroup)
 	if err := d.Set("pool_address_ranges", flattenPublicIPv4PoolRanges(pool.PoolAddressRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting pool_address_ranges: %s", err)
 	}
-	if err := d.Set("tags", KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 	d.Set("total_address_count", pool.TotalAddressCount)

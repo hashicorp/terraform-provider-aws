@@ -31,6 +31,9 @@ import (
 
 // @SDKResource("aws_kms_replica_key", name="Replica Key")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/kms/types;awstypes;awstypes.KeyMetadata")
+// @Testing(importIgnore="deletion_window_in_days;bypass_policy_lockout_safety_check")
+// @Testing(altRegionProvider=true)
 func resourceReplicaKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaKeyCreate,
@@ -45,7 +48,7 @@ func resourceReplicaKey() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,17 +63,17 @@ func resourceReplicaKey() *schema.Resource {
 				Default:      30,
 				ValidateFunc: validation.IntBetween(7, 30),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 8192),
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +89,7 @@ func resourceReplicaKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -126,11 +129,11 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.BypassPolicyLockoutSafetyCheck = v.(bool)
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		input.Policy = aws.String(v.(string))
 	}
 
@@ -153,16 +156,16 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) create: %s", d.Id(), err)
 	}
 
-	d.Set("key_id", d.Id())
+	d.Set(names.AttrKeyID, d.Id())
 
-	if enabled := d.Get("enabled").(bool); !enabled {
+	if enabled := d.Get(names.AttrEnabled).(bool); !enabled {
 		if err := updateKeyEnabled(ctx, conn, "KMS Replica Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	if v, ok := d.GetOk("policy"); ok {
+	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		if err := waitKeyPolicyPropagated(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) policy update: %s", d.Id(), err)
 		}
@@ -207,21 +210,21 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "KMS Replica Key (%s) is not a multi-Region replica key", d.Id())
 	}
 
-	d.Set("arn", key.metadata.Arn)
-	d.Set("description", key.metadata.Description)
-	d.Set("enabled", key.metadata.Enabled)
-	d.Set("key_id", key.metadata.KeyId)
+	d.Set(names.AttrARN, key.metadata.Arn)
+	d.Set(names.AttrDescription, key.metadata.Description)
+	d.Set(names.AttrEnabled, key.metadata.Enabled)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_rotation_enabled", key.rotation)
 	d.Set("key_spec", key.metadata.KeySpec)
 	d.Set("key_usage", key.metadata.KeyUsage)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), key.policy)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("primary_key_arn", key.metadata.MultiRegionConfiguration.PrimaryKey.Arn)
 
 	setTagsOut(ctx, key.tags)
@@ -235,26 +238,26 @@ func resourceReplicaKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && enabled {
+	if hasChange, enabled := d.HasChange(names.AttrEnabled), d.Get(names.AttrEnabled).(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
 		if err := updateKeyEnabled(ctx, conn, "KMS Replica Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("description") {
-		if err := updateKeyDescription(ctx, conn, "KMS Replica Key", d.Id(), d.Get("description").(string)); err != nil {
+	if d.HasChange(names.AttrDescription) {
+		if err := updateKeyDescription(ctx, conn, "KMS Replica Key", d.Id(), d.Get(names.AttrDescription).(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("policy") {
-		if err := updateKeyPolicy(ctx, conn, "KMS Replica Key", d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+	if d.HasChange(names.AttrPolicy) {
+		if err := updateKeyPolicy(ctx, conn, "KMS Replica Key", d.Id(), d.Get(names.AttrPolicy).(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && !enabled {
+	if hasChange, enabled := d.HasChange(names.AttrEnabled), d.Get(names.AttrEnabled).(bool); hasChange && !enabled {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
 		if err := updateKeyEnabled(ctx, conn, "KMS Replica Key", d.Id(), enabled); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

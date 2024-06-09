@@ -120,6 +120,7 @@ The caps enforced are as follows:
 | Rfc | RFC | caps3 |
 | Sagemaker | SageMaker | caps0 |
 | Sasl | SASL | caps1 |
+| Sdk | SDK | caps3 |
 | Sfn | SFN | caps3 |
 | Smb | SMB | caps3 |
 | Sms | SMS | caps3 |

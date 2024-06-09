@@ -39,7 +39,7 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 				Config: testAccClusterActivityStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterActivityStreamExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine_native_audit_fields_included", "false"),
+					resource.TestCheckResourceAttr(resourceName, "engine_native_audit_fields_included", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_stream_name"),
 				),
 			},

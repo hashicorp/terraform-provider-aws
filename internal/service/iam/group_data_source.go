@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_group", name="Group")
@@ -21,11 +22,11 @@ func dataSourceGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +34,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,7 +43,7 @@ func dataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -50,11 +51,11 @@ func dataSourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"user_name": {
+						names.AttrUserName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -69,7 +70,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	groupName := d.Get("group_name").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
 
 	req := &iam.GetGroupInput{
 		GroupName: aws.String(groupName),
@@ -96,8 +97,8 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(group.GroupId))
-	d.Set("arn", group.Arn)
-	d.Set("path", group.Path)
+	d.Set(names.AttrARN, group.Arn)
+	d.Set(names.AttrPath, group.Path)
 	d.Set("group_id", group.GroupId)
 	if err := d.Set("users", dataSourceGroupUsersRead(users)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting users: %s", err)
@@ -110,10 +111,10 @@ func dataSourceGroupUsersRead(iamUsers []awstypes.User) []map[string]interface{}
 	users := make([]map[string]interface{}, 0, len(iamUsers))
 	for _, i := range iamUsers {
 		u := make(map[string]interface{})
-		u["arn"] = aws.ToString(i.Arn)
+		u[names.AttrARN] = aws.ToString(i.Arn)
 		u["user_id"] = aws.ToString(i.UserId)
-		u["user_name"] = aws.ToString(i.UserName)
-		u["path"] = aws.ToString(i.Path)
+		u[names.AttrUserName] = aws.ToString(i.UserName)
+		u[names.AttrPath] = aws.ToString(i.Path)
 		users = append(users, u)
 	}
 	return users

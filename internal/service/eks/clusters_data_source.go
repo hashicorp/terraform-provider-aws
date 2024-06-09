@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_eks_clusters")
@@ -19,7 +20,7 @@ func dataSourceClusters() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClustersRead,
 
 		Schema: map[string]*schema.Schema{
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -46,7 +47,7 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("names", clusters)
+	d.Set(names.AttrNames, clusters)
 
 	return diags
 }

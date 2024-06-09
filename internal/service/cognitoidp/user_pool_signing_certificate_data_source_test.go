@@ -26,7 +26,7 @@ func TestAccCognitoIDPUserPoolSigningCertificateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserPoolSigningCertificateDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "certificate"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrCertificate),
 				),
 			},
 		},

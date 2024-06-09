@@ -315,6 +315,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>
@@ -326,6 +327,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
+  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>
@@ -426,4 +428,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fef19d282bd4baa2e4cfb819984b4f91b03ff5f8965b46d3753f80c46c4f1287 -->
+<!-- cache-key: cdktf-0.20.1 input-715899377097cb04e8609e74d778c3a361e886241b44dc5bc853411c3fc69237 -->

@@ -64,8 +64,8 @@ func (r *dataLakeResource) Metadata(_ context.Context, request resource.Metadata
 func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn":        framework.ARNAttributeComputedOnly(),
-			names.AttrID: framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
 			"meta_store_manager_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -78,7 +78,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -87,7 +87,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"encryption_configuration": schema.ListAttribute{
+						names.AttrEncryptionConfiguration: schema.ListAttribute{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeEncryptionConfigurationModel](ctx),
 							Optional:   true,
 							Computed:   true,
@@ -96,14 +96,14 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 							},
 							ElementType: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
-									"kms_key_id": types.StringType,
+									names.AttrKMSKeyID: types.StringType,
 								},
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.UseStateForUnknown(),
 							},
 						},
-						"region": schema.StringAttribute{
+						names.AttrRegion: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -135,7 +135,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 												"days": schema.Int64Attribute{
 													Optional: true,
 												},
-												"storage_class": schema.StringAttribute{
+												names.AttrStorageClass: schema.StringAttribute{
 													Optional: true,
 												},
 											},
@@ -156,7 +156,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 										ElementType: types.StringType,
 										Optional:    true,
 									},
-									"role_arn": schema.StringAttribute{
+									names.AttrRoleARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
 									},
@@ -166,7 +166,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

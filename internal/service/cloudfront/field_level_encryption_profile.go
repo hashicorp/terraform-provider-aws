@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_field_level_encryption_profile", name="Field-level Encryption Profile")
@@ -38,7 +39,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -85,7 +86,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -97,13 +98,13 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(id.UniqueId()),
 		Name:            aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -144,7 +145,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 
 	apiObject := output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
 	d.Set("caller_reference", apiObject.CallerReference)
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.EncryptionEntities != nil {
 		if err := d.Set("encryption_entities", []interface{}{flattenEncryptionEntities(apiObject.EncryptionEntities)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_entities: %s", err)
@@ -153,7 +154,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 		d.Set("encryption_entities", nil)
 	}
 	d.Set("etag", output.ETag)
-	d.Set("name", apiObject.Name)
+	d.Set(names.AttrName, apiObject.Name)
 
 	return diags
 }
@@ -164,10 +165,10 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 
 	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
