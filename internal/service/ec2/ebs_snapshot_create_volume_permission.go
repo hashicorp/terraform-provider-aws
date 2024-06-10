@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_snapshot_create_volume_permission")
-func ResourceSnapshotCreateVolumePermission() *schema.Resource {
+// @SDKResource("aws_snapshot_create_volume_permission", name="EBS Snapshot CreateVolume Permission")
+func resourceSnapshotCreateVolumePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreateVolumePermissionCreate,
 		ReadWithoutTimeout:   resourceSnapshotCreateVolumePermissionRead,

@@ -1023,8 +1023,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_security_group_rule",
 		},
 		{
-			Factory:  ResourceSnapshotCreateVolumePermission,
+			Factory:  resourceSnapshotCreateVolumePermission,
 			TypeName: "aws_snapshot_create_volume_permission",
+			Name:     "EBS Snapshot CreateVolume Permission",
 		},
 		{
 			Factory:  resourceSpotDataFeedSubscription,

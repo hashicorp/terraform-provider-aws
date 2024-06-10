@@ -78,6 +78,7 @@ var (
 	ResourceEBSDefaultKMSKey                         = resourceEBSDefaultKMSKey
 	ResourceEBSEncryptionByDefault                   = resourceEBSEncryptionByDefault
 	ResourceEBSSnapshotCopy                          = resourceEBSSnapshotCopy
+	ResourceSnapshotCreateVolumePermission           = resourceSnapshotCreateVolumePermission
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
