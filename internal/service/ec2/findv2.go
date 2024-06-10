@@ -1354,20 +1354,21 @@ func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx contex
 	return findNetworkInterfacesV2(ctx, conn, input)
 }
 
-func findEBSVolumesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) ([]awstypes.Volume, error) {
+func findEBSVolumes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) ([]awstypes.Volume, error) {
 	var output []awstypes.Volume
 
 	pages := ec2.NewDescribeVolumesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
-				return nil, &retry.NotFoundError{
-					LastError:   err,
-					LastRequest: input,
-				}
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
+		}
+
+		if err != nil {
 			return nil, err
 		}
 
@@ -1377,14 +1378,42 @@ func findEBSVolumesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return output, nil
 }
 
-func findEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) (*awstypes.Volume, error) {
-	output, err := findEBSVolumesV2(ctx, conn, input)
+func findEBSVolume(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) (*awstypes.Volume, error) {
+	output, err := findEBSVolumes(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEBSVolumeByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Volume, error) {
+	input := &ec2.DescribeVolumesInput{
+		VolumeIds: []string{id},
+	}
+
+	output, err := findEBSVolume(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VolumeStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VolumeId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func findPrefixListV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) (*awstypes.PrefixList, error) {
@@ -4267,62 +4296,6 @@ func findTransitGatewayVPCAttachmentByID(ctx context.Context, conn *ec2.Client, 
 
 	// Eventual consistency check.
 	if aws.ToString(output.TransitGatewayAttachmentId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func FindEBSVolumeByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Volume, error) {
-	input := &ec2.DescribeVolumesInput{
-		VolumeIds: []string{id},
-	}
-
-	output, err := findEBSVolumeV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := output.State; state == awstypes.VolumeStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.VolumeId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func FindEBSVolumeByIDV1(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Volume, error) {
-	input := &ec2.DescribeVolumesInput{
-		VolumeIds: []string{id},
-	}
-
-	output, err := findEBSVolumeV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := output.State; state == awstypes.VolumeStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.VolumeId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}

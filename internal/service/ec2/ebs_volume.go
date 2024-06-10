@@ -191,7 +191,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	volume, err := FindEBSVolumeByID(ctx, conn, d.Id())
+	volume, err := findEBSVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Volume %s not found, removing from state", d.Id())

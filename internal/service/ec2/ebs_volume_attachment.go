@@ -217,7 +217,7 @@ func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, insta
 		VolumeIds: []string{volumeID},
 	}
 
-	output, err := findEBSVolumeV2(ctx, conn, input)
+	output, err := findEBSVolume(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -326,7 +326,7 @@ func waitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.Client, volumeID
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VolumeAttachmentStateDetaching),
 		Target:     []string{},
-		Refresh:    statusVolumeAttachmentState(ctx, conn, volumeID, instanceID, deviceName),
+		Refresh:    statusVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

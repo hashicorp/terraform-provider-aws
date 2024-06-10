@@ -96,6 +96,7 @@ var (
 	FindClientVPNRouteByThreePartKey                           = findClientVPNRouteByThreePartKey
 	FindCustomerGatewayByID                                    = findCustomerGatewayByID
 	FindEBSVolumeAttachment                                    = findVolumeAttachment
+	FindEBSVolumeByID                                          = findEBSVolumeByID
 	FindEIPByAllocationID                                      = findEIPByAllocationID
 	FindEIPByAssociationID                                     = findEIPByAssociationID
 	FindEIPDomainNameAttributeByAllocationID                   = findEIPDomainNameAttributeByAllocationID

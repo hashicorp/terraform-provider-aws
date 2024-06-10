@@ -30,7 +30,7 @@ func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Clien
 	}
 }
 
-func statusCapacityReservationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusCapacityReservation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findCapacityReservationByID(ctx, conn, id)
 
@@ -62,7 +62,7 @@ func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
-func statusFleetState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusFleet(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
 		output, err := findFleet(ctx, conn, &ec2.DescribeFleetsInput{
@@ -81,7 +81,7 @@ func statusFleetState(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
-func statusHostState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusHost(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findHostByID(ctx, conn, id)
 
@@ -97,7 +97,7 @@ func statusHostState(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 	}
 }
 
-func statusInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusInstance(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call findInstanceByID as it maps useful status codes to NotFoundError.
 		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
@@ -178,7 +178,7 @@ func statusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2
 	}
 }
 
-func statusInstanceMetadataOptionsState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusInstanceMetadataOptions(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findInstanceByID(ctx, conn, id)
 
@@ -220,7 +220,7 @@ func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn 
 	}
 }
 
-func statusPlacementGroupState(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
+func statusPlacementGroup(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findPlacementGroupByName(ctx, conn, name)
 
@@ -252,7 +252,7 @@ func statusSpotFleetActivityStatus(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func statusSpotFleetRequestState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusSpotFleetRequest(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindSpotFleetRequestByID as it maps useful status codes to NotFoundError.
 		output, err := findSpotFleetRequest(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{
@@ -287,9 +287,9 @@ func statusSpotInstanceRequest(ctx context.Context, conn *ec2.Client, id string)
 	}
 }
 
-func statusVolumeState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVolume(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEBSVolumeByID(ctx, conn, id)
+		output, err := findEBSVolumeByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -303,7 +303,7 @@ func statusVolumeState(ctx context.Context, conn *ec2.Client, id string) retry.S
 	}
 }
 
-func statusVolumeAttachmentState(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
+func statusVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
@@ -319,7 +319,7 @@ func statusVolumeAttachmentState(ctx context.Context, conn *ec2.Client, volumeID
 	}
 }
 
-func statusVolumeModificationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVolumeModification(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVolumeModificationByID(ctx, conn, id)
 
@@ -335,7 +335,7 @@ func statusVolumeModificationState(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func statusVPCState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPC(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCByIDV2(ctx, conn, id)
 
@@ -351,7 +351,7 @@ func statusVPCState(ctx context.Context, conn *ec2.Client, id string) retry.Stat
 	}
 }
 
-func statusVPCIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, _, err := findVPCIPv6CIDRBlockAssociationByIDV2(ctx, conn, id)
 
@@ -415,7 +415,7 @@ func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id 
 	}
 }
 
-func statusVPCEndpointState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointByIDV2(ctx, conn, id)
 
@@ -999,7 +999,7 @@ func statusTransitGatewayPrefixListReference(ctx context.Context, conn *ec2.Clie
 	}
 }
 
-func statusTransitGatewayStaticRouteState(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
+func statusTransitGatewayStaticRoute(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, destination string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
@@ -1015,7 +1015,7 @@ func statusTransitGatewayStaticRouteState(ctx context.Context, conn *ec2.Client,
 	}
 }
 
-func statusTransitGatewayRouteTableState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayRouteTableByID(ctx, conn, id)
 
