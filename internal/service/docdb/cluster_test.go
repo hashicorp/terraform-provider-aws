@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +36,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccDocDBCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -103,7 +104,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 
 func TestAccDocDBCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -127,7 +128,7 @@ func TestAccDocDBCluster_disappears(t *testing.T) {
 
 func TestAccDocDBCluster_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,7 +163,7 @@ func TestAccDocDBCluster_identifierGenerated(t *testing.T) {
 
 func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -197,7 +198,7 @@ func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 
 func TestAccDocDBCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -250,7 +251,7 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 
 func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	snapshotName := fmt.Sprintf("%s-snapshot", rName)
 	resourceName := "aws_docdb_cluster.test"
@@ -305,7 +306,7 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 
 func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -349,7 +350,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 
 func TestAccDocDBCluster_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -384,7 +385,7 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 
 func TestAccDocDBCluster_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -419,7 +420,7 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 
 func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -465,7 +466,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 
 func TestAccDocDBCluster_port(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2 docdb.DBCluster
+	var dbCluster1, dbCluster2 awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -508,7 +509,7 @@ func TestAccDocDBCluster_port(t *testing.T) {
 
 func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -564,7 +565,7 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_docdb_cluster.test"
 	resourceName := "aws_docdb_cluster.test"
@@ -600,7 +601,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -643,7 +644,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_docdb_global_cluster.test"
 	resourceName := "aws_docdb_cluster.test"
@@ -686,7 +687,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName1 := "aws_docdb_global_cluster.test.0"
 	globalClusterResourceName2 := "aws_docdb_global_cluster.test.1"
@@ -732,7 +733,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 
 	ctx := acctest.Context(t)
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster docdb.DBCluster
+	var primaryDbCluster, secondaryDbCluster awstypes.DBCluster
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
 	rNameSecondary := sdkacctest.RandomWithPrefix("tf-acc-test-secondary")
@@ -765,7 +766,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 	acctest.Skip(t, "Amazon DocumentDB has identified an issue and is temporarily disallowing major version upgrades (MVU) in all regions.")
 
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -840,7 +841,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 
 func TestAccDocDBCluster_storageType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -889,7 +890,7 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
@@ -913,18 +914,18 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *docdb.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.DBCluster) resource.TestCheckFunc {
 	return testAccCheckClusterExistsProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *awstypes.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -940,7 +941,7 @@ func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.D
 
 func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
@@ -948,7 +949,7 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 			}
 
 			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
-			_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{
+			_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -973,9 +974,9 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *awstypes.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+		if aws.ToTime(i.ClusterCreateTime).Equal(aws.ToTime(j.ClusterCreateTime)) {
 			return errors.New("DocumentDB Cluster was not recreated")
 		}
 

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -110,7 +111,7 @@ func ResourceFolder() *schema.Resource {
 				MaxItems: 64,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -137,6 +138,7 @@ const (
 )
 
 func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
@@ -169,33 +171,34 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := conn.CreateFolderWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Arn == nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionCreating, ResNameFolder, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
-	return resourceFolderRead(ctx, d, meta)
+	return append(diags, resourceFolderRead(ctx, d, meta)...)
 }
 
 func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, folderId, err := ParseFolderId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := FindFolderByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Folder (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameFolder, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, ResNameFolder, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -211,7 +214,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("folder_path", flex.FlattenStringList(out.FolderPath)); err != nil {
-		return diag.Errorf("setting folder_path: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting folder_path: %s", err)
 	}
 
 	permsResp, err := conn.DescribeFolderPermissionsWithContext(ctx, &quicksight.DescribeFolderPermissionsInput{
@@ -220,21 +223,22 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Folder (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Folder (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("setting permissions: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
-	return nil
+	return diags
 }
 
 func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, folderId, err := ParseFolderId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.HasChangesExcept("permission", names.AttrTags, names.AttrTagsAll) {
@@ -247,7 +251,7 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		log.Printf("[DEBUG] Updating QuickSight Folder (%s): %#v", d.Id(), in)
 		_, err = conn.UpdateFolderWithContext(ctx, in)
 		if err != nil {
-			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameFolder, d.Id(), err)
+			return create.AppendDiagError(diags, names.QuickSight, create.ErrActionUpdating, ResNameFolder, d.Id(), err)
 		}
 	}
 
@@ -274,21 +278,22 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err = conn.UpdateFolderPermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("updating QuickSight Folder (%s) permissions: %s", folderId, err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Folder (%s) permissions: %s", folderId, err)
 		}
 	}
 
-	return resourceFolderRead(ctx, d, meta)
+	return append(diags, resourceFolderRead(ctx, d, meta)...)
 }
 
 func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight Folder %s", d.Id())
 
 	awsAccountId, folderId, err := ParseFolderId(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteFolderWithContext(ctx, &quicksight.DeleteFolderInput{
@@ -297,14 +302,14 @@ func resourceFolderDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionDeleting, ResNameFolder, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionDeleting, ResNameFolder, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFolderByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Folder, error) {

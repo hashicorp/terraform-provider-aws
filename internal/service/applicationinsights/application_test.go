@@ -98,52 +98,6 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 	})
 }
 
-func TestAccApplicationInsightsApplication_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var app applicationinsights.ApplicationInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_applicationinsights_application.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ApplicationInsightsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var app applicationinsights.ApplicationInfo
@@ -260,29 +214,4 @@ resource "aws_applicationinsights_application" "test" {
   auto_config_enabled = true
 }
 `
-}
-
-func testAccApplicationConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccApplicationConfigBase(rName) + fmt.Sprintf(`
-resource "aws_applicationinsights_application" "test" {
-  resource_group_name = aws_resourcegroups_group.test.name
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccApplicationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccApplicationConfigBase(rName) + fmt.Sprintf(`
-resource "aws_applicationinsights_application" "test" {
-  resource_group_name = aws_resourcegroups_group.test.name
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

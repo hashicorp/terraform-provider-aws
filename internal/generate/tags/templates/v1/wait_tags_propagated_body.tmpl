@@ -18,6 +18,7 @@ func {{ .WaitTagsPropagatedFunc }}(ctx context.Context, conn {{ .ClientType }}, 
 		}
 
 		if inContext, ok := tftags.FromContext(ctx); ok {
+			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
 			output = output.IgnoreConfig(inContext.IgnoreConfig)
 		}
 

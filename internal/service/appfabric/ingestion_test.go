@@ -30,6 +30,7 @@ func TestAccAppFabricIngestion_basic(t *testing.T) {
 	}
 
 	var ingestion appfabric.GetIngestionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_ingestion.test"
 
 	resource.ParallelTest(t, resource.TestCase{
