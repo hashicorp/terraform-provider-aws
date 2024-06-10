@@ -332,8 +332,8 @@ github.com/aws/aws-sdk-go-v2/service/route53 v1.40.10 h1:J9uHribwEgHmesH5r0enxsZ
 github.com/aws/aws-sdk-go-v2/service/route53 v1.40.10/go.mod h1:tdzmlLwRjsHJjd4XXoSSnubCkVdRa39y4jCp4RACMkY=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.10 h1:R56F/k3CQZHwrd3kHQ65Y91KHPBITruyPSX5/JGYe9E=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.10/go.mod h1:W3+eDMk01Na1U3aQfwGkkEP1Yfe6WUn8hXzyInvGlcU=
-github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.6 h1:QFfTnmxuNj9paWYSbvfqU7vj1pEKXb0ZEjYQn3G6yko=
-github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.6/go.mod h1:0xv+lDKL+fzQ9KcTJqd9KrJvqTLs7/DTzr3lwD1b6Tc=
+github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.7 h1:32/NRAG4ka8/hwr1k9ZA2xwarcJeWO6djaIFJ42tuFg=
+github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.7/go.mod h1:H9RRL0qQ+s+XlaZO5s5G3Z8cVZpKEoj313hOyglUwj0=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.55.1 h1:UAxBuh0/8sFJk1qOkvOKewP5sWeWaTPDknbQz0ZkDm0=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.55.1/go.mod h1:hWjsYGjVuqCgfoveVcVFPXIWgz0aByzwaxKlN1StKcM=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.44.12 h1:6F6JIv06AIJR7p+w9xjVYMVxkbNFBydg7eMcy/oP/r4=
