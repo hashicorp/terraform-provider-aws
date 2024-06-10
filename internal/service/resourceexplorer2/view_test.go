@@ -44,7 +44,7 @@ func testAccView_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerAccountID, "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrScope, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
