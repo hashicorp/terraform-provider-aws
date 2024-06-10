@@ -117,8 +117,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEBSSnapshotIDs,
+			Factory:  dataSourceEBSSnapshotIDs,
 			TypeName: "aws_ebs_snapshot_ids",
+			Name:     "EBS Snapshot IDs",
 		},
 		{
 			Factory:  DataSourceEBSVolume,

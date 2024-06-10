@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ebs_snapshot_ids")
-func DataSourceEBSSnapshotIDs() *schema.Resource {
+// @SDKDataSource("aws_ebs_snapshot_ids", name="EBS Snapshot IDs")
+func dataSourceEBSSnapshotIDs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSSnapshotIDsRead,
 
