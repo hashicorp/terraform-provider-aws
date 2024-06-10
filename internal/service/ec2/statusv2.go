@@ -850,7 +850,7 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 
 func statusImage(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindImageByID(ctx, conn, id)
+		output, err := findImageByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -3144,7 +3144,7 @@ func findImage(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesI
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Image, error) {
+func findImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Image, error) {
 	input := &ec2.DescribeImagesInput{
 		ImageIds: []string{id},
 	}

@@ -8,6 +8,7 @@ var (
 	CustomFiltersBlock                                               = customFiltersBlock
 	DeleteNetworkInterface                                           = deleteNetworkInterface
 	DetachNetworkInterface                                           = detachNetworkInterface
+	FindImageByID                                                    = findImageByID
 	FindInstanceByID                                                 = findInstanceByID
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2 = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2
 	FindNetworkInterfacesV2                                          = findNetworkInterfacesV2

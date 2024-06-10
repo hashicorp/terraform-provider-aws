@@ -2429,7 +2429,7 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*
 		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
 	}
 
-	image, err := FindImageByID(ctx, conn, amiID)
+	image, err := findImageByID(ctx, conn, amiID)
 
 	if err != nil {
 		return nil, err

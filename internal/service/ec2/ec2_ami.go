@@ -392,7 +392,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindImageByID(ctx, conn, d.Id())
+		return findImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -799,7 +799,7 @@ const imageDeprecationPropagationTimeout = 2 * time.Minute
 
 func waitImageDescriptionUpdated(ctx context.Context, conn *ec2.Client, imageID, expectedValue string) error {
 	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
-		output, err := FindImageByID(ctx, conn, imageID)
+		output, err := findImageByID(ctx, conn, imageID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -826,7 +826,7 @@ func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imag
 	expected = expected.Round(time.Minute)
 
 	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
-		output, err := FindImageByID(ctx, conn, imageID)
+		output, err := findImageByID(ctx, conn, imageID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
@@ -857,7 +857,7 @@ func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.Client, imag
 
 func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.Client, imageID string) error {
 	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
-		output, err := FindImageByID(ctx, conn, imageID)
+		output, err := findImageByID(ctx, conn, imageID)
 
 		if tfresource.NotFound(err) {
 			return false, nil
