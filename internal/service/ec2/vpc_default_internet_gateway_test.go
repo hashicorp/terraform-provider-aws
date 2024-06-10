@@ -29,12 +29,12 @@ func TestAccVPCDefaultInternetGateway_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCInternetGatewayConfig_basic,
+				Config: testAccVPCDefaultInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
+					testAccCheckDefaultInternetGatewayExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -59,12 +59,12 @@ func TestAccVPCDefaultInternetGateway_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCInternetGatewayConfig_basic,
+				Config: testAccVPCDefaultInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
+					testAccCheckDefaultInternetGatewayExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -85,12 +85,12 @@ func TestAccVPCDefaultInternetGateway_Attachment(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCInternetGatewayConfig_attachment(rName),
+				Config: testAccVPCDefaultInternetGatewayConfig_attachment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
+					testAccCheckDefaultInternetGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc1ResourceName, names.AttrID),
 				),
 			},
@@ -100,9 +100,9 @@ func TestAccVPCDefaultInternetGateway_Attachment(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCInternetGatewayConfig_attachmentUpdated(rName),
+				Config: testAccVPCDefaultInternetGatewayConfig_attachmentUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
+					testAccCheckDefaultInternetGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc2ResourceName, names.AttrID),
 				),
 			},
@@ -120,12 +120,12 @@ func TestAccVPCDefaultInternetGateway_Tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx),
+		CheckDestroy:             testAccCheckDefaultInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCInternetGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCDefaultInternetGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
+					testAccCheckDefaultInternetGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -136,18 +136,18 @@ func TestAccVPCDefaultInternetGateway_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCInternetGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCDefaultInternetGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
+					testAccCheckDefaultInternetGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCInternetGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCDefaultInternetGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
+					testAccCheckDefaultInternetGatewayExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -196,7 +196,6 @@ func testAccCheckDefaultInternetGatewayExists(ctx context.Context, n string, v *
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
