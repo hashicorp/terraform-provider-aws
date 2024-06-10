@@ -31,23 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(names.EC2ServiceID, testAccErrorCheckSkip)
-}
-
-func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"VolumeTypeNotAvailableInRegion",
-		"Invalid value specified for Phase",
-		"You have reached the maximum allowed number of license configurations created in one day",
-		"specified zone does not support multi-attach-enabled volumes",
-		"Unsupported volume type",
-		"HostLimitExceeded",
-		"ReservationCapacityExceeded",
-		"InsufficientInstanceCapacity",
-	)
-}
-
 // func TestFetchRootDevice(t *testing.T) {
 // 	ctx := acctest.Context(t)
 // 	t.Parallel()

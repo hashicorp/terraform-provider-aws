@@ -34,8 +34,8 @@ func resourceSpotInstanceRequest() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSpotInstanceRequestCreate,
 		ReadWithoutTimeout:   resourceSpotInstanceRequestRead,
-		DeleteWithoutTimeout: resourceSpotInstanceRequestDelete,
 		UpdateWithoutTimeout: resourceSpotInstanceRequestUpdate,
+		DeleteWithoutTimeout: resourceSpotInstanceRequestDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -292,6 +292,40 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
+func resourceSpotInstanceRequestUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceSpotInstanceRequestRead(ctx, d, meta)...)
+}
+
+func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
+	_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+		SpotInstanceRequestIds: []string{d.Id()},
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Instance Request (%s): %s", d.Id(), err)
+	}
+
+	if instanceID := d.Get("spot_instance_id").(string); instanceID != "" {
+		if err := terminateInstance(ctx, conn, instanceID, d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	return diags
+}
+
 func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -360,40 +394,6 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	} else {
 		d.Set("get_password_data", false)
 		d.Set("password_data", nil)
-	}
-
-	return diags
-}
-
-func resourceSpotInstanceRequestUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Tags only.
-
-	return append(diags, resourceSpotInstanceRequestRead(ctx, d, meta)...)
-}
-
-func resourceSpotInstanceRequestDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-
-	log.Printf("[INFO] Cancelling EC2 Spot Instance Request: %s", d.Id())
-	_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
-		SpotInstanceRequestIds: []string{d.Id()},
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "cancelling EC2 Spot Instance Request (%s): %s", d.Id(), err)
-	}
-
-	if instanceID := d.Get("spot_instance_id").(string); instanceID != "" {
-		if err := terminateInstance(ctx, conn, instanceID, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
 	}
 
 	return diags
