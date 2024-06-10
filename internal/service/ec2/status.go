@@ -7,8 +7,6 @@ import (
 	"context"
 	"strconv"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -344,26 +342,6 @@ func StatusVPCPeeringConnectionDeleted(ctx context.Context, conn *ec2.EC2, id st
 	}
 }
 
-func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2_sdkv2.Client, allocationID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, allocationID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output.PtrRecordUpdate == nil {
-			return output, "", nil
-		}
-
-		return output, aws_sdkv2.ToString(output.PtrRecordUpdate.Status), nil
-	}
-}
-
 func StatusInternetGatewayAttachmentState(ctx context.Context, conn *ec2.EC2, internetGatewayID, vpcID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindInternetGatewayAttachment(ctx, conn, internetGatewayID, vpcID)
@@ -512,85 +490,5 @@ func StatusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.EC2, 
 		}
 
 		return "", VPCEndpointRouteTableAssociationStatusReady, nil
-	}
-}
-
-func StatusEBSSnapshotImport(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindImportSnapshotTaskByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output.SnapshotTaskDetail, aws.StringValue(output.SnapshotTaskDetail.Status), nil
-	}
-}
-
-func StatusSnapshotStorageTier(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindSnapshotTierStatusBySnapshotID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.StorageTier), nil
-	}
-}
-
-func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindInstanceConnectEndpointByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
-func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status.Code), nil
-	}
-}
-
-func statusFastSnapshotRestore(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findFastSnapshotRestoreByTwoPartKey(ctx, conn, availabilityZone, snapshotID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
 	}
 }

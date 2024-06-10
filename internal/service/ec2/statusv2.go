@@ -46,6 +46,22 @@ func statusCapacityReservationState(ctx context.Context, conn *ec2.Client, id st
 	}
 }
 
+func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCarrierGatewayByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusFleetState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
@@ -100,10 +116,6 @@ func statusInstanceState(ctx context.Context, conn *ec2.Client, id string) retry
 	}
 }
 
-// StatusInstanceIAMInstanceProfile fetches the Instance and its IamInstanceProfile
-//
-// The EC2 API accepts a name and always returns an ARN, so it is converted
-// back to the name to prevent unexpected differences.
 func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		instance, err := FindInstanceByID(ctx, conn, id)
@@ -646,22 +658,6 @@ func statusClientVPNRoute(ctx context.Context, conn *ec2.Client, endpointID, tar
 	}
 }
 
-func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findCarrierGatewayByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
 func statusVPNConnection(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPNConnectionByID(ctx, conn, id)
@@ -1111,5 +1107,105 @@ func statusTransitGatewayVPCAttachmentState(ctx context.Context, conn *ec2.Clien
 		}
 
 		return output, string(output.State), nil
+	}
+}
+
+func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocationID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, allocationID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.PtrRecordUpdate == nil {
+			return output, "", nil
+		}
+
+		return output, aws.ToString(output.PtrRecordUpdate.Status), nil
+	}
+}
+
+func StatusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSnapshotTierStatusBySnapshotID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.StorageTier), nil
+	}
+}
+
+func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceConnectEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
+	}
+}
+
+func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabilityZone, snapshotID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFastSnapshotRestoreByTwoPartKey(ctx, conn, availabilityZone, snapshotID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func StatusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindImportSnapshotTaskByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.SnapshotTaskDetail, aws.ToString(output.SnapshotTaskDetail.Status), nil
 	}
 }
