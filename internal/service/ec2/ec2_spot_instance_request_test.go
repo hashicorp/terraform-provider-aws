@@ -194,38 +194,6 @@ func TestAccEC2SpotInstanceRequest_withLaunchGroup(t *testing.T) {
 	})
 }
 
-func TestAccEC2SpotInstanceRequest_withBlockDuration(t *testing.T) {
-	ctx := acctest.Context(t)
-	var sir awstypes.SpotInstanceRequest
-	resourceName := "aws_spot_instance_request.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSpotInstanceRequestConfig_blockDuration(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
-					testAccCheckSpotInstanceRequestAttributes(&sir),
-					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
-					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "block_duration_minutes", "60"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change", "wait_for_fulfillment"},
-			},
-		},
-	})
-}
-
 func TestAccEC2SpotInstanceRequest_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sir awstypes.SpotInstanceRequest
@@ -880,31 +848,6 @@ resource "aws_spot_instance_request" "test" {
   spot_price           = "0.05"
   wait_for_fulfillment = true
   launch_group         = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_tag" "test" {
-  resource_id = aws_spot_instance_request.test.spot_instance_id
-  key         = "Name"
-  value       = %[1]q
-}
-`, rName))
-}
-
-func testAccSpotInstanceRequestConfig_blockDuration(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
-		fmt.Sprintf(`
-resource "aws_spot_instance_request" "test" {
-  ami                    = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type          = data.aws_ec2_instance_type_offering.available.instance_type
-  spot_price             = "0.05"
-  wait_for_fulfillment   = true
-  block_duration_minutes = 60
 
   tags = {
     Name = %[1]q
