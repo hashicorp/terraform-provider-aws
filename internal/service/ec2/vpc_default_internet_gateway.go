@@ -107,29 +107,6 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 			log.Printf("some error")
 
 		}
-		/*
-			// Attached IGW not found, so we create one
-			if err != nil {
-				log.Print("creating default igw")
-				input := &ec2.CreateInternetGatewayInput{
-					TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeInternetGateway),
-				}
-
-				//log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
-				//output, err := conn.CreateInternetGatewayWithContext(ctx, input)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
-				}
-
-				//d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
-
-				if v, ok := d.GetOk(names.AttrVPCID); ok {
-					if err := attachInternetGateway(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-						return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
-					}
-				}
-			}*/
 	}
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
 }
