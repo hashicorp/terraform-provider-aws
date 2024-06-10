@@ -106,8 +106,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "EBS Default KMS Key",
 		},
 		{
-			Factory:  DataSourceEBSEncryptionByDefault,
+			Factory:  dataSourceEBSEncryptionByDefault,
 			TypeName: "aws_ebs_encryption_by_default",
+			Name:     "EBS Encryption By Default",
 		},
 		{
 			Factory:  DataSourceEBSSnapshot,
