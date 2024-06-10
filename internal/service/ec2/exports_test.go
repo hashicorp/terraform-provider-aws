@@ -79,6 +79,7 @@ var (
 	ResourceEBSEncryptionByDefault                   = resourceEBSEncryptionByDefault
 	ResourceEBSSnapshotCopy                          = resourceEBSSnapshotCopy
 	ResourceSnapshotCreateVolumePermission           = resourceSnapshotCreateVolumePermission
+	ResourceEBSSnapshotImport                        = resourceEBSSnapshotImport
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

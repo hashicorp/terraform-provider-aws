@@ -589,7 +589,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEBSSnapshotImport,
+			Factory:  resourceEBSSnapshotImport,
 			TypeName: "aws_ebs_snapshot_import",
 			Name:     "EBS Snapshot Import",
 			Tags: &types.ServicePackageResourceTags{
