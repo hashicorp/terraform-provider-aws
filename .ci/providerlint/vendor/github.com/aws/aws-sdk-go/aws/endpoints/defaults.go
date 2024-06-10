@@ -4874,6 +4874,14 @@ var awsPartition = partition{
 					},
 				},
 				endpointKey{
+					Region: "bedrock-ca-central-1",
+				}: endpoint{
+					Hostname: "bedrock.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
+				endpointKey{
 					Region: "bedrock-eu-central-1",
 				}: endpoint{
 					Hostname: "bedrock.eu-central-1.amazonaws.com",
@@ -4887,6 +4895,14 @@ var awsPartition = partition{
 					Hostname: "bedrock.eu-west-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "eu-west-1",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-eu-west-2",
+				}: endpoint{
+					Hostname: "bedrock.eu-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-2",
 					},
 				},
 				endpointKey{
@@ -4946,6 +4962,14 @@ var awsPartition = partition{
 					},
 				},
 				endpointKey{
+					Region: "bedrock-runtime-ca-central-1",
+				}: endpoint{
+					Hostname: "bedrock-runtime.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
+				endpointKey{
 					Region: "bedrock-runtime-eu-central-1",
 				}: endpoint{
 					Hostname: "bedrock-runtime.eu-central-1.amazonaws.com",
@@ -4959,6 +4983,14 @@ var awsPartition = partition{
 					Hostname: "bedrock-runtime.eu-west-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "eu-west-1",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-runtime-eu-west-2",
+				}: endpoint{
+					Hostname: "bedrock-runtime.eu-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-2",
 					},
 				},
 				endpointKey{
@@ -4986,6 +5018,14 @@ var awsPartition = partition{
 					},
 				},
 				endpointKey{
+					Region: "bedrock-runtime-sa-east-1",
+				}: endpoint{
+					Hostname: "bedrock-runtime.sa-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "sa-east-1",
+					},
+				},
+				endpointKey{
 					Region: "bedrock-runtime-us-east-1",
 				}: endpoint{
 					Hostname: "bedrock-runtime.us-east-1.amazonaws.com",
@@ -4999,6 +5039,14 @@ var awsPartition = partition{
 					Hostname: "bedrock-runtime.us-west-2.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "us-west-2",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-sa-east-1",
+				}: endpoint{
+					Hostname: "bedrock.sa-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "sa-east-1",
 					},
 				},
 				endpointKey{
@@ -5018,13 +5066,22 @@ var awsPartition = partition{
 					},
 				},
 				endpointKey{
+					Region: "ca-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "eu-west-2",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-west-3",
+				}: endpoint{},
+				endpointKey{
+					Region: "sa-east-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "us-east-1",
@@ -5083,6 +5140,12 @@ var awsPartition = partition{
 		},
 		"cases": service{
 			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "ap-northeast-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "ap-northeast-2",
+				}: endpoint{},
 				endpointKey{
 					Region: "ap-southeast-1",
 				}: endpoint{},
@@ -17587,11 +17650,26 @@ var awsPartition = partition{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "ca-central-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "kendra-fips.ca-central-1.amazonaws.com",
+				},
+				endpointKey{
 					Region: "eu-west-1",
 				}: endpoint{},
 				endpointKey{
 					Region: "eu-west-2",
 				}: endpoint{},
+				endpointKey{
+					Region: "fips-ca-central-1",
+				}: endpoint{
+					Hostname: "kendra-fips.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+					Deprecated: boxedTrue,
+				},
 				endpointKey{
 					Region: "fips-us-east-1",
 				}: endpoint{
@@ -31988,6 +32066,24 @@ var awsPartition = partition{
 					Hostname: "storagegateway-fips.ca-central-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "ca-central-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "ca-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region:  "ca-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "storagegateway-fips.ca-west-1.amazonaws.com",
+				},
+				endpointKey{
+					Region: "ca-west-1-fips",
+				}: endpoint{
+					Hostname: "storagegateway-fips.ca-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-west-1",
 					},
 					Deprecated: boxedTrue,
 				},
