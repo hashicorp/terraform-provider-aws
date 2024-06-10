@@ -86,8 +86,7 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 	}
 	vpc, err := findVPCV2(ctx, ec2Client, input)
 	if err == nil {
-
-		// Check if there is an IGW assigned to the default VPC
+		log.Print("[INFO] Found existing attached EC2 Internet Gateway")
 		input := &ec2.DescribeInternetGatewaysInput{}
 		input.Filters = newAttributeFilterList(map[string]string{
 			"attachment.vpc-id": *vpc.VpcId,
@@ -103,13 +102,12 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 			d.Set("existing_default_internet_gateway", true)
 
 		} else if tfresource.NotFound(err) {
+			log.Print("[INFO] Found default VPC without attached EC2 Internet Gateway. Creating and attaching one")
 			input := &ec2.CreateInternetGatewayInput{}
-
-			log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
 			output, err := conn.CreateInternetGatewayWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
+				return sdkdiag.AppendErrorf(diags, "Creating EC2 Internet Gateway: %s", err)
 			}
 
 			igw = output.InternetGateway
@@ -118,10 +116,10 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 			d.Set("existing_default_internet_gateway", false)
 
 			if err := attachInternetGateway(ctx, conn, d.Id(), *vpc.VpcId, d.Timeout(schema.TimeoutDelete)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "attaching EC2 Internet Gateway (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "Attaching EC2 Internet Gateway (%s): %s", d.Id(), err)
 			}
 		} else {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "Creating EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}
 	}
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
