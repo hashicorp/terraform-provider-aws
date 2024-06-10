@@ -76,6 +76,7 @@ var (
 	ResourceSpotFleetRequest                         = resourceSpotFleetRequest
 	ResourceSpotInstanceRequest                      = resourceSpotInstanceRequest
 	ResourceEBSDefaultKMSKey                         = resourceEBSDefaultKMSKey
+	ResourceEBSEncryptionByDefault                   = resourceEBSEncryptionByDefault
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
