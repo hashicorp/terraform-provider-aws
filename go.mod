@@ -184,7 +184,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/waf v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.21.10
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.49.3
-	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.5
+	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/xray v1.25.9
