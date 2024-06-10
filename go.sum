@@ -136,8 +136,8 @@ github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.25.10 h1:Za3irwaGoBfCKX
 github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.25.10/go.mod h1:Z+hqC2q0pc/cjVHEN/OGEQOiyIHHlHqajV6agFDWxAA=
 github.com/aws/aws-sdk-go-v2/service/codepipeline v1.28.0 h1:DPb5NN5t7oG01Dskb1qaURIAMA6GG7Y7OuVJDZZnLHI=
 github.com/aws/aws-sdk-go-v2/service/codepipeline v1.28.0/go.mod h1:wiyjnfFARpwbUaFukzDE/vFlIsT+18D34fR1jfZhLTk=
-github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.7 h1:M1eQwZJxbFMTqjZz1bw3pgZWxHrg6KxI49oI3qVOiZc=
-github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.7/go.mod h1:wzCHPA2yNJIO1rLoaShOaU9VQfpUyDTaOYBC52fJ50s=
+github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.8 h1:J6ToNokSFf2TooLPCbu0gE8pxNm2eCx1KPeiPQttI/o=
+github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.8/go.mod h1:AbHoQZ/Q3D7EuTv0s9G8Hq2MnLPuKh7CtTBZpQeZJOA=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.9 h1:eC/DreRM4xdByIGD8DetRnbVnkOyUgf3ll/9iqow9IU=
 github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.9/go.mod h1:eiGo1HOvfJ/lLYTI8pxzvy/vBoxIwf6pLJNASHiDW1w=
 github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.12 h1:pCP3UvACOEz44YxdU6Yt8Y31RUHb+YAFm7qJeFBxzP8=
