@@ -292,7 +292,7 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 					testAccCheckTableExists(ctx, resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", "200"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.write_capacity_units", "100"),
 					resource.TestCheckResourceAttr(resourceName, "comment.#", acctest.Ct1),
@@ -789,6 +789,18 @@ resource "aws_keyspaces_table" "test" {
     }
   }
 
+  auto_scaling_specification {
+    read_capacity_auto_scaling {
+      auto_scaling_disabled = false
+      minimum_units         = 4000
+      scaling_policy {
+        target_tracking_scaling_policy_configuration {
+          target_value = 30
+        }
+      }
+    }
+  }
+
   capacity_specification {
     read_capacity_units  = 200
     throughput_mode      = "PROVISIONED"
@@ -844,6 +856,18 @@ resource "aws_keyspaces_table" "test" {
 
   capacity_specification {
     throughput_mode = "PAY_PER_REQUEST"
+  }
+
+  auto_scaling_specification {
+    write_capacity_auto_scaling {
+      auto_scaling_disabled = false
+      minimum_units         = 4000
+      scaling_policy {
+        target_tracking_scaling_policy_configuration {
+          target_value = 30
+        }
+      }
+    }
   }
 
   comment {
