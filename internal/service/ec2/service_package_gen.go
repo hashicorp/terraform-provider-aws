@@ -573,7 +573,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "EBS Encryption By Default",
 		},
 		{
-			Factory:  ResourceEBSSnapshot,
+			Factory:  resourceEBSSnapshot,
 			TypeName: "aws_ebs_snapshot",
 			Name:     "EBS Snapshot",
 			Tags: &types.ServicePackageResourceTags{

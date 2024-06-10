@@ -769,7 +769,7 @@ func sweepEBSSnapshots(region string) error {
 		}
 
 		for _, v := range page.Snapshots {
-			r := ResourceEBSSnapshot()
+			r := resourceEBSSnapshot()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.SnapshotId))
 
@@ -1634,10 +1634,6 @@ func sweepSecurityGroups(region string) error {
 				log.Printf("[ERROR] Error deleting Security Group (%s): %s", aws.ToString(sg.GroupId), err)
 			}
 		}
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error retrieving EC2 Security Groups: %w", err)
 	}
 
 	return nil
