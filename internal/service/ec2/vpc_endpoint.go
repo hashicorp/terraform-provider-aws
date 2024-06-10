@@ -292,7 +292,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpce, err := findVPCEndpointByIDV2(ctx, conn, d.Id())
+	vpce, err := findVPCEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
@@ -341,7 +341,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrVPCID, vpce.VpcId)
 
-	if pl, err := findPrefixListByNameV2(ctx, conn, serviceName); err != nil {
+	if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
 		if tfresource.NotFound(err) {
 			d.Set("cidr_blocks", nil)
 		} else {
@@ -473,7 +473,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func vpcEndpointAccept(ctx context.Context, conn *ec2.Client, vpceID, serviceName string, timeout time.Duration) error {
-	serviceConfiguration, err := findVPCEndpointServiceConfigurationByServiceNameV2(ctx, conn, serviceName)
+	serviceConfiguration, err := findVPCEndpointServiceConfigurationByServiceName(ctx, conn, serviceName)
 
 	if err != nil {
 		return fmt.Errorf("reading EC2 VPC Endpoint Service Configuration (%s): %w", serviceName, err)

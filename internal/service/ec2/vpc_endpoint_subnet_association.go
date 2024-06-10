@@ -110,7 +110,7 @@ func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.Res
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
-	err := findVPCEndpointSubnetAssociationExistsV2(ctx, conn, endpointID, subnetID)
+	err := findVPCEndpointSubnetAssociationExists(ctx, conn, endpointID, subnetID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Subnet Association (%s) not found, removing from state", id)

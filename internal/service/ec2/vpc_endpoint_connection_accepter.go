@@ -89,7 +89,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	vpcEndpointConnection, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx, conn, serviceID, vpcEndpointID)
+	vpcEndpointConnection, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Connection %s not found, removing from state", d.Id())

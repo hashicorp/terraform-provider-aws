@@ -337,7 +337,7 @@ func statusVolumeModification(ctx context.Context, conn *ec2.Client, id string) 
 
 func statusVPC(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findVPCByIDV2(ctx, conn, id)
+		output, err := findVPCByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -353,7 +353,7 @@ func statusVPC(ctx context.Context, conn *ec2.Client, id string) retry.StateRefr
 
 func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, _, err := findVPCIPv6CIDRBlockAssociationByIDV2(ctx, conn, id)
+		output, _, err := findVPCIPv6CIDRBlockAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -369,7 +369,7 @@ func statusVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, id
 
 func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		attributeValue, err := findVPCAttributeV2(ctx, conn, id, attribute)
+		attributeValue, err := findVPCAttribute(ctx, conn, id, attribute)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -385,7 +385,7 @@ func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, a
 
 func statusNetworkInterface(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findNetworkInterfaceByIDV2(ctx, conn, id)
+		output, err := findNetworkInterfaceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -401,7 +401,7 @@ func statusNetworkInterface(ctx context.Context, conn *ec2.Client, id string) re
 
 func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findNetworkInterfaceAttachmentByIDV2(ctx, conn, id)
+		output, err := findNetworkInterfaceAttachmentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -417,7 +417,7 @@ func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id 
 
 func statusVPCEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findVPCEndpointByIDV2(ctx, conn, id)
+		output, err := findVPCEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -498,7 +498,7 @@ func statusRouteTableAssociation(ctx context.Context, conn *ec2.Client, id strin
 func statusVPCEndpointServiceAvailable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindVPCEndpointServiceConfigurationByID as it maps useful status codes to NotFoundError.
-		output, err := findVPCEndpointServiceConfigurationV2(ctx, conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+		output, err := findVPCEndpointServiceConfiguration(ctx, conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 			ServiceIds: []string{id},
 		})
 
@@ -516,7 +516,7 @@ func statusVPCEndpointServiceAvailable(ctx context.Context, conn *ec2.Client, id
 
 func fetchVPCEndpointServiceDeletionStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, id)
+		output, err := findVPCEndpointServiceConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -536,7 +536,7 @@ const (
 
 func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		err := findVPCEndpointRouteTableAssociationExistsV2(ctx, conn, vpcEndpointID, routeTableID)
+		err := findVPCEndpointRouteTableAssociationExists(ctx, conn, vpcEndpointID, routeTableID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -552,7 +552,7 @@ func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Clien
 
 func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx, conn, serviceID, vpcEndpointID)
+		output, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -568,7 +568,7 @@ func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Clien
 
 func statusVPCEndpointServicePrivateDNSNameConfiguration(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx, conn, id)
+		output, err := findVPCEndpointServicePrivateDNSNameConfigurationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

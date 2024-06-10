@@ -99,7 +99,7 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpce, err := findVPCEndpointByIDV2(ctx, conn, d.Id())
+	vpce, err := findVPCEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Policy (%s) not found, removing from state", d.Id())

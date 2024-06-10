@@ -209,7 +209,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	svcCfg, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, d.Id())
+	svcCfg, err := findVPCEndpointServiceConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC Endpoint Service %s not found, removing from state", d.Id())
@@ -255,7 +255,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 
 	setTagsOutV2(ctx, svcCfg.Tags)
 
-	allowedPrincipals, err := findVPCEndpointServicePermissionsByServiceIDV2(ctx, conn, d.Id())
+	allowedPrincipals, err := findVPCEndpointServicePermissionsByServiceID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Service (%s) permissions: %s", d.Id(), err)

@@ -559,19 +559,6 @@ func FindSecurityGroupByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return output, nil
 }
 
-// FindSecurityGroupByNameAndVPCID looks up a security group by name, VPC ID. Returns a retry.NotFoundError if not found.
-func FindSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.EC2, name, vpcID string) (*ec2.SecurityGroup, error) {
-	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: newAttributeFilterList(
-			map[string]string{
-				"group-name": name,
-				"vpc-id":     vpcID,
-			},
-		),
-	}
-	return FindSecurityGroup(ctx, conn, input)
-}
-
 // FindSecurityGroupByNameAndVPCIDAndOwnerID looks up a security group by name, VPC ID and owner ID. Returns a retry.NotFoundError if not found.
 func FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx context.Context, conn *ec2.EC2, name, vpcID, ownerID string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{

@@ -2742,7 +2742,7 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *a
 	// If the instance is in a VPC, find out if that VPC is Default to determine
 	// whether to store names.
 	if vpcID := aws.ToString(instance.VpcId); vpcID != "" {
-		vpc, err := FindVPCByIDV2(ctx, conn, vpcID)
+		vpc, err := findVPCByID(ctx, conn, vpcID)
 
 		if err != nil {
 			log.Printf("[WARN] error reading EC2 Instance (%s) VPC (%s): %s", d.Id(), vpcID, err)

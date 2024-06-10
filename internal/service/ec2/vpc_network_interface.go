@@ -494,7 +494,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return findNetworkInterfaceByIDV2(ctx, conn, d.Id())
+		return findNetworkInterfaceByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -1456,7 +1456,7 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, reso
 
 	tflog.Trace(ctx, "Checking for lingering ENIs")
 
-	enis, err := findNetworkInterfacesV2(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
+	enis, err := findNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			filterName: resourceId,
 		}),

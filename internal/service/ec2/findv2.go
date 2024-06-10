@@ -864,7 +864,7 @@ func findSpotPrice(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpo
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubnetsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
+func findSubnets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
 	var output []awstypes.Subnet
 
 	pages := ec2.NewDescribeSubnetsPaginator(conn, input)
@@ -943,7 +943,7 @@ func findVolumeModificationByID(ctx context.Context, conn *ec2.Client, id string
 	return output, nil
 }
 
-func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
+func findVPCAttribute(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: attribute,
 		VpcId:     aws.String(vpcID),
@@ -985,8 +985,8 @@ func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, att
 	return aws.ToBool(v.Value), nil
 }
 
-func findVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) (*awstypes.Vpc, error) {
-	output, err := findVPCsV2(ctx, conn, input)
+func findVPC(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) (*awstypes.Vpc, error) {
+	output, err := findVPCs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -995,7 +995,7 @@ func findVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInp
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
+func findVPCs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
 	var output []awstypes.Vpc
 
 	pages := ec2.NewDescribeVpcsPaginator(conn, input)
@@ -1019,22 +1019,22 @@ func findVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsIn
 	return output, nil
 }
 
-func findVPCByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
+func findVPCByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
 		VpcIds: []string{id},
 	}
 
-	return findVPCV2(ctx, conn, input)
+	return findVPC(ctx, conn, input)
 }
 
-func findVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
+func findVPCIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"ipv6-cidr-block-association.association-id": id,
 		}),
 	}
 
-	vpc, err := findVPCV2(ctx, conn, input)
+	vpc, err := findVPC(ctx, conn, input)
 
 	if err != nil {
 		return nil, nil, err
@@ -1053,7 +1053,7 @@ func findVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client
 	return nil, nil, &retry.NotFoundError{}
 }
 
-func findVPCDefaultNetworkACLV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
+func findVPCDefaultNetworkACL(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
 	input := &ec2.DescribeNetworkAclsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"default": "true",
@@ -1061,15 +1061,15 @@ func findVPCDefaultNetworkACLV2(ctx context.Context, conn *ec2.Client, id string
 		}),
 	}
 
-	return findNetworkACLV2(ctx, conn, input)
+	return findNetworkACL(ctx, conn, input)
 }
 
-func findNetworkACLByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
+func findNetworkACLByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
 	input := &ec2.DescribeNetworkAclsInput{
 		NetworkAclIds: []string{id},
 	}
 
-	output, err := findNetworkACLV2(ctx, conn, input)
+	output, err := findNetworkACL(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1085,8 +1085,8 @@ func findNetworkACLByIDV2(ctx context.Context, conn *ec2.Client, id string) (*aw
 	return output, nil
 }
 
-func findNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (*awstypes.NetworkAcl, error) {
-	output, err := findNetworkACLsV2(ctx, conn, input)
+func findNetworkACL(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (*awstypes.NetworkAcl, error) {
+	output, err := findNetworkACLs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1095,7 +1095,7 @@ func findNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
+func findNetworkACLs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) ([]awstypes.NetworkAcl, error) {
 	var output []awstypes.NetworkAcl
 
 	pages := ec2.NewDescribeNetworkAclsPaginator(conn, input)
@@ -1119,7 +1119,7 @@ func findNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return output, nil
 }
 
-func findVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
+func findVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"group-name": DefaultSecurityGroupName,
@@ -1127,7 +1127,7 @@ func findVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id str
 		}),
 	}
 
-	return findSecurityGroupV2(ctx, conn, input)
+	return findSecurityGroup(ctx, conn, input)
 }
 
 func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteTable, error) {
@@ -1175,8 +1175,8 @@ func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeR
 	return output, nil
 }
 
-func findSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) (*awstypes.SecurityGroup, error) {
-	output, err := findSecurityGroupsV2(ctx, conn, input)
+func findSecurityGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) (*awstypes.SecurityGroup, error) {
+	output, err := findSecurityGroups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1185,7 +1185,7 @@ func findSecurityGroupV2(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
+func findSecurityGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSecurityGroupsInput) ([]awstypes.SecurityGroup, error) {
 	var output []awstypes.SecurityGroup
 
 	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
@@ -1209,8 +1209,8 @@ func findSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	return output, nil
 }
 
-// findSecurityGroupByNameAndVPCIDV2 looks up a security group by name, VPC ID. Returns a retry.NotFoundError if not found.
-func findSecurityGroupByNameAndVPCIDV2(ctx context.Context, conn *ec2.Client, name, vpcID string) (*awstypes.SecurityGroup, error) {
+// findSecurityGroupByNameAndVPCID looks up a security group by name, VPC ID. Returns a retry.NotFoundError if not found.
+func findSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.Client, name, vpcID string) (*awstypes.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterListV2(
 			map[string]string{
@@ -1219,34 +1219,10 @@ func findSecurityGroupByNameAndVPCIDV2(ctx context.Context, conn *ec2.Client, na
 			},
 		),
 	}
-	return findSecurityGroupV2(ctx, conn, input)
+	return findSecurityGroup(ctx, conn, input)
 }
 
-func findIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
-	var output []awstypes.IpamPoolAllocation
-
-	pages := ec2.NewGetIpamPoolAllocationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolAllocationIdNotFound, errCodeInvalidIPAMPoolIdNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.IpamPoolAllocations...)
-	}
-
-	return output, nil
-}
-
-func findNetworkInterfacesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {
+func findNetworkInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {
 	var output []awstypes.NetworkInterface
 
 	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input)
@@ -1270,8 +1246,8 @@ func findNetworkInterfacesV2(ctx context.Context, conn *ec2.Client, input *ec2.D
 	return output, nil
 }
 
-func findNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) (*awstypes.NetworkInterface, error) {
-	output, err := findNetworkInterfacesV2(ctx, conn, input)
+func findNetworkInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) (*awstypes.NetworkInterface, error) {
+	output, err := findNetworkInterfaces(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1280,12 +1256,12 @@ func findNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, input *ec2.De
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findNetworkInterfaceByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
+func findNetworkInterfaceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: []string{id},
 	}
 
-	output, err := findNetworkInterfaceV2(ctx, conn, input)
+	output, err := findNetworkInterface(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1301,14 +1277,14 @@ func findNetworkInterfaceByIDV2(ctx context.Context, conn *ec2.Client, id string
 	return output, err
 }
 
-func findNetworkInterfaceAttachmentByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterfaceAttachment, error) {
+func findNetworkInterfaceAttachmentByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterfaceAttachment, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"attachment.attachment-id": id,
 		}),
 	}
 
-	networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
+	networkInterface, err := findNetworkInterface(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1321,29 +1297,7 @@ func findNetworkInterfaceAttachmentByIDV2(ctx context.Context, conn *ec2.Client,
 	return networkInterface.Attachment, nil
 }
 
-/*
-	func findNetworkInterfaceByAttachmentIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
-		input := &ec2.DescribeNetworkInterfacesInput{
-			Filters: newAttributeFilterListV2(map[string]string{
-				"attachment.attachment-id": id,
-			}),
-		}
-
-		networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if networkInterface == nil {
-			return nil, tfresource.NewEmptyResultError(input)
-		}
-
-		return networkInterface, nil
-	}
-*/
-
-func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx context.Context, conn *ec2.Client, attachmentInstanceOwnerID, description string) ([]awstypes.NetworkInterface, error) {
+func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.Client, attachmentInstanceOwnerID, description string) ([]awstypes.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"attachment.instance-owner-id": attachmentInstanceOwnerID,
@@ -1351,7 +1305,7 @@ func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx contex
 		}),
 	}
 
-	return findNetworkInterfacesV2(ctx, conn, input)
+	return findNetworkInterfaces(ctx, conn, input)
 }
 
 func findEBSVolumes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) ([]awstypes.Volume, error) {
@@ -1415,8 +1369,8 @@ func findEBSVolumeByID(ctx context.Context, conn *ec2.Client, id string) (*awsty
 	return output, nil
 }
 
-func findPrefixListV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) (*awstypes.PrefixList, error) {
-	output, err := findPrefixListsV2(ctx, conn, input)
+func findPrefixList(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) (*awstypes.PrefixList, error) {
+	output, err := findPrefixLists(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1425,7 +1379,7 @@ func findPrefixListV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findPrefixListsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) ([]awstypes.PrefixList, error) {
+func findPrefixLists(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) ([]awstypes.PrefixList, error) {
 	var output []awstypes.PrefixList
 
 	pages := ec2.NewDescribePrefixListsPaginator(conn, input)
@@ -1448,12 +1402,12 @@ func findPrefixListsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return output, nil
 }
 
-func findVPCEndpointByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcEndpoint, error) {
+func findVPCEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcEndpoint, error) {
 	input := &ec2.DescribeVpcEndpointsInput{
 		VpcEndpointIds: []string{id},
 	}
 
-	output, err := findVPCEndpointV2(ctx, conn, input)
+	output, err := findVPCEndpoint(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1476,8 +1430,8 @@ func findVPCEndpointByIDV2(ctx context.Context, conn *ec2.Client, id string) (*a
 	return output, nil
 }
 
-func findVPCEndpointV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) (*awstypes.VpcEndpoint, error) {
-	output, err := findVPCEndpointsV2(ctx, conn, input)
+func findVPCEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) (*awstypes.VpcEndpoint, error) {
+	output, err := findVPCEndpoints(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1486,7 +1440,7 @@ func findVPCEndpointV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpointsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
+func findVPCEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
 	var output []awstypes.VpcEndpoint
 
 	pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
@@ -1509,14 +1463,14 @@ func findVPCEndpointsV2(ctx context.Context, conn *ec2.Client, input *ec2.Descri
 	return output, nil
 }
 
-func findPrefixListByNameV2(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PrefixList, error) {
+func findPrefixListByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PrefixList, error) {
 	input := &ec2.DescribePrefixListsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"prefix-list-name": name,
 		}),
 	}
 
-	return findPrefixListV2(ctx, conn, input)
+	return findPrefixList(ctx, conn, input)
 }
 
 func findSpotFleetInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetInstancesInput) ([]awstypes.ActiveInstance, error) {
@@ -1635,18 +1589,18 @@ func findSpotFleetRequestHistoryRecords(ctx context.Context, conn *ec2.Client, i
 	return output, nil
 }
 
-func findVPCEndpointServiceConfigurationByServiceNameV2(ctx context.Context, conn *ec2.Client, name string) (*awstypes.ServiceConfiguration, error) {
+func findVPCEndpointServiceConfigurationByServiceName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.ServiceConfiguration, error) {
 	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"service-name": name,
 		}),
 	}
 
-	return findVPCEndpointServiceConfigurationV2(ctx, conn, input)
+	return findVPCEndpointServiceConfiguration(ctx, conn, input)
 }
 
-func findVPCEndpointServiceConfigurationV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) (*awstypes.ServiceConfiguration, error) {
-	output, err := findVPCEndpointServiceConfigurationsV2(ctx, conn, input)
+func findVPCEndpointServiceConfiguration(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) (*awstypes.ServiceConfiguration, error) {
+	output, err := findVPCEndpointServiceConfigurations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1655,7 +1609,7 @@ func findVPCEndpointServiceConfigurationV2(ctx context.Context, conn *ec2.Client
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpointServiceConfigurationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) ([]awstypes.ServiceConfiguration, error) {
+func findVPCEndpointServiceConfigurations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) ([]awstypes.ServiceConfiguration, error) {
 	var output []awstypes.ServiceConfiguration
 
 	pages := ec2.NewDescribeVpcEndpointServiceConfigurationsPaginator(conn, input)
@@ -1855,12 +1809,12 @@ func findVPNGatewayRoutePropagationExists(ctx context.Context, conn *ec2.Client,
 	}
 }
 
-func findVPCEndpointServiceConfigurationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ServiceConfiguration, error) {
+func findVPCEndpointServiceConfigurationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ServiceConfiguration, error) {
 	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 		ServiceIds: []string{id},
 	}
 
-	output, err := findVPCEndpointServiceConfigurationV2(ctx, conn, input)
+	output, err := findVPCEndpointServiceConfiguration(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1883,8 +1837,8 @@ func findVPCEndpointServiceConfigurationByIDV2(ctx context.Context, conn *ec2.Cl
 	return output, nil
 }
 
-func findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.PrivateDnsNameConfiguration, error) {
-	out, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, id)
+func findVPCEndpointServicePrivateDNSNameConfigurationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.PrivateDnsNameConfiguration, error) {
+	out, err := findVPCEndpointServiceConfigurationByID(ctx, conn, id)
 	if err != nil {
 		return nil, err
 	}
@@ -1892,7 +1846,7 @@ func findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx context.Context
 	return out.PrivateDnsNameConfiguration, nil
 }
 
-func findVPCEndpointServicePermissionsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicePermissionsInput) ([]awstypes.AllowedPrincipal, error) {
+func findVPCEndpointServicePermissions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicePermissionsInput) ([]awstypes.AllowedPrincipal, error) {
 	var output []awstypes.AllowedPrincipal
 
 	pages := ec2.NewDescribeVpcEndpointServicePermissionsPaginator(conn, input)
@@ -1915,15 +1869,15 @@ func findVPCEndpointServicePermissionsV2(ctx context.Context, conn *ec2.Client, 
 	return output, nil
 }
 
-func findVPCEndpointServicePermissionsByServiceIDV2(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.AllowedPrincipal, error) {
+func findVPCEndpointServicePermissionsByServiceID(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.AllowedPrincipal, error) {
 	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
 		ServiceId: aws.String(id),
 	}
 
-	return findVPCEndpointServicePermissionsV2(ctx, conn, input)
+	return findVPCEndpointServicePermissions(ctx, conn, input)
 }
 
-func findVPCEndpointServicesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicesInput) ([]awstypes.ServiceDetail, []string, error) {
+func findVPCEndpointServices(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicesInput) ([]awstypes.ServiceDetail, []string, error) {
 	var serviceDetails []awstypes.ServiceDetail
 	var serviceNames []string
 
@@ -1952,9 +1906,9 @@ func findVPCEndpointServicesV2(ctx context.Context, conn *ec2.Client, input *ec2
 	return serviceDetails, serviceNames, nil
 }
 
-// findVPCEndpointRouteTableAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
-func findVPCEndpointRouteTableAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, routeTableID string) error {
-	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+// findVPCEndpointRouteTableAssociationExists returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
+func findVPCEndpointRouteTableAssociationExists(ctx context.Context, conn *ec2.Client, vpcEndpointID string, routeTableID string) error {
+	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
 
 	if err != nil {
 		return err
@@ -1971,9 +1925,9 @@ func findVPCEndpointRouteTableAssociationExistsV2(ctx context.Context, conn *ec2
 	}
 }
 
-// findVPCEndpointSecurityGroupAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and security group IDs is found.
-func findVPCEndpointSecurityGroupAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, securityGroupID string) error {
-	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+// findVPCEndpointSecurityGroupAssociationExists returns NotFoundError if no association for the specified VPC endpoint and security group IDs is found.
+func findVPCEndpointSecurityGroupAssociationExists(ctx context.Context, conn *ec2.Client, vpcEndpointID, securityGroupID string) error {
+	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
 
 	if err != nil {
 		return err
@@ -1990,9 +1944,9 @@ func findVPCEndpointSecurityGroupAssociationExistsV2(ctx context.Context, conn *
 	}
 }
 
-// findVPCEndpointSubnetAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and subnet IDs is found.
-func findVPCEndpointSubnetAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, subnetID string) error {
-	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+// findVPCEndpointSubnetAssociationExists returns NotFoundError if no association for the specified VPC endpoint and subnet IDs is found.
+func findVPCEndpointSubnetAssociationExists(ctx context.Context, conn *ec2.Client, vpcEndpointID string, subnetID string) error {
+	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, vpcEndpointID)
 
 	if err != nil {
 		return err
@@ -2009,7 +1963,7 @@ func findVPCEndpointSubnetAssociationExistsV2(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) (*awstypes.VpcEndpointConnection, error) {
+func findVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) (*awstypes.VpcEndpointConnection, error) {
 	input := &ec2.DescribeVpcEndpointConnectionsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"service-id": serviceID,
@@ -2050,8 +2004,8 @@ func findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx context.Context,
 	return output, nil
 }
 
-func findVPCEndpointConnectionNotificationV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) (*awstypes.ConnectionNotification, error) {
-	output, err := findVPCEndpointConnectionNotificationsV2(ctx, conn, input)
+func findVPCEndpointConnectionNotification(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) (*awstypes.ConnectionNotification, error) {
+	output, err := findVPCEndpointConnectionNotifications(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -2060,7 +2014,7 @@ func findVPCEndpointConnectionNotificationV2(ctx context.Context, conn *ec2.Clie
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpointConnectionNotificationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) ([]awstypes.ConnectionNotification, error) {
+func findVPCEndpointConnectionNotifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) ([]awstypes.ConnectionNotification, error) {
 	var output []awstypes.ConnectionNotification
 
 	pages := ec2.NewDescribeVpcEndpointConnectionNotificationsPaginator(conn, input)
@@ -2083,12 +2037,12 @@ func findVPCEndpointConnectionNotificationsV2(ctx context.Context, conn *ec2.Cli
 	return output, nil
 }
 
-func findVPCEndpointConnectionNotificationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ConnectionNotification, error) {
+func findVPCEndpointConnectionNotificationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ConnectionNotification, error) {
 	input := &ec2.DescribeVpcEndpointConnectionNotificationsInput{
 		ConnectionNotificationId: aws.String(id),
 	}
 
-	output, err := findVPCEndpointConnectionNotificationV2(ctx, conn, input)
+	output, err := findVPCEndpointConnectionNotification(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -2104,7 +2058,7 @@ func findVPCEndpointConnectionNotificationByIDV2(ctx context.Context, conn *ec2.
 	return output, nil
 }
 
-func findVPCEndpointServicePermissionV2(ctx context.Context, conn *ec2.Client, serviceID, principalARN string) (*awstypes.AllowedPrincipal, error) {
+func findVPCEndpointServicePermission(ctx context.Context, conn *ec2.Client, serviceID, principalARN string) (*awstypes.AllowedPrincipal, error) {
 	// Applying a server-side filter on "principal" can lead to errors like
 	// "An error occurred (InvalidFilter) when calling the DescribeVpcEndpointServicePermissions operation: The filter value arn:aws:iam::123456789012:role/developer contains unsupported characters".
 	// Apply the filter client-side.
@@ -2112,7 +2066,7 @@ func findVPCEndpointServicePermissionV2(ctx context.Context, conn *ec2.Client, s
 		ServiceId: aws.String(serviceID),
 	}
 
-	allowedPrincipals, err := findVPCEndpointServicePermissionsV2(ctx, conn, input)
+	allowedPrincipals, err := findVPCEndpointServicePermissions(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -2578,40 +2532,6 @@ func findVPNGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awst
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
-	}
-
-	return output, nil
-}
-
-func findTransitGatewayAttachmentV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypes.TransitGatewayAttachment, error) {
-	output, err := findTransitGatewayAttachmentsV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findTransitGatewayAttachmentsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) ([]awstypes.TransitGatewayAttachment, error) {
-	var output []awstypes.TransitGatewayAttachment
-
-	pages := ec2.NewDescribeTransitGatewayAttachmentsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.TransitGatewayAttachments...)
 	}
 
 	return output, nil

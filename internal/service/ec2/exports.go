@@ -5,22 +5,22 @@ package ec2
 
 // Exports for use in other modules.
 var (
-	CustomFiltersBlock                                               = customFiltersBlock
-	DeleteNetworkInterface                                           = deleteNetworkInterface
-	DetachNetworkInterface                                           = detachNetworkInterface
-	FindImageByID                                                    = findImageByID
-	FindInstanceByID                                                 = findInstanceByID
-	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2 = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2
-	FindNetworkInterfacesV2                                          = findNetworkInterfacesV2
-	FindSecurityGroupByNameAndVPCIDV2                                = findSecurityGroupByNameAndVPCIDV2
-	FindVPCByIDV2                                                    = findVPCByIDV2
-	FindVPCEndpointByIDV2                                            = findVPCEndpointByIDV2
-	NewCustomFilterListFrameworkV2                                   = newCustomFilterListFrameworkV2
-	NewFilter                                                        = newFilter
-	NewFilterV2                                                      = newFilterV2
-	ResourceAMI                                                      = resourceAMI
-	ResourceTransitGateway                                           = resourceTransitGateway
-	ResourceTransitGatewayConnectPeer                                = resourceTransitGatewayConnectPeer
-	VPCEndpointCreationTimeout                                       = vpcEndpointCreationTimeout
-	WaitVPCEndpointAvailableV2                                       = waitVPCEndpointAvailable
+	CustomFiltersBlock                                             = customFiltersBlock
+	DeleteNetworkInterface                                         = deleteNetworkInterface
+	DetachNetworkInterface                                         = detachNetworkInterface
+	FindImageByID                                                  = findImageByID
+	FindInstanceByID                                               = findInstanceByID
+	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
+	FindNetworkInterfacesV2                                        = findNetworkInterfaces
+	FindSecurityGroupByNameAndVPCID                                = findSecurityGroupByNameAndVPCID
+	FindVPCByIDV2                                                  = findVPCByID
+	FindVPCEndpointByID                                            = findVPCEndpointByID
+	NewCustomFilterListFrameworkV2                                 = newCustomFilterListFrameworkV2
+	NewFilter                                                      = newFilter
+	NewFilterV2                                                    = newFilterV2
+	ResourceAMI                                                    = resourceAMI
+	ResourceTransitGateway                                         = resourceTransitGateway
+	ResourceTransitGatewayConnectPeer                              = resourceTransitGatewayConnectPeer
+	VPCEndpointCreationTimeout                                     = vpcEndpointCreationTimeout
+	WaitVPCEndpointAvailable                                       = waitVPCEndpointAvailable
 )

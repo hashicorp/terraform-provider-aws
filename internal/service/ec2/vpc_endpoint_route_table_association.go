@@ -86,7 +86,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
 	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return nil, findVPCEndpointRouteTableAssociationExistsV2(ctx, conn, endpointID, routeTableID)
+		return nil, findVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
