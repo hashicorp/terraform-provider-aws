@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.10
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.22.10
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.10
-	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.9
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.10
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.24.9
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.8
