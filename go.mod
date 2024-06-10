@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.13
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.10
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.7
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.10
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.11
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.9
