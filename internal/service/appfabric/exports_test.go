@@ -5,5 +5,5 @@ package appfabric
 
 // Exports for use in tests only.
 var (
-	ResourceIngestion = newResourceIngestion
+	ResourceIngestion = newIngestionResource
 )

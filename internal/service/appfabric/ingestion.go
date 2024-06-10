@@ -29,8 +29,8 @@ import (
 
 // @FrameworkResource(name="Ingestion")
 // @Tags(identifierAttribute="arn")
-func newResourceIngestion(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIngestion{}
+func newIngestionResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &ingestionResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -43,18 +43,19 @@ const (
 	ResNameIngestion = "Ingestion"
 )
 
-type resourceIngestion struct {
+type ingestionResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceIngestion) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_appfabric_ingestion"
+func (*ingestionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_appfabric_ingestion"
 }
 
-func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *ingestionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"app": schema.StringAttribute{
 				Required: true,
@@ -93,18 +94,18 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AppFabricClient(ctx)
-
-	var plan resourceIngestionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *ingestionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data ingestionResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().AppFabricClient(ctx)
+
 	input := &appfabric.CreateIngestionInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -112,88 +113,81 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 
 	out, err := conn.CreateIngestion(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, data.App.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.Ingestion == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), nil),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, data.App.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Set values for unknowns.
-	plan.AppBundleArn = fwflex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.AppBundleIdentifier = fwflex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.ARN = fwflex.StringToFramework(ctx, out.Ingestion.Arn)
-	plan.State = fwflex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
-	plan.setID()
+	data.AppBundleArn = fwflex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
+	data.AppBundleIdentifier = fwflex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
+	data.ARN = fwflex.StringToFramework(ctx, out.Ingestion.Arn)
+	data.State = fwflex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
+	data.setID()
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *ingestionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data ingestionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	var state resourceIngestionData
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if err := state.InitFromID(); err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
-		return
-	}
-
-	out, err := findIngestionByTwoPartKey(ctx, conn, state.AppBundleIdentifier.ValueString(), state.ARN.ValueString())
+	out, err := findIngestionByTwoPartKey(ctx, conn, data.AppBundleIdentifier.ValueString(), data.ARN.ValueString())
 
 	if tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.AppFabric, create.ErrActionReading, ResNameIngestion, state.App.ValueString())
-		resp.State.RemoveResource(ctx)
+		create.LogNotFoundRemoveState(names.AppFabric, create.ErrActionReading, ResNameIngestion, data.App.ValueString())
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.Append(create.DiagErrorFramework(names.AppFabric, create.ErrActionReading, ResNameIngestion, state.App.ValueString(), err))
+		response.Diagnostics.Append(create.DiagErrorFramework(names.AppFabric, create.ErrActionReading, ResNameIngestion, data.App.ValueString(), err))
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// There is no update API, so this method is a no-op
-func (r *resourceIngestion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
-
-func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data ingestionResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	var state resourceIngestionData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	in := &appfabric.DeleteIngestionInput{
-		AppBundleIdentifier: aws.String(state.AppBundleIdentifier.ValueString()),
-		IngestionIdentifier: aws.String(state.ARN.ValueString()),
+		AppBundleIdentifier: aws.String(data.AppBundleIdentifier.ValueString()),
+		IngestionIdentifier: aws.String(data.ARN.ValueString()),
 	}
 
 	_, err := conn.DeleteIngestion(ctx, in)
@@ -202,23 +196,23 @@ func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteReque
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionDeleting, ResNameIngestion, state.ARN.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppFabric, create.ErrActionDeleting, ResNameIngestion, data.ARN.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceIngestion) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
+func (r *ingestionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 const (
 	ingestionResourceIDPartCount = 2
 )
 
-func (m *resourceIngestionData) InitFromID() error {
+func (m *ingestionResourceModel) InitFromID() error {
 	id := m.ID.ValueString()
 	parts, err := flex.ExpandResourceId(id, ingestionResourceIDPartCount, false)
 
@@ -232,7 +226,7 @@ func (m *resourceIngestionData) InitFromID() error {
 	return nil
 }
 
-func (m *resourceIngestionData) setID() {
+func (m *ingestionResourceModel) setID() {
 	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppBundleIdentifier.ValueString(), m.ARN.ValueString()}, ingestionResourceIDPartCount, false)))
 }
 
@@ -257,7 +251,7 @@ func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appB
 	return out.Ingestion, nil
 }
 
-type resourceIngestionData struct {
+type ingestionResourceModel struct {
 	App                 types.String `tfsdk:"app"`
 	ARN                 types.String `tfsdk:"arn"`
 	AppBundleIdentifier types.String `tfsdk:"app_bundle_identifier"`
