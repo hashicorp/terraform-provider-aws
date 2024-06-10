@@ -28,8 +28,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_volume_attachment")
-func ResourceVolumeAttachment() *schema.Resource {
+// @SDKResource("aws_volume_attachment", name="EBS Volume Attachment")
+func resourceVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVolumeAttachmentCreate,
 		ReadWithoutTimeout:   resourceVolumeAttachmentRead,

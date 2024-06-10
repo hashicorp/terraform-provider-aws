@@ -81,6 +81,7 @@ var (
 	ResourceSnapshotCreateVolumePermission           = resourceSnapshotCreateVolumePermission
 	ResourceEBSSnapshotImport                        = resourceEBSSnapshotImport
 	ResourceEBSSnapshot                              = resourceEBSSnapshot
+	ResourceVolumeAttachment                         = resourceVolumeAttachment
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

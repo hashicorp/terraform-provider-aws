@@ -1102,8 +1102,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVolumeAttachment,
+			Factory:  resourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
+			Name:     "EBS Volume Attachment",
 		},
 		{
 			Factory:  ResourceVPC,
