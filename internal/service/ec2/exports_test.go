@@ -77,6 +77,7 @@ var (
 	ResourceSpotInstanceRequest                      = resourceSpotInstanceRequest
 	ResourceEBSDefaultKMSKey                         = resourceEBSDefaultKMSKey
 	ResourceEBSEncryptionByDefault                   = resourceEBSEncryptionByDefault
+	ResourceEBSSnapshotCopy                          = resourceEBSSnapshotCopy
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
