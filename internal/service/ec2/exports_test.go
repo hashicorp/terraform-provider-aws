@@ -82,6 +82,7 @@ var (
 	ResourceEBSSnapshotImport                        = resourceEBSSnapshotImport
 	ResourceEBSSnapshot                              = resourceEBSSnapshot
 	ResourceVolumeAttachment                         = resourceVolumeAttachment
+	ResourceEBSVolume                                = resourceEBSVolume
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

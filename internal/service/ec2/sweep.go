@@ -726,7 +726,7 @@ func sweepEBSVolumes(region string) error {
 				continue
 			}
 
-			r := ResourceEBSVolume()
+			r := resourceEBSVolume()
 			d := r.Data(nil)
 			d.SetId(id)
 

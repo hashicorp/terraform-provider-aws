@@ -30,7 +30,7 @@ import (
 // @SDKResource("aws_ebs_volume", name="EBS Volume")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceEBSVolume() *schema.Resource {
+func resourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSVolumeCreate,
 		ReadWithoutTimeout:   resourceEBSVolumeRead,
