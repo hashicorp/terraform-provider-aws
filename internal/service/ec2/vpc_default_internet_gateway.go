@@ -102,6 +102,24 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 			d.SetId(aws.ToString(igw.InternetGatewayId))
 			d.Set("existing_default_internet_gateway", true)
 
+		} else if tfresource.NotFound(err) {
+			input := &ec2.CreateInternetGatewayInput{}
+
+			log.Printf("[DEBUG] Creating EC2 Internet Gateway: %s", input)
+			output, err := conn.CreateInternetGatewayWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway: %s", err)
+			}
+
+			igw = output.InternetGateway
+
+			d.SetId(aws.ToString(igw.InternetGatewayId))
+			d.Set("existing_default_internet_gateway", false)
+
+			if err := attachInternetGateway(ctx, conn, d.Id(), *vpc.VpcId, d.Timeout(schema.TimeoutDelete)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "attaching EC2 Internet Gateway (%s): %s", d.Id(), err)
+			}
 		} else {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}
