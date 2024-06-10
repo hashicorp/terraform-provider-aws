@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,6 +70,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
@@ -89,20 +91,21 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 
 	resp, err := conn.CreateGroupMembershipWithContext(ctx, createOpts)
 	if err != nil {
-		return diag.Errorf("adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
+		return sdkdiag.AppendErrorf(diags, "adding QuickSight user (%s) to group (%s): %s", memberName, groupName, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s/%s", awsAccountID, namespace, groupName, aws.StringValue(resp.GroupMember.MemberName)))
 
-	return resourceGroupMembershipRead(ctx, d, meta)
+	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
-		return diag.Errorf("%s", err)
+		return sdkdiag.AppendErrorf(diags, "%s", err)
 	}
 
 	listInput := &quicksight.ListGroupMembershipsInput{
@@ -113,13 +116,13 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 
 	found, err := FindGroupMembership(ctx, conn, listInput, userName)
 	if err != nil {
-		return diag.Errorf("listing QuickSight Group Memberships (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing QuickSight Group Memberships (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() && !found {
 		log.Printf("[WARN] QuickSight User-group membership (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set(names.AttrAWSAccountID, awsAccountID)
@@ -127,15 +130,16 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("member_name", userName)
 	d.Set(names.AttrGroupName, groupName)
 
-	return nil
+	return diags
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, userName, err := GroupMembershipParseID(d.Id())
 	if err != nil {
-		return diag.Errorf("%s", err)
+		return sdkdiag.AppendErrorf(diags, "%s", err)
 	}
 
 	deleteOpts := &quicksight.DeleteGroupMembershipInput{
@@ -147,12 +151,12 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 
 	if _, err := conn.DeleteGroupMembershipWithContext(ctx, deleteOpts); err != nil {
 		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return diag.Errorf("deleting QuickSight User-group membership %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QuickSight User-group membership %s: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func GroupMembershipParseID(id string) (string, string, string, string, error) {

@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
+const serializeDelay = 4*time.Minute + 30*time.Second
+
 // Serialize to limit API rate-limit exceeded errors.
 func TestAccAmplify_serial(t *testing.T) {
 	t.Parallel()
@@ -18,7 +20,7 @@ func TestAccAmplify_serial(t *testing.T) {
 		"App": {
 			acctest.CtBasic:            testAccApp_basic,
 			acctest.CtDisappears:       testAccApp_disappears,
-			"tags":                     testAccApp_tags,
+			"tags":                     testAccAmplifyApp_tagsSerial,
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
 			"BasicAuthCredentials":     testAccApp_BasicAuthCredentials,
 			"BuildSpec":                testAccApp_BuildSpec,
@@ -37,7 +39,7 @@ func TestAccAmplify_serial(t *testing.T) {
 		"Branch": {
 			acctest.CtBasic:        testAccBranch_basic,
 			acctest.CtDisappears:   testAccBranch_disappears,
-			"tags":                 testAccBranch_tags,
+			"tags":                 testAccAmplifyBranch_tagsSerial,
 			"BasicAuthCredentials": testAccBranch_BasicAuthCredentials,
 			"EnvironmentVariables": testAccBranch_EnvironmentVariables,
 			"OptionalArguments":    testAccBranch_OptionalArguments,
@@ -54,5 +56,5 @@ func TestAccAmplify_serial(t *testing.T) {
 		},
 	}
 
-	acctest.RunSerialTests2Levels(t, testCases, 5*time.Second)
+	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
 }

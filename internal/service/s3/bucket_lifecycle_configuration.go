@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -256,6 +257,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
@@ -280,7 +282,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Lifecycle Configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -288,18 +290,19 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		diag.Errorf("waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
+		sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	const (
@@ -338,28 +341,29 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Lifecycle Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output)); err != nil {
-		return diag.Errorf("setting rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
@@ -378,24 +382,25 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 	}, errCodeNoSuchLifecycleConfiguration)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitLifecycleRulesEquals(ctx, conn, bucket, expectedBucketOwner, rules, d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
-		diag.Errorf("waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
+		sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecycle Configuration (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3.DeleteBucketLifecycleInput{
@@ -408,11 +413,11 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	_, err = conn.DeleteBucketLifecycle(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
@@ -420,10 +425,10 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Lifecyle Configuration (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Lifecyle Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // suppressMissingFilterConfigurationBlock suppresses the diff that results from an omitted

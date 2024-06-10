@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/dlclark/regexp2"
 	acctestgen "github.com/hashicorp/terraform-provider-aws/internal/acctest/generate"
@@ -237,6 +238,7 @@ type ResourceDatum struct {
 	ImportIgnore              []string
 	Implementation            implementation
 	Serialize                 bool
+	SerializeDelay            bool
 	PreCheck                  bool
 	SkipEmptyTags             bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	NoRemoveTags              bool
@@ -246,6 +248,7 @@ type ResourceDatum struct {
 	additionalTfVars          map[string]string
 	AlternateRegionProvider   bool
 	TagsUpdateForceNew        bool
+	CheckDestroyNoop          bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -406,6 +409,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.DestroyTakesT = b
 					}
 				}
+				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.CheckDestroyNoop = b
+						d.GoImports = append(d.GoImports,
+							goImport{
+								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+							},
+						)
+					}
+				}
 				if attr, ok := args.Keyword["existsType"]; ok {
 					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
@@ -477,6 +493,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.Serialize = b
+					}
+				}
+				if attr, ok := args.Keyword["serializeDelay"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SerializeDelay = b
 					}
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
@@ -636,4 +660,25 @@ func parseIdentifierSpec(s string) (string, *goImport, error) {
 	default:
 		return "", nil, fmt.Errorf("invalid generator value: %q", s)
 	}
+}
+
+func generateDurationStatement(d time.Duration) string {
+	var buf strings.Builder
+
+	d = d.Round(1 * time.Second)
+
+	if d >= time.Minute {
+		mins := d / time.Minute
+		fmt.Fprintf(&buf, "%d*time.Minute", mins)
+		d = d - mins*time.Minute
+		if d != 0 {
+			fmt.Fprint(&buf, "+")
+		}
+	}
+	if d != 0 {
+		secs := d / time.Second
+		fmt.Fprintf(&buf, "%d*time.Second", secs)
+	}
+
+	return buf.String()
 }
