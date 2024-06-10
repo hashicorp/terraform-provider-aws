@@ -191,10 +191,11 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s): %s", d.Id(), err)
 	}
 
+	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
-		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
+		Resource:  "hostedzone/" + zoneID,
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrComment, "")
@@ -202,7 +203,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API.
 	d.Set(names.AttrName, normalizeZoneName(aws.ToString(output.HostedZone.Name)))
-	d.Set("zone_id", cleanZoneID(aws.ToString(output.HostedZone.Id)))
+	d.Set("zone_id", zoneID)
 
 	var nameServers []string
 
