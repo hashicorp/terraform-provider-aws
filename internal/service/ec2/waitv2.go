@@ -2407,7 +2407,7 @@ func waitEIPDomainNameAttributeDeleted(ctx context.Context, conn *ec2.Client, al
 	return nil, err
 }
 
-func WaitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.Client, importTaskID string, timeout time.Duration) (*awstypes.SnapshotTaskDetail, error) {
+func waitEBSSnapshotImportComplete(ctx context.Context, conn *ec2.Client, importTaskID string, timeout time.Duration) (*awstypes.SnapshotTaskDetail, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			EBSSnapshotImportStateActive,
@@ -2457,7 +2457,7 @@ func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2.Client, id string
 	return nil, err
 }
 
-func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+func waitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateInProgress),
 		Target:  enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateComplete),
@@ -2476,7 +2476,7 @@ func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2.Client, i
 	return nil, err
 }
 
-func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+func waitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateDeleteInProgress),
 		Target:  []string{},
@@ -2495,7 +2495,7 @@ func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2.Client, i
 	return nil, err
 }
 
-func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
+func waitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodePending),
 		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
@@ -2516,7 +2516,7 @@ func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2.Client, id
 	return nil, err
 }
 
-func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
+func waitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
 		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
@@ -2537,7 +2537,7 @@ func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2.Client, id
 	return nil, err
 }
 
-func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
+func waitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeDeleting, awstypes.VerifiedAccessEndpointStatusCodeActive, awstypes.VerifiedAccessEndpointStatusCodeDeleted),
 		Target:  []string{},
