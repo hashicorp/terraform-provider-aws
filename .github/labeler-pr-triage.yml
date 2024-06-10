@@ -2170,11 +2170,11 @@ service/vpc:
       - changed-files:
           - any-glob-to-any-file:
               - 'internal/service/ec2/**/vpc_*'
+              - 'website/**/default_internet_gateway*'
               - 'website/**/default_network_*'
               - 'website/**/default_route_*'
               - 'website/**/default_security_*'
               - 'website/**/default_subnet*'
-              - 'website/**/default_internet_gateway*'
               - 'website/**/default_vpc*'
               - 'website/**/ec2_managed_*'
               - 'website/**/ec2_network_*'
