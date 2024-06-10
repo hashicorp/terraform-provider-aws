@@ -99,7 +99,9 @@ This resource supports the following arguments:
 The `deployment_targets` configuration block supports the following arguments:
 
 * `organizational_unit_ids` - (Optional) The organization root ID or organizational unit (OU) IDs to which StackSets deploys.
-
+* `account_filter_type` - (Optional) Limit deployment targets to individual accounts or include additional accounts with provided OUs. Valid values: `INTERSECTION`, `DIFFERENCE`, `UNION`, `NONE`.
+* `accounts` - (Optional) The list of accounts to deploy stack set updates.
+* `accounts_url` - (Optional) The S3 URL of the file containing the list of accounts.
 ### `operation_preferences` Argument Reference
 
 The `operation_preferences` configuration block supports the following arguments:
