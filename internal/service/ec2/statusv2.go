@@ -530,6 +530,10 @@ func fetchVPCEndpointServiceDeletionStatus(ctx context.Context, conn *ec2.Client
 	}
 }
 
+const (
+	VPCEndpointRouteTableAssociationStatusReady = "ready"
+)
+
 func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		err := findVPCEndpointRouteTableAssociationExistsV2(ctx, conn, vpcEndpointID, routeTableID)
