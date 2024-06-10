@@ -8,8 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	ec2v2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -77,16 +76,15 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 
 	// Check if there is a default VPC
-	ec2Client := meta.(*conns.AWSClient).EC2Client(ctx)
-
-	input := &ec2v2.DescribeVpcsInput{
-		Filters: newAttributeFilterListV2(
+	input := &ec2.DescribeVpcsInput{
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"isDefault": "true",
 			},
 		),
 	}
-	vpc, err := findVPCV2(ctx, ec2Client, input)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	vpc, err := FindVPC(ctx, conn, input)
 	if err == nil {
 		log.Print("[INFO] Found existing attached EC2 Internet Gateway")
 		input := &ec2.DescribeInternetGatewaysInput{}
@@ -94,13 +92,11 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 			"attachment.vpc-id": *vpc.VpcId,
 		})
 
-		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-
 		igw, err := FindInternetGateway(ctx, conn, input)
 		log.Printf("found igw with ID: %s", igw)
 
 		if err == nil {
-			d.SetId(aws.ToString(igw.InternetGatewayId))
+			d.SetId(*igw.InternetGatewayId)
 			d.Set("existing_default_internet_gateway", true)
 
 		} else if tfresource.NotFound(err) {
@@ -114,7 +110,7 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 
 			igw = output.InternetGateway
 
-			d.SetId(aws.ToString(igw.InternetGatewayId))
+			d.SetId(*igw.InternetGatewayId)
 			d.Set("existing_default_internet_gateway", false)
 
 			if err := attachInternetGateway(ctx, conn, d.Id(), *vpc.VpcId, d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -132,18 +128,16 @@ func resourceDefaultInternetGatewayDelete(ctx context.Context, d *schema.Resourc
 	if d.Get(names.AttrForceDestroy).(bool) {
 
 		// See if the VPC assigned to the IGW has the isDefault property
-		ec2Client := meta.(*conns.AWSClient).EC2Client(ctx)
-		input := &ec2v2.DescribeVpcsInput{
-			Filters: newAttributeFilterListV2(
+		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+		input := &ec2.DescribeVpcsInput{
+			Filters: newAttributeFilterList(
 				map[string]string{
 					"isDefault": "true",
 					"vpc-id":    d.Get(names.AttrVPCID).(string),
 				},
 			),
 		}
-		_, err := findVPCV2(ctx, ec2Client, input)
-
-		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+		_, err := FindVPC(ctx, conn, input)
 
 		if err == nil {
 			// Detach if it is attached.
