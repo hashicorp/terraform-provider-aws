@@ -111,8 +111,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "EBS Encryption By Default",
 		},
 		{
-			Factory:  DataSourceEBSSnapshot,
+			Factory:  dataSourceEBSSnapshot,
 			TypeName: "aws_ebs_snapshot",
+			Name:     "EBS Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceEBSSnapshotIDs,
