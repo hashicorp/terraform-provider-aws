@@ -75,6 +75,11 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
+			names.AttrScope: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -129,6 +134,10 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
+
+	if v, ok := d.GetOk(names.AttrScope); ok {
+		input.Scope = aws.String(v.(string))
+	}
 
 	output, err := conn.CreateView(ctx, input)
 
@@ -220,6 +229,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 
 	data.DefaultView = types.BoolValue(defaultViewARN == data.ViewARN.ValueString())
 
+	d.Set(names.AttrScope, output.Scope)
 	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

@@ -44,6 +44,7 @@ func testAccView_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerAccountID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -281,6 +282,8 @@ func testAccCheckViewExists(ctx context.Context, n string, v *resourceexplorer2.
 
 func testAccViewConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_resourceexplorer2_index" "test" {
   type = "LOCAL"
 
