@@ -471,7 +471,7 @@ func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
-func statusRouteTableAssociationStateV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusRouteTableAssociationV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findRouteTableAssociationByID(ctx, conn, id)
 
@@ -495,7 +495,7 @@ func statusRouteTableAssociationStateV2(ctx context.Context, conn *ec2.Client, i
 	}
 }
 
-func statusVPCEndpointServiceStateAvailableV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpointServiceAvailableV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindVPCEndpointServiceConfigurationByID as it maps useful status codes to NotFoundError.
 		output, err := findVPCEndpointServiceConfigurationV2(ctx, conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
@@ -514,7 +514,7 @@ func statusVPCEndpointServiceStateAvailableV2(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func statusVPCEndpointServiceStateDeletedV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpointServiceDeletedV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, id)
 
@@ -546,7 +546,7 @@ func statusVPCEndpointRouteTableAssociationV2(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func statusVPCEndpointConnectionVPCEndpointStateV2(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
+func statusVPCEndpointConnectionVPCEndpointV2(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx, conn, serviceID, vpcEndpointID)
 
@@ -578,7 +578,7 @@ func statusVPCEndpointServicePrivateDNSNameConfigurationV2(ctx context.Context, 
 	}
 }
 
-func statusClientVPNEndpointState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusClientVPNEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClientVPNEndpointByID(ctx, conn, id)
 
@@ -594,7 +594,7 @@ func statusClientVPNEndpointState(ctx context.Context, conn *ec2.Client, id stri
 	}
 }
 
-func statusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusClientVPNEndpointClientConnectResponseOptions(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClientVPNEndpointClientConnectResponseOptionsByID(ctx, conn, id)
 
@@ -848,7 +848,7 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 	}
 }
 
-func statusImageState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusImage(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindImageByID(ctx, conn, id)
 
@@ -880,7 +880,7 @@ func statusImageBlockPublicAccess(ctx context.Context, conn *ec2.Client) retry.S
 	}
 }
 
-func statusTransitGatewayState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayByID(ctx, conn, id)
 
@@ -896,7 +896,7 @@ func statusTransitGatewayState(ctx context.Context, conn *ec2.Client, id string)
 	}
 }
 
-func statusTransitGatewayConnectState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayConnect(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayConnectByID(ctx, conn, id)
 
@@ -912,7 +912,7 @@ func statusTransitGatewayConnectState(ctx context.Context, conn *ec2.Client, id 
 	}
 }
 
-func statusTransitGatewayConnectPeerState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayConnectPeer(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayConnectPeerByID(ctx, conn, id)
 
@@ -928,7 +928,7 @@ func statusTransitGatewayConnectPeerState(ctx context.Context, conn *ec2.Client,
 	}
 }
 
-func statusTransitGatewayMulticastDomainState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayMulticastDomainByID(ctx, conn, id)
 
@@ -944,7 +944,7 @@ func statusTransitGatewayMulticastDomainState(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func statusTransitGatewayMulticastDomainAssociationState(ctx context.Context, conn *ec2.Client, multicastDomainID, attachmentID, subnetID string) retry.StateRefreshFunc {
+func statusTransitGatewayMulticastDomainAssociation(ctx context.Context, conn *ec2.Client, multicastDomainID, attachmentID, subnetID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, multicastDomainID, attachmentID, subnetID)
 
@@ -960,7 +960,7 @@ func statusTransitGatewayMulticastDomainAssociationState(ctx context.Context, co
 	}
 }
 
-func statusTransitGatewayPeeringAttachmentState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayPeeringAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call findTransitGatewayPeeringAttachmentByID as it maps useful status codes to NotFoundError.
 		output, err := findTransitGatewayPeeringAttachment(ctx, conn, &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
@@ -979,7 +979,7 @@ func statusTransitGatewayPeeringAttachmentState(ctx context.Context, conn *ec2.C
 	}
 }
 
-func statusTransitGatewayPrefixListReferenceState(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, prefixListID string) retry.StateRefreshFunc {
+func statusTransitGatewayPrefixListReference(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, prefixListID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)
 
@@ -1027,7 +1027,7 @@ func statusTransitGatewayRouteTableState(ctx context.Context, conn *ec2.Client, 
 	}
 }
 
-func statusTransitGatewayPolicyTableState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayPolicyTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayPolicyTableByID(ctx, conn, id)
 
@@ -1043,7 +1043,7 @@ func statusTransitGatewayPolicyTableState(ctx context.Context, conn *ec2.Client,
 	}
 }
 
-func statusTransitGatewayPolicyTableAssociationState(ctx context.Context, conn *ec2.Client, transitGatewayPolicyTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
+func statusTransitGatewayPolicyTableAssociation(ctx context.Context, conn *ec2.Client, transitGatewayPolicyTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayPolicyTableAssociationByTwoPartKey(ctx, conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
 
@@ -1059,7 +1059,7 @@ func statusTransitGatewayPolicyTableAssociationState(ctx context.Context, conn *
 	}
 }
 
-func statusTransitGatewayRouteTableAssociationState(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
+func statusTransitGatewayRouteTableAssociation(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID, transitGatewayAttachmentID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
@@ -1075,7 +1075,7 @@ func statusTransitGatewayRouteTableAssociationState(ctx context.Context, conn *e
 	}
 }
 
-func statusTransitGatewayRouteTablePropagationState(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, transitGatewayAttachmentID string) retry.StateRefreshFunc {
+func statusTransitGatewayRouteTablePropagation(ctx context.Context, conn *ec2.Client, transitGatewayRouteTableID string, transitGatewayAttachmentID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
@@ -1091,7 +1091,7 @@ func statusTransitGatewayRouteTablePropagationState(ctx context.Context, conn *e
 	}
 }
 
-func statusTransitGatewayVPCAttachmentState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call findTransitGatewayVPCAttachmentByID as it maps useful status codes to NotFoundError.
 		output, err := findTransitGatewayVPCAttachment(ctx, conn, &ec2.DescribeTransitGatewayVpcAttachmentsInput{
@@ -1130,7 +1130,7 @@ func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocat
 	}
 }
 
-func StatusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSnapshotTierStatusBySnapshotID(ctx, conn, id)
 
@@ -1162,7 +1162,7 @@ func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
 
@@ -1194,7 +1194,7 @@ func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabili
 	}
 }
 
-func StatusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindImportSnapshotTaskByID(ctx, conn, id)
 

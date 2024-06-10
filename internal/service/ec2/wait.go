@@ -976,7 +976,7 @@ func WaitEBSSnapshotImportComplete(ctx context.Context, conn *ec2_sdkv2.Client, 
 			EBSSnapshotImportStateConverting,
 		},
 		Target:  []string{EBSSnapshotImportStateCompleted},
-		Refresh: StatusEBSSnapshotImport(ctx, conn, importTaskID),
+		Refresh: statusEBSSnapshotImport(ctx, conn, importTaskID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -1000,7 +1000,7 @@ func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2_sdkv2.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(TargetStorageTierStandard),
 		Target:  enum.Slice(awstypes.TargetStorageTierArchive),
-		Refresh: StatusSnapshotStorageTier(ctx, conn, id),
+		Refresh: statusSnapshotStorageTier(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -1058,7 +1058,7 @@ func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodePending),
 		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -1079,7 +1079,7 @@ func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
 		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -1100,7 +1100,7 @@ func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Clie
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeDeleting, awstypes.VerifiedAccessEndpointStatusCodeActive, awstypes.VerifiedAccessEndpointStatusCodeDeleted),
 		Target:  []string{},
-		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
+		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
