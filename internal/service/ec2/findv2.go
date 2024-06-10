@@ -4274,3 +4274,924 @@ func findTransitGatewayVPCAttachmentByID(ctx context.Context, conn *ec2.Client, 
 
 	return output, nil
 }
+
+func FindEBSVolumeByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Volume, error) {
+	input := &ec2.DescribeVolumesInput{
+		VolumeIds: []string{id},
+	}
+
+	output, err := findEBSVolumeV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VolumeStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VolumeId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindEBSVolumeByIDV1(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Volume, error) {
+	input := &ec2.DescribeVolumesInput{
+		VolumeIds: []string{id},
+	}
+
+	output, err := findEBSVolumeV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VolumeStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VolumeId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEIPs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAddressesInput) ([]awstypes.Address, error) {
+	output, err := conn.DescribeAddresses(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound, errCodeInvalidAllocationIDNotFound) ||
+		tfawserr.ErrMessageContains(err, errCodeAuthFailure, "does not belong to you") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Addresses, nil
+}
+
+func findEIP(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAddressesInput) (*awstypes.Address, error) {
+	output, err := findEIPs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEIPByAllocationID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Address, error) {
+	input := &ec2.DescribeAddressesInput{
+		AllocationIds: []string{id},
+	}
+
+	output, err := findEIP(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.AllocationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEIPByAssociationID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Address, error) {
+	input := &ec2.DescribeAddressesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"association-id": id,
+		}),
+	}
+
+	output, err := findEIP(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.AssociationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEIPAttributes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAddressesAttributeInput) ([]awstypes.AddressAttribute, error) {
+	var output []awstypes.AddressAttribute
+
+	pages := ec2.NewDescribeAddressesAttributePaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Addresses...)
+	}
+
+	return output, nil
+}
+
+func findEIPAttribute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAddressesAttributeInput) (*awstypes.AddressAttribute, error) {
+	output, err := findEIPAttributes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEIPDomainNameAttributeByAllocationID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.AddressAttribute, error) {
+	input := &ec2.DescribeAddressesAttributeInput{
+		AllocationIds: []string{id},
+		Attribute:     awstypes.AddressAttributeNameDomainName,
+	}
+
+	output, err := findEIPAttribute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.AllocationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findKeyPair(ctx context.Context, conn *ec2.Client, input *ec2.DescribeKeyPairsInput) (*awstypes.KeyPairInfo, error) {
+	output, err := findKeyPairs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findKeyPairs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeKeyPairsInput) ([]awstypes.KeyPairInfo, error) {
+	output, err := conn.DescribeKeyPairs(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidKeyPairNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.KeyPairs, nil
+}
+
+func findKeyPairByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.KeyPairInfo, error) {
+	input := &ec2.DescribeKeyPairsInput{
+		KeyNames: []string{name},
+	}
+
+	output, err := findKeyPair(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.KeyName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindImportSnapshotTasks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImportSnapshotTasksInput) ([]awstypes.ImportSnapshotTask, error) {
+	var output []awstypes.ImportSnapshotTask
+
+	pages := ec2.NewDescribeImportSnapshotTasksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidConversionTaskIdMalformed, "not found") {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.ImportSnapshotTasks...)
+	}
+
+	return output, nil
+}
+
+func FindImportSnapshotTask(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImportSnapshotTasksInput) (*awstypes.ImportSnapshotTask, error) {
+	output, err := FindImportSnapshotTasks(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.ImportSnapshotTask) bool { return v.SnapshotTaskDetail != nil })
+}
+
+func FindImportSnapshotTaskByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ImportSnapshotTask, error) {
+	input := &ec2.DescribeImportSnapshotTasksInput{
+		ImportTaskIds: []string{id},
+	}
+
+	output, err := FindImportSnapshotTask(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ImportTaskId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindSnapshots(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotsInput) ([]awstypes.Snapshot, error) {
+	var output []awstypes.Snapshot
+
+	pages := ec2.NewDescribeSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.Snapshots...)
+	}
+
+	return output, nil
+}
+
+func FindSnapshot(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotsInput) (*awstypes.Snapshot, error) {
+	output, err := FindSnapshots(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindSnapshotByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Snapshot, error) {
+	input := &ec2.DescribeSnapshotsInput{
+		SnapshotIds: []string{id},
+	}
+
+	output, err := FindSnapshot(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SnapshotId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindSnapshotAttribute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotAttributeInput) (*ec2.DescribeSnapshotAttributeOutput, error) {
+	output, err := conn.DescribeSnapshotAttribute(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx context.Context, conn *ec2.Client, snapshotID, accountID string) (awstypes.CreateVolumePermission, error) {
+	input := &ec2.DescribeSnapshotAttributeInput{
+		Attribute:  awstypes.SnapshotAttributeNameCreateVolumePermission,
+		SnapshotId: aws.String(snapshotID),
+	}
+
+	output, err := FindSnapshotAttribute(ctx, conn, input)
+
+	if err != nil {
+		return awstypes.CreateVolumePermission{}, err
+	}
+
+	for _, v := range output.CreateVolumePermissions {
+		if aws.ToString(v.UserId) == accountID {
+			return v, nil
+		}
+	}
+
+	return awstypes.CreateVolumePermission{}, &retry.NotFoundError{LastRequest: input}
+}
+
+func FindFindSnapshotTierStatuses(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotTierStatusInput) ([]awstypes.SnapshotTierStatus, error) {
+	var output []awstypes.SnapshotTierStatus
+
+	pages := ec2.NewDescribeSnapshotTierStatusPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SnapshotTierStatuses...)
+	}
+
+	return output, nil
+}
+
+func FindFindSnapshotTierStatus(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotTierStatusInput) (*awstypes.SnapshotTierStatus, error) {
+	output, err := FindFindSnapshotTierStatuses(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SnapshotTierStatus, error) {
+	input := &ec2.DescribeSnapshotTierStatusInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"snapshot-id": id,
+		}),
+	}
+
+	output, err := FindFindSnapshotTierStatus(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SnapshotId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput) ([]awstypes.Subscription, error) {
+	var output []awstypes.Subscription
+
+	pages := ec2.NewDescribeAwsNetworkPerformanceMetricSubscriptionsPaginator(conn, input, func(o *ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsPaginatorOptions) {
+		o.Limit = 100
+	})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Subscriptions...)
+	}
+
+	return output, nil
+}
+
+func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, conn *ec2.Client, source, destination, metric, statistic string) (*awstypes.Subscription, error) {
+	input := &ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput{}
+
+	output, err := FindNetworkPerformanceMetricSubscriptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if aws.ToString(v.Source) == source && aws.ToString(v.Destination) == destination && string(v.Metric) == metric && string(v.Statistic) == statistic {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceConnectEndpointsInput) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+	output, err := FindInstanceConnectEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceConnectEndpointsInput) ([]awstypes.Ec2InstanceConnectEndpoint, error) {
+	var output []awstypes.Ec2InstanceConnectEndpoint
+
+	pages := ec2.NewDescribeInstanceConnectEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceConnectEndpoints...)
+	}
+
+	return output, nil
+}
+
+func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+	input := &ec2.DescribeInstanceConnectEndpointsInput{
+		InstanceConnectEndpointIds: []string{id},
+	}
+	output, err := FindInstanceConnectEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.Ec2InstanceConnectEndpointStateDeleteComplete {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.InstanceConnectEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetVerifiedAccessGroupPolicyOutput, error) {
+	input := &ec2.GetVerifiedAccessGroupPolicyInput{
+		VerifiedAccessGroupId: &id,
+	}
+	output, err := conn.GetVerifiedAccessGroupPolicy(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessEndpointPolicyByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetVerifiedAccessEndpointPolicyOutput, error) {
+	input := &ec2.GetVerifiedAccessEndpointPolicyInput{
+		VerifiedAccessEndpointId: &id,
+	}
+	output, err := conn.GetVerifiedAccessEndpointPolicy(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessGroupsInput) (*awstypes.VerifiedAccessGroup, error) {
+	output, err := FindVerifiedAccessGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessGroupsInput) ([]awstypes.VerifiedAccessGroup, error) {
+	var output []awstypes.VerifiedAccessGroup
+
+	pages := ec2.NewDescribeVerifiedAccessGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessGroups...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessGroup, error) {
+	input := &ec2.DescribeVerifiedAccessGroupsInput{
+		VerifiedAccessGroupIds: []string{id},
+	}
+	output, err := FindVerifiedAccessGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VerifiedAccessGroupId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstancesInput) (*awstypes.VerifiedAccessInstance, error) {
+	output, err := FindVerifiedAccessInstances(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstancesInput) ([]awstypes.VerifiedAccessInstance, error) {
+	var output []awstypes.VerifiedAccessInstance
+
+	pages := ec2.NewDescribeVerifiedAccessInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessInstances...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessInstance, error) {
+	input := &ec2.DescribeVerifiedAccessInstancesInput{
+		VerifiedAccessInstanceIds: []string{id},
+	}
+	output, err := FindVerifiedAccessInstance(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VerifiedAccessInstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstanceLoggingConfiguration(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+	output, err := FindVerifiedAccessInstanceLoggingConfigurations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessInstanceLoggingConfigurations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) ([]awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+	var output []awstypes.VerifiedAccessInstanceLoggingConfiguration
+
+	pages := ec2.NewDescribeVerifiedAccessInstanceLoggingConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LoggingConfigurations...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+	input := &ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput{
+		VerifiedAccessInstanceIds: []string{id},
+	}
+	output, err := FindVerifiedAccessInstanceLoggingConfiguration(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VerifiedAccessInstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context, conn *ec2.Client, vaiID, vatpID string) error {
+	output, err := FindVerifiedAccessInstanceByID(ctx, conn, vaiID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range output.VerifiedAccessTrustProviders {
+		if aws.ToString(v.VerifiedAccessTrustProviderId) == vatpID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("Verified Access Instance (%s) Trust Provider (%s) Attachment not found", vaiID, vatpID),
+	}
+}
+
+func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessTrustProvidersInput) (*awstypes.VerifiedAccessTrustProvider, error) {
+	output, err := FindVerifiedAccessTrustProviders(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessTrustProviders(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessTrustProvidersInput) ([]awstypes.VerifiedAccessTrustProvider, error) {
+	var output []awstypes.VerifiedAccessTrustProvider
+
+	pages := ec2.NewDescribeVerifiedAccessTrustProvidersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessTrustProviders...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessTrustProvider, error) {
+	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{
+		VerifiedAccessTrustProviderIds: []string{id},
+	}
+	output, err := FindVerifiedAccessTrustProvider(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VerifiedAccessTrustProviderId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessEndpointsInput) (*awstypes.VerifiedAccessEndpoint, error) {
+	output, err := FindVerifiedAccessEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessEndpointsInput) ([]awstypes.VerifiedAccessEndpoint, error) {
+	var output []awstypes.VerifiedAccessEndpoint
+
+	pages := ec2.NewDescribeVerifiedAccessEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessEndpoints...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessEndpoint, error) {
+	input := &ec2.DescribeVerifiedAccessEndpointsInput{
+		VerifiedAccessEndpointIds: []string{id},
+	}
+	output, err := FindVerifiedAccessEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status != nil && status.Code == awstypes.VerifiedAccessEndpointStatusCodeDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status.Code),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VerifiedAccessEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findFastSnapshotRestore(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFastSnapshotRestoresInput) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	output, err := findFastSnapshotRestores(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFastSnapshotRestores(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFastSnapshotRestoresInput) ([]awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	var output []awstypes.DescribeFastSnapshotRestoreSuccessItem
+
+	pages := ec2.NewDescribeFastSnapshotRestoresPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.FastSnapshotRestores...)
+	}
+
+	return output, nil
+}
+
+func findFastSnapshotRestoreByTwoPartKey(ctx context.Context, conn *ec2.Client, availabilityZone, snapshotID string) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	input := &ec2.DescribeFastSnapshotRestoresInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"availability-zone": availabilityZone,
+			"snapshot-id":       snapshotID,
+		}),
+	}
+
+	output, err := findFastSnapshotRestore(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.FastSnapshotRestoreStateCodeDisabled {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
