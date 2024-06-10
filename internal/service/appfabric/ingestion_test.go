@@ -165,8 +165,8 @@ resource "aws_appfabric_ingestion" "test" {
   tenant_id             = "test-tenant-id"
   ingestion_type        = "auditLog"
   tags = {
-    Name = "AppFabricTesting"
+    Name = %[1]q
   }
 }
-`)
+`, rName)
 }
