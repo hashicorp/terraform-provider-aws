@@ -280,7 +280,7 @@ fumpt: ## Run gofumpt
 
 gen: prereq-go ## Run all Go generators
 	@echo "make: Running Go generators..."
-	$(GO_VER) generate ./...
+	$(GO_VER) generate -v ./...
 	# Generate service package lists last as they may depend on output of earlier generators.
 	$(GO_VER) generate ./internal/provider
 	$(GO_VER) generate ./internal/sweep

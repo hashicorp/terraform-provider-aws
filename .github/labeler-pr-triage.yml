@@ -2174,6 +2174,7 @@ service/vpc:
               - 'website/**/default_route_*'
               - 'website/**/default_security_*'
               - 'website/**/default_subnet*'
+              - 'website/**/default_internet_gateway*'
               - 'website/**/default_vpc*'
               - 'website/**/ec2_managed_*'
               - 'website/**/ec2_network_*'

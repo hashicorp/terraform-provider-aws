@@ -96,9 +96,8 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 		log.Printf("found igw with ID: %s", igw)
 
 		if err == nil {
-			d.SetId(*igw.InternetGatewayId)
+			d.SetId(aws.StringValue(igw.InternetGatewayId))
 			d.Set("existing_default_internet_gateway", true)
-
 		} else if tfresource.NotFound(err) {
 			log.Print("[INFO] Found default VPC without attached EC2 Internet Gateway. Creating and attaching one")
 			input := &ec2.CreateInternetGatewayInput{}
@@ -110,7 +109,7 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 
 			igw = output.InternetGateway
 
-			d.SetId(*igw.InternetGatewayId)
+			d.SetId(aws.StringValue(igw.InternetGatewayId))
 			d.Set("existing_default_internet_gateway", false)
 
 			if err := attachInternetGateway(ctx, conn, d.Id(), *vpc.VpcId, d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -126,7 +125,6 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 func resourceDefaultInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if d.Get(names.AttrForceDestroy).(bool) {
-
 		// See if the VPC assigned to the IGW has the isDefault property
 		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 		input := &ec2.DescribeVpcsInput{
