@@ -33,10 +33,8 @@ The following arguments are required:
 * `app` - (Required) Name of the application.
 Refer to the AWS Documentation for the [list of valid values](https://docs.aws.amazon.com/appfabric/latest/api/API_CreateIngestion.html#appfabric-CreateIngestion-request-app)
 
-* `app_bundle_identifier` - (Required) Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app bundle to use for the request. 
-
+* `app_bundle_identifier` - (Required) Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app bundle to use for the request.
 * `ingestion_type` - (Required) Ingestion type. Valid values are `auditLog`.
-
 * `tenant_id` - (Required) ID of the application tenant.
 
 ## Attribute Reference
@@ -44,7 +42,7 @@ Refer to the AWS Documentation for the [list of valid values](https://docs.aws.a
 This resource exports the following attributes in addition to the arguments above:
 
 * `app_bundle_arn` - Amazon Resource Name (ARN) of the app bundle to use for the request.
-* `arn` - ARN of the Ingestion. 
+* `arn` - ARN of the Ingestion.
 * `state` - Status of the Ingestion. Valid values are: `enabled` or `disabled`
 
 ## Timeouts
@@ -56,6 +54,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `delete` - (Default `5m`)
 
 ## Import
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFabric Ingestion using the `app_bundle_identifier` and `arn` separated by `,`. For example:
 
 ```terraform
