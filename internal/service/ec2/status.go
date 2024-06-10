@@ -13,6 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+//
+// Move functions to statusv2.go as they are migrated to AWS SDK for Go v2.
+//
+
 // StatusLocalGatewayRouteTableVPCAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
 func StatusLocalGatewayRouteTableVPCAssociationState(ctx context.Context, conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {

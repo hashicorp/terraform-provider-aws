@@ -318,7 +318,7 @@ func waitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*awstyp
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.VpcStatePending),
 		Target:  enum.Slice(awstypes.VpcStateAvailable),
-		Refresh: statusVPCStateV2(ctx, conn, id),
+		Refresh: statusVPCState(ctx, conn, id),
 		Timeout: vpcCreatedTimeout,
 	}
 
@@ -335,7 +335,7 @@ func waitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VpcCidrBlockStateCodeAssociating, awstypes.VpcCidrBlockStateCodeDisassociated, awstypes.VpcCidrBlockStateCodeFailing),
 		Target:     enum.Slice(awstypes.VpcCidrBlockStateCodeAssociated),
-		Refresh:    statusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
+		Refresh:    statusVPCIPv6CIDRBlockAssociationState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -357,7 +357,7 @@ func waitVPCIPv6CIDRBlockAssociationCreatedV2(ctx context.Context, conn *ec2.Cli
 func waitVPCAttributeUpdatedV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName, expectedValue bool) (*awstypes.Vpc, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    statusVPCAttributeValueV2(ctx, conn, vpcID, attribute),
+		Refresh:    statusVPCAttributeValue(ctx, conn, vpcID, attribute),
 		Timeout:    ec2PropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -376,7 +376,7 @@ func waitVPCIPv6CIDRBlockAssociationDeletedV2(ctx context.Context, conn *ec2.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.VpcCidrBlockStateCodeAssociated, awstypes.VpcCidrBlockStateCodeDisassociating, awstypes.VpcCidrBlockStateCodeFailing),
 		Target:     []string{},
-		Refresh:    statusVPCIPv6CIDRBlockAssociationStateV2(ctx, conn, id),
+		Refresh:    statusVPCIPv6CIDRBlockAssociationState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -402,7 +402,7 @@ func waitNetworkInterfaceAvailableAfterUseV2(ctx context.Context, conn *ec2.Clie
 		Pending:    enum.Slice(awstypes.NetworkInterfaceStatusInUse),
 		Target:     enum.Slice(awstypes.NetworkInterfaceStatusAvailable),
 		Timeout:    timeout,
-		Refresh:    statusNetworkInterfaceV2(ctx, conn, id),
+		Refresh:    statusNetworkInterface(ctx, conn, id),
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 		// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
@@ -424,7 +424,7 @@ func waitNetworkInterfaceCreatedV2(ctx context.Context, conn *ec2.Client, id str
 		Pending: []string{NetworkInterfaceStatusPending},
 		Target:  enum.Slice(awstypes.NetworkInterfaceStatusAvailable),
 		Timeout: timeout,
-		Refresh: statusNetworkInterfaceV2(ctx, conn, id),
+		Refresh: statusNetworkInterface(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -441,7 +441,7 @@ func waitNetworkInterfaceAttachedV2(ctx context.Context, conn *ec2.Client, id st
 		Pending: enum.Slice(awstypes.AttachmentStatusAttaching),
 		Target:  enum.Slice(awstypes.AttachmentStatusAttached),
 		Timeout: timeout,
-		Refresh: statusNetworkInterfaceAttachmentV2(ctx, conn, id),
+		Refresh: statusNetworkInterfaceAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -458,7 +458,7 @@ func waitNetworkInterfaceDetachedV2(ctx context.Context, conn *ec2.Client, id st
 		Pending: enum.Slice(awstypes.AttachmentStatusAttached, awstypes.AttachmentStatusDetaching),
 		Target:  enum.Slice(awstypes.AttachmentStatusDetached),
 		Timeout: timeout,
-		Refresh: statusNetworkInterfaceAttachmentV2(ctx, conn, id),
+		Refresh: statusNetworkInterfaceAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -575,7 +575,7 @@ func waitVPCEndpointAcceptedV2(ctx context.Context, conn *ec2.Client, vpcEndpoin
 		Pending:    enum.Slice(vpcEndpointStatePendingAcceptance),
 		Target:     enum.Slice(vpcEndpointStateAvailable),
 		Timeout:    timeout,
-		Refresh:    statusVPCEndpointStateV2(ctx, conn, vpcEndpointID),
+		Refresh:    statusVPCEndpointState(ctx, conn, vpcEndpointID),
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -598,7 +598,7 @@ func waitVPCEndpointAvailableV2(ctx context.Context, conn *ec2.Client, vpcEndpoi
 		Pending:    enum.Slice(vpcEndpointStatePending),
 		Target:     enum.Slice(vpcEndpointStateAvailable, vpcEndpointStatePendingAcceptance),
 		Timeout:    timeout,
-		Refresh:    statusVPCEndpointStateV2(ctx, conn, vpcEndpointID),
+		Refresh:    statusVPCEndpointState(ctx, conn, vpcEndpointID),
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -620,7 +620,7 @@ func waitVPCEndpointDeletedV2(ctx context.Context, conn *ec2.Client, vpcEndpoint
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
 		Target:     []string{},
-		Refresh:    statusVPCEndpointStateV2(ctx, conn, vpcEndpointID),
+		Refresh:    statusVPCEndpointState(ctx, conn, vpcEndpointID),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -713,7 +713,7 @@ func waitRouteTableAssociationCreated(ctx context.Context, conn *ec2.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
 		Target:         enum.Slice(awstypes.RouteTableAssociationStateCodeAssociated),
-		Refresh:        statusRouteTableAssociationV2(ctx, conn, id),
+		Refresh:        statusRouteTableAssociation(ctx, conn, id),
 		Timeout:        timeout,
 		NotFoundChecks: RouteTableAssociationCreatedNotFoundChecks,
 	}
@@ -735,7 +735,7 @@ func waitRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociating, awstypes.RouteTableAssociationStateCodeAssociated),
 		Target:  []string{},
-		Refresh: statusRouteTableAssociationV2(ctx, conn, id),
+		Refresh: statusRouteTableAssociation(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -756,7 +756,7 @@ func waitRouteTableAssociationUpdated(ctx context.Context, conn *ec2.Client, id 
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
 		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeAssociated),
-		Refresh: statusRouteTableAssociationV2(ctx, conn, id),
+		Refresh: statusRouteTableAssociation(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -853,7 +853,7 @@ func waitVPCEndpointServiceAvailableV2(ctx context.Context, conn *ec2.Client, id
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.ServiceStatePending),
 		Target:     enum.Slice(awstypes.ServiceStateAvailable),
-		Refresh:    statusVPCEndpointServiceAvailableV2(ctx, conn, id),
+		Refresh:    statusVPCEndpointServiceAvailable(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -873,7 +873,7 @@ func waitVPCEndpointServiceDeletedV2(ctx context.Context, conn *ec2.Client, id s
 		Pending:    enum.Slice(awstypes.ServiceStateAvailable, awstypes.ServiceStateDeleting),
 		Target:     []string{},
 		Timeout:    timeout,
-		Refresh:    statusVPCEndpointServiceDeletedV2(ctx, conn, id),
+		Refresh:    fetchVPCEndpointServiceDeletionStatus(ctx, conn, id),
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -891,7 +891,7 @@ func waitVPCEndpointRouteTableAssociationReadyV2(ctx context.Context, conn *ec2.
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(VPCEndpointRouteTableAssociationStatusReady),
-		Refresh:                   statusVPCEndpointRouteTableAssociationV2(ctx, conn, vpcEndpointID, routeTableID),
+		Refresh:                   statusVPCEndpointRouteTableAssociation(ctx, conn, vpcEndpointID, routeTableID),
 		Timeout:                   ec2PropagationTimeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -905,7 +905,7 @@ func waitVPCEndpointRouteTableAssociationDeletedV2(ctx context.Context, conn *ec
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(VPCEndpointRouteTableAssociationStatusReady),
 		Target:                    []string{},
-		Refresh:                   statusVPCEndpointRouteTableAssociationV2(ctx, conn, vpcEndpointID, routeTableID),
+		Refresh:                   statusVPCEndpointRouteTableAssociation(ctx, conn, vpcEndpointID, routeTableID),
 		Timeout:                   ec2PropagationTimeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -919,7 +919,7 @@ func waitVPCEndpointConnectionAcceptedV2(ctx context.Context, conn *ec2.Client, 
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{vpcEndpointStatePendingAcceptance, vpcEndpointStatePending},
 		Target:     []string{vpcEndpointStateAvailable},
-		Refresh:    statusVPCEndpointConnectionVPCEndpointV2(ctx, conn, serviceID, vpcEndpointID),
+		Refresh:    statusVPCEndpointConnectionVPCEndpoint(ctx, conn, serviceID, vpcEndpointID),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -938,7 +938,7 @@ func waitVPCEndpointServicePrivateDNSNameVerifiedV2(ctx context.Context, conn *e
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.DnsNameStatePendingVerification),
 		Target:                    enum.Slice(awstypes.DnsNameStateVerified),
-		Refresh:                   statusVPCEndpointServicePrivateDNSNameConfigurationV2(ctx, conn, id),
+		Refresh:                   statusVPCEndpointServicePrivateDNSNameConfiguration(ctx, conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

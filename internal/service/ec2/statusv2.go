@@ -335,7 +335,7 @@ func statusVolumeModificationState(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func statusVPCStateV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCByIDV2(ctx, conn, id)
 
@@ -351,7 +351,7 @@ func statusVPCStateV2(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
-func statusVPCIPv6CIDRBlockAssociationStateV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCIPv6CIDRBlockAssociationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, _, err := findVPCIPv6CIDRBlockAssociationByIDV2(ctx, conn, id)
 
@@ -367,7 +367,7 @@ func statusVPCIPv6CIDRBlockAssociationStateV2(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func statusVPCAttributeValueV2(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) retry.StateRefreshFunc {
+func statusVPCAttributeValue(ctx context.Context, conn *ec2.Client, id string, attribute awstypes.VpcAttributeName) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		attributeValue, err := findVPCAttributeV2(ctx, conn, id, attribute)
 
@@ -383,7 +383,7 @@ func statusVPCAttributeValueV2(ctx context.Context, conn *ec2.Client, id string,
 	}
 }
 
-func statusNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusNetworkInterface(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findNetworkInterfaceByIDV2(ctx, conn, id)
 
@@ -399,7 +399,7 @@ func statusNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, id string) 
 	}
 }
 
-func statusNetworkInterfaceAttachmentV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusNetworkInterfaceAttachment(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findNetworkInterfaceAttachmentByIDV2(ctx, conn, id)
 
@@ -415,7 +415,7 @@ func statusNetworkInterfaceAttachmentV2(ctx context.Context, conn *ec2.Client, i
 	}
 }
 
-func statusVPCEndpointStateV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpointState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointByIDV2(ctx, conn, id)
 
@@ -471,7 +471,7 @@ func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
-func statusRouteTableAssociationV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusRouteTableAssociation(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findRouteTableAssociationByID(ctx, conn, id)
 
@@ -495,7 +495,7 @@ func statusRouteTableAssociationV2(ctx context.Context, conn *ec2.Client, id str
 	}
 }
 
-func statusVPCEndpointServiceAvailableV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpointServiceAvailable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindVPCEndpointServiceConfigurationByID as it maps useful status codes to NotFoundError.
 		output, err := findVPCEndpointServiceConfigurationV2(ctx, conn, &ec2.DescribeVpcEndpointServiceConfigurationsInput{
@@ -514,7 +514,7 @@ func statusVPCEndpointServiceAvailableV2(ctx context.Context, conn *ec2.Client, 
 	}
 }
 
-func statusVPCEndpointServiceDeletedV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func fetchVPCEndpointServiceDeletionStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, id)
 
@@ -530,7 +530,7 @@ func statusVPCEndpointServiceDeletedV2(ctx context.Context, conn *ec2.Client, id
 	}
 }
 
-func statusVPCEndpointRouteTableAssociationV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
+func statusVPCEndpointRouteTableAssociation(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		err := findVPCEndpointRouteTableAssociationExistsV2(ctx, conn, vpcEndpointID, routeTableID)
 
@@ -546,7 +546,7 @@ func statusVPCEndpointRouteTableAssociationV2(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func statusVPCEndpointConnectionVPCEndpointV2(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
+func statusVPCEndpointConnectionVPCEndpoint(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx, conn, serviceID, vpcEndpointID)
 
@@ -562,7 +562,7 @@ func statusVPCEndpointConnectionVPCEndpointV2(ctx context.Context, conn *ec2.Cli
 	}
 }
 
-func statusVPCEndpointServicePrivateDNSNameConfigurationV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPCEndpointServicePrivateDNSNameConfiguration(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx, conn, id)
 
