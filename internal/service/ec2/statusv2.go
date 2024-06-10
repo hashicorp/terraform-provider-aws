@@ -99,7 +99,7 @@ func statusHostState(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 
 func statusInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
+		// Don't call findInstanceByID as it maps useful status codes to NotFoundError.
 		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
 			InstanceIds: []string{id},
 		})
@@ -118,7 +118,7 @@ func statusInstanceState(ctx context.Context, conn *ec2.Client, id string) retry
 
 func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		instance, err := FindInstanceByID(ctx, conn, id)
+		instance, err := findInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -144,7 +144,7 @@ func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id 
 
 func statusInstanceCapacityReservationSpecificationEquals(ctx context.Context, conn *ec2.Client, id string, expectedValue *awstypes.CapacityReservationSpecification) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceByID(ctx, conn, id)
+		output, err := findInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -160,7 +160,7 @@ func statusInstanceCapacityReservationSpecificationEquals(ctx context.Context, c
 
 func statusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceByID(ctx, conn, id)
+		output, err := findInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -180,7 +180,7 @@ func statusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2
 
 func statusInstanceMetadataOptionsState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceByID(ctx, conn, id)
+		output, err := findInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -200,7 +200,7 @@ func statusInstanceMetadataOptionsState(ctx context.Context, conn *ec2.Client, i
 
 func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceByID(ctx, conn, id)
+		output, err := findInstanceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

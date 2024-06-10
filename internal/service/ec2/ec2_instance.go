@@ -1119,7 +1119,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	instance, err := FindInstanceByID(ctx, conn, d.Id())
+	instance, err := findInstanceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Instance %s not found, removing from state", d.Id())
@@ -1629,7 +1629,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("ipv6_address_count") && !d.IsNewResource() {
-		instance, err := FindInstanceByID(ctx, conn, d.Id())
+		instance, err := findInstanceByID(ctx, conn, d.Id())
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
@@ -1685,7 +1685,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChanges("secondary_private_ips", names.AttrVPCSecurityGroupIDs) && !d.IsNewResource() {
-		instance, err := FindInstanceByID(ctx, conn, d.Id())
+		instance, err := findInstanceByID(ctx, conn, d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)

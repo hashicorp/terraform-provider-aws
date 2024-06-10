@@ -3,10 +3,12 @@
 
 package ec2
 
+// Exports for use in other modules.
 var (
 	CustomFiltersBlock                                               = customFiltersBlock
 	DeleteNetworkInterface                                           = deleteNetworkInterface
 	DetachNetworkInterface                                           = detachNetworkInterface
+	FindInstanceByID                                                 = findInstanceByID
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2 = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2
 	FindNetworkInterfacesV2                                          = findNetworkInterfacesV2
 	FindVPCByIDV2                                                    = findVPCByIDV2

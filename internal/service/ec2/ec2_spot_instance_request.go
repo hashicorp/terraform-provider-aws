@@ -296,7 +296,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	instance, err := FindInstanceByID(ctx, conn, d.Get("spot_instance_id").(string))
+	instance, err := findInstanceByID(ctx, conn, d.Get("spot_instance_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

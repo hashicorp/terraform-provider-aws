@@ -350,7 +350,7 @@ func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInst
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
 }
 
-func FindInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
+func findInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: []string{id},
 	}
