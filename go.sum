@@ -378,8 +378,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.24.5 h1:iXjh3uaH3vsVcnyZX7MqCoCf
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.24.5/go.mod h1:5ZXesEuy/QcO0WUnt+4sDkxhdXRHTu2yG0uCSH8B6os=
 github.com/aws/aws-sdk-go-v2/service/sts v1.28.12 h1:M/1u4HBpwLuMtjlxuI2y6HoVLzF5e2mfxHCg7ZVMYmk=
 github.com/aws/aws-sdk-go-v2/service/sts v1.28.12/go.mod h1:kcfd+eTdEi/40FIbLq4Hif3XMXnl5b/+t/KTfLt9xIk=
-github.com/aws/aws-sdk-go-v2/service/swf v1.23.1 h1:+bMrBr9MkMR7sQQ/T21FodUjsB1vKOyDLo3u2MgtwwU=
-github.com/aws/aws-sdk-go-v2/service/swf v1.23.1/go.mod h1:kzwdnvkra6Qyq2TgQ/7Q/OHo4IdIM151BDGHvQhojz8=
+github.com/aws/aws-sdk-go-v2/service/swf v1.23.2 h1:/EudBRyXqjvogP4JLFb31Jt8rz4YYy1UgW9KzKR+1xo=
+github.com/aws/aws-sdk-go-v2/service/swf v1.23.2/go.mod h1:z92PP2/Cnis08+F2SlpnLT2kpJPpBQcWQ6aNGyGRvQg=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.9 h1:p1uPd+o1wGJpYnAEzEnreXtMOhgeFKdFnQLls1E2co0=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.9/go.mod h1:zencmu9FPb6meSHsu92x3URWsL9hQ/wfFPrJeQgvN1c=
 github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.0.7 h1:5oXX0KAXq4TA/Lo3KA0Y9hr9DtVMI7uen/sjQWF3s58=
