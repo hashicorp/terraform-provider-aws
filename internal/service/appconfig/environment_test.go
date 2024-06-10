@@ -39,12 +39,12 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}`)),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -177,10 +177,10 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -193,12 +193,12 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.1", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "monitor.#", acctest.Ct0),
 				),
 			},
 		},
@@ -257,80 +257,6 @@ func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
 				ResourceName:      resourceName1,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAppConfigEnvironment_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_environment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnvironmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEnvironmentConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccEnvironmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAppConfigEnvironment_tagsWithNullValue(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_environment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnvironmentConfig_tagsWithNullValue(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckNoResourceAttr(resourceName, "tags.key2"),
-				),
-				// ~ tags           = {
-				// 	~ "key2" = "" -> null
-				// 	  # (1 unchanged element hidden)
-				//   }
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -408,7 +334,7 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			appID := rs.Primary.Attributes["application_id"]
+			appID := rs.Primary.Attributes[names.AttrApplicationID]
 			envID := rs.Primary.Attributes["environment_id"]
 
 			input := &appconfig.GetEnvironmentInput{
@@ -446,7 +372,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		appID := rs.Primary.Attributes["application_id"]
+		appID := rs.Primary.Attributes[names.AttrApplicationID]
 		envID := rs.Primary.Attributes["environment_id"]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
@@ -575,47 +501,6 @@ resource "aws_appconfig_environment" "test" {
 resource "aws_appconfig_environment" "test2" {
   name           = "%[1]s-2"
   application_id = aws_appconfig_application.test.id
-}
-`, rName))
-}
-
-func testAccEnvironmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccApplicationConfig_name(rName), fmt.Sprintf(`
-resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
-  application_id = aws_appconfig_application.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccEnvironmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccApplicationConfig_name(rName), fmt.Sprintf(`
-resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
-  application_id = aws_appconfig_application.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccEnvironmentConfig_tagsWithNullValue(rName string) string {
-	return acctest.ConfigCompose(testAccApplicationConfig_name(rName), fmt.Sprintf(`
-resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
-  application_id = aws_appconfig_application.test.id
-
-  tags = {
-    key1 = "value1"
-    key2 = null
-  }
 }
 `, rName))
 }

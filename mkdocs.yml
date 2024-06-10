@@ -24,6 +24,7 @@ nav:
           - Bugs and Enhancements: bugs-and-enhancements.md
           - Documentation Changes: documentation-changes.md
       - Acceptance Tests: running-and-writing-acceptance-tests.md
+      - Continuous Integration: continuous-integration.md
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
@@ -38,6 +39,7 @@ nav:
       - Dependency Updates: dependency-updates.md
       - Design Decision Log: design-decision-log.md
       - Error Handling: error-handling.md
+      - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md
       - Provider Design: provider-design.md
       - Provider Scaffolding (skaff): skaff.md

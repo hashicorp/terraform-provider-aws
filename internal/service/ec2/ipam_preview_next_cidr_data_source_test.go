@@ -85,7 +85,7 @@ func TestAccIPAMPreviewNextCIDRDataSource_ipv4DisallowedCIDR(t *testing.T) {
 				Config: testAccIPAMPreviewNextCIDRDataSourceConfig_ipv4Disallowed(netmaskLength, disallowedCidr),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "cidr", expectedCidr),
-					resource.TestCheckResourceAttr(datasourceName, "disallowed_cidrs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "disallowed_cidrs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(datasourceName, "disallowed_cidrs.0", disallowedCidr),
 					resource.TestCheckResourceAttrPair(datasourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(datasourceName, "netmask_length", netmaskLength),

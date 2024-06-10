@@ -167,7 +167,7 @@ func resourceSchedule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"capacity_provider_strategy": {
+									names.AttrCapacityProviderStrategy: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										MaxItems: 6,
@@ -280,7 +280,7 @@ func resourceSchedule() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"propagate_tags": {
+									names.AttrPropagateTags: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.PropagateTags](),
@@ -432,6 +432,7 @@ const (
 )
 
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
@@ -484,11 +485,11 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, err)
 	}
 
 	if out == nil || out.ScheduleArn == nil {
-		return create.DiagError(names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, errors.New("empty output"))
 	}
 
 	// When the schedule is created without specifying a group, it is assigned
@@ -501,21 +502,22 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 	id, err := ResourceScheduleIDFromARN(aws.ToString(out.ScheduleArn))
 
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, fmt.Errorf("invalid resource id: %w", err))
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameSchedule, name, fmt.Errorf("invalid resource id: %w", err))
 	}
 
 	d.SetId(id)
 
-	return resourceScheduleRead(ctx, d, meta)
+	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
 	}
 
 	out, err := findScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
@@ -523,11 +525,11 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Scheduler Schedule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -540,7 +542,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err := d.Set("flexible_time_window", []interface{}{flattenFlexibleTimeWindow(out.FlexibleTimeWindow)}); err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
 	d.Set(names.AttrGroupName, out.GroupName)
@@ -559,13 +561,14 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrState, string(out.State))
 
 	if err := d.Set(names.AttrTarget, []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	in := &scheduler.UpdateScheduleInput{
@@ -609,19 +612,20 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionUpdating, ResNameSchedule, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionUpdating, ResNameSchedule, d.Id(), err)
 	}
 
-	return resourceScheduleRead(ctx, d, meta)
+	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionDeleting, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionDeleting, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
 	}
 
 	log.Printf("[INFO] Deleting EventBridge Scheduler Schedule %s", d.Id())
@@ -634,13 +638,13 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta in
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.Scheduler, create.ErrActionDeleting, ResNameSchedule, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionDeleting, ResNameSchedule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, groupName, scheduleName string) (*scheduler.GetScheduleOutput, error) {

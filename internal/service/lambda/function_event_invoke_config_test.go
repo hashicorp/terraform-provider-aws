@@ -37,10 +37,10 @@ func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 				),
 			},
@@ -120,8 +120,8 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, names.AttrARN),
 				),
 			},
@@ -134,8 +134,8 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnFailure_destination(t *
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSNSTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", snsTopicResourceName, names.AttrARN),
 				),
 			},
@@ -163,8 +163,8 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", sqsQueueResourceName, names.AttrARN),
 				),
 			},
@@ -177,8 +177,8 @@ func TestAccLambdaFunctionEventInvokeConfig_DestinationOnSuccess_destination(t *
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSNSTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", snsTopicResourceName, names.AttrARN),
 				),
 			},
@@ -205,8 +205,8 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, names.AttrARN),
 				),
 			},
@@ -219,7 +219,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_qualifierVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct0),
 				),
 			},
 		},
@@ -245,8 +245,8 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnFailureDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination", sqsQueueResourceName, names.AttrARN),
 				),
 			},
@@ -259,8 +259,8 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_swap(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_destinationOnSuccessDestinationSQSQueue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_success.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_success.0.destination", sqsQueueResourceName, names.AttrARN),
 				),
 			},
@@ -387,7 +387,7 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.Ct0),
 				),
 			},
 			{
@@ -399,14 +399,14 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.Ct0),
 				),
 			},
 		},

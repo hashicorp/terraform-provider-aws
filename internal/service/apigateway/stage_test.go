@@ -41,10 +41,10 @@ func testAccStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "invoke_url"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -62,11 +62,11 @@ func testAccStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "invoke_url"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Hello world"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "variables.three", "3"),
-					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "variables.three", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -78,9 +78,9 @@ func testAccStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "invoke_url"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -103,7 +103,7 @@ func testAccStage_cache(t *testing.T) {
 				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func testAccStage_cache(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 
@@ -126,14 +126,14 @@ func testAccStage_cache(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "1.6"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -158,7 +158,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -172,7 +172,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "6.1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -180,7 +180,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", ""),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -188,54 +188,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "28.4"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
-				),
-			},
-		},
-	})
-}
-
-func testAccStage_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf apigateway.GetStageOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_api_gateway_stage.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStageConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccStageImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccStageConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccStageConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -313,7 +266,7 @@ func testAccStage_accessLogSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", clf),
 				),
@@ -324,7 +277,7 @@ func testAccStage_accessLogSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", json),
 				),
@@ -334,7 +287,7 @@ func testAccStage_accessLogSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", xml),
 				),
@@ -344,7 +297,7 @@ func testAccStage_accessLogSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", csv),
 				),
@@ -354,7 +307,7 @@ func testAccStage_accessLogSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
 				),
 			},
 		},
@@ -382,7 +335,7 @@ func testAccStage_AccessLogSettings_kinesis(t *testing.T) {
 				Config: testAccStageConfig_accessLogSettingsKinesis(rName, clf),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", kinesesResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", clf),
 				),
@@ -393,7 +346,7 @@ func testAccStage_AccessLogSettings_kinesis(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", kinesesResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", json),
 				),
@@ -403,7 +356,7 @@ func testAccStage_AccessLogSettings_kinesis(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", kinesesResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", xml),
 				),
@@ -413,7 +366,7 @@ func testAccStage_AccessLogSettings_kinesis(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", kinesesResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", csv),
 				),
@@ -423,7 +376,7 @@ func testAccStage_AccessLogSettings_kinesis(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+/stages/prod`)),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
 				),
 			},
 		},
@@ -481,10 +434,10 @@ func testAccStage_canarySettings(t *testing.T) {
 				Config: testAccStageConfig_canarySettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "3"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
 				),
 			},
 			{
@@ -497,17 +450,17 @@ func testAccStage_canarySettings(t *testing.T) {
 				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccStageConfig_canarySettingsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", "false"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
 				),
 			},
 		},
@@ -745,35 +698,6 @@ resource "aws_api_gateway_stage" "test" {
   }
 }
 `, rName, format))
-}
-
-func testAccStageConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
-resource "aws_api_gateway_stage" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  stage_name    = "prod"
-  deployment_id = aws_api_gateway_deployment.test.id
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccStageConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
-resource "aws_api_gateway_stage" "test" {
-  rest_api_id   = aws_api_gateway_rest_api.test.id
-  stage_name    = "prod"
-  deployment_id = aws_api_gateway_deployment.test.id
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccStageConfig_wafACL(rName string) string {

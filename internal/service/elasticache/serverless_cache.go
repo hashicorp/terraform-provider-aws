@@ -91,7 +91,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"engine": schema.StringAttribute{
+			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

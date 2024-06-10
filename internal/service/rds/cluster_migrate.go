@@ -15,12 +15,12 @@ import (
 func resourceClusterResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -109,7 +109,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -134,7 +134,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -154,7 +154,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -329,7 +329,7 @@ func resourceClusterResourceV0() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
@@ -358,7 +358,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeFloat,
 							Required: true,
 						},
@@ -384,7 +384,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

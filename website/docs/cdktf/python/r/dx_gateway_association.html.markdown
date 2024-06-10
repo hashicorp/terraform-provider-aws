@@ -135,6 +135,8 @@ A full example of how to create a VPN Gateway in one AWS account, create a Direc
 
 ~> **NOTE:** `dx_gateway_id` and `associated_gateway_id` must be specified for single account Direct Connect gateway associations.
 
+~> **NOTE:** If the `associated_gateway_id` is in another region, an [alias](https://developer.hashicorp.com/terraform/language/providers/configuration#alias-multiple-provider-configurations) in a new provider block for that region should be specified.
+
 This argument supports the following arguments:
 
 * `dx_gateway_id` - (Required) The ID of the Direct Connect gateway.
@@ -188,4 +190,4 @@ Using `terraform import`, import Direct Connect gateway associations using `dx_g
 % terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a27cdf93a7d5c42337724f3a987226ae88c4ae0502a4d4160e2444683c6a343d -->
+<!-- cache-key: cdktf-0.20.1 input-0ac2e87a080600552d29a95cc43041850423a7590e074bd273531a8258096778 -->

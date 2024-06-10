@@ -38,11 +38,11 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`deploymentstrategy/[0-9a-z]{4,7}`)),
-					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "3"),
-					resource.TestCheckResourceAttr(resourceName, "growth_factor", "10"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "growth_factor", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "replicate_to", string(awstypes.ReplicateToNone)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -158,51 +158,6 @@ func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppConfigDeploymentStrategy_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_deployment_strategy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentStrategyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDeploymentStrategyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDeploymentStrategyConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDeploymentStrategyConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckDeploymentStrategyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
@@ -299,35 +254,4 @@ resource "aws_appconfig_deployment_strategy" "test" {
   replicate_to                   = "NONE"
 }
 `, rName, time)
-}
-
-func testAccDeploymentStrategyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_appconfig_deployment_strategy" "test" {
-  name                           = %[1]q
-  deployment_duration_in_minutes = 3
-  growth_factor                  = 10
-  replicate_to                   = "NONE"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccDeploymentStrategyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_appconfig_deployment_strategy" "test" {
-  name                           = %[1]q
-  deployment_duration_in_minutes = 3
-  growth_factor                  = 10
-  replicate_to                   = "NONE"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

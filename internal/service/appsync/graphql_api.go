@@ -117,7 +117,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"user_pool_id": {
+									names.AttrUserPoolID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -263,12 +263,12 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"default_action": {
+						names.AttrDefaultAction: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appsync.DefaultAction_Values(), false),
 						},
-						"user_pool_id": {
+						names.AttrUserPoolID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -646,8 +646,8 @@ func expandGraphQLAPIUserPoolConfig(l []interface{}, currentRegion string) *apps
 
 	userPoolConfig := &appsync.UserPoolConfig{
 		AwsRegion:     aws.String(currentRegion),
-		DefaultAction: aws.String(m["default_action"].(string)),
-		UserPoolId:    aws.String(m["user_pool_id"].(string)),
+		DefaultAction: aws.String(m[names.AttrDefaultAction].(string)),
+		UserPoolId:    aws.String(m[names.AttrUserPoolID].(string)),
 	}
 
 	if v, ok := m["app_id_client_regex"].(string); ok && v != "" {
@@ -723,7 +723,7 @@ func expandGraphQLAPICognitoUserPoolConfig(l []interface{}, currentRegion string
 
 	userPoolConfig := &appsync.CognitoUserPoolConfig{
 		AwsRegion:  aws.String(currentRegion),
-		UserPoolId: aws.String(m["user_pool_id"].(string)),
+		UserPoolId: aws.String(m[names.AttrUserPoolID].(string)),
 	}
 
 	if v, ok := m["app_id_client_regex"].(string); ok && v != "" {
@@ -772,9 +772,9 @@ func flattenGraphQLAPIUserPoolConfig(userPoolConfig *appsync.UserPoolConfig) []i
 	}
 
 	m := map[string]interface{}{
-		"aws_region":     aws.StringValue(userPoolConfig.AwsRegion),
-		"default_action": aws.StringValue(userPoolConfig.DefaultAction),
-		"user_pool_id":   aws.StringValue(userPoolConfig.UserPoolId),
+		"aws_region":            aws.StringValue(userPoolConfig.AwsRegion),
+		names.AttrDefaultAction: aws.StringValue(userPoolConfig.DefaultAction),
+		names.AttrUserPoolID:    aws.StringValue(userPoolConfig.UserPoolId),
 	}
 
 	if userPoolConfig.AppIdClientRegex != nil {
@@ -830,8 +830,8 @@ func flattenGraphQLAPICognitoUserPoolConfig(userPoolConfig *appsync.CognitoUserP
 	}
 
 	m := map[string]interface{}{
-		"aws_region":   aws.StringValue(userPoolConfig.AwsRegion),
-		"user_pool_id": aws.StringValue(userPoolConfig.UserPoolId),
+		"aws_region":         aws.StringValue(userPoolConfig.AwsRegion),
+		names.AttrUserPoolID: aws.StringValue(userPoolConfig.UserPoolId),
 	}
 
 	if userPoolConfig.AppIdClientRegex != nil {

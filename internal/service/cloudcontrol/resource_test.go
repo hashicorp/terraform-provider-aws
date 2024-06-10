@@ -374,7 +374,7 @@ func TestAccCloudControlResource_DesiredState_objectValueUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, "value1updated"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1updated"`)),
 				),

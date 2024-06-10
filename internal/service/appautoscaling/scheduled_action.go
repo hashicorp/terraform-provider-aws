@@ -65,7 +65,7 @@ func resourceScheduledAction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:         nullable.TypeNullableInt,
 							Optional:     true,
 							ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
@@ -284,7 +284,7 @@ func expandScalableTargetAction(l []interface{}) *awstypes.ScalableTargetAction 
 
 	result := &awstypes.ScalableTargetAction{}
 
-	if v, ok := m["max_capacity"]; ok {
+	if v, ok := m[names.AttrMaxCapacity]; ok {
 		if v, null, _ := nullable.Int(v.(string)).ValueInt32(); !null {
 			result.MaxCapacity = aws.Int32(v)
 		}
@@ -305,7 +305,7 @@ func flattenScalableTargetAction(cfg *awstypes.ScalableTargetAction) []interface
 
 	m := make(map[string]interface{})
 	if cfg.MaxCapacity != nil {
-		m["max_capacity"] = strconv.FormatInt(int64(aws.ToInt32(cfg.MaxCapacity)), 10)
+		m[names.AttrMaxCapacity] = strconv.FormatInt(int64(aws.ToInt32(cfg.MaxCapacity)), 10)
 	}
 	if cfg.MinCapacity != nil {
 		m["min_capacity"] = strconv.FormatInt(int64(aws.ToInt32(cfg.MinCapacity)), 10)

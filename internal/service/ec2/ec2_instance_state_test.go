@@ -21,7 +21,6 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_state.test"
 	state := "stopped"
-	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -30,7 +29,7 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, force),
+				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -46,7 +45,6 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 	resourceName := "aws_ec2_instance_state.test"
 	stateStopped := "stopped"
 	stateRunning := "running"
-	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -55,7 +53,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(stateStopped, force),
+				Config: testAccInstanceStateConfig_basic(stateStopped, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -68,7 +66,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceStateConfig_basic(stateRunning, force),
+				Config: testAccInstanceStateConfig_basic(stateRunning, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
@@ -84,7 +82,6 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 	resourceName := "aws_ec2_instance_state.test"
 	parentResourceName := "aws_instance.test"
 	state := "stopped"
-	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -93,7 +90,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, force),
+				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), parentResourceName),

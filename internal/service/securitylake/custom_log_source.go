@@ -79,8 +79,8 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"location":        types.StringType,
-						names.AttrRoleARN: types.StringType,
+						names.AttrLocation: types.StringType,
+						names.AttrRoleARN:  types.StringType,
 					},
 				},
 				PlanModifiers: []planmodifier.List{
@@ -151,7 +151,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"external_id": schema.StringAttribute{
+									names.AttrExternalID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),

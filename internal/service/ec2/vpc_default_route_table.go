@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_route_table", name="Route Table")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultRouteTableCreate,
@@ -70,7 +72,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 						///
 						// Destinations.
 						///
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
@@ -143,36 +145,36 @@ func resourceDefaultRouteTable() *schema.Resource {
 
 func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
-	routeTable, err := FindRouteTableByID(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Default Route Table (%s): %s", routeTableID, err)
 	}
 
-	d.SetId(aws.StringValue(routeTable.RouteTableId))
+	d.SetId(aws.ToString(routeTable.RouteTableId))
 
 	// Remove all existing VGW associations.
 	for _, v := range routeTable.PropagatingVgws {
-		if err := routeTableDisableVGWRoutePropagation(ctx, conn, d.Id(), aws.StringValue(v.GatewayId)); err != nil {
+		if err := routeTableDisableVGWRoutePropagation(ctx, conn, d.Id(), aws.ToString(v.GatewayId)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	// Delete all existing routes.
 	for _, v := range routeTable.Routes {
-		if gatewayID := aws.StringValue(v.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
+		if gatewayID := aws.ToString(v.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 			continue
 		}
 
-		if aws.StringValue(v.Origin) == ec2.RouteOriginEnableVgwRoutePropagation {
+		if v.Origin == awstypes.RouteOriginEnableVgwRoutePropagation {
 			continue
 		}
 
-		if v.DestinationPrefixListId != nil && strings.HasPrefix(aws.StringValue(v.GatewayId), "vpce-") {
+		if v.DestinationPrefixListId != nil && strings.HasPrefix(aws.ToString(v.GatewayId), "vpce-") {
 			// Skipping because VPC endpoint routes are handled separately
 			// See aws_vpc_endpoint
 			continue
@@ -183,23 +185,23 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 		var destination string
-		var routeFinder RouteFinder
+		var routeFinder routeFinder
 
 		if v.DestinationCidrBlock != nil {
 			input.DestinationCidrBlock = v.DestinationCidrBlock
-			destination = aws.StringValue(v.DestinationCidrBlock)
-			routeFinder = FindRouteByIPv4Destination
+			destination = aws.ToString(v.DestinationCidrBlock)
+			routeFinder = findRouteByIPv4Destination
 		} else if v.DestinationIpv6CidrBlock != nil {
 			input.DestinationIpv6CidrBlock = v.DestinationIpv6CidrBlock
-			destination = aws.StringValue(v.DestinationIpv6CidrBlock)
-			routeFinder = FindRouteByIPv6Destination
+			destination = aws.ToString(v.DestinationIpv6CidrBlock)
+			routeFinder = findRouteByIPv6Destination
 		} else if v.DestinationPrefixListId != nil {
 			input.DestinationPrefixListId = v.DestinationPrefixListId
-			destination = aws.StringValue(v.DestinationPrefixListId)
-			routeFinder = FindRouteByPrefixListIDDestination
+			destination = aws.ToString(v.DestinationPrefixListId)
+			routeFinder = findRouteByPrefixListIDDestination
 		}
 
-		_, err := conn.DeleteRouteWithContext(ctx, input)
+		_, err := conn.DeleteRoute(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound) {
 			continue
@@ -209,7 +211,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "deleting Route in EC2 Default Route Table (%s) with destination (%s): %s", d.Id(), destination, err)
 		}
 
-		if _, err := WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route in EC2 Default Route Table (%s) with destination (%s) delete: %s", d.Id(), destination, err)
 		}
 	}
@@ -236,7 +238,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Default Route Table (%s) tags: %s", d.Id(), err)
 	}
 
@@ -252,15 +254,15 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTable, err := FindMainRouteTableByVPCID(ctx, conn, d.Id())
+	routeTable, err := findMainRouteTableByVPCID(ctx, conn, d.Id())
 
 	if err != nil {
 		return nil, err
 	}
 
-	d.SetId(aws.StringValue(routeTable.RouteTableId))
+	d.SetId(aws.ToString(routeTable.RouteTableId))
 
 	return []*schema.ResourceData{d}, nil
 }

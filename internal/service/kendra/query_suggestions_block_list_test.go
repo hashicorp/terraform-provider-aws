@@ -45,7 +45,7 @@ func TestAccKendraQuerySuggestionsBlockList_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", names.AttrKey),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
@@ -218,7 +218,7 @@ func TestAccKendraQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuerySuggestionsBlockListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", names.AttrKey)),
 			},
@@ -226,7 +226,7 @@ func TestAccKendraQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
 				Config: testAccQuerySuggestionsBlockListConfig_sourceS3Path(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuerySuggestionsBlockListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source_s3_path.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test2", names.AttrKey)),
 			},
@@ -293,8 +293,8 @@ func TestAccKendraQuerySuggestionsBlockList_tags(t *testing.T) {
 				Config: testAccQuerySuggestionsBlockListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuerySuggestionsBlockListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -303,20 +303,20 @@ func TestAccKendraQuerySuggestionsBlockList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQuerySuggestionsBlockListConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccQuerySuggestionsBlockListConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuerySuggestionsBlockListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccQuerySuggestionsBlockListConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuerySuggestionsBlockListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

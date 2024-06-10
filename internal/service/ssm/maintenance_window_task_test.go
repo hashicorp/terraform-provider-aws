@@ -40,7 +40,7 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`windowtask/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "window_task_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "window_id", "aws_ssm_maintenance_window.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct1),
 				),
 			},
 			{
@@ -51,9 +51,9 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
 					resource.TestCheckResourceAttr(resourceName, "task_arn", "AWS-InstallPowerShellModule"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "3"),
-					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "3"),
-					resource.TestCheckResourceAttr(resourceName, "max_errors", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrency", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "max_errors", acctest.Ct2),
 					testAccCheckWindowsTaskNotRecreated(t, &before, &after),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccSSMMaintenanceWindowTask_noTarget(t *testing.T) {
 				Config: testAccMaintenanceWindowTaskConfig_noTarget(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct0),
 				),
 			},
 			{
@@ -362,7 +362,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParametersCloudWatc
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, serviceRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_log_group_name", cwResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -377,7 +377,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParametersCloudWatc
 					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &task),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, serviceRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -387,7 +387,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParametersCloudWatc
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, serviceRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_log_group_name", cwResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", acctest.CtTrue),
 				),
 			},
 		},

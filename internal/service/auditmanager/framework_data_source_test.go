@@ -56,9 +56,9 @@ func TestAccAuditManagerFrameworkDataSource_custom(t *testing.T) {
 				Config: testAccFrameworkDataSourceConfig_custom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "control_sets.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "control_sets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "control_sets.0.name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "control_sets.0.controls.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "control_sets.0.controls.#", acctest.Ct1),
 				),
 			},
 		},

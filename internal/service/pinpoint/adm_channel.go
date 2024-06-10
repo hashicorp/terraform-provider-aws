@@ -29,7 +29,7 @@ func ResourceADMChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -57,7 +57,7 @@ func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.ADMChannelRequest{}
 
@@ -99,7 +99,7 @@ func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "getting Pinpoint ADM Channel for application %s: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", channel.ADMChannelResponse.ApplicationId)
+	d.Set(names.AttrApplicationID, channel.ADMChannelResponse.ApplicationId)
 	d.Set(names.AttrEnabled, channel.ADMChannelResponse.Enabled)
 	// client_id and client_secret are never returned
 

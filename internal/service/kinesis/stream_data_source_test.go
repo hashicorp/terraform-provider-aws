@@ -29,11 +29,11 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRetentionPeriod, "72"),
-					resource.TestCheckResourceAttr(dataSourceName, "shard_level_metrics.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName, "shard_level_metrics.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(dataSourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
@@ -42,8 +42,8 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 			{
 				Config: testAccStreamDataSourceConfig_basic(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "4"),
-					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", acctest.Ct3),
 				),
 			},
 		},

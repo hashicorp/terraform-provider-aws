@@ -44,7 +44,7 @@ func ResourceGroup() *schema.Resource {
 					Computed: true,
 				},
 
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -84,7 +84,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get(names.AttrNamespace).(string)
 
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
 
@@ -134,7 +134,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, resp.Group.Arn)
-	d.Set("aws_account_id", awsAccountID)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
 	d.Set(names.AttrGroupName, resp.Group.GroupName)
 	d.Set(names.AttrDescription, resp.Group.Description)
 	d.Set(names.AttrNamespace, namespace)

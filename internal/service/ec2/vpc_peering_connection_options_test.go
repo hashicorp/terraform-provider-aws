@@ -36,8 +36,8 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 				Config: testAccVPCPeeringConnectionOptionsConfig_sameRegionSameAccount(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "false"),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", acctest.CtFalse),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -45,8 +45,8 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(resourceName, "accepter.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceName, "accepter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_remote_vpc_dns_resolution", acctest.CtTrue),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -67,7 +67,7 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						acctest.CtOne,
+						acctest.Ct1,
 					),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
@@ -79,7 +79,7 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						acctest.CtOne,
+						acctest.Ct1,
 					),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"accepter",
@@ -115,8 +115,8 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 				Config: testAccVPCPeeringConnectionOptionsConfig_differentRegionSameAccount(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", acctest.CtTrue),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -124,8 +124,8 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", acctest.CtTrue),
 					testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, pcxResourceNamePeer,
 						"accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -148,7 +148,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						acctest.CtOne,
+						acctest.Ct1,
 					),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
@@ -160,7 +160,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 					resource.TestCheckResourceAttr(
 						resourceNamePeer,
 						"accepter.#",
-						acctest.CtOne,
+						acctest.Ct1,
 					),
 					testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, pcxResourceNamePeer,
 						"accepter",
@@ -195,8 +195,8 @@ func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T)
 				Config: testAccVPCPeeringConnectionOptionsConfig_sameRegionDifferentAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", acctest.CtTrue),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
 						&ec2.VpcPeeringConnectionOptionsDescription{
@@ -204,8 +204,8 @@ func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T)
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", acctest.CtTrue),
 				),
 			},
 			{

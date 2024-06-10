@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_ebs_volume", name="EBS Volume")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSVolumeCreate,
@@ -99,18 +100,18 @@ func ResourceEBSVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				AtLeastOneOf: []string{names.AttrSize, "snapshot_id"},
+				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrSize, "snapshot_id"},
+				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput": {
+			names.AttrThroughput: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -159,11 +160,11 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Size = aws.Int32(int32(value.(int)))
 	}
 
-	if value, ok := d.GetOk("snapshot_id"); ok {
+	if value, ok := d.GetOk(names.AttrSnapshotID); ok {
 		input.SnapshotId = aws.String(value.(string))
 	}
 
-	if value, ok := d.GetOk("throughput"); ok {
+	if value, ok := d.GetOk(names.AttrThroughput); ok {
 		input.Throughput = aws.Int32(int32(value.(int)))
 	}
 
@@ -217,8 +218,8 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("outpost_arn", volume.OutpostArn)
 	d.Set(names.AttrSize, volume.Size)
-	d.Set("snapshot_id", volume.SnapshotId)
-	d.Set("throughput", volume.Throughput)
+	d.Set(names.AttrSnapshotID, volume.SnapshotId)
+	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set(names.AttrType, volume.VolumeType)
 
 	setTagsOutV2(ctx, volume.Tags)
@@ -246,7 +247,7 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		// "If no throughput value is specified, the existing value is retained."
 		// Not currently correct, so always specify any non-zero throughput value.
 		// Throughput is valid only for gp3 volumes.
-		if v := d.Get("throughput").(int); v > 0 && d.Get(names.AttrType).(string) == string(awstypes.VolumeTypeGp3) {
+		if v := d.Get(names.AttrThroughput).(int); v > 0 && d.Get(names.AttrType).(string) == string(awstypes.VolumeTypeGp3) {
 			input.Throughput = aws.Int32(int32(v))
 		}
 
@@ -339,7 +340,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	iops := diff.Get(names.AttrIOPS).(int)
 	multiAttachEnabled := diff.Get("multi_attach_enabled").(bool)
-	throughput := diff.Get("throughput").(int)
+	throughput := diff.Get(names.AttrThroughput).(int)
 	volumeType := awstypes.VolumeType(diff.Get(names.AttrType).(string))
 
 	if diff.Id() == "" {

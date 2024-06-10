@@ -160,13 +160,13 @@ func ResourceContainerRecipe() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
-												"snapshot_id": {
+												names.AttrSnapshotID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
-												"throughput": {
+												names.AttrThroughput: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
@@ -195,7 +195,7 @@ func ResourceContainerRecipe() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
-									"virtual_name": {
+									names.AttrVirtualName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,

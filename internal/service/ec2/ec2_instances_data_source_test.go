@@ -25,9 +25,9 @@ func TestAccEC2InstancesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_ids(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.CtTwo),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", acctest.CtTwo),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.Ct2),
 					// Public IP values are flakey for new EC2 instances due to eventual consistency
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
 				),
@@ -48,7 +48,7 @@ func TestAccEC2InstancesDataSource_tags(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -67,7 +67,7 @@ func TestAccEC2InstancesDataSource_instanceStateNames(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_instanceStateNames(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -86,10 +86,10 @@ func TestAccEC2InstancesDataSource_empty(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.CtZero),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", acctest.CtZero),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.CtZero),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", acctest.CtZero),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ipv6_addresses.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "public_ips.#", acctest.Ct0),
 				),
 			},
 		},
@@ -108,9 +108,9 @@ func TestAccEC2InstancesDataSource_timeout(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "ipv6_addresses.#"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
 				),
 			},

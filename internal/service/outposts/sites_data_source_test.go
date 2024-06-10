@@ -43,7 +43,7 @@ func testAccCheckSitesAttributes(dataSourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", dataSourceName)
 		}
 
-		if v := rs.Primary.Attributes["ids.#"]; v == acctest.CtZero {
+		if v := rs.Primary.Attributes["ids.#"]; v == acctest.Ct0 {
 			return fmt.Errorf("expected at least one ids result, got none")
 		}
 

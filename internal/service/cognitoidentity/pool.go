@@ -59,7 +59,7 @@ func resourcePool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validIdentityProvidersClientID,
 						},
-						"provider_name": {
+						names.AttrProviderName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validIdentityProvidersProviderName,

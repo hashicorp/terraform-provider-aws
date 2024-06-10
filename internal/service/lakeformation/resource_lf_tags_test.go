@@ -179,17 +179,17 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "woodcote",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-2", rName),
 						names.AttrValue: "theloop",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-3", rName),
 						names.AttrValue: "two",
@@ -209,17 +209,17 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "stowe",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-2", rName),
 						names.AttrValue: "becketts",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-3", rName),
 						names.AttrValue: "three",
@@ -351,7 +351,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 					input.Resource.Table.Name = aws.String(v)
 				}
 
-				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 					input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 				}
 			}
@@ -377,7 +377,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 					input.Resource.TableWithColumns.ColumnNames = cols
 				}
 
-				if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == "true" {
+				if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == acctest.CtTrue {
 					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{}
 				}
 
@@ -458,7 +458,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 				input.Resource.Table.Name = aws.String(v)
 			}
 
-			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 				input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 			}
 		}
@@ -484,7 +484,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 				input.Resource.TableWithColumns.ColumnNames = cols
 			}
 
-			if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == "true" {
+			if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == acctest.CtTrue {
 				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{}
 			}
 

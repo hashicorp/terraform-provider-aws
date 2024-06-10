@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_ec2_traffic_mirror_filter", name="Traffic Mirror Filter")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTrafficMirrorFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorFilterCreate,

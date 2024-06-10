@@ -31,7 +31,7 @@ func TestAccFSxONTAPStorageVirtualMachinesDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccONTAPStorageVirtualMachinesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
 				),
 			},
 		},

@@ -97,7 +97,7 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_tags": tftags.TagsSchemaComputed(),
+			names.AttrResourceTags: tftags.TagsSchemaComputed(),
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -164,7 +164,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
-	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)

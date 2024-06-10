@@ -27,6 +27,9 @@ import (
 
 // @SDKResource("aws_appautoscaling_target", name="Target")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types;awstypes;awstypes.ScalableTarget")
+// @Testing(importStateIdFunc="testAccTargetImportStateIdFunc")
+// @Testing(skipEmptyTags=true)
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetCreate,
@@ -43,7 +46,7 @@ func resourceTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"max_capacity": {
+			names.AttrMaxCapacity: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -85,7 +88,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	resourceID := d.Get(names.AttrResourceID).(string)
 	input := &applicationautoscaling.RegisterScalableTargetInput{
-		MaxCapacity:       aws.Int32(int32(d.Get("max_capacity").(int))),
+		MaxCapacity:       aws.Int32(int32(d.Get(names.AttrMaxCapacity).(int))),
 		MinCapacity:       aws.Int32(int32(d.Get("min_capacity").(int))),
 		ResourceId:        aws.String(resourceID),
 		ScalableDimension: awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
@@ -132,7 +135,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	t := outputRaw.(*awstypes.ScalableTarget)
 
 	d.Set(names.AttrARN, t.ScalableTargetARN)
-	d.Set("max_capacity", t.MaxCapacity)
+	d.Set(names.AttrMaxCapacity, t.MaxCapacity)
 	d.Set("min_capacity", t.MinCapacity)
 	d.Set(names.AttrResourceID, t.ResourceId)
 	d.Set(names.AttrRoleARN, t.RoleARN)
@@ -148,7 +151,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &applicationautoscaling.RegisterScalableTargetInput{
-			MaxCapacity:       aws.Int32(int32(d.Get("max_capacity").(int))),
+			MaxCapacity:       aws.Int32(int32(d.Get(names.AttrMaxCapacity).(int))),
 			MinCapacity:       aws.Int32(int32(d.Get("min_capacity").(int))),
 			ResourceId:        aws.String(d.Id()),
 			ScalableDimension: awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),

@@ -342,7 +342,7 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 			},
 
-			"propagate_tags": {
+			names.AttrPropagateTags: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -562,7 +562,7 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 	}
 
 	if d.HasChanges(
-		"propagate_tags",
+		names.AttrPropagateTags,
 		names.AttrParameters,
 		"platform_capabilities",
 		"scheduling_priority",
@@ -582,7 +582,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 	jobDefinitionType := d.Get(names.AttrType).(string)
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
-		PropagateTags:     aws.Bool(d.Get("propagate_tags").(bool)),
+		PropagateTags:     aws.Bool(d.Get(names.AttrPropagateTags).(bool)),
 		Tags:              getTagsIn(ctx),
 		Type:              aws.String(jobDefinitionType),
 	}
@@ -717,7 +717,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrParameters, aws.StringValueMap(jobDefinition.Parameters))
 	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
-	d.Set("propagate_tags", jobDefinition.PropagateTags)
+	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
 
 	if jobDefinition.RetryStrategy != nil {
 		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
@@ -790,7 +790,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.NodeProperties = props
 		}
 
-		if v, ok := d.GetOk("propagate_tags"); ok {
+		if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 			input.PropagateTags = aws.Bool(v.(bool))
 		}
 

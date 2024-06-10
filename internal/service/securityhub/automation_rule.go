@@ -78,7 +78,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"actions": schema.SetNestedBlock{
+			names.AttrActions: schema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[automationRulesActionModel](ctx),
 				Validators: []validator.Set{
 					setvalidator.IsRequired(),
@@ -198,7 +198,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"aws_account_id":                     stringFilterSchemaFramework(ctx),
+						names.AttrAWSAccountID:               stringFilterSchemaFramework(ctx),
 						"aws_account_name":                   stringFilterSchemaFramework(ctx),
 						"company_name":                       stringFilterSchemaFramework(ctx),
 						"compliance_associated_standards_id": stringFilterSchemaFramework(ctx),
@@ -226,7 +226,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						names.AttrResourceID:                 stringFilterSchemaFramework(ctx),
 						"resource_partition":                 stringFilterSchemaFramework(ctx),
 						"resource_region":                    stringFilterSchemaFramework(ctx),
-						"resource_tags":                      mapFilterSchemaFramework(ctx),
+						names.AttrResourceTags:               mapFilterSchemaFramework(ctx),
 						names.AttrResourceType:               stringFilterSchemaFramework(ctx),
 						"severity_label":                     stringFilterSchemaFramework(ctx),
 						"source_url":                         stringFilterSchemaFramework(ctx),

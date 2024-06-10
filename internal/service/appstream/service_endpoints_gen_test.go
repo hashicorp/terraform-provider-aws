@@ -4,17 +4,18 @@ package appstream_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -47,11 +48,17 @@ type configFile struct {
 type caseExpectations struct {
 	diags    diag.Diagnostics
 	endpoint string
+	region   string
+}
+
+type apiCallParams struct {
+	endpoint string
+	region   string
 }
 
 type setupFunc func(setup *caseSetup)
 
-type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) string
+type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams
 
 const (
 	packageNameConfigEndpoint = "https://packagename-config.endpoint.test/"
@@ -68,13 +75,18 @@ const (
 	configParam = "appstream"
 )
 
+const (
+	expectedCallRegion = "us-west-2" //lintignore:AWSAT003
+)
+
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
-	const region = "us-west-2" //lintignore:AWSAT003
+	const providerRegion = "us-west-2" //lintignore:AWSAT003
+	const expectedEndpointRegion = providerRegion
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
 			with:     []setupFunc{withNoConfig},
-			expected: expectDefaultEndpoint(region),
+			expected: expectDefaultEndpoint(expectedEndpointRegion),
 		},
 
 		// Package name endpoint on Config
@@ -201,46 +213,94 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			},
 			expected: expectBaseConfigFileEndpoint(),
 		},
+
+		// Use FIPS endpoint on Config
+
+		"use fips config": {
+			with: []setupFunc{
+				withUseFIPSInConfig,
+			},
+			expected: expectDefaultFIPSEndpoint(expectedEndpointRegion),
+		},
+
+		"use fips config with package name endpoint config": {
+			with: []setupFunc{
+				withUseFIPSInConfig,
+				withPackageNameEndpointInConfig,
+			},
+			expected: expectPackageNameConfigEndpoint(),
+		},
 	}
 
 	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, region, testcase, callService)
+			testEndpointCase(t, providerRegion, testcase, callService)
 		})
 	}
 }
 
 func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+	r := appstream_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(appstream_sdkv1.EndpointsID, region)
+	ep, err := r.ResolveEndpoint(context.Background(), appstream_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
+	})
 	if err != nil {
 		return err.Error()
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI.String()
 }
 
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func defaultFIPSEndpoint(region string) string {
+	r := appstream_sdkv2.NewDefaultEndpointResolverV2()
+
+	ep, err := r.ResolveEndpoint(context.Background(), appstream_sdkv2.EndpointParameters{
+		Region:  aws_sdkv2.String(region),
+		UseFIPS: aws_sdkv2.Bool(true),
+	})
+	if err != nil {
+		return err.Error()
+	}
+
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
+	}
+
+	return ep.URI.String()
+}
+
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.AppStreamConn(ctx)
+	client := meta.AppStreamClient(ctx)
 
-	req, _ := client.ListAssociatedFleetsRequest(&appstream_sdkv1.ListAssociatedFleetsInput{})
+	var result apiCallParams
 
-	req.HTTPRequest.URL.Path = "/"
+	_, err := client.ListAssociatedFleets(ctx, &appstream_sdkv2.ListAssociatedFleetsInput{
+		StackName: aws_sdkv2.String("test"),
+	},
+		func(opts *appstream_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
+				addRetrieveRegionMiddleware(&result.region),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 
-	endpoint := req.HTTPRequest.URL.String()
-
-	return endpoint
+	return result
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -273,39 +333,56 @@ func withBaseEndpointInConfigFile(setup *caseSetup) {
 	setup.configFile.baseUrl = baseConfigFileEndpoint
 }
 
+func withUseFIPSInConfig(setup *caseSetup) {
+	setup.config["use_fips_endpoint"] = true
+}
+
 func expectDefaultEndpoint(region string) caseExpectations {
 	return caseExpectations{
 		endpoint: defaultEndpoint(region),
+		region:   expectedCallRegion,
+	}
+}
+
+func expectDefaultFIPSEndpoint(region string) caseExpectations {
+	return caseExpectations{
+		endpoint: defaultFIPSEndpoint(region),
+		region:   expectedCallRegion,
 	}
 }
 
 func expectPackageNameConfigEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: packageNameConfigEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
 func expectAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: awsServiceEnvvarEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseEnvvarEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
 func expectServiceConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: serviceConfigFileEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
 func expectBaseConfigFileEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: baseConfigFileEndpoint,
+		region:   expectedCallRegion,
 	}
 }
 
@@ -369,10 +446,14 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	endpoint := callF(ctx, t, meta)
+	callParams := callF(ctx, t, meta)
 
-	if endpoint != testcase.expected.endpoint {
-		t.Errorf("expected endpoint %q, got %q", testcase.expected.endpoint, endpoint)
+	if e, a := testcase.expected.endpoint, callParams.endpoint; e != a {
+		t.Errorf("expected endpoint %q, got %q", e, a)
+	}
+
+	if e, a := testcase.expected.region, callParams.region; e != a {
+		t.Errorf("expected region %q, got %q", e, a)
 	}
 }
 
@@ -406,7 +487,27 @@ func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.Fi
 		})
 }
 
-var errCancelOperation = fmt.Errorf("Test: Cancelling request")
+func addRetrieveRegionMiddleware(region *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Serialize.Add(
+			retrieveRegionMiddleware(region),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
+	return middleware.SerializeMiddlewareFunc(
+		"Test: Retrieve Region",
+		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+			*region = awsmiddleware.GetRegion(ctx)
+
+			return next.HandleSerialize(ctx, in)
+		},
+	)
+}
+
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
 
 func addCancelRequestMiddleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {

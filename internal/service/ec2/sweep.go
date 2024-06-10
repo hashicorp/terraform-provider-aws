@@ -520,7 +520,7 @@ func sweepCarrierGateways(region string) error {
 		}
 
 		for _, v := range page.CarrierGateways {
-			r := ResourceCarrierGateway()
+			r := resourceCarrierGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.CarrierGatewayId))
 
@@ -564,7 +564,7 @@ func sweepClientVPNEndpoints(region string) error {
 		}
 
 		for _, v := range page.ClientVpnEndpoints {
-			r := ResourceClientVPNEndpoint()
+			r := resourceClientVPNEndpoint()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.ClientVpnEndpointId))
 
@@ -619,7 +619,7 @@ func sweepClientVPNNetworkAssociations(region string) error {
 				}
 
 				for _, v := range page.ClientVpnTargetNetworks {
-					r := ResourceClientVPNNetworkAssociation()
+					r := resourceClientVPNNetworkAssociation()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(v.AssociationId))
 					d.Set("client_vpn_endpoint_id", v.ClientVpnEndpointId)
@@ -2002,7 +2002,7 @@ func sweepTransitGateways(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGateway()
+			r := resourceTransitGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayId))
 
@@ -2050,7 +2050,7 @@ func sweepTransitGatewayConnectPeers(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayConnectPeer()
+			r := resourceTransitGatewayConnectPeer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayConnectPeerId))
 
@@ -2098,7 +2098,7 @@ func sweepTransitGatewayConnects(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayConnect()
+			r := resourceTransitGatewayConnect()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
@@ -2146,7 +2146,7 @@ func sweepTransitGatewayMulticastDomains(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayMulticastDomain()
+			r := resourceTransitGatewayMulticastDomain()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
 
@@ -2242,7 +2242,7 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayVPCAttachment()
+			r := resourceTransitGatewayVPCAttachment()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
@@ -2369,7 +2369,7 @@ func sweepVPCEndpoints(region string) error {
 				continue
 			}
 
-			r := ResourceVPCEndpoint()
+			r := resourceVPCEndpoint()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -2737,7 +2737,7 @@ func sweepIPAMs(region string) error {
 		}
 
 		for _, v := range page.Ipams {
-			r := ResourceIPAM()
+			r := resourceIPAM()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamId))
 			d.Set("cascade", true)
@@ -2784,7 +2784,7 @@ func sweepIPAMResourceDiscoveries(region string) error {
 		for _, v := range page.IpamResourceDiscoveries {
 			// do not attempt to delete default resource created by each ipam
 			if !aws.BoolValue(v.IsDefault) {
-				r := ResourceIPAMResourceDiscovery()
+				r := resourceIPAMResourceDiscovery()
 				d := r.Data(nil)
 				d.SetId(aws.StringValue(v.IpamResourceDiscoveryId))
 

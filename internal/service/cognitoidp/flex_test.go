@@ -30,8 +30,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"),
-					MinLength: aws.String("10"),
+					MaxLength: aws.String(acctest.Ct10),
+					MinLength: aws.String(acctest.Ct10),
 				},
 			},
 			Expected: true,
@@ -45,8 +45,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"),
-					MinLength: aws.String("10"),
+					MaxLength: aws.String(acctest.Ct10),
+					MinLength: aws.String(acctest.Ct10),
 				},
 			},
 			Expected: false,
@@ -60,8 +60,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"),
-					MinLength: aws.String("10"),
+					MaxLength: aws.String(acctest.Ct10),
+					MinLength: aws.String(acctest.Ct10),
 				},
 			},
 			Expected: false,
@@ -75,8 +75,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("non-existent"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"),
-					MinLength: aws.String("10"),
+					MaxLength: aws.String(acctest.Ct10),
+					MinLength: aws.String(acctest.Ct10),
 				},
 			},
 			Expected: false,
@@ -90,8 +90,8 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"),
-					MinLength: aws.String("10"),
+					MaxLength: aws.String(acctest.Ct10),
+					MinLength: aws.String(acctest.Ct10),
 				},
 			},
 			Expected: false,
@@ -106,7 +106,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("999"),
-					MinLength: aws.String("10"),
+					MinLength: aws.String(acctest.Ct10),
 				},
 			},
 			Expected: false,
@@ -120,7 +120,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Name:                   aws.String("birthdate"),
 				Required:               aws.Bool(false),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
-					MaxLength: aws.String("10"),
+					MaxLength: aws.String(acctest.Ct10),
 					MinLength: aws.String("999"),
 				},
 			},
@@ -145,7 +145,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Mutable:                aws.Bool(true),
 				Name:                   aws.String("updated_at"),
 				NumberAttributeConstraints: &cognitoidentityprovider.NumberAttributeConstraintsType{
-					MinValue: aws.String(acctest.CtZero),
+					MinValue: aws.String(acctest.Ct0),
 				},
 				Required: aws.Bool(false),
 			},
@@ -193,7 +193,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String(acctest.CtZero),
+					MinLength: aws.String(acctest.Ct0),
 				},
 			},
 			want: true,
@@ -209,7 +209,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 					Required:               aws.Bool(true),
 					StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 						MaxLength: aws.String("2048"),
-						MinLength: aws.String(acctest.CtZero),
+						MinLength: aws.String(acctest.Ct0),
 					},
 				},
 			},
@@ -221,7 +221,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String(acctest.CtZero),
+					MinLength: aws.String(acctest.Ct0),
 				},
 			},
 			want: false,
@@ -249,7 +249,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String(acctest.CtZero),
+					MinLength: aws.String(acctest.Ct0),
 				},
 			},
 			want: false,

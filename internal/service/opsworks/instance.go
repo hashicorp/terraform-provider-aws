@@ -326,7 +326,7 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -352,7 +352,7 @@ func ResourceInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -368,7 +368,7 @@ func ResourceInstance() *schema.Resource {
 							Required: true,
 						},
 
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -378,7 +378,7 @@ func ResourceInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -639,7 +639,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
@@ -668,7 +668,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			})
 		}
 	}
@@ -1006,11 +1006,11 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 				bd[names.AttrDeviceName] = aws.StringValue(bdm.DeviceName)
 			}
 			if bdm.VirtualName != nil {
-				bd["virtual_name"] = aws.StringValue(bdm.VirtualName)
+				bd[names.AttrVirtualName] = aws.StringValue(bdm.VirtualName)
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-					bd["snapshot_id"] = aws.StringValue(bdm.Ebs.SnapshotId)
+					bd[names.AttrSnapshotID] = aws.StringValue(bdm.Ebs.SnapshotId)
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

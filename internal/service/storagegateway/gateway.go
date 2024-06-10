@@ -34,7 +34,7 @@ import (
 
 // @SDKResource("aws_storagegateway_gateway", name="Gateway")
 // @Tags(identifierAttribute="arn")
-func ResourceGateway() *schema.Resource {
+func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
 		ReadWithoutTimeout:   resourceGatewayRead,
@@ -71,7 +71,7 @@ func ResourceGateway() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(51200),
 			},
-			"cloudwatch_log_group_arn": {
+			names.AttrCloudWatchLogGroupARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -382,7 +382,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway Gateway (%q) to be Connected: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrCloudWatchLogGroupARN); ok && v.(string) != "" {
 		input := &storagegateway.UpdateGatewayInformationInput{
 			GatewayARN:            aws.String(d.Id()),
 			CloudWatchLogGroupARN: aws.String(v.(string)),
@@ -588,7 +588,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// The Storage Gateway API currently provides no way to read this value
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("tape_drive_type", d.Get("tape_drive_type").(string))
-	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupARN)
+	d.Set(names.AttrCloudWatchLogGroupARN, output.CloudWatchLogGroupARN)
 	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
 	d.Set("smb_file_share_visibility", smbSettingsOutput.FileSharesVisible)
 	d.Set("ec2_instance_id", output.Ec2InstanceId)
@@ -648,9 +648,9 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
-	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
+	if d.HasChanges("gateway_name", "gateway_timezone", names.AttrCloudWatchLogGroupARN) {
 		input := &storagegateway.UpdateGatewayInformationInput{
-			CloudWatchLogGroupARN: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
+			CloudWatchLogGroupARN: aws.String(d.Get(names.AttrCloudWatchLogGroupARN).(string)),
 			GatewayARN:            aws.String(d.Id()),
 			GatewayName:           aws.String(d.Get("gateway_name").(string)),
 			GatewayTimezone:       aws.String(d.Get("gateway_timezone").(string)),

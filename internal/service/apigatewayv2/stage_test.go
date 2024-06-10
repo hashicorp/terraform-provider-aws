@@ -24,8 +24,9 @@ import (
 
 func TestAccAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -38,25 +39,26 @@ func TestAccAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -71,8 +73,9 @@ func TestAccAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_basicHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -85,25 +88,26 @@ func TestAccAPIGatewayV2Stage_basicHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -118,8 +122,9 @@ func TestAccAPIGatewayV2Stage_basicHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_defaultHTTPStage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -132,25 +137,26 @@ func TestAccAPIGatewayV2Stage_defaultHTTPStage(t *testing.T) {
 			{
 				Config: testAccStageConfig_defaultHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "$default"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -165,8 +171,9 @@ func TestAccAPIGatewayV2Stage_defaultHTTPStage(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -179,50 +186,52 @@ func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_autoDeployHTTP(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccStageConfig_autoDeployHTTP(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "true"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					// The stage's DeploymentId attribute will be set asynchronously as deployments are done automatically.
 					// resource.TestCheckResourceAttrSet(resourceName, "deployment_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -238,8 +247,9 @@ func TestAccAPIGatewayV2Stage_autoDeployHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -252,7 +262,8 @@ func TestAccAPIGatewayV2Stage_disappears(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -263,8 +274,9 @@ func TestAccAPIGatewayV2Stage_disappears(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	cloudWatchResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -278,27 +290,28 @@ func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 			{
 				Config: testAccStageConfig_accessLogSettings(rName, "$context.identity.sourceIp $context.requestId"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.identity.sourceIp $context.requestId"),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -310,24 +323,25 @@ func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 			{
 				Config: testAccStageConfig_accessLogSettings(rName, "$context.requestId"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtOne),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.requestId"),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -336,8 +350,9 @@ func TestAccAPIGatewayV2Stage_accessLogSettings(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	certificateResourceName := "aws_api_gateway_client_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -351,25 +366,26 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 			{
 				Config: testAccStageConfig_clientCertificateIdAndDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "client_certificate_id", certificateResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test stage"),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -381,25 +397,26 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 			{
 				Config: testAccStageConfig_clientCertificateIdAndDescriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test stage updated"),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -408,8 +425,9 @@ func TestAccAPIGatewayV2Stage_clientCertificateIdAndDescription(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -422,49 +440,51 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_defaultRouteSettingsWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "ERROR"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "2222"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "8888"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccStageConfig_defaultRouteSettingsWebSocketUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "1111"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "9999"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -476,22 +496,23 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "INFO"), // No drift detection if not configured
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -500,8 +521,9 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsWebSocket(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -514,49 +536,51 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_defaultRouteSettingsHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "2222"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "8888"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccStageConfig_defaultRouteSettingsHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "1111"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "9999"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -568,22 +592,23 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -592,8 +617,9 @@ func TestAccAPIGatewayV2Stage_defaultRouteSettingsHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_deployment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	deploymentResourceName := "aws_apigatewayv2_deployment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -607,25 +633,26 @@ func TestAccAPIGatewayV2Stage_deployment(t *testing.T) {
 			{
 				Config: testAccStageConfig_deployment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_id", deploymentResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -640,8 +667,9 @@ func TestAccAPIGatewayV2Stage_deployment(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -654,86 +682,88 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_routeSettingsWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "false",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtFalse,
 						"route_key":                "$default",
-						"throttling_burst_limit":   acctest.CtZero,
-						"throttling_rate_limit":    acctest.CtZero,
+						"throttling_burst_limit":   acctest.Ct0,
+						"throttling_rate_limit":    acctest.Ct0,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "true",
-						"detailed_metrics_enabled": "true",
+						"data_trace_enabled":       acctest.CtTrue,
+						"detailed_metrics_enabled": acctest.CtTrue,
 						"logging_level":            "ERROR",
 						"route_key":                "$connect",
 						"throttling_burst_limit":   "2222",
 						"throttling_rate_limit":    "8888",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccStageConfig_routeSettingsWebSocketUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "false",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtFalse,
 						"route_key":                "$default",
 						"throttling_burst_limit":   "1111",
 						"throttling_rate_limit":    "9999",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "false",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtFalse,
 						"logging_level":            "INFO",
 						"route_key":                "$connect",
-						"throttling_burst_limit":   acctest.CtZero,
-						"throttling_rate_limit":    acctest.CtZero,
+						"throttling_burst_limit":   acctest.Ct0,
+						"throttling_rate_limit":    acctest.Ct0,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "false",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtFalse,
 						"route_key":                "$disconnect",
-						"throttling_burst_limit":   acctest.CtZero,
-						"throttling_rate_limit":    acctest.CtZero,
+						"throttling_burst_limit":   acctest.Ct0,
+						"throttling_rate_limit":    acctest.Ct0,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -745,22 +775,23 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -769,8 +800,9 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -783,63 +815,65 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_routeSettingsHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "true",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtTrue,
 						"route_key":                "$default",
 						"throttling_burst_limit":   "2222",
 						"throttling_rate_limit":    "8888",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccStageConfig_routeSettingsHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "false",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtFalse,
 						"route_key":                "$default",
 						"throttling_burst_limit":   "1111",
 						"throttling_rate_limit":    "9999",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -851,22 +885,23 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -875,8 +910,9 @@ func TestAccAPIGatewayV2Stage_routeSettingsHTTP(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -889,63 +925,65 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 			{
 				Config: testAccStageConfig_routeSettingsHTTPRoute(rName, "GET /first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "false",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtFalse,
 						"route_key":                "GET /first",
-						"throttling_burst_limit":   acctest.CtOne,
-						"throttling_rate_limit":    acctest.CtZero,
+						"throttling_burst_limit":   acctest.Ct1,
+						"throttling_rate_limit":    acctest.Ct0,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccStageConfig_routeSettingsHTTPRoute(rName, "POST /second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
-						"data_trace_enabled":       "false",
-						"detailed_metrics_enabled": "false",
+						"data_trace_enabled":       acctest.CtFalse,
+						"detailed_metrics_enabled": acctest.CtFalse,
 						"route_key":                "POST /second",
-						"throttling_burst_limit":   acctest.CtOne,
-						"throttling_rate_limit":    acctest.CtZero,
+						"throttling_burst_limit":   acctest.Ct1,
+						"throttling_rate_limit":    acctest.Ct0,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -960,8 +998,9 @@ func TestAccAPIGatewayV2Stage_RouteSettingsHTTP_withRoute(t *testing.T) {
 
 func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiId string
+	var api apigatewayv2.GetApiOutput
 	var v apigatewayv2.GetStageOutput
+	apiResourceName := "aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -974,27 +1013,28 @@ func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 			{
 				Config: testAccStageConfig_variables(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckAPIExists(ctx, apiResourceName, &api),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					testAccCheckStageARN(resourceName, names.AttrARN, &api, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
+					testAccCheckStageExecutionARN(resourceName, "execution_arn", &api, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "stage_variables.Var1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_variables.Var2", "Value2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -1006,92 +1046,22 @@ func TestAccAPIGatewayV2Stage_stageVariables(t *testing.T) {
 			{
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					testAccCheckStageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayV2Stage_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var apiId string
-	var v apigatewayv2.GetStageOutput
-	resourceName := "aws_apigatewayv2_stage.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStageDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStageConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					testAccCheckStageARN(resourceName, names.AttrARN, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
-					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccStageImportStateIdFunc(resourceName),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccStageConfig_basicWebSocket(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -1124,7 +1094,7 @@ func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckStageExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
+func testAccCheckStageExists(ctx context.Context, n string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1139,22 +1109,21 @@ func testAccCheckStageExists(ctx context.Context, n string, apiID *string, v *ap
 			return err
 		}
 
-		*apiID = rs.Primary.Attributes["api_id"]
 		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckStageARN(resourceName, attributeName string, vApiId *string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
+func testAccCheckStageARN(resourceName, attributeName string, api *apigatewayv2.GetApiOutput, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, "apigateway", fmt.Sprintf("/apis/%s/stages/%s", *vApiId, *v.StageName))(s)
+		return acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, "apigateway", fmt.Sprintf("/apis/%s/stages/%s", aws.ToString(api.ApiId), aws.ToString(v.StageName)))(s)
 	}
 }
 
-func testAccCheckStageExecutionARN(resourceName, attributeName string, vApiId *string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
+func testAccCheckStageExecutionARN(resourceName, attributeName string, api *apigatewayv2.GetApiOutput, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return acctest.CheckResourceAttrRegionalARN(resourceName, attributeName, "execute-api", fmt.Sprintf("%s/%s", *vApiId, *v.StageName))(s)
+		return acctest.CheckResourceAttrRegionalARN(resourceName, attributeName, "execute-api", fmt.Sprintf("%s/%s", aws.ToString(api.ApiId), aws.ToString(v.StageName)))(s)
 	}
 }
 
@@ -1510,22 +1479,6 @@ resource "aws_apigatewayv2_stage" "test" {
   stage_variables = {
     Var1 = "Value1"
     Var2 = "Value2"
-  }
-}
-`, rName))
-}
-
-func testAccStageConfig_tags(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStageConfig_apiWebSocket(rName),
-		fmt.Sprintf(`
-resource "aws_apigatewayv2_stage" "test" {
-  api_id = aws_apigatewayv2_api.test.id
-  name   = %[1]q
-
-  tags = {
-    Key1 = "Value1"
-    Key2 = "Value2"
   }
 }
 `, rName))

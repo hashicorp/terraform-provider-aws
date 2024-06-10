@@ -31,22 +31,22 @@ func testAccFrameworkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "control.#", resourceName, "control.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
 						names.AttrName:            "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
-						"input_parameter.#":       acctest.CtOne,
+						"input_parameter.#":       acctest.Ct1,
 						"input_parameter.0.name":  "requiredRetentionDays",
 						"input_parameter.0.value": "35",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
 						names.AttrName:      "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
-						"input_parameter.#": "3",
+						"input_parameter.#": acctest.Ct3,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
 						names.AttrName: "BACKUP_RECOVERY_POINT_ENCRYPTED",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
 						names.AttrName:                        "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN",
-						"scope.#":                             acctest.CtOne,
-						"scope.0.compliance_resource_ids.#":   acctest.CtOne,
-						"scope.0.compliance_resource_types.#": acctest.CtOne,
+						"scope.#":                             acctest.Ct1,
+						"scope.0.compliance_resource_ids.#":   acctest.Ct1,
+						"scope.0.compliance_resource_types.#": acctest.Ct1,
 						"scope.0.compliance_resource_types.0": "EBS",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{

@@ -34,15 +34,15 @@ func TestAccAppConfigConfigurationProfileDataSource_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationProfileDataSourceConfig_basic(appName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "application_id", appResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrApplicationID, appResourceName, names.AttrID),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/([a-z\d]{4,7})/configurationprofile/+.`)),
 					resource.TestMatchResourceAttr(dataSourceName, "configuration_profile_id", regexache.MustCompile(`[a-z\d]{4,7}`)),
 					resource.TestCheckResourceAttr(dataSourceName, "kms_key_identifier", "alias/"+rName),
 					resource.TestCheckResourceAttr(dataSourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "retrieval_role_arn", ""),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "AWS.Freeform"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "validator.*", map[string]string{
 						names.AttrContent: "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",

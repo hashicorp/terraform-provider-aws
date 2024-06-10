@@ -39,6 +39,7 @@ const (
 
 // @SDKResource("aws_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -71,7 +72,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"ipv6_ipam_pool_id"},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -126,7 +127,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
-				ConflictsWith: []string{"cidr_block"},
+				ConflictsWith: []string{names.AttrCIDRBlock},
 				RequiredWith:  []string{"ipv4_ipam_pool_id"},
 			},
 			"ipv6_association_id": {
@@ -185,7 +186,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		TagSpecifications:           getTagSpecificationsInV2(ctx, types.ResourceTypeVpc),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -283,7 +284,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("cidr_block", vpc.CidrBlock)
+	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
@@ -318,7 +319,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
-	if v, err := findVPCMainRouteTableV2(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
 		d.Set("default_route_table_id", nil)
 		d.Set("main_route_table_id", nil)
@@ -519,12 +520,12 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 	}
 
 	// cidr_block can be set by a value returned from IPAM or explicitly in config.
-	if diff.Id() != "" && diff.HasChange("cidr_block") {
+	if diff.Id() != "" && diff.HasChange(names.AttrCIDRBlock) {
 		// If netmask is set then cidr_block is derived from IPAM, ignore changes.
 		if diff.Get("ipv4_netmask_length") != 0 {
-			return diff.Clear("cidr_block")
+			return diff.Clear(names.AttrCIDRBlock)
 		}
-		return diff.ForceNew("cidr_block")
+		return diff.ForceNew(names.AttrCIDRBlock)
 	}
 
 	return nil

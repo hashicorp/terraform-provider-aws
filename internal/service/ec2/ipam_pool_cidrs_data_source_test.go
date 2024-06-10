@@ -23,19 +23,19 @@ func TestAccIPAMPoolCIDRsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccIPAMPoolCIDRsDataSourceConfig_basicOneCIDRs,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRs,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRsFiltered,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", acctest.Ct1),
 				),
 			},
 		},

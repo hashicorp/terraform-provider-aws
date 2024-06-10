@@ -40,7 +40,7 @@ func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "calculated_spend.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "budget_limit.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.key1", resourceName, "tags.key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},

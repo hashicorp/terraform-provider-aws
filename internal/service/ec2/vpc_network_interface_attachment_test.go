@@ -31,7 +31,7 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, "aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
-					resource.TestCheckResourceAttr(resourceName, "device_index", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "device_index", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),

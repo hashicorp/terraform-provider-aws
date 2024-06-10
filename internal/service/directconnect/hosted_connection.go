@@ -38,7 +38,7 @@ func ResourceHostedConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validConnectionBandWidth(),
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,7 +59,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -78,7 +78,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,9 +107,9 @@ func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData,
 	name := d.Get(names.AttrName).(string)
 	input := &directconnect.AllocateHostedConnectionInput{
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
-		ConnectionId:   aws.String(d.Get("connection_id").(string)),
+		ConnectionId:   aws.String(d.Get(names.AttrConnectionID).(string)),
 		ConnectionName: aws.String(name),
-		OwnerAccount:   aws.String(d.Get("owner_account_id").(string)),
+		OwnerAccount:   aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 		Vlan:           aws.Int64(int64(d.Get("vlan").(int))),
 	}
 
@@ -149,11 +149,11 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("lag_id", connection.LagId)
 	d.Set("loa_issue_time", aws.TimeValue(connection.LoaIssueTime).Format(time.RFC3339))
-	d.Set("location", connection.Location)
+	d.Set(names.AttrLocation, connection.Location)
 	d.Set(names.AttrName, connection.ConnectionName)
-	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
-	d.Set("provider_name", connection.ProviderName)
+	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set(names.AttrRegion, connection.Region)
 	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan", connection.Vlan)
