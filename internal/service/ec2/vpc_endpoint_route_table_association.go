@@ -67,7 +67,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 
 	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 
-	err = waitVPCEndpointRouteTableAssociationReadyV2(ctx, conn, endpointID, routeTableID)
+	err = waitVPCEndpointRouteTableAssociationReady(ctx, conn, endpointID, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Route Table Association (%s) to become available: %s", id, err)
@@ -127,7 +127,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "deleting VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
 
-	err = waitVPCEndpointRouteTableAssociationDeletedV2(ctx, conn, endpointID, routeTableID)
+	err = waitVPCEndpointRouteTableAssociationDeleted(ctx, conn, endpointID, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Route Table Association (%s) to delete: %s", id, err)

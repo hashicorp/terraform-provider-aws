@@ -205,7 +205,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		d.SetId(aws.ToString(vpc.VpcId))
 		d.Set("existing_default_vpc", false)
 
-		vpc, err = waitVPCCreatedV2(ctx, conn, d.Id())
+		vpc, err = waitVPCCreated(ctx, conn, d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default VPC (%s) create: %s", d.Id(), err)

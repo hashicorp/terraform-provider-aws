@@ -187,7 +187,7 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.ToString(output.ServiceConfiguration.ServiceId))
 
-	if _, err := waitVPCEndpointServiceAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVPCEndpointServiceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint Service (%s) create: %s", d.Id(), err)
 	}
 
@@ -295,7 +295,7 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint Service (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitVPCEndpointServiceAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitVPCEndpointServiceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint Service (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -336,7 +336,7 @@ func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC Endpoint Service (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitVPCEndpointServiceDeletedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitVPCEndpointServiceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint Service (%s) delete: %s", d.Id(), err)
 	}
 

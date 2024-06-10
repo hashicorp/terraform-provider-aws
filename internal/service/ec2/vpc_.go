@@ -227,7 +227,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.ToString(output.Vpc.VpcId))
 
-	vpc, err := waitVPCCreatedV2(ctx, conn, d.Id())
+	vpc, err := waitVPCCreated(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) create: %s", d.Id(), err)
@@ -236,7 +236,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 {
 		associationID := aws.ToString(output.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
 
-		if _, err := waitVPCIPv6CIDRBlockAssociationCreatedV2(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout); err != nil {
+		if _, err := waitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPv6 CIDR block (%s) associated: %s", d.Id(), associationID, err)
 		}
 	}
@@ -600,7 +600,7 @@ func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.Client, vpcID string, 
 		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdatedV2(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsHostnames, v); err != nil {
+	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsHostnames, v); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
@@ -619,7 +619,7 @@ func modifyVPCDNSSupport(ctx context.Context, conn *ec2.Client, vpcID string, v 
 		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdatedV2(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsSupport, v); err != nil {
+	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsSupport, v); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
@@ -638,7 +638,7 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, 
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
-	if _, err := waitVPCAttributeUpdatedV2(ctx, conn, vpcID, types.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
+	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, types.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 
@@ -659,7 +659,7 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vp
 			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): %w", associationID, err)
 		}
 
-		if _, err := waitVPCIPv6CIDRBlockAssociationDeletedV2(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout); err != nil {
+		if _, err := waitVPCIPv6CIDRBlockAssociationDeleted(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout); err != nil {
 			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): waiting for completion: %w", associationID, err)
 		}
 	}
@@ -697,7 +697,7 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vp
 
 		associationID = aws.ToString(output.Ipv6CidrBlockAssociation.AssociationId)
 
-		if _, err := waitVPCIPv6CIDRBlockAssociationCreatedV2(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout); err != nil {
+		if _, err := waitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout); err != nil {
 			return "", fmt.Errorf("associating IPv6 CIDR block: waiting for completion: %w", err)
 		}
 	}

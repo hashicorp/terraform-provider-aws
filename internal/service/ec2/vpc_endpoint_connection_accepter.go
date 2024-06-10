@@ -71,7 +71,7 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	_, err = waitVPCEndpointConnectionAcceptedV2(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
+	_, err = waitVPCEndpointConnectionAccepted(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Connection (%s) to be accepted: %s", d.Id(), err)

@@ -431,7 +431,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(output.NetworkInterface.NetworkInterfaceId))
 
-	if _, err := waitNetworkInterfaceCreatedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitNetworkInterfaceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Network Interface (%s) create: %s", d.Id(), err)
 	}
 
@@ -1069,7 +1069,7 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 
 	attachmentID := aws.ToString(output.AttachmentId)
 
-	if _, err := waitNetworkInterfaceAttachedV2(ctx, conn, attachmentID, timeout); err != nil {
+	if _, err := waitNetworkInterfaceAttached(ctx, conn, attachmentID, timeout); err != nil {
 		return "", fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, instanceID, err)
 	}
 
@@ -1108,7 +1108,7 @@ func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
 	}
 
-	_, err = waitNetworkInterfaceDetachedV2(ctx, conn, attachmentID, timeout)
+	_, err = waitNetworkInterfaceDetached(ctx, conn, attachmentID, timeout)
 
 	if tfresource.NotFound(err) {
 		return nil
@@ -1496,7 +1496,7 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil && aws.ToString(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
-			networkInterface, err := waitNetworkInterfaceAvailableAfterUseV2(ctx, conn, networkInterfaceID, timeout)
+			networkInterface, err := waitNetworkInterfaceAvailableAfterUse(ctx, conn, networkInterfaceID, timeout)
 			if tfresource.NotFound(err) {
 				return nil
 			}

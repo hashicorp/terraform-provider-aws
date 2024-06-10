@@ -267,7 +267,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if _, err := waitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) create: %s", serviceName, err)
 	}
 
@@ -436,7 +436,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -465,7 +465,7 @@ func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitVPCEndpointDeletedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err = waitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
@@ -490,7 +490,7 @@ func vpcEndpointAccept(ctx context.Context, conn *ec2.Client, vpceID, serviceNam
 		return fmt.Errorf("accepting EC2 VPC Endpoint (%s) connection: %w", vpceID, err)
 	}
 
-	if _, err = waitVPCEndpointAcceptedV2(ctx, conn, vpceID, timeout); err != nil {
+	if _, err = waitVPCEndpointAccepted(ctx, conn, vpceID, timeout); err != nil {
 		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) acceptance: %w", vpceID, err)
 	}
 

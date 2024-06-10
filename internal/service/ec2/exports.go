@@ -18,5 +18,5 @@ var (
 	ResourceTransitGateway                                           = resourceTransitGateway
 	ResourceTransitGatewayConnectPeer                                = resourceTransitGatewayConnectPeer
 	VPCEndpointCreationTimeout                                       = vpcEndpointCreationTimeout
-	WaitVPCEndpointAvailableV2                                       = waitVPCEndpointAvailableV2
+	WaitVPCEndpointAvailableV2                                       = waitVPCEndpointAvailable
 )
