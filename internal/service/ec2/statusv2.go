@@ -1136,7 +1136,7 @@ func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2.Client, allocat
 
 func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotTierStatusBySnapshotID(ctx, conn, id)
+		output, err := findSnapshotTierStatusBySnapshotID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1152,7 +1152,7 @@ func statusSnapshotStorageTier(ctx context.Context, conn *ec2.Client, id string)
 
 func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceConnectEndpointByID(ctx, conn, id)
+		output, err := findInstanceConnectEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1168,7 +1168,7 @@ func statusInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, id str
 
 func statusVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
+		output, err := findVerifiedAccessEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1200,7 +1200,7 @@ func statusFastSnapshotRestore(ctx context.Context, conn *ec2.Client, availabili
 
 func statusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindImportSnapshotTaskByID(ctx, conn, id)
+		output, err := findImportSnapshotTaskByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

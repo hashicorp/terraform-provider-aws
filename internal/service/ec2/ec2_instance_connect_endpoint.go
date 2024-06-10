@@ -192,7 +192,7 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 	conn := r.Meta().EC2Client(ctx)
 
 	id := data.InstanceConnectEndpointId.ValueString()
-	instanceConnectEndpoint, err := FindInstanceConnectEndpointByID(ctx, conn, id)
+	instanceConnectEndpoint, err := findInstanceConnectEndpointByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))

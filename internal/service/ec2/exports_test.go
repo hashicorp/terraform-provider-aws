@@ -94,6 +94,7 @@ var (
 	FindClientVPNEndpointByID                                  = findClientVPNEndpointByID
 	FindClientVPNNetworkAssociationByTwoPartKey                = findClientVPNNetworkAssociationByTwoPartKey
 	FindClientVPNRouteByThreePartKey                           = findClientVPNRouteByThreePartKey
+	FindCreateSnapshotCreateVolumePermissionByTwoPartKey       = findCreateSnapshotCreateVolumePermissionByTwoPartKey
 	FindCustomerGatewayByID                                    = findCustomerGatewayByID
 	FindEBSVolumeAttachment                                    = findVolumeAttachment
 	FindEBSVolumeByID                                          = findEBSVolumeByID
@@ -111,6 +112,7 @@ var (
 	FindIPAMResourceDiscoveryByID                              = findIPAMResourceDiscoveryByID
 	FindIPAMScopeByID                                          = findIPAMScopeByID
 	FindImageLaunchPermission                                  = findImageLaunchPermission
+	FindInstanceConnectEndpointByID                            = findInstanceConnectEndpointByID
 	FindInstanceMetadataDefaults                               = findInstanceMetadataDefaults
 	FindInstanceStateByID                                      = findInstanceStateByID
 	FindKeyPairByName                                          = findKeyPairByName
@@ -118,6 +120,7 @@ var (
 	FindMainRouteTableAssociationByID                          = findMainRouteTableAssociationByID
 	FindNetworkACLByIDV2                                       = findNetworkACLByIDV2
 	FindNetworkInterfaceByIDV2                                 = findNetworkInterfaceByIDV2
+	FindNetworkPerformanceMetricSubscriptionByFourPartKey      = findNetworkPerformanceMetricSubscriptionByFourPartKey
 	FindPlacementGroupByName                                   = findPlacementGroupByName
 	FindPublicIPv4Pools                                        = findPublicIPv4Pools
 	FindRouteByIPv4DestinationV2                               = findRouteByIPv4Destination
@@ -125,6 +128,8 @@ var (
 	FindRouteByPrefixListIDDestinationV2                       = findRouteByPrefixListIDDestination
 	FindRouteTableAssociationByIDV2                            = findRouteTableAssociationByID
 	FindRouteTableByIDV2                                       = findRouteTableByID
+	FindSnapshot                                               = findSnapshot
+	FindSnapshotByID                                           = findSnapshotByID
 	FindSpotDatafeedSubscription                               = findSpotDatafeedSubscription
 	FindSpotFleetRequestByID                                   = findSpotFleetRequestByID
 	FindSpotFleetRequests                                      = findSpotFleetRequests
@@ -160,6 +165,12 @@ var (
 	FindVPNGatewayByID                                         = findVPNGatewayByID
 	FindVPNGatewayRoutePropagationExistsV2                     = findVPNGatewayRoutePropagationExists
 	FindVPNGatewayVPCAttachmentByTwoPartKey                    = findVPNGatewayVPCAttachmentByTwoPartKey
+	FindVerifiedAccessEndpointByID                             = findVerifiedAccessEndpointByID
+	FindVerifiedAccessGroupByID                                = findVerifiedAccessGroupByID
+	FindVerifiedAccessInstanceByID                             = findVerifiedAccessInstanceByID
+	FindVerifiedAccessInstanceLoggingConfigurationByInstanceID = findVerifiedAccessInstanceLoggingConfigurationByInstanceID
+	FindVerifiedAccessInstanceTrustProviderAttachmentExists    = findVerifiedAccessInstanceTrustProviderAttachmentExists
+	FindVerifiedAccessTrustProviderByID                        = findVerifiedAccessTrustProviderByID
 	FindVolumeAttachmentInstanceByID                           = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                  = flattenNetworkInterfacePrivateIPAddresses
 	IPAMServicePrincipal                                       = ipamServicePrincipal

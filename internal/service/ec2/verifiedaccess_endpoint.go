@@ -245,7 +245,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	ep, err := FindVerifiedAccessEndpointByID(ctx, conn, d.Id())
+	ep, err := findVerifiedAccessEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Endpoint (%s) not found, removing from state", d.Id())
@@ -277,7 +277,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
 	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
 
-	output, err := FindVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s) policy: %s", d.Id(), err)

@@ -1361,14 +1361,13 @@ func findEBSVolumes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVo
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
 		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
 			return nil, err
 		}
 
@@ -4477,7 +4476,7 @@ func findKeyPairByName(ctx context.Context, conn *ec2.Client, name string) (*aws
 	return output, nil
 }
 
-func FindImportSnapshotTasks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImportSnapshotTasksInput) ([]awstypes.ImportSnapshotTask, error) {
+func findImportSnapshotTasks(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImportSnapshotTasksInput) ([]awstypes.ImportSnapshotTask, error) {
 	var output []awstypes.ImportSnapshotTask
 
 	pages := ec2.NewDescribeImportSnapshotTasksPaginator(conn, input)
@@ -4500,8 +4499,8 @@ func FindImportSnapshotTasks(ctx context.Context, conn *ec2.Client, input *ec2.D
 	return output, nil
 }
 
-func FindImportSnapshotTask(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImportSnapshotTasksInput) (*awstypes.ImportSnapshotTask, error) {
-	output, err := FindImportSnapshotTasks(ctx, conn, input)
+func findImportSnapshotTask(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImportSnapshotTasksInput) (*awstypes.ImportSnapshotTask, error) {
+	output, err := findImportSnapshotTasks(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4510,12 +4509,12 @@ func FindImportSnapshotTask(ctx context.Context, conn *ec2.Client, input *ec2.De
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.ImportSnapshotTask) bool { return v.SnapshotTaskDetail != nil })
 }
 
-func FindImportSnapshotTaskByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ImportSnapshotTask, error) {
+func findImportSnapshotTaskByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ImportSnapshotTask, error) {
 	input := &ec2.DescribeImportSnapshotTasksInput{
 		ImportTaskIds: []string{id},
 	}
 
-	output, err := FindImportSnapshotTask(ctx, conn, input)
+	output, err := findImportSnapshotTask(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4531,7 +4530,7 @@ func FindImportSnapshotTaskByID(ctx context.Context, conn *ec2.Client, id string
 	return output, nil
 }
 
-func FindSnapshots(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotsInput) ([]awstypes.Snapshot, error) {
+func findSnapshots(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotsInput) ([]awstypes.Snapshot, error) {
 	var output []awstypes.Snapshot
 
 	pages := ec2.NewDescribeSnapshotsPaginator(conn, input)
@@ -4554,8 +4553,8 @@ func FindSnapshots(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSna
 	return output, nil
 }
 
-func FindSnapshot(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotsInput) (*awstypes.Snapshot, error) {
-	output, err := FindSnapshots(ctx, conn, input)
+func findSnapshot(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotsInput) (*awstypes.Snapshot, error) {
+	output, err := findSnapshots(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4564,12 +4563,12 @@ func FindSnapshot(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnap
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindSnapshotByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Snapshot, error) {
+func findSnapshotByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Snapshot, error) {
 	input := &ec2.DescribeSnapshotsInput{
 		SnapshotIds: []string{id},
 	}
 
-	output, err := FindSnapshot(ctx, conn, input)
+	output, err := findSnapshot(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4585,7 +4584,7 @@ func FindSnapshotByID(ctx context.Context, conn *ec2.Client, id string) (*awstyp
 	return output, nil
 }
 
-func FindSnapshotAttribute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotAttributeInput) (*ec2.DescribeSnapshotAttributeOutput, error) {
+func findSnapshotAttribute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotAttributeInput) (*ec2.DescribeSnapshotAttributeOutput, error) {
 	output, err := conn.DescribeSnapshotAttribute(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
@@ -4606,13 +4605,13 @@ func FindSnapshotAttribute(ctx context.Context, conn *ec2.Client, input *ec2.Des
 	return output, nil
 }
 
-func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx context.Context, conn *ec2.Client, snapshotID, accountID string) (awstypes.CreateVolumePermission, error) {
+func findCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx context.Context, conn *ec2.Client, snapshotID, accountID string) (awstypes.CreateVolumePermission, error) {
 	input := &ec2.DescribeSnapshotAttributeInput{
 		Attribute:  awstypes.SnapshotAttributeNameCreateVolumePermission,
 		SnapshotId: aws.String(snapshotID),
 	}
 
-	output, err := FindSnapshotAttribute(ctx, conn, input)
+	output, err := findSnapshotAttribute(ctx, conn, input)
 
 	if err != nil {
 		return awstypes.CreateVolumePermission{}, err
@@ -4627,7 +4626,7 @@ func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx context.Context, c
 	return awstypes.CreateVolumePermission{}, &retry.NotFoundError{LastRequest: input}
 }
 
-func FindFindSnapshotTierStatuses(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotTierStatusInput) ([]awstypes.SnapshotTierStatus, error) {
+func findFindSnapshotTierStatuses(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotTierStatusInput) ([]awstypes.SnapshotTierStatus, error) {
 	var output []awstypes.SnapshotTierStatus
 
 	pages := ec2.NewDescribeSnapshotTierStatusPaginator(conn, input)
@@ -4644,8 +4643,8 @@ func FindFindSnapshotTierStatuses(ctx context.Context, conn *ec2.Client, input *
 	return output, nil
 }
 
-func FindFindSnapshotTierStatus(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotTierStatusInput) (*awstypes.SnapshotTierStatus, error) {
-	output, err := FindFindSnapshotTierStatuses(ctx, conn, input)
+func findFindSnapshotTierStatus(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSnapshotTierStatusInput) (*awstypes.SnapshotTierStatus, error) {
+	output, err := findFindSnapshotTierStatuses(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4654,14 +4653,14 @@ func FindFindSnapshotTierStatus(ctx context.Context, conn *ec2.Client, input *ec
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SnapshotTierStatus, error) {
+func findSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SnapshotTierStatus, error) {
 	input := &ec2.DescribeSnapshotTierStatusInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"snapshot-id": id,
 		}),
 	}
 
-	output, err := FindFindSnapshotTierStatus(ctx, conn, input)
+	output, err := findFindSnapshotTierStatus(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4677,7 +4676,7 @@ func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.Client, i
 	return output, nil
 }
 
-func FindNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput) ([]awstypes.Subscription, error) {
+func findNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput) ([]awstypes.Subscription, error) {
 	var output []awstypes.Subscription
 
 	pages := ec2.NewDescribeAwsNetworkPerformanceMetricSubscriptionsPaginator(conn, input, func(o *ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsPaginatorOptions) {
@@ -4696,10 +4695,10 @@ func FindNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2.Cl
 	return output, nil
 }
 
-func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, conn *ec2.Client, source, destination, metric, statistic string) (*awstypes.Subscription, error) {
+func findNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, conn *ec2.Client, source, destination, metric, statistic string) (*awstypes.Subscription, error) {
 	input := &ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput{}
 
-	output, err := FindNetworkPerformanceMetricSubscriptions(ctx, conn, input)
+	output, err := findNetworkPerformanceMetricSubscriptions(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4714,8 +4713,8 @@ func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, 
 	return nil, &retry.NotFoundError{}
 }
 
-func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceConnectEndpointsInput) (*awstypes.Ec2InstanceConnectEndpoint, error) {
-	output, err := FindInstanceConnectEndpoints(ctx, conn, input)
+func findInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceConnectEndpointsInput) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+	output, err := findInstanceConnectEndpoints(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4724,7 +4723,7 @@ func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2.Client, input *e
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceConnectEndpointsInput) ([]awstypes.Ec2InstanceConnectEndpoint, error) {
+func findInstanceConnectEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceConnectEndpointsInput) ([]awstypes.Ec2InstanceConnectEndpoint, error) {
 	var output []awstypes.Ec2InstanceConnectEndpoint
 
 	pages := ec2.NewDescribeInstanceConnectEndpointsPaginator(conn, input)
@@ -4748,11 +4747,11 @@ func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2.Client, input *
 	return output, nil
 }
 
-func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Ec2InstanceConnectEndpoint, error) {
+func findInstanceConnectEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Ec2InstanceConnectEndpoint, error) {
 	input := &ec2.DescribeInstanceConnectEndpointsInput{
 		InstanceConnectEndpointIds: []string{id},
 	}
-	output, err := FindInstanceConnectEndpoint(ctx, conn, input)
+	output, err := findInstanceConnectEndpoint(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4775,7 +4774,7 @@ func FindInstanceConnectEndpointByID(ctx context.Context, conn *ec2.Client, id s
 	return output, nil
 }
 
-func FindVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetVerifiedAccessGroupPolicyOutput, error) {
+func findVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetVerifiedAccessGroupPolicyOutput, error) {
 	input := &ec2.GetVerifiedAccessGroupPolicyInput{
 		VerifiedAccessGroupId: &id,
 	}
@@ -4799,7 +4798,7 @@ func FindVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2.Client, id
 	return output, nil
 }
 
-func FindVerifiedAccessEndpointPolicyByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetVerifiedAccessEndpointPolicyOutput, error) {
+func findVerifiedAccessEndpointPolicyByID(ctx context.Context, conn *ec2.Client, id string) (*ec2.GetVerifiedAccessEndpointPolicyOutput, error) {
 	input := &ec2.GetVerifiedAccessEndpointPolicyInput{
 		VerifiedAccessEndpointId: &id,
 	}
@@ -4823,8 +4822,8 @@ func FindVerifiedAccessEndpointPolicyByID(ctx context.Context, conn *ec2.Client,
 	return output, nil
 }
 
-func FindVerifiedAccessGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessGroupsInput) (*awstypes.VerifiedAccessGroup, error) {
-	output, err := FindVerifiedAccessGroups(ctx, conn, input)
+func findVerifiedAccessGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessGroupsInput) (*awstypes.VerifiedAccessGroup, error) {
+	output, err := findVerifiedAccessGroups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4833,7 +4832,7 @@ func FindVerifiedAccessGroup(ctx context.Context, conn *ec2.Client, input *ec2.D
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindVerifiedAccessGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessGroupsInput) ([]awstypes.VerifiedAccessGroup, error) {
+func findVerifiedAccessGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessGroupsInput) ([]awstypes.VerifiedAccessGroup, error) {
 	var output []awstypes.VerifiedAccessGroup
 
 	pages := ec2.NewDescribeVerifiedAccessGroupsPaginator(conn, input)
@@ -4857,11 +4856,11 @@ func FindVerifiedAccessGroups(ctx context.Context, conn *ec2.Client, input *ec2.
 	return output, nil
 }
 
-func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessGroup, error) {
+func findVerifiedAccessGroupByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessGroup, error) {
 	input := &ec2.DescribeVerifiedAccessGroupsInput{
 		VerifiedAccessGroupIds: []string{id},
 	}
-	output, err := FindVerifiedAccessGroup(ctx, conn, input)
+	output, err := findVerifiedAccessGroup(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4877,8 +4876,8 @@ func FindVerifiedAccessGroupByID(ctx context.Context, conn *ec2.Client, id strin
 	return output, nil
 }
 
-func FindVerifiedAccessInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstancesInput) (*awstypes.VerifiedAccessInstance, error) {
-	output, err := FindVerifiedAccessInstances(ctx, conn, input)
+func findVerifiedAccessInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstancesInput) (*awstypes.VerifiedAccessInstance, error) {
+	output, err := findVerifiedAccessInstances(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4887,7 +4886,7 @@ func FindVerifiedAccessInstance(ctx context.Context, conn *ec2.Client, input *ec
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindVerifiedAccessInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstancesInput) ([]awstypes.VerifiedAccessInstance, error) {
+func findVerifiedAccessInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstancesInput) ([]awstypes.VerifiedAccessInstance, error) {
 	var output []awstypes.VerifiedAccessInstance
 
 	pages := ec2.NewDescribeVerifiedAccessInstancesPaginator(conn, input)
@@ -4911,11 +4910,11 @@ func FindVerifiedAccessInstances(ctx context.Context, conn *ec2.Client, input *e
 	return output, nil
 }
 
-func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessInstance, error) {
+func findVerifiedAccessInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessInstance, error) {
 	input := &ec2.DescribeVerifiedAccessInstancesInput{
 		VerifiedAccessInstanceIds: []string{id},
 	}
-	output, err := FindVerifiedAccessInstance(ctx, conn, input)
+	output, err := findVerifiedAccessInstance(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4931,8 +4930,8 @@ func FindVerifiedAccessInstanceByID(ctx context.Context, conn *ec2.Client, id st
 	return output, nil
 }
 
-func FindVerifiedAccessInstanceLoggingConfiguration(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
-	output, err := FindVerifiedAccessInstanceLoggingConfigurations(ctx, conn, input)
+func findVerifiedAccessInstanceLoggingConfiguration(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+	output, err := findVerifiedAccessInstanceLoggingConfigurations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4941,7 +4940,7 @@ func FindVerifiedAccessInstanceLoggingConfiguration(ctx context.Context, conn *e
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindVerifiedAccessInstanceLoggingConfigurations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) ([]awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+func findVerifiedAccessInstanceLoggingConfigurations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) ([]awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
 	var output []awstypes.VerifiedAccessInstanceLoggingConfiguration
 
 	pages := ec2.NewDescribeVerifiedAccessInstanceLoggingConfigurationsPaginator(conn, input)
@@ -4965,11 +4964,11 @@ func FindVerifiedAccessInstanceLoggingConfigurations(ctx context.Context, conn *
 	return output, nil
 }
 
-func FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
+func findVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
 	input := &ec2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput{
 		VerifiedAccessInstanceIds: []string{id},
 	}
-	output, err := FindVerifiedAccessInstanceLoggingConfiguration(ctx, conn, input)
+	output, err := findVerifiedAccessInstanceLoggingConfiguration(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4985,8 +4984,8 @@ func FindVerifiedAccessInstanceLoggingConfigurationByInstanceID(ctx context.Cont
 	return output, nil
 }
 
-func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context, conn *ec2.Client, vaiID, vatpID string) error {
-	output, err := FindVerifiedAccessInstanceByID(ctx, conn, vaiID)
+func findVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context, conn *ec2.Client, vaiID, vatpID string) error {
+	output, err := findVerifiedAccessInstanceByID(ctx, conn, vaiID)
 
 	if err != nil {
 		return err
@@ -5003,8 +5002,8 @@ func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context
 	}
 }
 
-func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessTrustProvidersInput) (*awstypes.VerifiedAccessTrustProvider, error) {
-	output, err := FindVerifiedAccessTrustProviders(ctx, conn, input)
+func findVerifiedAccessTrustProvider(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessTrustProvidersInput) (*awstypes.VerifiedAccessTrustProvider, error) {
+	output, err := findVerifiedAccessTrustProviders(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -5013,7 +5012,7 @@ func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2.Client, inpu
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindVerifiedAccessTrustProviders(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessTrustProvidersInput) ([]awstypes.VerifiedAccessTrustProvider, error) {
+func findVerifiedAccessTrustProviders(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessTrustProvidersInput) ([]awstypes.VerifiedAccessTrustProvider, error) {
 	var output []awstypes.VerifiedAccessTrustProvider
 
 	pages := ec2.NewDescribeVerifiedAccessTrustProvidersPaginator(conn, input)
@@ -5037,11 +5036,11 @@ func FindVerifiedAccessTrustProviders(ctx context.Context, conn *ec2.Client, inp
 	return output, nil
 }
 
-func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessTrustProvider, error) {
+func findVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessTrustProvider, error) {
 	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{
 		VerifiedAccessTrustProviderIds: []string{id},
 	}
-	output, err := FindVerifiedAccessTrustProvider(ctx, conn, input)
+	output, err := findVerifiedAccessTrustProvider(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -5057,8 +5056,8 @@ func FindVerifiedAccessTrustProviderByID(ctx context.Context, conn *ec2.Client, 
 	return output, nil
 }
 
-func FindVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessEndpointsInput) (*awstypes.VerifiedAccessEndpoint, error) {
-	output, err := FindVerifiedAccessEndpoints(ctx, conn, input)
+func findVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessEndpointsInput) (*awstypes.VerifiedAccessEndpoint, error) {
+	output, err := findVerifiedAccessEndpoints(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -5067,7 +5066,7 @@ func FindVerifiedAccessEndpoint(ctx context.Context, conn *ec2.Client, input *ec
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindVerifiedAccessEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessEndpointsInput) ([]awstypes.VerifiedAccessEndpoint, error) {
+func findVerifiedAccessEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVerifiedAccessEndpointsInput) ([]awstypes.VerifiedAccessEndpoint, error) {
 	var output []awstypes.VerifiedAccessEndpoint
 
 	pages := ec2.NewDescribeVerifiedAccessEndpointsPaginator(conn, input)
@@ -5091,11 +5090,11 @@ func FindVerifiedAccessEndpoints(ctx context.Context, conn *ec2.Client, input *e
 	return output, nil
 }
 
-func FindVerifiedAccessEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessEndpoint, error) {
+func findVerifiedAccessEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VerifiedAccessEndpoint, error) {
 	input := &ec2.DescribeVerifiedAccessEndpointsInput{
 		VerifiedAccessEndpointIds: []string{id},
 	}
-	output, err := FindVerifiedAccessEndpoint(ctx, conn, input)
+	output, err := findVerifiedAccessEndpoint(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
