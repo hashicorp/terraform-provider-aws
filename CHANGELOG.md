@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_route53_zone: Fix `InvalidInput: 1 validation error detected: Value '...' at 'resourceId' failed to satisfy constraint: Member must have length less than or equal to 32` errors for resources imported with a `/hostedzone/` prefix ([#37893](https://github.com/hashicorp/terraform-provider-aws/issues/37893))
+* service/apigatewayv2: Retry on `ConflictException: Unable to complete operation due to concurrent modification` errors ([#37902](https://github.com/hashicorp/terraform-provider-aws/issues/37902))
 
 ## 5.53.0 (June  7, 2024)
 
