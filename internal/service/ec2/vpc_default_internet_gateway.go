@@ -70,6 +70,7 @@ func ResourceDefaultInternetGateway() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
+
 func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -101,11 +102,8 @@ func resourceDefaultInternetGatewayCreate(ctx context.Context, d *schema.Resourc
 			d.SetId(aws.ToString(igw.InternetGatewayId))
 			d.Set("existing_default_internet_gateway", true)
 
-		} else if tfresource.NotFound(err) {
-			log.Printf("not implemented yet")
 		} else {
-			log.Printf("some error")
-
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway (%s): %s", d.Id(), err)
 		}
 	}
 	return append(diags, resourceInternetGatewayRead(ctx, d, meta)...)
