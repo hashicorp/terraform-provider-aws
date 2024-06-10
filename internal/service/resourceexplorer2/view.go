@@ -75,8 +75,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
-			names.AttrScope: {
-				Type:     schema.TypeString,
+			names.AttrScope: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -134,10 +133,6 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
-
-	if v, ok := d.GetOk(names.AttrScope); ok {
-		input.Scope = aws.String(v.(string))
-	}
 
 	output, err := conn.CreateView(ctx, input)
 
@@ -229,7 +224,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 
 	data.DefaultView = types.BoolValue(defaultViewARN == data.ViewARN.ValueString())
 
-	d.Set(names.AttrScope, output.Scope)
+	data.Scope = types.StringValue(aws.ToString(output.View.Scope))
 	setTagsOut(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -336,6 +331,7 @@ type viewResourceModel struct {
 	Filters            fwtypes.ListNestedObjectValueOf[searchFilterModel]     `tfsdk:"filters"`
 	ID                 types.String                                           `tfsdk:"id"`
 	IncludedProperties fwtypes.ListNestedObjectValueOf[includedPropertyModel] `tfsdk:"included_property"`
+	Scope              types.String                                           `tfsdk:"scope"`
 	ViewARN            types.String                                           `tfsdk:"arn"`
 	ViewName           types.String                                           `tfsdk:"name"`
 	Tags               types.Map                                              `tfsdk:"tags"`
