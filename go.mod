@@ -133,7 +133,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/osis v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.6
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.10
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/polly v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.6.5
