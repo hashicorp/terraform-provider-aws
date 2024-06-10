@@ -1,4 +1,9 @@
 ## 5.54.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_route53_zone: Fix `InvalidInput: 1 validation error detected: Value '...' at 'resourceId' failed to satisfy constraint: Member must have length less than or equal to 32` errors for resources imported with a `/hostedzone/` prefix ([#37893](https://github.com/hashicorp/terraform-provider-aws/issues/37893))
+
 ## 5.53.0 (June  7, 2024)
 
 FEATURES:
