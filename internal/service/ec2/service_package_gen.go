@@ -128,8 +128,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEBSVolumes,
+			Factory:  dataSourceEBSVolumes,
 			TypeName: "aws_ebs_volumes",
+			Name:     "EBS Volumes",
 		},
 		{
 			Factory:  dataSourceClientVPNEndpoint,
