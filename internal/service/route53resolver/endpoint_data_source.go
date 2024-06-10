@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -81,6 +82,7 @@ func DataSourceEndpoint() *schema.Resource {
 }
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	endpointID := d.Get("resolver_endpoint_id").(string)
@@ -111,13 +113,13 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Endpoints: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoints: %s", err)
 	}
 
 	if n := len(endpoints); n == 0 {
-		return diag.Errorf("no Route53 Resolver Endpoint matched")
+		return sdkdiag.AppendErrorf(diags, "no Route53 Resolver Endpoint matched")
 	} else if n > 1 {
-		return diag.Errorf("%d Route53 Resolver Endpoints matched; use additional constraints to reduce matches to a single Endpoint", n)
+		return sdkdiag.AppendErrorf(diags, "%d Route53 Resolver Endpoints matched; use additional constraints to reduce matches to a single Endpoint", n)
 	}
 
 	ep := endpoints[0]
@@ -134,7 +136,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
 
 	var ips []*string
@@ -145,7 +147,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrIPAddresses, aws.StringValueSlice(ips))
 
-	return nil
+	return diags
 }
 
 func buildR53ResolverTagFilters(set *schema.Set) []*route53resolver.Filter {

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -204,7 +205,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		defer conns.GlobalMutexKV.Unlock(cevMutexKey)
 		file, err := resourceCustomDBEngineVersionLoadFileContent(filename)
 		if err != nil {
-			return diag.Errorf("unable to load %q: %s", filename, err)
+			return sdkdiag.AppendErrorf(diags, "unable to load %q: %s", filename, err)
 		}
 		input.Manifest = aws.String(file)
 	} else if v, ok := d.GetOk("manifest"); ok {
@@ -213,13 +214,13 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 
 	output, err := conn.CreateCustomDBEngineVersionWithContext(ctx, &input)
 	if err != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionCreating, ResNameCustomDBEngineVersion, fmt.Sprintf("%s:%s", aws.StringValue(output.Engine), aws.StringValue(output.EngineVersion)), err)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionCreating, ResNameCustomDBEngineVersion, fmt.Sprintf("%s:%s", aws.StringValue(output.Engine), aws.StringValue(output.EngineVersion)), err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Engine), aws.StringValue(output.EngineVersion)))
 
 	if _, err := waitCustomDBEngineVersionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionWaitingForCreation, ResNameCustomDBEngineVersion, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionWaitingForCreation, ResNameCustomDBEngineVersion, d.Id(), err)
 	}
 
 	return append(diags, resourceCustomDBEngineVersionRead(ctx, d, meta)...)
@@ -237,7 +238,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionReading, ResNameCustomDBEngineVersion, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, ResNameCustomDBEngineVersion, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.DBEngineVersionArn)
@@ -266,13 +267,13 @@ func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChangesExcept(names.AttrDescription, names.AttrStatus) {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), errors.New("only description and status can be updated"))...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), errors.New("only description and status can be updated"))
 	}
 
 	update := false
 	engine, engineVersion, e := customEngineVersionParseID(d.Id())
 	if e != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), e)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), e)
 	}
 	input := &rds.ModifyCustomDBEngineVersionInput{
 		Engine:        aws.String(engine),
@@ -295,14 +296,14 @@ func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] Updating RDS CustomDBEngineVersion (%s): %#v", d.Id(), input)
 	output, err := conn.ModifyCustomDBEngineVersionWithContext(ctx, input)
 	if err != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), err)
 	}
 	if output == nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), errors.New("empty output"))
 	}
 
 	if _, err := waitCustomDBEngineVersionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionWaitingForUpdate, ResNameCustomDBEngineVersion, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionWaitingForUpdate, ResNameCustomDBEngineVersion, d.Id(), err)
 	}
 
 	return append(diags, resourceCustomDBEngineVersionRead(ctx, d, meta)...)
@@ -316,7 +317,7 @@ func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.Resource
 
 	engine, engineVersion, e := customEngineVersionParseID(d.Id())
 	if e != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), e)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), e)
 	}
 	_, err := conn.DeleteCustomDBEngineVersionWithContext(ctx, &rds.DeleteCustomDBEngineVersionInput{
 		Engine:        aws.String(engine),
@@ -328,11 +329,11 @@ func resourceCustomDBEngineVersionDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionDeleting, ResNameCustomDBEngineVersion, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionDeleting, ResNameCustomDBEngineVersion, d.Id(), err)
 	}
 
 	if _, err := waitCustomDBEngineVersionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return append(diags, create.DiagError(names.RDS, create.ErrActionWaitingForDeletion, ResNameCustomDBEngineVersion, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionWaitingForDeletion, ResNameCustomDBEngineVersion, d.Id(), err)
 	}
 
 	return diags

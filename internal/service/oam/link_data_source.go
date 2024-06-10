@@ -63,13 +63,14 @@ const (
 )
 
 func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	linkIdentifier := d.Get("link_identifier").(string)
 
 	out, err := findLinkByID(ctx, conn, linkIdentifier)
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, linkIdentifier, err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, linkIdentifier, err)
 	}
 
 	d.SetId(aws.ToString(out.Arn))
@@ -83,13 +84,13 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	tags, err := listTags(ctx, conn, d.Id())
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameLink, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, DSNameLink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionSetting, DSNameLink, d.Id(), err)
 	}
 
 	return nil

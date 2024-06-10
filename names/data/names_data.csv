@@ -122,7 +122,7 @@ devops-guru,devopsguru,devopsguru,devopsguru,,devopsguru,,,DevOpsGuru,DevOpsGuru
 directconnect,directconnect,directconnect,directconnect,,directconnect,,,DirectConnect,DirectConnect,,1,,aws_dx_,aws_directconnect_,,dx_,Direct Connect,AWS,,,,,,,Direct Connect,DescribeConnections,,,
 dlm,dlm,dlm,dlm,,dlm,,,DLM,DLM,,,2,,aws_dlm_,,dlm_,DLM (Data Lifecycle Manager),Amazon,,,,,,,DLM,GetLifecyclePolicies,,,
 dms,dms,databasemigrationservice,databasemigrationservice,,dms,,databasemigration;databasemigrationservice,DMS,DatabaseMigrationService,,1,,,aws_dms_,,dms_,DMS (Database Migration),AWS,,,,,,,Database Migration Service,DescribeCertificates,,,
-docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocumentDB,Amazon,,,,,,,DocDB,DescribeDBClusters,,,
+docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,,2,,aws_docdb_,,docdb_,DocumentDB,Amazon,,,,,,,DocDB,DescribeDBClusters,,,
 docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocumentDB Elastic,Amazon,,,,,,,DocDB Elastic,ListClusters,,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,,2,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,,,,,,DRS,DescribeJobs,,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,,
@@ -160,7 +160,7 @@ emr-containers,emrcontainers,emrcontainers,emrcontainers,,emrcontainers,,,EMRCon
 emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRServerless,EMRServerless,,,2,,aws_emrserverless_,,emrserverless_,EMR Serverless,Amazon,,,,,,,EMR Serverless,ListApplications,,,
 ,,,,,,,,,,,,,,,,,End-of-Support Migration Program (EMP) for Windows Server,AWS,x,,,,,,,,,,No SDK support
 events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,,2,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,,,EventBridge,ListEventBuses,,,
-schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,,,schemas,ListRegistries,,,
+schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,x,,2,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,,,schemas,ListRegistries,,,
 fis,fis,fis,fis,,fis,,,FIS,FIS,,,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,,,fis,ListExperiments,,,
 finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,,2,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,,,finspace,ListEnvironments,,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,x,,,,,finspace data,,,,
