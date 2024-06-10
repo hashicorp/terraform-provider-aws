@@ -12,6 +12,7 @@ var (
 	FindInstanceByID                                                 = findInstanceByID
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2 = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2
 	FindNetworkInterfacesV2                                          = findNetworkInterfacesV2
+	FindSecurityGroupByNameAndVPCIDV2                                = findSecurityGroupByNameAndVPCIDV2
 	FindVPCByIDV2                                                    = findVPCByIDV2
 	FindVPCEndpointByIDV2                                            = findVPCEndpointByIDV2
 	NewCustomFilterListFrameworkV2                                   = newCustomFilterListFrameworkV2
