@@ -10,15 +10,15 @@ import (
 	"strconv"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+//
+// Move functions to waitv2.go as they are migrated to AWS SDK for Go v2.
+//
 
 const (
 	InstanceReadyTimeout = 10 * time.Minute
@@ -586,48 +586,6 @@ func WaitNATGatewayAddressUnassigned(ctx context.Context, conn *ec2.EC2, natGate
 	return nil, err
 }
 
-func waitEIPDomainNameAttributeUpdated(ctx context.Context, conn *ec2_sdkv2.Client, allocationID string, timeout time.Duration) (*awstypes.AddressAttribute, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{PTRUpdateStatusPending},
-		Target:  []string{""},
-		Timeout: timeout,
-		Refresh: statusEIPDomainNameAttribute(ctx, conn, allocationID),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.AddressAttribute); ok {
-		if v := output.PtrRecordUpdate; v != nil {
-			tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(v.Reason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitEIPDomainNameAttributeDeleted(ctx context.Context, conn *ec2_sdkv2.Client, allocationID string, timeout time.Duration) (*awstypes.AddressAttribute, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{PTRUpdateStatusPending},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: statusEIPDomainNameAttribute(ctx, conn, allocationID),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.AddressAttribute); ok {
-		if v := output.PtrRecordUpdate; v != nil {
-			tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(v.Reason)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 const (
 	dhcpOptionSetDeletedTimeout = 3 * time.Minute
 )
@@ -964,187 +922,4 @@ func WaitVPCEndpointRouteTableAssociationReady(ctx context.Context, conn *ec2.EC
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
-}
-
-func WaitEBSSnapshotImportComplete(ctx context.Context, conn *ec2_sdkv2.Client, importTaskID string, timeout time.Duration) (*awstypes.SnapshotTaskDetail, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			EBSSnapshotImportStateActive,
-			EBSSnapshotImportStateUpdating,
-			EBSSnapshotImportStateValidating,
-			EBSSnapshotImportStateValidated,
-			EBSSnapshotImportStateConverting,
-		},
-		Target:  []string{EBSSnapshotImportStateCompleted},
-		Refresh: statusEBSSnapshotImport(ctx, conn, importTaskID),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SnapshotTaskDetail); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-const (
-	ebsSnapshotArchivedTimeout = 60 * time.Minute
-)
-
-func waitEBSSnapshotTierArchive(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.SnapshotTierStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(TargetStorageTierStandard),
-		Target:  enum.Slice(awstypes.TargetStorageTierArchive),
-		Refresh: statusSnapshotStorageTier(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.SnapshotTierStatus); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateInProgress),
-		Target:  enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateComplete),
-		Refresh: statusInstanceConnectEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Ec2InstanceConnectEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.StateMessage)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateDeleteInProgress),
-		Target:  []string{},
-		Refresh: statusInstanceConnectEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.Ec2InstanceConnectEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.StateMessage)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodePending),
-		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
-		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
-		Refresh:                   statusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeDeleting, awstypes.VerifiedAccessEndpointStatusCodeActive, awstypes.VerifiedAccessEndpointStatusCodeDeleted),
-		Target:  []string{},
-		Refresh: statusVerifiedAccessEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
-		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitFastSnapshotRestoreCreated(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string, timeout time.Duration) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.FastSnapshotRestoreStateCodeEnabling, awstypes.FastSnapshotRestoreStateCodeOptimizing),
-		Target:  enum.Slice(awstypes.FastSnapshotRestoreStateCodeEnabled),
-		Refresh: statusFastSnapshotRestore(ctx, conn, availabilityZone, snapshotID),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.DescribeFastSnapshotRestoreSuccessItem); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitFastSnapshotRestoreDeleted(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string, timeout time.Duration) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.FastSnapshotRestoreStateCodeDisabling, awstypes.FastSnapshotRestoreStateCodeOptimizing, awstypes.FastSnapshotRestoreStateCodeEnabled),
-		Target:  []string{},
-		Refresh: statusFastSnapshotRestore(ctx, conn, availabilityZone, snapshotID),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.DescribeFastSnapshotRestoreSuccessItem); ok {
-		return output, err
-	}
-
-	return nil, err
 }
