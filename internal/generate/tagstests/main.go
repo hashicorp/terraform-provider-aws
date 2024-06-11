@@ -479,6 +479,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["name"]; ok {
 					attr = strings.ReplaceAll(attr, " ", "")
 					d.Name = strings.ReplaceAll(attr, "-", "")
+				} else if d.DataSource {
+					v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					continue
 				}
 
 			case "Tags":
@@ -653,7 +656,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tlsKey {
 		if len(tlsKeyCN) == 0 {
-			tlsKeyCN = `"example.com"`
+			tlsKeyCN = "acctest.RandomDomain().String()"
+			d.GoImports = append(d.GoImports,
+				goImport{
+					Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+				},
+			)
 		}
 		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
