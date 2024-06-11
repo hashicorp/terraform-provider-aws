@@ -1,5 +1,9 @@
 ## 5.54.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_appfabric_app_bundle` ([#37542](https://github.com/hashicorp/terraform-provider-aws/issues/37542))
+
 BUG FIXES:
 
 * resource/aws_ec2_capacity_reservation: Fix `InvalidCapacityReservationId.NotFound` errors during Read and Delete when resource is manually deleted ([#37127](https://github.com/hashicorp/terraform-provider-aws/issues/37127))
