@@ -4914,6 +4914,14 @@ var awsPartition = partition{
 					},
 				},
 				endpointKey{
+					Region: "bedrock-fips-ca-central-1",
+				}: endpoint{
+					Hostname: "bedrock-fips.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
+				endpointKey{
 					Region: "bedrock-fips-us-east-1",
 				}: endpoint{
 					Hostname: "bedrock-fips.us-east-1.amazonaws.com",
@@ -4999,6 +5007,14 @@ var awsPartition = partition{
 					Hostname: "bedrock-runtime.eu-west-3.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "eu-west-3",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-runtime-fips-ca-central-1",
+				}: endpoint{
+					Hostname: "bedrock-runtime-fips.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
 					},
 				},
 				endpointKey{
@@ -39204,6 +39220,22 @@ var awsusgovPartition = partition{
 		"bedrock": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "bedrock-fips-us-gov-west-1",
+				}: endpoint{
+					Hostname: "bedrock-fips.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-runtime-fips-us-gov-west-1",
+				}: endpoint{
+					Hostname: "bedrock-runtime-fips.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				endpointKey{
 					Region: "bedrock-runtime-us-gov-west-1",
 				}: endpoint{
 					Hostname: "bedrock-runtime.us-gov-west-1.amazonaws.com",
@@ -43785,6 +43817,46 @@ var awsusgovPartition = partition{
 					Variant: fipsVariant,
 				}: endpoint{
 					Hostname: "securityhub-fips.us-gov-west-1.amazonaws.com",
+				},
+			},
+		},
+		"securitylake": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-east-1",
+				}: endpoint{},
+				endpointKey{
+					Region:  "us-gov-east-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "securitylake.us-gov-east-1.amazonaws.com",
+				},
+				endpointKey{
+					Region: "us-gov-east-1-fips",
+				}: endpoint{
+					Hostname: "securitylake.us-gov-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-east-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region:  "us-gov-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "securitylake.us-gov-west-1.amazonaws.com",
+				},
+				endpointKey{
+					Region: "us-gov-west-1-fips",
+				}: endpoint{
+					Hostname: "securitylake.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+					Deprecated: boxedTrue,
 				},
 			},
 		},

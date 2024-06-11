@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.53.20 h1:cYWPvZLP1gPj5CfUdnfjaaA7WFK3FGoJ/R9+Ks1inU4=
-github.com/aws/aws-sdk-go v1.53.20/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.53.21 h1:vAXk3mJQqveg1H3uZaUBaGXrKWa97hc9zBhudsDZugA=
+github.com/aws/aws-sdk-go v1.53.21/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.27.2 h1:pLsTXqX93rimAOZG2FIYraDQstZaaGVVN4tNw65v0h8=
 github.com/aws/aws-sdk-go-v2 v1.27.2/go.mod h1:ffIFB97e2yNsv4aTSGkqtHnppsIJzw7G7BReUZ3jCXM=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 h1:x6xsQXGSmW6frevwDA+vi/wqhp1ct18mVXYN08/93to=
@@ -44,8 +44,8 @@ github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 h1:hT8rVHwugYE2lEfdFE0QWVo81lF7
 github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0/go.mod h1:8tu/lYfQfFe6IGnaOdrpVgEL2IrrDOf6/m9RQum4NkY=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.9 h1:vHyZxoLVOgrI8GqX7OMHLXp4YYoxeEsrjweXKpye+ds=
 github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.9/go.mod h1:z9VXZsWA2BvZNH1dT0ToUYwMu/CR9Skkj/TBX+mceZw=
-github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.8 h1:M7r9Kmcre5n8D9jHj0huXFgkqTDWVeuIrJdknNuh7Tg=
-github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.8/go.mod h1:+J6D4VAx1rypnSo1AI7XIx4v3al7RwEmTT45+hKtsuo=
+github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.30.0 h1:l5NODu13ZXBo3SIuWlSqM8W15UkmGb1CfoT9LMePiGQ=
+github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.30.0/go.mod h1:+J6D4VAx1rypnSo1AI7XIx4v3al7RwEmTT45+hKtsuo=
 github.com/aws/aws-sdk-go-v2/service/account v1.17.1 h1:4NJR1yu7rp5FxJqnqpRaSnIiq/EL26EBaGFnLh3TVlM=
 github.com/aws/aws-sdk-go-v2/service/account v1.17.1/go.mod h1:RP2gSKo6kGbTkrDVhsK7BDmhobfBc+0O1dVI1VGNR0U=
 github.com/aws/aws-sdk-go-v2/service/acm v1.26.2 h1:BAAPzljqPgzr4vJl1aI+qwWArot2Ev7jZy9i69Bysvo=
@@ -86,8 +86,8 @@ github.com/aws/aws-sdk-go-v2/service/batch v1.38.1 h1:AJUFYzHn6B6vYa3/MHZkdoAx+0
 github.com/aws/aws-sdk-go-v2/service/batch v1.38.1/go.mod h1:3EYTC8QgdDTgwytlDYvWUvSTgmyQ/4V5rCJlma5ZTvk=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.10 h1:oBaVBnBvkDh/7gNz7Fs6EbrVdMMfnysCoach9u9B0zQ=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.10/go.mod h1:ukyl81iTQhkgiZydbzFTdh6ddHza0HQO/vffH37X5GQ=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.7 h1:gI9T/n6WLHtirIFSZ8OWbO9yg5cUtYrNfWw8nzLQw54=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.7/go.mod h1:jlgZZlnucnhTwwkt/MLIYT9GRq+hgjkkaLNwWaqp7lk=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.8 h1:xYOVGI6TC1gfli10NShlRsd80pe1Fp/t+LXJNIshihI=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.8/go.mod h1:jlgZZlnucnhTwwkt/MLIYT9GRq+hgjkkaLNwWaqp7lk=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.12.2 h1:5mpsZ7TDvTw1TpT7DnSQTUDMluVPZdccKzhXGThQdho=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.12.2/go.mod h1:sR0KPW2UZmFP1A9xAIO9lQIwh/uzmGy9hTenzuyems0=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.23.6 h1:2NdUhw2XHwuT2sK1849T4FEl3dNB6mebOWYaQV/T++4=
@@ -348,8 +348,8 @@ github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.3 h1:+pg3v9mWOmnR01Pxd
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.3/go.mod h1:M9TqBwpQ7AC6zu1Yji7vijRliqir7hxjuRcnxIk7jCc=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.2 h1:ybKzmQRXvLkQ9rb251QPmaC5ZlCK1g8b1MLq7DD5eaE=
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.2/go.mod h1:6SQ5lQJXJZ4HL8ewgW7kp68UkqQtUE/3UmEvDLpJxKk=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.9 h1:IwWt0+xWLLSbTAaMy7KrfIc/z7VHIT3GtpHGa6gI+tw=
-github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.9/go.mod h1:R23fuxDRRYRzUYthyjMLC+j5J3FOdt8vEruXVmzieEc=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.10 h1:l0kwFg8afOlC/CkG60/EZNvzWlzexZdyrVHGzO9gcwU=
+github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.10/go.mod h1:R23fuxDRRYRzUYthyjMLC+j5J3FOdt8vEruXVmzieEc=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.10 h1:YmcqlNM/+On+uz1U8mO67xmCBpIDBunL/Jcvxh5HjnQ=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.10/go.mod h1:qNYkunnIvN0ttbrpYRRZnv2TYUEcAlQmhKXkvT46Rrs=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.10 h1:B4VK4LEI/L5dtYq2Omzt4XQ9WwtZX7I+YwmkhcDdEV8=

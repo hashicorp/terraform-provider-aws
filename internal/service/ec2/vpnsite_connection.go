@@ -751,7 +751,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 			}),
 		}
 
-		output, err := findTransitGatewayAttachmentV2(ctx, conn, input)
+		output, err := findTransitGatewayAttachment(ctx, conn, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
