@@ -18,11 +18,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccAppFabricAppBundle_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appbundle awstypes.AppBundle
+	resourceName := "aws_appfabric_app_bundle.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppBundleConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					resource.TestCheckNoResourceAttr(resourceName, "customer_managed_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
@@ -42,6 +70,54 @@ func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppBundle, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAppFabricAppBundle_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appbundle awstypes.AppBundle
+	resourceName := "aws_appfabric_app_bundle.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppBundleConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppBundleConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccAppBundleConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -98,14 +174,6 @@ const testAccAppBundleConfig_basic = `
 resource "aws_appfabric_app_bundle" "test" {}
 `
 
-func testAccAppBundleConfig_customer_managed_key() string {
-	return fmt.Sprintf(`
-resource "aws_appfabric_app_bundle" "test" {
-	customer_managed_key = "arn:aws:kms:us-east-1:732859338261:key/c67081be-29a0-4049-a821-1436d27bde94"
-}
-`)
-}
-
 func testAccAppBundleConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
@@ -119,21 +187,10 @@ resource "aws_appfabric_app_bundle" "test" {
 func testAccAppBundleConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
-	tags = {
-		%[1]q = %[2]q
-		%[3]q = %[4]q
-	}
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAppBundleConfig_full(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_appfabric_app_bundle" "test" {
-	customer_managed_key = "arn:aws:kms:us-east-1:732859338261:key/c67081be-29a0-4049-a821-1436d27bde94"
-	tags = {
-		Name = "AppFabricTesting"
-	}
-}
-`)
 }
