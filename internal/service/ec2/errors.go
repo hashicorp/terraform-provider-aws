@@ -33,7 +33,7 @@ const (
 	errCodeInvalidAssociationIDNotFound                            = "InvalidAssociationID.NotFound"
 	errCodeInvalidAssociationNotFound                              = "InvalidAssociation.NotFound"
 	errCodeInvalidAttachmentIDNotFound                             = "InvalidAttachmentID.NotFound"
-	errCodeInvalidCapacityReservationIdNotFound                    = "InvalidCapacityReservationId.NotFound'"
+	errCodeInvalidCapacityReservationIdNotFound                    = "InvalidCapacityReservationId.NotFound"
 	errCodeInvalidCarrierGatewayIDNotFound                         = "InvalidCarrierGatewayID.NotFound"
 	errCodeInvalidClientVPNActiveAssociationNotFound               = "InvalidClientVpnActiveAssociationNotFound"
 	errCodeInvalidClientVPNAssociationIdNotFound                   = "InvalidClientVpnAssociationIdNotFound"
