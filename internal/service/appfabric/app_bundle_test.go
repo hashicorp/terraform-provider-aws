@@ -25,10 +25,7 @@ func TestAccAppFabricAppBundle_basic(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
@@ -56,10 +53,7 @@ func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
@@ -83,10 +77,7 @@ func TestAccAppFabricAppBundle_cmk(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
@@ -113,10 +104,7 @@ func TestAccAppFabricAppBundle_tags(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
