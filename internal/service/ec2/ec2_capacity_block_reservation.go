@@ -33,7 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_ec2_capacity_block_reservation",name="Capacity BLock Reservation")
+// @FrameworkResource("aws_ec2_capacity_block_reservation",name="Capacity Block Reservation")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 func newResourceCapacityBlockReservation(context.Context) (resource.ResourceWithConfigure, error) {
