@@ -103,24 +103,11 @@ func (r *resourceCapacityBlockReservation) Schema(ctx context.Context, _ resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"ephemeral_storage": schema.BoolAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrInstanceCount: schema.Int64Attribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-			"instance_match_criteria": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.InstanceMatchCriteria](),
-				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"instance_platform": schema.StringAttribute{
@@ -142,7 +129,7 @@ func (r *resourceCapacityBlockReservation) Schema(ctx context.Context, _ resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrOwnerID: schema.StringAttribute{
+			"placement_group_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -151,12 +138,6 @@ func (r *resourceCapacityBlockReservation) Schema(ctx context.Context, _ resourc
 			"reservation_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.CapacityReservationType](),
 				Computed:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"placement_group_arn": schema.StringAttribute{
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -289,14 +270,11 @@ type resourceCapacityBlockReservationData struct {
 	EbsOptimized            types.Bool                                                       `tfsdk:"ebs_optimized"`
 	EndDate                 timetypes.RFC3339                                                `tfsdk:"end_date"`
 	EndDateType             fwtypes.StringEnum[awstypes.EndDateType]                         `tfsdk:"end_date_type"`
-	EphemeralStorage        types.Bool                                                       `tfsdk:"ephemeral_storage"`
 	ID                      types.String                                                     `tfsdk:"id"`
 	InstanceCount           types.Int64                                                      `tfsdk:"instance_count"`
-	InstanceMatchCriteria   fwtypes.StringEnum[awstypes.InstanceMatchCriteria]               `tfsdk:"instance_match_criteria"`
 	InstancePlatform        fwtypes.StringEnum[awstypes.CapacityReservationInstancePlatform] `tfsdk:"instance_platform"`
 	InstanceType            types.String                                                     `tfsdk:"instance_type"`
 	OutpostARN              types.String                                                     `tfsdk:"outpost_arn"`
-	OwnerID                 types.String                                                     `tfsdk:"owner_id"`
 	PlacementGroupARN       types.String                                                     `tfsdk:"placement_group_arn"`
 	ReservationType         fwtypes.StringEnum[awstypes.CapacityReservationType]             `tfsdk:"reservation_type"`
 	StartDate               timetypes.RFC3339                                                `tfsdk:"start_date"`

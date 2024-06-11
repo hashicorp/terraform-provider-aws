@@ -17,8 +17,6 @@ Provides an EC2 Capacity Block Reservation. This allows you to purchase capacity
 ## Example Usage
 
 ```terraform
-
-
 data "aws_ec2_capacity_block_offering" "example" {
   capacity_duration = 24
   end_date          = "2024-05-30T15:04:05Z"
@@ -49,10 +47,18 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the reservation.
 * `availability_zone` - The Availability Zone in which to create the Capacity Block Reservation.
+* `created_date` - The date and time at which the Capacity Block Reservation was created.
+* `ebs_optimized` - Indicates whether the Capacity Reservation supports EBS-optimized instances.
 * `end_date` - The date and time at which the Capacity Block Reservation expires. When a Capacity Block Reservation expires, the reserved capacity is released and you can no longer launch instances into it. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
+* `end_date_type` - Indicates the way in which the Capacity Reservation ends.
+* `id` - The ID of the Capacity Block Reservation.
 * `instance_count` - The number of instances for which to reserve capacity.
 * `instance_type` - The instance type for which to reserve capacity.
+* `outpost_arn` - The ARN of the Outpost on which to create the Capacity Block Reservation.
+* `placement_group_arn` - The ARN of the placement group in which to create the Capacity Block Reservation.
+* `reservation_type` - The type of Capacity Reservation.
 * `start_date` - The date and time at which the Capacity Block Reservation starts. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 * `tenancy` - Indicates the tenancy of the Capacity Block Reservation. Specify either `default` or `dedicated`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
