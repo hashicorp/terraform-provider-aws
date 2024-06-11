@@ -33,6 +33,8 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -65,6 +67,8 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,6 +97,8 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
