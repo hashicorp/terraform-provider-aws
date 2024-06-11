@@ -22,6 +22,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newAppBundleResource,
+			Name:    "App Bundle",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory: newIngestionResource,
 			Name:    "Ingestion",
 			Tags: &types.ServicePackageResourceTags{

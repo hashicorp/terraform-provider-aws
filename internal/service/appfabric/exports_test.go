@@ -5,5 +5,8 @@ package appfabric
 
 // Exports for use in tests only.
 var (
+	ResourceAppBundle = newAppBundleResource
 	ResourceIngestion = newIngestionResource
+
+	FindAppBundleByID = findAppBundleByID
 )
