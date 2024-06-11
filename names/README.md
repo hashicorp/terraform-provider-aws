@@ -93,7 +93,7 @@ The explanation of the attributes of `data/names_data.csv` are as follows:
 | **skip_client_generate** | Code | Some service clients need special configuration rather than the default generated configuration; use a non-empty value to skip generation but you must then manually configure the client in `internal/conns/config.go` |
 | **deprecated_env_var** | Code | Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services |
 | **tf_aws_env_var** | Code | `TF_AWS_<service>_ENDPOINT` envvar defined for some services |
-| **endpoint_api_call** | Code | AWS cli command to describe current service |
+| **endpoint_api_call** | Code | Command for the AWS cli for describing the current service |
 | **endpoint_api_params** | Code | Used in **service_endpoints_gen_test.go** files for API calls that require a configured value |
 | **endpoint_region_override** | Code | Specified alternate regional [endpoint]([https://docs.aws.amazon.com/general/latest/gr/rande.html) for API requests |
 | **endpoint_only** | Code | Bool based on if **not_implemented** is non-blank, whether the service endpoint should be included in the provider `endpoints` configuration |
