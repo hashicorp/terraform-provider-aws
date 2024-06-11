@@ -19,7 +19,7 @@ Provides an EC2 Capacity Block Reservation. This allows you to purchase capacity
 ```terraform
 
 
-data "aws_ec2_capacity_block_offering" "test" {
+data "aws_ec2_capacity_block_offering" "example" {
   capacity_duration = 24
   end_date          = "2024-05-30T15:04:05Z"
   instance_count    = 1
@@ -28,7 +28,7 @@ data "aws_ec2_capacity_block_offering" "test" {
   start_date        = "2024-04-28T15:04:05Z"
 }
 
-resource "aws_ec2_capacity_block_reservation" "test" {
+resource "aws_ec2_capacity_block_reservation" "example" {
   capacity_block_offering_id = data.aws_ec2_capacity_block_offering.test.id
   instance_platform          = "Linux/UNIX"
   tags = {
