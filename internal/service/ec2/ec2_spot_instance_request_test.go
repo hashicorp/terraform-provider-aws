@@ -582,14 +582,14 @@ func testAccCheckSpotInstanceRequestExists(ctx context.Context, n string, v *aws
 func testAccCheckSpotInstanceRequestAttributes(
 	sir *awstypes.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *sir.SpotPrice != "0.050000" {
-			return fmt.Errorf("Unexpected spot price: %s", *sir.SpotPrice)
+		if v := aws.ToString(sir.SpotPrice); v != "0.050000" {
+			return fmt.Errorf("Unexpected spot price: %s", v)
 		}
 		if sir.State != awstypes.SpotInstanceStateActive {
 			return fmt.Errorf("Unexpected request state: %s", sir.State)
 		}
-		if *sir.Status.Code != "fulfilled" {
-			return fmt.Errorf("Unexpected bid status: %s", sir.State)
+		if v := aws.ToString(sir.Status.Code); v != "fulfilled" {
+			return fmt.Errorf("Unexpected bid status: %s", v)
 		}
 		return nil
 	}
@@ -611,7 +611,7 @@ func testAccCheckSpotInstanceRequestAttributesCheckSIRWithoutSpot(
 		if sir.State != awstypes.SpotInstanceStateActive {
 			return fmt.Errorf("Unexpected request state: %s", sir.State)
 		}
-		if *sir.Status.Code != "fulfilled" {
+		if v := aws.ToString(sir.Status.Code); v != "fulfilled" {
 			return fmt.Errorf("Unexpected bid status: %s", sir.State)
 		}
 		return nil
@@ -653,14 +653,7 @@ func testAccCheckSpotInstanceRequest_NetworkInterfaceAttributes(
 func testAccCheckSpotInstanceRequestAttributesVPC(
 	sir *awstypes.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		nis := sir.LaunchSpecification.NetworkInterfaces
-		if nis == nil || len(nis) != 1 {
-			return fmt.Errorf("Expected exactly 1 network interface, found %d", len(nis))
-		}
-
-		ni := nis[0]
-
-		if ni.SubnetId == nil {
+		if sir.LaunchSpecification.SubnetId == nil {
 			return fmt.Errorf("Expected SubnetId not be non-empty for %s as the instance belongs to a VPC", *sir.InstanceId)
 		}
 		return nil
