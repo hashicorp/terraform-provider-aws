@@ -25,7 +25,10 @@ func TestAccAppFabricAppBundle_basic(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
@@ -53,7 +56,10 @@ func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
@@ -77,7 +83,10 @@ func TestAccAppFabricAppBundle_cmk(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
@@ -104,7 +113,10 @@ func TestAccAppFabricAppBundle_tags(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
