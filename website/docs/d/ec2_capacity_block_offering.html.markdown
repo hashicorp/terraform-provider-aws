@@ -3,17 +3,17 @@ subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_capacity_block_offering"
 description: |-
-  Information about a single EC2 Capacity Block Reservation.
+  Information about a single EC2 Capacity Block Offering.
 ---
 
 # Data Source: aws_ec2_capacity_block_offering
 
-Information about a single EC2 Capacity Block Reservation.
+Information about a single EC2 Capacity Block Offering.
 
 ## Example Usage
 
 ```terraform
-data "aws_ec2_capacity_block_offering" "test" {
+data "aws_ec2_capacity_block_offering" "example" {
   capacity_duration_hours = 24
   end_date_range          = "2024-05-30T15:04:05Z"
   instance_count          = 1
