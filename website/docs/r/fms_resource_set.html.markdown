@@ -48,13 +48,13 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FMS (Firewall Manager) Resource Set using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FMS (Firewall Manager) Resource Set using the `id`. For example:
 
 ```terraform
 import {
@@ -63,7 +63,7 @@ import {
 }
 ```
 
-Using `terraform import`, import FMS (Firewall Manager) Resource Set using the `example_id_arg`. For example:
+Using `terraform import`, import FMS (Firewall Manager) Resource Set using the `id`. For example:
 
 ```console
 % terraform import aws_fms_resource_set.example resource_set-id-12345678

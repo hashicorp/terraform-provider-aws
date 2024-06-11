@@ -32,7 +32,7 @@ func testAccFMSResourceSet_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -64,7 +64,7 @@ func testAccFMSResourceSet_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -92,7 +92,7 @@ func testAccFMSResourceSet_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

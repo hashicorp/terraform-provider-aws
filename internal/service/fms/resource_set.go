@@ -193,6 +193,9 @@ func (r *resourceResourceSet) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -227,6 +230,9 @@ func (r *resourceResourceSet) Update(ctx context.Context, req resource.UpdateReq
 		}
 
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
