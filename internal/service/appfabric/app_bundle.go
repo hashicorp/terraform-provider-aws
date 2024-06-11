@@ -181,7 +181,7 @@ func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) 
 
 type appBundleResourceModel struct {
 	ARN                   types.String `tfsdk:"arn"`
-	CustomerManagedKeyARN types.String `tfsdk:"customer_managed_key_arn"`
+	CustomerManagedKeyARN fwtypes.ARN  `tfsdk:"customer_managed_key_arn"`
 	ID                    types.String `tfsdk:"id"`
 	Tags                  types.Map    `tfsdk:"tags"`
 	TagsAll               types.Map    `tfsdk:"tags_all"`
