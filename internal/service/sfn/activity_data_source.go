@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,7 +31,7 @@ func DataSourceActivity() *schema.Resource {
 					names.AttrName,
 				},
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,6 +49,7 @@ func DataSourceActivity() *schema.Resource {
 }
 
 func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	if v, ok := d.GetOk(names.AttrName); ok {
@@ -69,13 +71,13 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 		})
 
 		if err != nil {
-			return diag.Errorf("listing Step Functions Activities: %s", err)
+			return sdkdiag.AppendErrorf(diags, "listing Step Functions Activities: %s", err)
 		}
 
 		if n := len(activities); n == 0 {
-			return diag.Errorf("no Step Functions Activities matched")
+			return sdkdiag.AppendErrorf(diags, "no Step Functions Activities matched")
 		} else if n > 1 {
-			return diag.Errorf("%d Step Functions Activities matched; use additional constraints to reduce matches to a single Activity", n)
+			return sdkdiag.AppendErrorf(diags, "%d Step Functions Activities matched; use additional constraints to reduce matches to a single Activity", n)
 		}
 
 		activity := activities[0]
@@ -83,22 +85,22 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 		arn := aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
 		d.Set(names.AttrARN, arn)
-		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, activity.CreationDate.Format(time.RFC3339))
 		d.Set(names.AttrName, activity.Name)
 	} else if v, ok := d.GetOk(names.AttrARN); ok {
 		arn := v.(string)
 		activity, err := FindActivityByARN(ctx, conn, arn)
 
 		if err != nil {
-			return diag.Errorf("reading Step Functions Activity (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "reading Step Functions Activity (%s): %s", arn, err)
 		}
 
 		arn = aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
 		d.Set(names.AttrARN, arn)
-		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, activity.CreationDate.Format(time.RFC3339))
 		d.Set(names.AttrName, activity.Name)
 	}
 
-	return nil
+	return diags
 }

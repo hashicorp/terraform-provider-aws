@@ -97,7 +97,7 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 					testAccCheckUserGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the user group description"),
-					resource.TestCheckResourceAttr(resourceName, "precedence", "1"),
+					resource.TestCheckResourceAttr(resourceName, "precedence", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
@@ -163,7 +163,7 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrName])
+		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}
@@ -178,7 +178,7 @@ func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrName])
+			_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,7 +51,7 @@ func ResourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +64,7 @@ func ResourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -166,6 +167,7 @@ func ResourceStateMachine() *schema.Resource {
 }
 
 func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
@@ -178,7 +180,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 		Type:       aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -195,16 +197,17 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	}, sfn.ErrCodeStateMachineDeleting, "AccessDeniedException")
 
 	if err != nil {
-		return diag.Errorf("creating Step Functions State Machine (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Step Functions State Machine (%s): %s", name, err)
 	}
 
 	arn := aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn)
 	d.SetId(arn)
 
-	return resourceStateMachineRead(ctx, d, meta)
+	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
 func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	output, err := FindStateMachineByARN(ctx, conn, d.Id())
@@ -212,27 +215,27 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Step Functions State Machine (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Step Functions State Machine (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, output.StateMachineArn)
 	if output.CreationDate != nil {
-		d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set("creation_date", nil)
+		d.Set(names.AttrCreationDate, nil)
 	}
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrDescription, output.Description)
 	if output.LoggingConfiguration != nil {
-		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
-			return diag.Errorf("setting logging_configuration: %s", err)
+		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	} else {
-		d.Set("logging_configuration", nil)
+		d.Set(names.AttrLoggingConfiguration, nil)
 	}
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))
@@ -242,7 +245,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrStatus, output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
-			return diag.Errorf("setting tracing_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting tracing_configuration: %s", err)
 		}
 	} else {
 		d.Set("tracing_configuration", nil)
@@ -255,7 +258,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	listVersionsOutput, err := conn.ListStateMachineVersionsWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Step Functions State Machine (%s) Versions: %s", d.Id(), err)
 	}
 
 	// The results are sorted in descending order of the version creation time.
@@ -266,10 +269,11 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("state_machine_version_arn", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -285,8 +289,8 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.VersionDescription = aws.String(d.Get("version_description").(string))
 		}
 
-		if d.HasChange("logging_configuration") {
-			if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrLoggingConfiguration) {
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.LoggingConfiguration = expandLoggingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -300,7 +304,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.UpdateStateMachineWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Step Functions State Machine (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Step Functions State Machine (%s): %s", d.Id(), err)
 		}
 
 		// Handle eventual consistency after update.
@@ -324,14 +328,15 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		})
 
 		if err != nil {
-			return diag.Errorf("waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceStateMachineRead(ctx, d, meta)
+	return append(diags, resourceStateMachineRead(ctx, d, meta)...)
 }
 
 func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Step Functions State Machine: %s", d.Id())
@@ -340,14 +345,14 @@ func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting Step Functions State Machine (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitStateMachineDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Step Functions State Machine (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Step Functions State Machine (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.DescribeStateMachineOutput, error) {

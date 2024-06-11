@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_verifiedaccess_endpoint", name="Verified Access Endpoint")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVerifiedAccessEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessEndpointCreate,
@@ -79,7 +80,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -195,7 +196,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		ClientToken:           aws.String(id.UniqueId()),
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
 		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
-		EndpointType:          types.VerifiedAccessEndpointType(d.Get("endpoint_type").(string)),
+		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
 		TagSpecifications:     getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessEndpoint),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
 	}
@@ -232,7 +233,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(aws.ToString(output.VerifiedAccessEndpoint.VerifiedAccessEndpointId))
 
-	if _, err := WaitVerifiedAccessEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVerifiedAccessEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Verified Access Endpoint (%s) create: %s", d.Id(), err)
 	}
 
@@ -244,7 +245,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	ep, err := FindVerifiedAccessEndpointByID(ctx, conn, d.Id())
+	ep, err := findVerifiedAccessEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Endpoint (%s) not found, removing from state", d.Id())
@@ -262,7 +263,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("device_validation_domain", ep.DeviceValidationDomain)
 	d.Set("domain_certificate_arn", ep.DomainCertificateArn)
 	d.Set("endpoint_domain", ep.EndpointDomain)
-	d.Set("endpoint_type", ep.EndpointType)
+	d.Set(names.AttrEndpointType, ep.EndpointType)
 	if err := d.Set("load_balancer_options", flattenVerifiedAccessEndpointLoadBalancerOptions(ep.LoadBalancerOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer_options: %s", err)
 	}
@@ -276,7 +277,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
 	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
 
-	output, err := FindVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s) policy: %s", d.Id(), err)
@@ -323,7 +324,7 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitVerifiedAccessEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitVerifiedAccessEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Verified Access Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -364,7 +365,7 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitVerifiedAccessEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitVerifiedAccessEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Verified Access Endpoint (%s) delete: %s", d.Id(), err)
 	}
 

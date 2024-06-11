@@ -67,7 +67,7 @@ func ResourceFirewall() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"encryption_configuration": encryptionConfigurationSchema(),
+			names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
 			"firewall_policy_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -127,7 +127,7 @@ func ResourceFirewall() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -177,7 +177,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encryption_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -225,7 +225,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrARN, firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set(names.AttrDescription, firewall.Description)
-	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
@@ -284,9 +284,9 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		updateToken = aws.StringValue(output.UpdateToken)
 	}
 
-	if d.HasChange("encryption_configuration") {
+	if d.HasChange(names.AttrEncryptionConfiguration) {
 		input := &networkfirewall.UpdateFirewallEncryptionConfigurationInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 			FirewallArn:             aws.String(d.Id()),
 			UpdateToken:             aws.String(updateToken),
 		}
@@ -530,7 +530,7 @@ func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 		mapping := &networkfirewall.SubnetMapping{
 			SubnetId: aws.String(tfMap[names.AttrSubnetID].(string)),
 		}
-		if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 			mapping.IPAddressType = aws.String(v)
 		}
 		mappings = append(mappings, mapping)
@@ -600,8 +600,8 @@ func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	mappings := make([]interface{}, 0, len(sm))
 	for _, s := range sm {
 		m := map[string]interface{}{
-			names.AttrSubnetID: aws.StringValue(s.SubnetId),
-			"ip_address_type":  aws.StringValue(s.IPAddressType),
+			names.AttrSubnetID:      aws.StringValue(s.SubnetId),
+			names.AttrIPAddressType: aws.StringValue(s.IPAddressType),
 		}
 		mappings = append(mappings, m)
 	}
@@ -619,7 +619,7 @@ func subnetMappingsHash(v interface{}) int {
 	if id, ok := tfMap[names.AttrSubnetID].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
-	if id, ok := tfMap["ip_address_type"].(string); ok {
+	if id, ok := tfMap[names.AttrIPAddressType].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
 

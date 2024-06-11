@@ -53,8 +53,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.CertificateStatusIssued)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
@@ -63,8 +63,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.CertificateStatusIssued)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
@@ -72,8 +72,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
@@ -81,8 +81,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
@@ -90,8 +90,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
@@ -99,8 +99,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 		},

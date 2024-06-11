@@ -62,7 +62,7 @@ func ResourceDevice() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 40),
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -187,7 +187,7 @@ func expandDevice(l []interface{}) []*sagemaker.Device {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.Device{
-		DeviceName: aws.String(m["device_name"].(string)),
+		DeviceName: aws.String(m[names.AttrDeviceName].(string)),
 	}
 
 	if v, ok := m[names.AttrDescription].(string); ok && v != "" {
@@ -207,7 +207,7 @@ func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interfac
 	}
 
 	m := map[string]interface{}{
-		"device_name": aws.StringValue(config.DeviceName),
+		names.AttrDeviceName: aws.StringValue(config.DeviceName),
 	}
 
 	if config.Description != nil {

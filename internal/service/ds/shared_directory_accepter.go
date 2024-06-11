@@ -49,7 +49,7 @@ func ResourceSharedDirectoryAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set("method", dir.ShareMethod)
-	d.Set("owner_account_id", dir.OwnerDirectoryDescription.AccountId)
+	d.Set(names.AttrOwnerAccountID, dir.OwnerDirectoryDescription.AccountId)
 	d.Set("owner_directory_id", dir.OwnerDirectoryDescription.DirectoryId)
 	d.Set("shared_directory_id", dir.DirectoryId)
 

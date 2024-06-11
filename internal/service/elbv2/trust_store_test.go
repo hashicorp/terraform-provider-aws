@@ -39,7 +39,7 @@ func TestAccELBV2TrustStore_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("truststore/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -128,52 +128,6 @@ func TestAccELBV2TrustStore_namePrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: false,
-			},
-		},
-	})
-}
-
-func TestAccELBV2TrustStore_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf elbv2.TrustStore
-	resourceName := "aws_lb_trust_store.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrustStoreDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTrustStoreConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: false,
-			},
-			{
-				Config: testAccTrustStoreConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccTrustStoreConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrustStoreExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
 			},
 		},
 	})
@@ -324,34 +278,4 @@ resource "aws_lb_trust_store" "test" {
   ca_certificates_bundle_s3_key    = aws_s3_object.test.key
 }
 `, namePrefix))
-}
-
-func testAccTrustStoreConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
-resource "aws_lb_trust_store" "test" {
-  name                             = %[1]q
-  ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
-  ca_certificates_bundle_s3_key    = aws_s3_object.test.key
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccTrustStoreConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccTrustStoreConfig_baseS3BucketCA(rName), fmt.Sprintf(`
-resource "aws_lb_trust_store" "test" {
-  name                             = %[1]q
-  ca_certificates_bundle_s3_bucket = aws_s3_bucket.test.bucket
-  ca_certificates_bundle_s3_key    = aws_s3_object.test.key
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -26,7 +26,7 @@ func DataSourceTaskExecution() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTaskExecutionRead,
 
 		Schema: map[string]*schema.Schema{
-			"capacity_provider_strategy": {
+			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -40,7 +40,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
@@ -78,7 +78,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.LaunchType_Values(), false),
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -90,7 +90,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -124,7 +124,7 @@ func DataSourceTaskExecution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"environment": {
+									names.AttrEnvironment: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -176,7 +176,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"execution_role_arn": {
+						names.AttrExecutionRoleARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -185,7 +185,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -213,7 +213,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -231,7 +231,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -246,7 +246,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"propagate_tags": {
+			names.AttrPropagateTags: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.PropagateTags_Values(), false),
@@ -296,7 +296,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	if v, ok := d.GetOk("capacity_provider_strategy"); ok {
+	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok {
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("client_token"); ok {
@@ -317,7 +317,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("launch_type"); ok {
 		input.LaunchType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("network_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("overrides"); ok {
@@ -340,7 +340,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("propagate_tags"); ok {
+	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 		input.PropagateTags = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("reference_id"); ok {
@@ -381,7 +381,7 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 	if v, ok := tfMap["memory"]; ok {
 		apiObject.Memory = aws.String(v.(string))
 	}
-	if v, ok := tfMap["execution_role_arn"]; ok {
+	if v, ok := tfMap[names.AttrExecutionRoleARN]; ok {
 		apiObject.ExecutionRoleArn = aws.String(v.(string))
 	}
 	if v, ok := tfMap["task_role_arn"]; ok {
@@ -406,7 +406,7 @@ func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []*ecs.InferenceAcce
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		iao := &ecs.InferenceAcceleratorOverride{
-			DeviceName: aws.String(tfMap["device_name"].(string)),
+			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
 			DeviceType: aws.String(tfMap["device_type"].(string)),
 		}
 		apiObject = append(apiObject, iao)
@@ -433,7 +433,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 		if v, ok := tfMap["cpu"]; ok {
 			co.Cpu = aws.Int64(int64(v.(int)))
 		}
-		if v, ok := tfMap["environment"]; ok {
+		if v, ok := tfMap[names.AttrEnvironment]; ok {
 			co.Environment = expandTaskEnvironment(v.(*schema.Set))
 		}
 		if v, ok := tfMap["memory"]; ok {

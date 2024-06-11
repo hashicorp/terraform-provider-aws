@@ -87,7 +87,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -95,7 +95,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -117,7 +117,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"user_pool_id": {
+									names.AttrUserPoolID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -210,7 +210,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"client_id": {
+						names.AttrClientID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -218,7 +218,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -237,7 +237,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 10000),
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -263,12 +263,12 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"default_action": {
+						names.AttrDefaultAction: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appsync.DefaultAction_Values(), false),
 						},
-						"user_pool_id": {
+						names.AttrUserPoolID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -351,7 +351,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.GraphqlApi.ApiId))
 
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -461,8 +461,8 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s): %s", d.Id(), err)
 		}
 
-		if d.HasChange("schema") {
-			if v, ok := d.GetOk("schema"); ok {
+		if d.HasChange(names.AttrSchema) {
+			if v, ok := d.GetOk(names.AttrSchema); ok {
 				if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -619,14 +619,14 @@ func expandGraphQLAPIOpenIDConnectConfig(l []interface{}) *appsync.OpenIDConnect
 	m := l[0].(map[string]interface{})
 
 	openIDConnectConfig := &appsync.OpenIDConnectConfig{
-		Issuer: aws.String(m["issuer"].(string)),
+		Issuer: aws.String(m[names.AttrIssuer].(string)),
 	}
 
 	if v, ok := m["auth_ttl"].(int); ok && v != 0 {
 		openIDConnectConfig.AuthTTL = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["client_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrClientID].(string); ok && v != "" {
 		openIDConnectConfig.ClientId = aws.String(v)
 	}
 
@@ -646,8 +646,8 @@ func expandGraphQLAPIUserPoolConfig(l []interface{}, currentRegion string) *apps
 
 	userPoolConfig := &appsync.UserPoolConfig{
 		AwsRegion:     aws.String(currentRegion),
-		DefaultAction: aws.String(m["default_action"].(string)),
-		UserPoolId:    aws.String(m["user_pool_id"].(string)),
+		DefaultAction: aws.String(m[names.AttrDefaultAction].(string)),
+		UserPoolId:    aws.String(m[names.AttrUserPoolID].(string)),
 	}
 
 	if v, ok := m["app_id_client_regex"].(string); ok && v != "" {
@@ -723,7 +723,7 @@ func expandGraphQLAPICognitoUserPoolConfig(l []interface{}, currentRegion string
 
 	userPoolConfig := &appsync.CognitoUserPoolConfig{
 		AwsRegion:  aws.String(currentRegion),
-		UserPoolId: aws.String(m["user_pool_id"].(string)),
+		UserPoolId: aws.String(m[names.AttrUserPoolID].(string)),
 	}
 
 	if v, ok := m["app_id_client_regex"].(string); ok && v != "" {
@@ -757,10 +757,10 @@ func flattenGraphQLAPIOpenIDConnectConfig(openIDConnectConfig *appsync.OpenIDCon
 	}
 
 	m := map[string]interface{}{
-		"auth_ttl":  aws.Int64Value(openIDConnectConfig.AuthTTL),
-		"client_id": aws.StringValue(openIDConnectConfig.ClientId),
-		"iat_ttl":   aws.Int64Value(openIDConnectConfig.IatTTL),
-		"issuer":    aws.StringValue(openIDConnectConfig.Issuer),
+		"auth_ttl":         aws.Int64Value(openIDConnectConfig.AuthTTL),
+		names.AttrClientID: aws.StringValue(openIDConnectConfig.ClientId),
+		"iat_ttl":          aws.Int64Value(openIDConnectConfig.IatTTL),
+		names.AttrIssuer:   aws.StringValue(openIDConnectConfig.Issuer),
 	}
 
 	return []interface{}{m}
@@ -772,9 +772,9 @@ func flattenGraphQLAPIUserPoolConfig(userPoolConfig *appsync.UserPoolConfig) []i
 	}
 
 	m := map[string]interface{}{
-		"aws_region":     aws.StringValue(userPoolConfig.AwsRegion),
-		"default_action": aws.StringValue(userPoolConfig.DefaultAction),
-		"user_pool_id":   aws.StringValue(userPoolConfig.UserPoolId),
+		"aws_region":            aws.StringValue(userPoolConfig.AwsRegion),
+		names.AttrDefaultAction: aws.StringValue(userPoolConfig.DefaultAction),
+		names.AttrUserPoolID:    aws.StringValue(userPoolConfig.UserPoolId),
 	}
 
 	if userPoolConfig.AppIdClientRegex != nil {
@@ -830,8 +830,8 @@ func flattenGraphQLAPICognitoUserPoolConfig(userPoolConfig *appsync.CognitoUserP
 	}
 
 	m := map[string]interface{}{
-		"aws_region":   aws.StringValue(userPoolConfig.AwsRegion),
-		"user_pool_id": aws.StringValue(userPoolConfig.UserPoolId),
+		"aws_region":         aws.StringValue(userPoolConfig.AwsRegion),
+		names.AttrUserPoolID: aws.StringValue(userPoolConfig.UserPoolId),
 	}
 
 	if userPoolConfig.AppIdClientRegex != nil {

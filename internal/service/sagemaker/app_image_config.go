@@ -216,7 +216,7 @@ func ResourceAppImageConfig() *schema.Resource {
 							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -413,7 +413,7 @@ func expandKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemake
 			Name: aws.String(tfMap[names.AttrName].(string)),
 		}
 
-		if v, ok := tfMap["display_name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 			kernelSpec.DisplayName = aws.String(v)
 		}
 
@@ -464,7 +464,7 @@ func flattenKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelS
 		kernelSpec[names.AttrName] = aws.StringValue(raw.Name)
 
 		if raw.DisplayName != nil {
-			kernelSpec["display_name"] = aws.StringValue(raw.DisplayName)
+			kernelSpec[names.AttrDisplayName] = aws.StringValue(raw.DisplayName)
 		}
 
 		res = append(res, kernelSpec)

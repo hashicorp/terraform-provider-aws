@@ -26,6 +26,8 @@ var (
 	FindTableByName                              = findTableByName
 	FindTableExportByARN                         = findTableExportByARN
 	FindTableItemByTwoPartKey                    = findTableItemByTwoPartKey
+	FindTag                                      = findTag
+	FlattenTableItemAttributes                   = flattenTableItemAttributes
 	ListTags                                     = listTags
 	RegionFromARN                                = regionFromARN
 	ReplicaForRegion                             = replicaForRegion

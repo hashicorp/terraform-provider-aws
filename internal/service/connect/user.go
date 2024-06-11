@@ -55,7 +55,7 @@ func ResourceUser() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -84,7 +84,7 @@ func ResourceUser() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
@@ -175,7 +175,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.IdentityInfo = expandIdentityInfo(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("password"); ok {
+	if v, ok := d.GetOk(names.AttrPassword); ok {
 		input.Password = aws.String(v.(string))
 	}
 
@@ -392,7 +392,7 @@ func expandIdentityInfo(identityInfo []interface{}) *connect.UserIdentityInfo {
 
 	result := &connect.UserIdentityInfo{}
 
-	if v, ok := tfMap["email"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEmail].(string); ok && v != "" {
 		result.Email = aws.String(v)
 	}
 
@@ -444,7 +444,7 @@ func flattenIdentityInfo(identityInfo *connect.UserIdentityInfo) []interface{} {
 	values := map[string]interface{}{}
 
 	if v := identityInfo.Email; v != nil {
-		values["email"] = aws.StringValue(v)
+		values[names.AttrEmail] = aws.StringValue(v)
 	}
 
 	if v := identityInfo.FirstName; v != nil {

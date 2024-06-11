@@ -33,7 +33,7 @@ func TestAccRDSProxyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "auth.#", resourceName, "auth.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "debug_logging", resourceName, "debug_logging"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_family", resourceName, "engine_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "idle_client_timeout", resourceName, "idle_client_timeout"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "require_tls", resourceName, "require_tls"),

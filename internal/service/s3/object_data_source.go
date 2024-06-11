@@ -89,7 +89,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func dataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -221,15 +221,11 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
 	d.Set("content_length", output.ContentLength)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("expiration", output.Expiration)
-	if output.Expires != nil {
-		d.Set("expires", output.Expires.Format(time.RFC1123))
-	} else {
-		d.Set("expires", nil)
-	}
+	d.Set("expires", output.ExpiresString) // formatted in RFC1123
 	if output.LastModified != nil {
 		d.Set("last_modified", output.LastModified.Format(time.RFC1123))
 	} else {
@@ -243,9 +239,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("sse_kms_key_id", output.SSEKMSKeyId)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect_location", output.WebsiteRedirectLocation)

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRoute
+	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -43,7 +43,7 @@ func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
@@ -59,7 +59,7 @@ func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) 
 
 func testAccTransitGatewayRoute_basic_ipv6(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRoute
+	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test_ipv6"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -80,7 +80,7 @@ func testAccTransitGatewayRoute_basic_ipv6(t *testing.T, semaphore tfsync.Semaph
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "2001:db8::/56"),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
@@ -96,7 +96,7 @@ func testAccTransitGatewayRoute_basic_ipv6(t *testing.T, semaphore tfsync.Semaph
 
 func testAccTransitGatewayRoute_blackhole(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRoute
+	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test_blackhole"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -116,7 +116,7 @@ func testAccTransitGatewayRoute_blackhole(t *testing.T, semaphore tfsync.Semapho
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "10.1.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
@@ -132,7 +132,7 @@ func testAccTransitGatewayRoute_blackhole(t *testing.T, semaphore tfsync.Semapho
 
 func testAccTransitGatewayRoute_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRoute
+	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -160,7 +160,7 @@ func testAccTransitGatewayRoute_disappears(t *testing.T, semaphore tfsync.Semaph
 
 func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRoute
+	var v awstypes.TransitGatewayRoute
 	resourceName := "aws_ec2_transit_gateway_route.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -187,7 +187,7 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 	})
 }
 
-func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *ec2.TransitGatewayRoute) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *awstypes.TransitGatewayRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -204,7 +204,7 @@ func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *ec2
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayStaticRoute(ctx, conn, transitGatewayRouteTableID, destination)
 
@@ -220,7 +220,7 @@ func testAccCheckTransitGatewayRouteExists(ctx context.Context, n string, v *ec2
 
 func testAccCheckTransitGatewayRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_route" {

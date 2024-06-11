@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ebs_volumes")
-func DataSourceEBSVolumes() *schema.Resource {
+// @SDKDataSource("aws_ebs_volumes", name="EBS Volumes")
+func dataSourceEBSVolumes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSVolumesRead,
 
@@ -27,8 +27,8 @@ func DataSourceEBSVolumes() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -49,17 +49,17 @@ func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta 
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := findEBSVolumesV2(ctx, conn, input)
+	output, err := findEBSVolumes(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Volumes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
 	}
 
 	var volumeIDs []string
@@ -69,7 +69,7 @@ func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", volumeIDs)
+	d.Set(names.AttrIDs, volumeIDs)
 
 	return diags
 }

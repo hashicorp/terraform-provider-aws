@@ -59,7 +59,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +81,7 @@ func ResourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,13 +93,13 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -179,7 +179,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -201,7 +201,7 @@ func ResourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,13 +213,13 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -244,12 +244,12 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &directconnect.CreateConnectionInput{
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(name),
-		Location:       aws.String(d.Get("location").(string)),
+		Location:       aws.String(d.Get(names.AttrLocation).(string)),
 		RequestMACSec:  aws.Bool(d.Get("request_macsec").(bool)),
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
@@ -293,13 +293,13 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("encryption_mode", connection.EncryptionMode)
 	d.Set("has_logical_redundancy", connection.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
-	d.Set("location", connection.Location)
+	d.Set(names.AttrLocation, connection.Location)
 	d.Set("macsec_capable", connection.MacSecCapable)
 	d.Set(names.AttrName, connection.ConnectionName)
-	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
-	d.Set("provider_name", connection.ProviderName)
+	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
 	// d.Set("request_macsec", d.Get("request_macsec").(bool))
@@ -339,7 +339,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	if _, ok := d.GetOk("skip_destroy"); ok {
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
 		return diags
 	}
 

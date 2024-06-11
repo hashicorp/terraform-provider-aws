@@ -21,7 +21,7 @@ func dataSourceWorkspace() *schema.Resource {
 		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(workspaceID)
-	d.Set("alias", workspace.Alias)
+	d.Set(names.AttrAlias, workspace.Alias)
 	d.Set(names.AttrARN, workspace.Arn)
 	d.Set(names.AttrCreatedDate, workspace.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrKMSKeyARN, workspace.KmsKeyArn)

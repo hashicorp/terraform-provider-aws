@@ -176,7 +176,7 @@ func dataSourceTable() *schema.Resource {
 					},
 				},
 			},
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -278,7 +278,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("stream_enabled", false)
 	}
 
-	d.Set("stream_arn", table.LatestStreamArn)
+	d.Set(names.AttrStreamARN, table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
 	if err := d.Set("server_side_encryption", flattenTableServerSideEncryption(table.SSEDescription)); err != nil {

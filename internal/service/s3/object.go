@@ -42,6 +42,9 @@ import (
 
 // @SDKResource("aws_s3_object", name="Object")
 // @Tags(identifierAttribute="arn", resourceType="Object")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
+// @Testing(importStateIdFunc=testAccObjectImportStateIdFunc)
+// @Testing(importIgnore="force_destroy")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -110,15 +113,15 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content_base64"},
+				ConflictsWith: []string{names.AttrSource, "content_base64"},
 			},
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content"},
+				ConflictsWith: []string{names.AttrSource, names.AttrContent},
 			},
 			"content_disposition": {
 				Type:     schema.TypeString,
@@ -132,7 +135,7 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -146,7 +149,7 @@ func resourceObject() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{names.AttrKMSKeyID},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -221,16 +224,16 @@ func resourceObject() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
+				ConflictsWith: []string{names.AttrContent, "content_base64"},
 			},
 			"source_hash": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -296,7 +299,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("metadata", output.Metadata)
@@ -306,9 +309,9 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("server_side_encryption", output.ServerSideEncryption)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
@@ -416,7 +419,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false, optFns...)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get(names.AttrForceDestroy).(bool), false, optFns...)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
 	}
@@ -463,7 +466,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var body io.ReadSeeker
 
-	if v, ok := d.GetOk("source"); ok {
+	if v, ok := d.GetOk(names.AttrSource); ok {
 		source := v.(string)
 		path, err := homedir.Expand(source)
 		if err != nil {
@@ -481,7 +484,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 				log.Printf("[WARN] Error closing S3 object source (%s): %s", path, err)
 			}
 		}()
-	} else if v, ok := d.GetOk("content"); ok {
+	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		body = strings.NewReader(v.(string))
 	} else if v, ok := d.GetOk("content_base64"); ok {
 		// We can't do streaming decoding here (with base64.NewDecoder) because
@@ -529,7 +532,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ContentLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type"); ok {
+	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 
@@ -558,7 +561,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ServerSideEncryption = types.ServerSideEncryption(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_class"); ok {
+	if v, ok := d.GetOk(names.AttrStorageClass); ok {
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
@@ -651,15 +654,15 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"content_disposition",
 		"content_encoding",
 		"content_language",
-		"content_type",
-		"content",
+		names.AttrContentType,
+		names.AttrContent,
 		"etag",
 		names.AttrKMSKeyID,
 		"metadata",
 		"server_side_encryption",
-		"source",
+		names.AttrSource,
 		"source_hash",
-		"storage_class",
+		names.AttrStorageClass,
 		"website_redirect",
 	} {
 		if d.HasChange(key) {

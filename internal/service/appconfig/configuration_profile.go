@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_appconfig_configuration_profile", name="Connection Profile")
+// @SDKResource("aws_appconfig_configuration_profile", name="Configuration Profile")
 // @Tags(identifierAttribute="arn")
 func ResourceConfigurationProfile() *schema.Resource {
 	return &schema.Resource{
@@ -39,7 +39,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -96,7 +96,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"content": {
+						names.AttrContent: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -123,7 +123,7 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	appId := d.Get("application_id").(string)
+	appId := d.Get(names.AttrApplicationID).(string)
 	name := d.Get(names.AttrName).(string)
 	input := &appconfig.CreateConfigurationProfileInput{
 		ApplicationId: aws.String(appId),
@@ -198,7 +198,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading AppConfig Configuration Profile (%s) for Application (%s): empty response", confProfID, appID)
 	}
 
-	d.Set("application_id", output.ApplicationId)
+	d.Set(names.AttrApplicationID, output.ApplicationId)
 	d.Set("configuration_profile_id", output.Id)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
@@ -309,7 +309,7 @@ func expandValidator(tfMap map[string]interface{}) awstypes.Validator {
 	validator := awstypes.Validator{}
 
 	// AppConfig API supports empty content
-	if v, ok := tfMap["content"].(string); ok {
+	if v, ok := tfMap[names.AttrContent].(string); ok {
 		validator.Content = aws.String(v)
 	}
 
@@ -343,7 +343,7 @@ func flattenValidator(validator awstypes.Validator) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := validator.Content; v != nil {
-		tfMap["content"] = aws.ToString(v)
+		tfMap[names.AttrContent] = aws.ToString(v)
 	}
 
 	tfMap[names.AttrType] = string(validator.Type)

@@ -144,13 +144,14 @@ const (
 )
 
 func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	name := d.Get("configuration_set_name").(string)
 
 	out, err := FindConfigurationSetByID(ctx, conn, name)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameConfigurationSet, name, err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameConfigurationSet, name, err)
 	}
 
 	d.SetId(aws.ToString(out.ConfigurationSetName))
@@ -160,7 +161,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	if out.DeliveryOptions != nil {
 		if err := d.Set("delivery_options", []interface{}{flattenDeliveryOptions(out.DeliveryOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("delivery_options", nil)
@@ -168,7 +169,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	if out.ReputationOptions != nil {
 		if err := d.Set("reputation_options", []interface{}{flattenReputationOptions(out.ReputationOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("reputation_options", nil)
@@ -176,7 +177,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	if out.SendingOptions != nil {
 		if err := d.Set("sending_options", []interface{}{flattenSendingOptions(out.SendingOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("sending_options", nil)
@@ -184,7 +185,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	if out.SuppressionOptions != nil {
 		if err := d.Set("suppression_options", []interface{}{flattenSuppressionOptions(out.SuppressionOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("suppression_options", nil)
@@ -192,7 +193,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	if out.TrackingOptions != nil {
 		if err := d.Set("tracking_options", []interface{}{flattenTrackingOptions(out.TrackingOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("tracking_options", nil)
@@ -200,7 +201,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	if out.VdmOptions != nil {
 		if err := d.Set("vdm_options", []interface{}{flattenVDMOptions(out.VdmOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("vdm_options", nil)
@@ -208,14 +209,14 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameConfigurationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameConfigurationSet, d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameConfigurationSet, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

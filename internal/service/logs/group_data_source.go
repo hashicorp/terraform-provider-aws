@@ -16,6 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_cloudwatch_log_group")
+// @Tags(identifierAttribute="arn")
 func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
@@ -25,7 +26,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -54,7 +55,6 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	logGroup, err := findLogGroupByName(ctx, conn, name)
@@ -65,20 +65,10 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 	d.Set(names.AttrARN, TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
-	d.Set("creation_time", logGroup.CreationTime)
+	d.Set(names.AttrCreationTime, logGroup.CreationTime)
 	d.Set(names.AttrKMSKeyID, logGroup.KmsKeyId)
 	d.Set("log_group_class", logGroup.LogGroupClass)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
-
-	tags, err := listLogGroupTags(ctx, conn, name)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CloudWatch Logs Log Group (%s): %s", name, err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

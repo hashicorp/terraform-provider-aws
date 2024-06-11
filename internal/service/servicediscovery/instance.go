@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,7 +36,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -66,11 +67,12 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &servicediscovery.RegisterInstanceInput{
-		Attributes:       flex.ExpandStringMap(d.Get("attributes").(map[string]interface{})),
+		Attributes:       flex.ExpandStringMap(d.Get(names.AttrAttributes).(map[string]interface{})),
 		CreatorRequestId: aws.String(id.UniqueId()),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
@@ -80,21 +82,22 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := conn.RegisterInstanceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("registering Service Discovery Instance (%s): %s", instanceID, err)
+		return sdkdiag.AppendErrorf(diags, "registering Service Discovery Instance (%s): %s", instanceID, err)
 	}
 
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
 		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
-			return diag.Errorf("waiting for Service Discovery Instance (%s) create: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Instance (%s) create: %s", d.Id(), err)
 		}
 	}
 
-	return resourceInstanceRead(ctx, d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	instance, err := FindInstanceByServiceIDAndInstanceID(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
@@ -102,11 +105,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Service Discovery Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Service Discovery Instance (%s): %s", d.Id(), err)
 	}
 
 	attributes := instance.Attributes
@@ -116,22 +119,23 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		delete(attributes, "AWS_INSTANCE_IPV4")
 	}
 
-	d.Set("attributes", aws.StringValueMap(attributes))
+	d.Set(names.AttrAttributes, aws.StringValueMap(attributes))
 	d.Set(names.AttrInstanceID, instance.Id)
 
-	return nil
+	return diags
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	err := deregisterInstance(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

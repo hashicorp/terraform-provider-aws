@@ -41,12 +41,12 @@ func DataSourceFirewall() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key_id": {
+						names.AttrKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -226,7 +226,7 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("delete_protection", firewall.DeleteProtection)
 	d.Set(names.AttrDescription, firewall.Description)
 	d.Set(names.AttrName, firewall.FirewallName)
-	d.Set("encryption_configuration", flattenDataSourceEncryptionConfiguration(firewall.EncryptionConfiguration))
+	d.Set(names.AttrEncryptionConfiguration, flattenDataSourceEncryptionConfiguration(firewall.EncryptionConfiguration))
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
 	d.Set("firewall_status", flattenDataSourceFirewallStatus(output.FirewallStatus))
@@ -359,8 +359,8 @@ func flattenDataSourceEncryptionConfiguration(encrypt *networkfirewall.Encryptio
 	}
 
 	m := map[string]interface{}{
-		"key_id":       aws.StringValue(encrypt.KeyId),
-		names.AttrType: aws.StringValue(encrypt.Type),
+		names.AttrKeyID: aws.StringValue(encrypt.KeyId),
+		names.AttrType:  aws.StringValue(encrypt.Type),
 	}
 
 	return []interface{}{m}

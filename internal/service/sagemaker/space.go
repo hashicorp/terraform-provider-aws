@@ -142,7 +142,7 @@ func ResourceSpace() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"file_system_id": {
+												names.AttrFileSystemID: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -387,7 +387,7 @@ func ResourceSpace() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -465,7 +465,7 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("home_efs_file_system_uid", space.HomeEfsFileSystemUid)
 	d.Set("space_display_name", space.SpaceDisplayName)
 	d.Set("space_name", space.SpaceName)
-	d.Set("url", space.Url)
+	d.Set(names.AttrURL, space.Url)
 
 	if err := d.Set("ownership_settings", flattenOwnershipSettings(space.OwnershipSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker Space (%s): %s", d.Id(), err)
@@ -816,7 +816,7 @@ func expandEFSFileSystem(tfMap map[string]interface{}) *sagemaker.EFSFileSystem 
 
 	apiObject := &sagemaker.EFSFileSystem{}
 
-	if v, ok := tfMap["file_system_id"].(string); ok {
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -863,7 +863,7 @@ func flattenEFSFileSystem(apiObject *sagemaker.EFSFileSystem) []map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if apiObject.FileSystemId != nil {
-		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(apiObject.FileSystemId)
 	}
 
 	return []map[string]interface{}{tfMap}

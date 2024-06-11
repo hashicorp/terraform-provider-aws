@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -20,8 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_transit_gateway_route_table")
-func DataSourceTransitGatewayRouteTable() *schema.Resource {
+// @SDKDataSource("aws_ec2_transit_gateway_route_table", name="Transit Gateway Route Table")
+// @Tags
+func dataSourceTransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRead,
 
@@ -42,7 +43,7 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -59,13 +60,12 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 
 func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterListV2(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -74,19 +74,19 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.TransitGatewayRouteTableIds = aws.StringSlice([]string{v.(string)})
+		input.TransitGatewayRouteTableIds = []string{v.(string)}
 	}
 
-	transitGatewayRouteTable, err := FindTransitGatewayRouteTable(ctx, conn, input)
+	transitGatewayRouteTable, err := findTransitGatewayRouteTable(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Route Table", err))
 	}
 
-	d.SetId(aws.StringValue(transitGatewayRouteTable.TransitGatewayRouteTableId))
+	d.SetId(aws.ToString(transitGatewayRouteTable.TransitGatewayRouteTableId))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
@@ -96,9 +96,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
 	d.Set(names.AttrTransitGatewayID, transitGatewayRouteTable.TransitGatewayId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, transitGatewayRouteTable.Tags)
 
 	return diags
 }

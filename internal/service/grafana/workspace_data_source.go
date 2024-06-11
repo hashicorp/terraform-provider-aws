@@ -50,7 +50,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -136,7 +136,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrCreatedDate, workspace.Created.Format(time.RFC3339))
 	d.Set("data_sources", workspace.DataSources)
 	d.Set(names.AttrDescription, workspace.Description)
-	d.Set("endpoint", workspace.Endpoint)
+	d.Set(names.AttrEndpoint, workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
 	d.Set(names.AttrLastUpdatedDate, workspace.Modified.Format(time.RFC3339))
 	d.Set(names.AttrName, workspace.Name)

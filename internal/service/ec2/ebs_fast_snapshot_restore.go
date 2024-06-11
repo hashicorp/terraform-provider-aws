@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="EBS Fast Snapshot Restore")
+// @FrameworkResource("aws_ebs_fast_snapshot_restore", name="EBS Fast Snapshot Restore")
 func newEBSFastSnapshotRestoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsFastSnapshotRestoreResource{}
 
@@ -55,7 +55,7 @@ func (r *ebsFastSnapshotRestoreResource) Schema(ctx context.Context, request res
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"snapshot_id": schema.StringAttribute{
+			names.AttrSnapshotID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

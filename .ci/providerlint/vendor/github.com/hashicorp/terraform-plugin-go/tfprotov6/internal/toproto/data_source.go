@@ -38,6 +38,7 @@ func ReadDataSource_Response(in *tfprotov6.ReadDataSourceResponse) *tfplugin6.Re
 	resp := &tfplugin6.ReadDataSource_Response{
 		Diagnostics: Diagnostics(in.Diagnostics),
 		State:       DynamicValue(in.State),
+		Deferred:    Deferred(in.Deferred),
 	}
 
 	return resp

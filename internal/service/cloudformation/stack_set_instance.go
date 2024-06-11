@@ -144,7 +144,7 @@ func resourceStackSetInstance() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -196,7 +196,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
@@ -314,7 +314,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
-	d.Set("region", region)
+	d.Set(names.AttrRegion, region)
 	d.Set("stack_set_name", stackSetName)
 
 	callAs := d.Get("call_as").(string)

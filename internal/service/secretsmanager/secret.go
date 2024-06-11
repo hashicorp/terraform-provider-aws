@@ -34,6 +34,8 @@ import (
 
 // @SDKResource("aws_secretsmanager_secret", name="Secret")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/secretsmanager;secretsmanager.DescribeSecretOutput")
+// @Testing(importIgnore="force_overwrite_replica_secret;recovery_window_in_days")
 func resourceSecret() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretCreate,
@@ -113,7 +115,7 @@ func resourceSecret() *schema.Resource {
 						buf.WriteString(fmt.Sprintf("%s-", v))
 					}
 
-					if v, ok := m["region"].(string); ok {
+					if v, ok := m[names.AttrRegion].(string); ok {
 						buf.WriteString(fmt.Sprintf("%s-", v))
 					}
 
@@ -130,7 +132,7 @@ func resourceSecret() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -138,7 +140,7 @@ func resourceSecret() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_message": {
+						names.AttrStatusMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -517,7 +519,7 @@ func expandReplicaRegionType(tfMap map[string]interface{}) *types.ReplicaRegionT
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -568,11 +570,11 @@ func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[str
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	if v := apiObject.StatusMessage; v != nil {
-		tfMap["status_message"] = aws.ToString(v)
+		tfMap[names.AttrStatusMessage] = aws.ToString(v)
 	}
 
 	return tfMap

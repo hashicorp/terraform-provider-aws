@@ -46,7 +46,7 @@ func ResourceS3Endpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -62,7 +62,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validEndpointID,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(dms.ReplicationEndpointTypeValue_Values(), false),
@@ -71,7 +71,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"external_id": {
+			names.AttrExternalID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -231,7 +231,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
@@ -331,12 +331,12 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(d.Get("endpoint_id").(string)),
-		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
+		EndpointType:       aws.String(d.Get(names.AttrEndpointType).(string)),
 		EngineName:         aws.String("s3"),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CertificateArn = aws.String(v.(string))
 	}
 
@@ -352,7 +352,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ServiceAccessRoleArn = aws.String(v.(string))
 	}
 
-	input.S3Settings = s3Settings(d, d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget)
+	input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == dms.ReplicationEndpointTypeValueTarget)
 
 	input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
 
@@ -415,11 +415,11 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("endpoint_arn", endpoint.EndpointArn)
 
-	d.Set("certificate_arn", endpoint.CertificateArn)
+	d.Set(names.AttrCertificateARN, endpoint.CertificateArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
-	d.Set("endpoint_type", strings.ToLower(*endpoint.EndpointType)) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
+	d.Set(names.AttrEndpointType, strings.ToLower(*endpoint.EndpointType)) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
 	d.Set("engine_display_name", endpoint.EngineDisplayName)
-	d.Set("external_id", endpoint.ExternalId)
+	d.Set(names.AttrExternalID, endpoint.ExternalId)
 	// d.Set("external_table_definition", endpoint.ExternalTableDefinition) // set from s3 settings
 	d.Set(names.AttrKMSKeyARN, endpoint.KmsKeyId)
 	// d.Set("service_access_role_arn", endpoint.ServiceAccessRoleArn) // set from s3 settings
@@ -445,7 +445,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("dict_page_size_limit", s3settings.DictPageSizeLimit)
 	d.Set("enable_statistics", s3settings.EnableStatistics)
 	d.Set("encoding_type", s3settings.EncodingType)
-	d.Set("expected_bucket_owner", s3settings.ExpectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, s3settings.ExpectedBucketOwner)
 	d.Set("ignore_header_rows", s3settings.IgnoreHeaderRows)
 	d.Set("include_op_for_full_load", s3settings.IncludeOpForFullLoad)
 	d.Set("max_file_size", s3settings.MaxFileSize)
@@ -455,7 +455,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("timestamp_column_name", s3settings.TimestampColumnName)
 	d.Set("use_task_start_time_for_full_load_timestamp", s3settings.UseTaskStartTimeForFullLoadTimestamp)
 
-	if d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget {
+	if d.Get(names.AttrEndpointType).(string) == dms.ReplicationEndpointTypeValueTarget {
 		d.Set("add_trailing_padding_character", s3settings.AddTrailingPaddingCharacter)
 		d.Set("compression_type", s3settings.CompressionType)
 		d.Set("csv_no_sup_value", s3settings.CsvNoSupValue)
@@ -492,12 +492,12 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
 		}
 
-		if d.HasChange("certificate_arn") {
-			input.CertificateArn = aws.String(d.Get("certificate_arn").(string))
+		if d.HasChange(names.AttrCertificateARN) {
+			input.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
 		}
 
-		if d.HasChange("endpoint_type") {
-			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
+		if d.HasChange(names.AttrEndpointType) {
+			input.EndpointType = aws.String(d.Get(names.AttrEndpointType).(string))
 		}
 
 		input.EngineName = aws.String(engineNameS3)
@@ -507,11 +507,11 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChangesExcept(
-			"certificate_arn",
-			"endpoint_type",
+			names.AttrCertificateARN,
+			names.AttrEndpointType,
 			"ssl_mode",
 		) {
-			input.S3Settings = s3Settings(d, d.Get("endpoint_type").(string) == dms.ReplicationEndpointTypeValueTarget)
+			input.S3Settings = s3Settings(d, d.Get(names.AttrEndpointType).(string) == dms.ReplicationEndpointTypeValueTarget)
 			input.ServiceAccessRoleArn = aws.String(d.Get("service_access_role_arn").(string))
 
 			input.ExtraConnectionAttributes = extraConnectionAnomalies(d)
@@ -672,7 +672,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.EncryptionMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok { // likely only useful for target
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok { // likely only useful for target
 		s3s.ExpectedBucketOwner = aws.String(v.(string))
 	}
 

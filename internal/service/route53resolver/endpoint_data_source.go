@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -28,7 +29,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
@@ -38,7 +39,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -46,7 +47,7 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"ip_addresses": {
+			names.AttrIPAddresses: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -81,12 +82,13 @@ func DataSourceEndpoint() *schema.Resource {
 }
 
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	endpointID := d.Get("resolver_endpoint_id").(string)
 	input := &route53resolver.ListResolverEndpointsInput{}
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = buildR53ResolverTagFilters(v.(*schema.Set))
 	}
 
@@ -111,13 +113,13 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Endpoints: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoints: %s", err)
 	}
 
 	if n := len(endpoints); n == 0 {
-		return diag.Errorf("no Route53 Resolver Endpoint matched")
+		return sdkdiag.AppendErrorf(diags, "no Route53 Resolver Endpoint matched")
 	} else if n > 1 {
-		return diag.Errorf("%d Route53 Resolver Endpoints matched; use additional constraints to reduce matches to a single Endpoint", n)
+		return sdkdiag.AppendErrorf(diags, "%d Route53 Resolver Endpoints matched; use additional constraints to reduce matches to a single Endpoint", n)
 	}
 
 	ep := endpoints[0]
@@ -134,7 +136,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
 
 	var ips []*string
@@ -143,9 +145,9 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 		ips = append(ips, v.Ip)
 	}
 
-	d.Set("ip_addresses", aws.StringValueSlice(ips))
+	d.Set(names.AttrIPAddresses, aws.StringValueSlice(ips))
 
-	return nil
+	return diags
 }
 
 func buildR53ResolverTagFilters(set *schema.Set) []*route53resolver.Filter {
@@ -154,7 +156,7 @@ func buildR53ResolverTagFilters(set *schema.Set) []*route53resolver.Filter {
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]interface{}) {
 			filterValues = append(filterValues, aws.String(e.(string)))
 		}
 		filters = append(filters, &route53resolver.Filter{

@@ -65,7 +65,7 @@ func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resourc
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"scope": schema.StringAttribute{
+			names.AttrScope: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

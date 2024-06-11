@@ -35,7 +35,7 @@ func DataSourceEventIntegration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

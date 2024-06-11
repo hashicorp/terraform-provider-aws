@@ -6,6 +6,8 @@ package appfabric
 // Exports for use in tests only.
 var (
 	ResourceAppAuthorization = newAppAuthorizationResource
+	ResourceAppBundle        = newAppBundleResource
 
 	FindAppAuthorizationByTwoPartKey = findAppAuthorizationByTwoPartKey
+	FindAppBundleByID                = findAppBundleByID
 )

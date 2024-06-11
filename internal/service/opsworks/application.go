@@ -86,17 +86,17 @@ func ResourceApplication() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
 						},
 
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -143,7 +143,7 @@ func ResourceApplication() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -175,7 +175,7 @@ func ResourceApplication() *schema.Resource {
 				//Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate": {
+						names.AttrCertificate: {
 							Type:     schema.TypeString,
 							Required: true,
 							StateFunc: func(v interface{}) string {
@@ -187,7 +187,7 @@ func ResourceApplication() *schema.Resource {
 								}
 							},
 						},
-						"private_key": {
+						names.AttrPrivateKey: {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
@@ -407,14 +407,14 @@ func resourceFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVaria
 
 func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*opsworks.EnvironmentVariable) {
 	if len(vs) == 0 {
-		d.Set("environment", nil)
+		d.Set(names.AttrEnvironment, nil)
 		return
 	}
 
 	// sensitive variables are returned obfuscated from the API, this creates a
 	// permadiff between the obfuscated API response and the config value. We
 	// start with the existing state so it can passthrough when the key is secure
-	values := d.Get("environment").(*schema.Set).List()
+	values := d.Get(names.AttrEnvironment).(*schema.Set).List()
 
 	for i := 0; i < len(values); i++ {
 		value := values[i].(map[string]interface{})
@@ -431,11 +431,11 @@ func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*ops
 		}
 	}
 
-	d.Set("environment", values)
+	d.Set(names.AttrEnvironment, values)
 }
 
 func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.EnvironmentVariable {
-	environmentVariables := d.Get("environment").(*schema.Set).List()
+	environmentVariables := d.Get(names.AttrEnvironment).(*schema.Set).List()
 	result := make([]*opsworks.EnvironmentVariable, len(environmentVariables))
 
 	for i := 0; i < len(environmentVariables); i++ {
@@ -474,10 +474,10 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 			m[names.AttrType] = aws.StringValue(v.Type)
 		}
 		if v.Url != nil {
-			m["url"] = aws.StringValue(v.Url)
+			m[names.AttrURL] = aws.StringValue(v.Url)
 		}
 		if v.Username != nil {
-			m["username"] = aws.StringValue(v.Username)
+			m[names.AttrUsername] = aws.StringValue(v.Username)
 		}
 		if v.Revision != nil {
 			m["revision"] = aws.StringValue(v.Revision)
@@ -486,7 +486,7 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 		// v.Password and v.SshKey will, on read, contain the placeholder string
 		// "*****FILTERED*****", so we ignore it on read and let persist
 		// the value already in the state.
-		m["password"] = d.Get("app_source.0.password").(string)
+		m[names.AttrPassword] = d.Get("app_source.0.password").(string)
 		m["ssh_key"] = d.Get("app_source.0.ssh_key").(string)
 
 		nv = append(nv, m)
@@ -545,11 +545,11 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.PrivateKey != nil {
-			m["private_key"] = aws.StringValue(v.PrivateKey)
+			m[names.AttrPrivateKey] = aws.StringValue(v.PrivateKey)
 			set = true
 		}
 		if v.Certificate != nil {
-			m["certificate"] = aws.StringValue(v.Certificate)
+			m[names.AttrCertificate] = aws.StringValue(v.Certificate)
 			set = true
 		}
 		if v.Chain != nil {

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,121 +35,124 @@ func resourceInsight() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"filters": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aws_account_id":                              stringFilterSchema(),
-						"company_name":                                stringFilterSchema(),
-						"compliance_status":                           stringFilterSchema(),
-						"confidence":                                  numberFilterSchema(),
-						names.AttrCreatedAt:                           dateFilterSchema(),
-						"criticality":                                 numberFilterSchema(),
-						names.AttrDescription:                         stringFilterSchema(),
-						"finding_provider_fields_confidence":          numberFilterSchema(),
-						"finding_provider_fields_criticality":         numberFilterSchema(),
-						"finding_provider_fields_related_findings_id": stringFilterSchema(),
-						"finding_provider_fields_related_findings_product_arn": stringFilterSchema(),
-						"finding_provider_fields_severity_label":               stringFilterSchema(),
-						"finding_provider_fields_severity_original":            stringFilterSchema(),
-						"finding_provider_fields_types":                        stringFilterSchema(),
-						"first_observed_at":                                    dateFilterSchema(),
-						"generator_id":                                         stringFilterSchema(),
-						names.AttrID:                                           stringFilterSchema(),
-						"keyword":                                              keywordFilterSchema(),
-						"last_observed_at":                                     dateFilterSchema(),
-						"malware_name":                                         stringFilterSchema(),
-						"malware_path":                                         stringFilterSchema(),
-						"malware_state":                                        stringFilterSchema(),
-						"malware_type":                                         stringFilterSchema(),
-						"network_destination_domain":                           stringFilterSchema(),
-						"network_destination_ipv4":                             ipFilterSchema(),
-						"network_destination_ipv6":                             ipFilterSchema(),
-						"network_destination_port":                             numberFilterSchema(),
-						"network_direction":                                    stringFilterSchema(),
-						"network_protocol":                                     stringFilterSchema(),
-						"network_source_domain":                                stringFilterSchema(),
-						"network_source_ipv4":                                  ipFilterSchema(),
-						"network_source_ipv6":                                  ipFilterSchema(),
-						"network_source_mac":                                   stringFilterSchema(),
-						"network_source_port":                                  numberFilterSchema(),
-						"note_text":                                            stringFilterSchema(),
-						"note_updated_at":                                      dateFilterSchema(),
-						"note_updated_by":                                      stringFilterSchema(),
-						"process_launched_at":                                  dateFilterSchema(),
-						"process_name":                                         stringFilterSchema(),
-						"process_parent_pid":                                   numberFilterSchema(),
-						"process_path":                                         stringFilterSchema(),
-						"process_pid":                                          numberFilterSchema(),
-						"process_terminated_at":                                dateFilterSchema(),
-						"product_arn":                                          stringFilterSchema(),
-						"product_fields":                                       mapFilterSchema(),
-						"product_name":                                         stringFilterSchema(),
-						"recommendation_text":                                  stringFilterSchema(),
-						"record_state":                                         stringFilterSchema(),
-						"related_findings_id":                                  stringFilterSchema(),
-						"related_findings_product_arn":                         stringFilterSchema(),
-						"resource_aws_ec2_instance_iam_instance_profile_arn": stringFilterSchema(),
-						"resource_aws_ec2_instance_image_id":                 stringFilterSchema(),
-						"resource_aws_ec2_instance_ipv4_addresses":           ipFilterSchema(),
-						"resource_aws_ec2_instance_ipv6_addresses":           ipFilterSchema(),
-						"resource_aws_ec2_instance_key_name":                 stringFilterSchema(),
-						"resource_aws_ec2_instance_launched_at":              dateFilterSchema(),
-						"resource_aws_ec2_instance_subnet_id":                stringFilterSchema(),
-						"resource_aws_ec2_instance_type":                     stringFilterSchema(),
-						"resource_aws_ec2_instance_vpc_id":                   stringFilterSchema(),
-						"resource_aws_iam_access_key_created_at":             dateFilterSchema(),
-						"resource_aws_iam_access_key_status":                 stringFilterSchema(),
-						"resource_aws_iam_access_key_user_name":              stringFilterSchema(),
-						"resource_aws_s3_bucket_owner_id":                    stringFilterSchema(),
-						"resource_aws_s3_bucket_owner_name":                  stringFilterSchema(),
-						"resource_container_image_id":                        stringFilterSchema(),
-						"resource_container_image_name":                      stringFilterSchema(),
-						"resource_container_launched_at":                     dateFilterSchema(),
-						"resource_container_name":                            stringFilterSchema(),
-						"resource_details_other":                             mapFilterSchema(),
-						"resource_id":                                        stringFilterSchema(),
-						"resource_partition":                                 stringFilterSchema(),
-						"resource_region":                                    stringFilterSchema(),
-						"resource_tags":                                      mapFilterSchema(),
-						"resource_type":                                      stringFilterSchema(),
-						"severity_label":                                     stringFilterSchema(),
-						"source_url":                                         stringFilterSchema(),
-						"threat_intel_indicator_category":                    stringFilterSchema(),
-						"threat_intel_indicator_last_observed_at":            dateFilterSchema(),
-						"threat_intel_indicator_source":                      stringFilterSchema(),
-						"threat_intel_indicator_source_url":                  stringFilterSchema(),
-						"threat_intel_indicator_type":                        stringFilterSchema(),
-						"threat_intel_indicator_value":                       stringFilterSchema(),
-						"title":                                              stringFilterSchema(),
-						names.AttrType:                                       stringFilterSchema(),
-						"updated_at":                                         dateFilterSchema(),
-						"user_defined_values":                                mapFilterSchema(),
-						"verification_state":                                 stringFilterSchema(),
-						"workflow_status":                                    workflowStatusSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"filters": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrAWSAccountID:                        stringFilterSchema(),
+							"company_name":                                stringFilterSchema(),
+							"compliance_status":                           stringFilterSchema(),
+							"confidence":                                  numberFilterSchema(),
+							names.AttrCreatedAt:                           dateFilterSchema(),
+							"criticality":                                 numberFilterSchema(),
+							names.AttrDescription:                         stringFilterSchema(),
+							"finding_provider_fields_confidence":          numberFilterSchema(),
+							"finding_provider_fields_criticality":         numberFilterSchema(),
+							"finding_provider_fields_related_findings_id": stringFilterSchema(),
+							"finding_provider_fields_related_findings_product_arn": stringFilterSchema(),
+							"finding_provider_fields_severity_label":               stringFilterSchema(),
+							"finding_provider_fields_severity_original":            stringFilterSchema(),
+							"finding_provider_fields_types":                        stringFilterSchema(),
+							"first_observed_at":                                    dateFilterSchema(),
+							"generator_id":                                         stringFilterSchema(),
+							names.AttrID:                                           stringFilterSchema(),
+							"keyword":                                              keywordFilterSchema(),
+							"last_observed_at":                                     dateFilterSchema(),
+							"malware_name":                                         stringFilterSchema(),
+							"malware_path":                                         stringFilterSchema(),
+							"malware_state":                                        stringFilterSchema(),
+							"malware_type":                                         stringFilterSchema(),
+							"network_destination_domain":                           stringFilterSchema(),
+							"network_destination_ipv4":                             ipFilterSchema(),
+							"network_destination_ipv6":                             ipFilterSchema(),
+							"network_destination_port":                             numberFilterSchema(),
+							"network_direction":                                    stringFilterSchema(),
+							"network_protocol":                                     stringFilterSchema(),
+							"network_source_domain":                                stringFilterSchema(),
+							"network_source_ipv4":                                  ipFilterSchema(),
+							"network_source_ipv6":                                  ipFilterSchema(),
+							"network_source_mac":                                   stringFilterSchema(),
+							"network_source_port":                                  numberFilterSchema(),
+							"note_text":                                            stringFilterSchema(),
+							"note_updated_at":                                      dateFilterSchema(),
+							"note_updated_by":                                      stringFilterSchema(),
+							"process_launched_at":                                  dateFilterSchema(),
+							"process_name":                                         stringFilterSchema(),
+							"process_parent_pid":                                   numberFilterSchema(),
+							"process_path":                                         stringFilterSchema(),
+							"process_pid":                                          numberFilterSchema(),
+							"process_terminated_at":                                dateFilterSchema(),
+							"product_arn":                                          stringFilterSchema(),
+							"product_fields":                                       mapFilterSchema(),
+							"product_name":                                         stringFilterSchema(),
+							"recommendation_text":                                  stringFilterSchema(),
+							"record_state":                                         stringFilterSchema(),
+							"related_findings_id":                                  stringFilterSchema(),
+							"related_findings_product_arn":                         stringFilterSchema(),
+							"resource_aws_ec2_instance_iam_instance_profile_arn": stringFilterSchema(),
+							"resource_aws_ec2_instance_image_id":                 stringFilterSchema(),
+							"resource_aws_ec2_instance_ipv4_addresses":           ipFilterSchema(),
+							"resource_aws_ec2_instance_ipv6_addresses":           ipFilterSchema(),
+							"resource_aws_ec2_instance_key_name":                 stringFilterSchema(),
+							"resource_aws_ec2_instance_launched_at":              dateFilterSchema(),
+							"resource_aws_ec2_instance_subnet_id":                stringFilterSchema(),
+							"resource_aws_ec2_instance_type":                     stringFilterSchema(),
+							"resource_aws_ec2_instance_vpc_id":                   stringFilterSchema(),
+							"resource_aws_iam_access_key_created_at":             dateFilterSchema(),
+							"resource_aws_iam_access_key_status":                 stringFilterSchema(),
+							"resource_aws_iam_access_key_user_name":              stringFilterSchema(),
+							"resource_aws_s3_bucket_owner_id":                    stringFilterSchema(),
+							"resource_aws_s3_bucket_owner_name":                  stringFilterSchema(),
+							"resource_container_image_id":                        stringFilterSchema(),
+							"resource_container_image_name":                      stringFilterSchema(),
+							"resource_container_launched_at":                     dateFilterSchema(),
+							"resource_container_name":                            stringFilterSchema(),
+							"resource_details_other":                             mapFilterSchema(),
+							names.AttrResourceID:                                 stringFilterSchema(),
+							"resource_partition":                                 stringFilterSchema(),
+							"resource_region":                                    stringFilterSchema(),
+							names.AttrResourceTags:                               mapFilterSchema(),
+							names.AttrResourceType:                               stringFilterSchema(),
+							"severity_label":                                     stringFilterSchema(),
+							"source_url":                                         stringFilterSchema(),
+							"threat_intel_indicator_category":                    stringFilterSchema(),
+							"threat_intel_indicator_last_observed_at":            dateFilterSchema(),
+							"threat_intel_indicator_source":                      stringFilterSchema(),
+							"threat_intel_indicator_source_url":                  stringFilterSchema(),
+							"threat_intel_indicator_type":                        stringFilterSchema(),
+							"threat_intel_indicator_value":                       stringFilterSchema(),
+							"title":                                              stringFilterSchema(),
+							names.AttrType:                                       stringFilterSchema(),
+							"updated_at":                                         dateFilterSchema(),
+							"user_defined_values":                                mapFilterSchema(),
+							"verification_state":                                 stringFilterSchema(),
+							"workflow_status":                                    workflowStatusSchema(),
+						},
 					},
 				},
-			},
-			"group_by_attribute": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"group_by_attribute": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
 
 func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -164,15 +168,16 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateInsight(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Security Hub Insight (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Insight (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.InsightArn))
 
-	return resourceInsightRead(ctx, d, meta)
+	return append(diags, resourceInsightRead(ctx, d, meta)...)
 }
 
 func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	insight, err := findInsightByARN(ctx, conn, d.Id())
@@ -180,24 +185,25 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Security Hub Insight (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, insight.InsightArn)
 	if err := d.Set("filters", flattenSecurityFindingFilters(insight.Filters)); err != nil {
-		return diag.Errorf("setting filters: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting filters: %s", err)
 	}
 	d.Set("group_by_attribute", insight.GroupByAttribute)
 	d.Set(names.AttrName, insight.Name)
 
-	return nil
+	return diags
 }
 
 func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	input := &securityhub.UpdateInsightInput{
@@ -219,13 +225,14 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.UpdateInsight(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Security Hub Insight (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
-	return resourceInsightRead(ctx, d, meta)
+	return append(diags, resourceInsightRead(ctx, d, meta)...)
 }
 
 func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Security Hub Insight: %s", d.Id())
@@ -234,14 +241,14 @@ func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Security Hub Insight (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findInsightByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
@@ -299,7 +306,7 @@ func dateFilterSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"unit": {
+							names.AttrUnit: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[types.DateRangeUnit](),
@@ -450,7 +457,7 @@ func expandDateFilterDateRange(l []interface{}) *types.DateRange {
 
 	dr := &types.DateRange{}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		dr.Unit = types.DateRangeUnit(v)
 	}
 
@@ -506,7 +513,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 
 	filters := &types.AwsSecurityFindingFilters{}
 
-	if v, ok := tfMap["aws_account_id"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrAWSAccountID].(*schema.Set); ok && v.Len() > 0 {
 		filters.AwsAccountId = expandStringFilters(v.List())
 	}
 
@@ -782,7 +789,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceDetailsOther = expandMapFilters(v.List())
 	}
 
-	if v, ok := tfMap["resource_id"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResourceID].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceId = expandStringFilters(v.List())
 	}
 
@@ -794,11 +801,11 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceRegion = expandStringFilters(v.List())
 	}
 
-	if v, ok := tfMap["resource_tags"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResourceTags].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceTags = expandMapFilters(v.List())
 	}
 
-	if v, ok := tfMap["resource_type"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResourceType].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceType = expandStringFilters(v.List())
 	}
 
@@ -1021,7 +1028,7 @@ func flattenDateFilterDateRange(dateRange *types.DateRange) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"unit":          string(dateRange.Unit),
+		names.AttrUnit:  string(dateRange.Unit),
 		names.AttrValue: aws.ToInt32((dateRange.Value)),
 	}
 
@@ -1138,7 +1145,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 	}
 
 	m := map[string]interface{}{
-		"aws_account_id":                              flattenStringFilters(filters.AwsAccountId),
+		names.AttrAWSAccountID:                        flattenStringFilters(filters.AwsAccountId),
 		"company_name":                                flattenStringFilters(filters.CompanyName),
 		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
 		"confidence":                                  flattenNumberFilters(filters.Confidence),
@@ -1207,11 +1214,11 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"resource_container_launched_at":                     flattenDateFilters(filters.ResourceContainerLaunchedAt),
 		"resource_container_name":                            flattenStringFilters(filters.ResourceContainerName),
 		"resource_details_other":                             flattenMapFilters(filters.ResourceDetailsOther),
-		"resource_id":                                        flattenStringFilters(filters.ResourceId),
+		names.AttrResourceID:                                 flattenStringFilters(filters.ResourceId),
 		"resource_partition":                                 flattenStringFilters(filters.ResourcePartition),
 		"resource_region":                                    flattenStringFilters(filters.ResourceRegion),
-		"resource_tags":                                      flattenMapFilters(filters.ResourceTags),
-		"resource_type":                                      flattenStringFilters(filters.ResourceType),
+		names.AttrResourceTags:                               flattenMapFilters(filters.ResourceTags),
+		names.AttrResourceType:                               flattenStringFilters(filters.ResourceType),
 		"severity_label":                                     flattenStringFilters(filters.SeverityLabel),
 		"source_url":                                         flattenStringFilters(filters.ThreatIntelIndicatorSourceUrl),
 		"threat_intel_indicator_category":                    flattenStringFilters(filters.ThreatIntelIndicatorCategory),

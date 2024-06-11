@@ -72,7 +72,7 @@ func ResourceFramework() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
-						"scope": {
+						names.AttrScope: {
 							// The control scope can include
 							// one or more resource types,
 							// a combination of a tag key and value,
@@ -107,7 +107,7 @@ func ResourceFramework() *schema.Resource {
 					},
 				},
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -192,7 +192,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrName, resp.FrameworkName)
 	d.Set(names.AttrStatus, resp.FrameworkStatus)
 
-	if err := d.Set("creation_time", resp.CreationTime.Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreationTime, resp.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
@@ -275,7 +275,7 @@ func expandFrameworkControls(ctx context.Context, controls []interface{}) []*bac
 
 		frameworkControl := &backup.FrameworkControl{
 			ControlName:  aws.String(tfMap[names.AttrName].(string)),
-			ControlScope: expandControlScope(ctx, tfMap["scope"].([]interface{})),
+			ControlScope: expandControlScope(ctx, tfMap[names.AttrScope].([]interface{})),
 		}
 
 		if v, ok := tfMap["input_parameter"]; ok && v.(*schema.Set).Len() > 0 {
@@ -352,7 +352,7 @@ func flattenFrameworkControls(ctx context.Context, controls []*backup.FrameworkC
 		values := map[string]interface{}{}
 		values["input_parameter"] = flattenInputParameters(control.ControlInputParameters)
 		values[names.AttrName] = aws.StringValue(control.ControlName)
-		values["scope"] = flattenScope(ctx, control.ControlScope)
+		values[names.AttrScope] = flattenScope(ctx, control.ControlScope)
 		frameworkControls = append(frameworkControls, values)
 	}
 	return frameworkControls

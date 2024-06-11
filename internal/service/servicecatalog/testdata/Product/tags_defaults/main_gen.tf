@@ -22,7 +22,7 @@ resource "aws_servicecatalog_product" "test" {
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 
-  tags = var.tags
+  tags = var.resource_tags
 }
 
 resource "aws_s3_bucket" "test" {
@@ -59,17 +59,18 @@ resource "aws_s3_object" "test" {
 
 data "aws_partition" "current" {}
 
-
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)
-  nullable = false
+  nullable = true
 }
-
 
 variable "provider_tags" {
   type     = map(string)

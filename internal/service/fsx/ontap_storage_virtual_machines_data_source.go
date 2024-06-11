@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_fsx_ontap_storage_virtual_machines", name="ONTAP Storage Virtual Machines")
@@ -21,8 +22,8 @@ func dataSourceONTAPStorageVirtualMachines() *schema.Resource {
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachinesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": storageVirtualMachineFiltersSchema(),
-			"ids": {
+			names.AttrFilter: storageVirtualMachineFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -38,7 +39,7 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
 	input.Filters = newStorageVirtualMachineFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)
 
 	if len(input.Filters) == 0 {
@@ -52,7 +53,7 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", tfslices.ApplyToAll(svms, func(svm *fsx.StorageVirtualMachine) string {
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(svms, func(svm *fsx.StorageVirtualMachine) string {
 		return aws.StringValue(svm.StorageVirtualMachineId)
 	}))
 

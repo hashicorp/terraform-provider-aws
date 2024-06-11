@@ -44,11 +44,11 @@ func DataSourceListener() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"load_balancer_arn", names.AttrPort},
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -67,7 +67,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -108,16 +108,16 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Computed:  true,
 										Sensitive: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -125,7 +125,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -153,7 +153,7 @@ func DataSourceListener() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"content_type": {
+									names.AttrContentType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -161,7 +161,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -178,7 +178,7 @@ func DataSourceListener() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"duration": {
+												names.AttrDuration: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -198,7 +198,7 @@ func DataSourceListener() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -221,7 +221,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -237,7 +237,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -267,7 +267,7 @@ func DataSourceListener() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -334,12 +334,12 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
-		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
+		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
 	})
-	if err := d.Set("default_action", flattenLbListenerActions(d, "default_action", listener.DefaultActions)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenLbListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)

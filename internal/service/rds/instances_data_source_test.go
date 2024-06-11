@@ -25,16 +25,16 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, "identifier"),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
 		},
@@ -52,16 +52,16 @@ func TestAccRDSInstancesDataSource_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, "identifier"),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
 		},

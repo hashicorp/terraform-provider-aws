@@ -26,12 +26,12 @@ func DataSourceLinks() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -59,7 +59,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.Provider = aws.String(v.(string))
 	}
 
@@ -90,7 +90,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", linkIDs)
+	d.Set(names.AttrIDs, linkIDs)
 
 	return diags
 }

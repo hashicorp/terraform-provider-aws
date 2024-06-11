@@ -78,7 +78,7 @@ func resourceSchedule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -113,7 +113,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Recurrence = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("start_time"); ok {
+	if v, ok := d.GetOk(names.AttrStartTime); ok {
 		v, _ := time.Parse(ScheduleTimeLayout, v.(string))
 
 		input.StartTime = aws.Time(v)
@@ -193,7 +193,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("recurrence", sa.Recurrence)
 	if sa.StartTime != nil {
-		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
+		d.Set(names.AttrStartTime, sa.StartTime.Format(ScheduleTimeLayout))
 	}
 	d.Set("time_zone", sa.TimeZone)
 

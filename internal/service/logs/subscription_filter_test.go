@@ -37,10 +37,10 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", lambdaFunctionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
 					resource.TestCheckResourceAttr(resourceName, "filter_pattern", "logtype test"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -139,7 +139,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, firehoseResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -169,7 +169,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisStream(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", kinesisStream, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, kinesisStream, names.AttrARN),
 				),
 			},
 			{
@@ -265,7 +265,7 @@ func testAccCheckSubscriptionFilterDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes[names.AttrName])
+			_, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -291,7 +291,7 @@ func testAccCheckSubscriptionFilterExists(ctx context.Context, n string, v *type
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes[names.AttrName])
+		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -310,7 +310,7 @@ func testAccSubscriptionFilterImportStateIDFunc(resourceName string) resource.Im
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		logGroupName := rs.Primary.Attributes["log_group_name"]
+		logGroupName := rs.Primary.Attributes[names.AttrLogGroupName]
 		filterNamePrefix := rs.Primary.Attributes[names.AttrName]
 		stateID := fmt.Sprintf("%s|%s", logGroupName, filterNamePrefix)
 

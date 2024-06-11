@@ -50,7 +50,7 @@ func ResourceBackupPolicy() *schema.Resource {
 				},
 			},
 
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +63,7 @@ func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	fsID := d.Get("file_system_id").(string)
+	fsID := d.Get(names.AttrFileSystemID).(string)
 
 	if err := backupPolicyPut(ctx, conn, fsID, d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EFS Backup Policy (%s): %s", fsID, err)
@@ -94,7 +94,7 @@ func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting backup_policy: %s", err)
 	}
 
-	d.Set("file_system_id", d.Id())
+	d.Set(names.AttrFileSystemID, d.Id())
 
 	return diags
 }

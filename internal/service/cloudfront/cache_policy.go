@@ -35,7 +35,7 @@ func resourceCachePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -178,7 +178,7 @@ func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:       aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -218,7 +218,7 @@ func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	apiObject := output.CachePolicy.CachePolicyConfig
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
 	d.Set("etag", output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)
@@ -250,7 +250,7 @@ func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Name:       aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 

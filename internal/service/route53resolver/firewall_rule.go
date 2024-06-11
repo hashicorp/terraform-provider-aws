@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,7 +36,7 @@ func ResourceFirewallRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.Action_Values(), false),
@@ -77,7 +78,7 @@ func ResourceFirewallRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validResolverName,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -86,6 +87,7 @@ func ResourceFirewallRule() *schema.Resource {
 }
 
 func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
@@ -93,12 +95,12 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	ruleID := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallRuleInput{
-		Action:               aws.String(d.Get("action").(string)),
+		Action:               aws.String(d.Get(names.AttrAction).(string)),
 		CreatorRequestId:     aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		Name:                 aws.String(name),
-		Priority:             aws.Int64(int64(d.Get("priority").(int))),
+		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
@@ -120,21 +122,22 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	_, err := conn.CreateFirewallRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Firewall Rule (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Firewall Rule (%s): %s", name, err)
 	}
 
 	d.SetId(ruleID)
 
-	return resourceFirewallRuleRead(ctx, d, meta)
+	return append(diags, resourceFirewallRuleRead(ctx, d, meta)...)
 }
 
 func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	firewallRule, err := FindFirewallRuleByTwoPartKey(ctx, conn, firewallRuleGroupID, firewallDomainListID)
@@ -142,14 +145,14 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("action", firewallRule.Action)
+	d.Set(names.AttrAction, firewallRule.Action)
 	d.Set("block_override_dns_type", firewallRule.BlockOverrideDnsType)
 	d.Set("block_override_domain", firewallRule.BlockOverrideDomain)
 	d.Set("block_override_ttl", firewallRule.BlockOverrideTtl)
@@ -157,26 +160,27 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("firewall_rule_group_id", firewallRule.FirewallRuleGroupId)
 	d.Set("firewall_domain_list_id", firewallRule.FirewallDomainListId)
 	d.Set(names.AttrName, firewallRule.Name)
-	d.Set("priority", firewallRule.Priority)
+	d.Set(names.AttrPriority, firewallRule.Priority)
 
-	return nil
+	return diags
 }
 
 func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &route53resolver.UpdateFirewallRuleInput{
-		Action:               aws.String(d.Get("action").(string)),
+		Action:               aws.String(d.Get(names.AttrAction).(string)),
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
-		Priority:             aws.Int64(int64(d.Get("priority").(int))),
+		Priority:             aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
@@ -198,19 +202,20 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	_, err = conn.UpdateFirewallRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
 	}
 
-	return resourceFirewallRuleRead(ctx, d, meta)
+	return append(diags, resourceFirewallRuleRead(ctx, d, meta)...)
 }
 
 func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
@@ -220,14 +225,14 @@ func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const firewallRuleIDSeparator = ":"

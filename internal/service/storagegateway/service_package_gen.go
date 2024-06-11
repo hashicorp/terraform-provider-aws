@@ -6,8 +6,10 @@ import (
 	"context"
 
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,8 +28,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceLocalDisk,
+			Factory:  dataSourceLocalDisk,
 			TypeName: "aws_storagegateway_local_disk",
+			Name:     "Local Disk",
 		},
 	}
 }
@@ -35,11 +38,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCache,
+			Factory:  resourceCache,
 			TypeName: "aws_storagegateway_cache",
+			Name:     "Cache",
 		},
 		{
-			Factory:  ResourceCachediSCSIVolume,
+			Factory:  resourceCachediSCSIVolume,
 			TypeName: "aws_storagegateway_cached_iscsi_volume",
 			Name:     "Cached iSCSI Volume",
 			Tags: &types.ServicePackageResourceTags{
@@ -47,7 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceFileSystemAssociation,
+			Factory:  resourceFileSystemAssociation,
 			TypeName: "aws_storagegateway_file_system_association",
 			Name:     "File System Association",
 			Tags: &types.ServicePackageResourceTags{
@@ -55,7 +59,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGateway,
+			Factory:  resourceGateway,
 			TypeName: "aws_storagegateway_gateway",
 			Name:     "Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -63,7 +67,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNFSFileShare,
+			Factory:  resourceNFSFileShare,
 			TypeName: "aws_storagegateway_nfs_file_share",
 			Name:     "NFS File Share",
 			Tags: &types.ServicePackageResourceTags{
@@ -71,7 +75,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSMBFileShare,
+			Factory:  resourceSMBFileShare,
 			TypeName: "aws_storagegateway_smb_file_share",
 			Name:     "SMB File Share",
 			Tags: &types.ServicePackageResourceTags{
@@ -79,7 +83,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceStorediSCSIVolume,
+			Factory:  resourceStorediSCSIVolume,
 			TypeName: "aws_storagegateway_stored_iscsi_volume",
 			Name:     "Stored iSCSI Volume",
 			Tags: &types.ServicePackageResourceTags{
@@ -87,7 +91,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTapePool,
+			Factory:  resourceTapePool,
 			TypeName: "aws_storagegateway_tape_pool",
 			Name:     "Tape Pool",
 			Tags: &types.ServicePackageResourceTags{
@@ -95,12 +99,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUploadBuffer,
+			Factory:  resourceUploadBuffer,
 			TypeName: "aws_storagegateway_upload_buffer",
+			Name:     "Upload Buffer",
 		},
 		{
 			Factory:  ResourceWorkingStorage,
 			TypeName: "aws_storagegateway_working_storage",
+			Name:     "Working Storage",
 		},
 	}
 }
@@ -111,9 +117,23 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*storagegateway_sdkv1.StorageGateway, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return storagegateway_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	cfg := aws_sdkv1.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws_sdkv1.String(endpoint)
+
+		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
+			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+		}
+	}
+
+	return storagegateway_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

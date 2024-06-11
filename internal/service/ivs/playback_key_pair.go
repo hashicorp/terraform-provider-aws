@@ -54,7 +54,7 @@ func ResourcePlaybackKeyPair() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,7 +77,7 @@ func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.ImportPlaybackKeyPairInput{
-		PublicKeyMaterial: aws.String(d.Get("public_key").(string)),
+		PublicKeyMaterial: aws.String(d.Get(names.AttrPublicKey).(string)),
 		Tags:              getTagsIn(ctx),
 	}
 

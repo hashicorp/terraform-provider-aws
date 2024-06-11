@@ -39,7 +39,7 @@ func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.Sc
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -51,7 +51,7 @@ func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.Sc
 						names.AttrDescription: schema.StringAttribute{
 							Computed: true,
 						},
-						"group_name": schema.StringAttribute{
+						names.AttrGroupName: schema.StringAttribute{
 							Computed: true,
 						},
 						"precedence": schema.Int64Attribute{

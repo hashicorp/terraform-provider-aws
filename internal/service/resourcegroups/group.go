@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,7 +49,7 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -62,7 +63,7 @@ func resourceGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Schema{
@@ -117,6 +118,7 @@ func resourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -127,7 +129,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	waitForConfigurationAttached := false
-	if groupCfg, set := d.GetOk("configuration"); set {
+	if groupCfg, set := d.GetOk(names.AttrConfiguration); set {
 		// Only expand and add configuration if its set
 		input.Configuration = expandGroupConfigurationItems(groupCfg.(*schema.Set).List())
 		waitForConfigurationAttached = true
@@ -141,21 +143,22 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := conn.CreateGroup(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Resource Groups Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Resource Groups Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.Group.Name))
 
 	if waitForConfigurationAttached {
 		if _, err := waitGroupConfigurationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("waiting for Resource Groups Group (%s) configuration update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Resource Groups Group (%s) configuration update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceGroupRead(ctx, d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	group, err := findGroupByName(ctx, conn, d.Id())
@@ -163,11 +166,11 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Resource Groups Group %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Resource Groups Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Resource Groups Group (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.ToString(group.GroupArn)
@@ -185,7 +188,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			// Attempting to get the query on a configuration group returns BadRequestException.
 			hasQuery = false
 		} else {
-			return diag.Errorf("reading Resource Groups Group (%s) resource query: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Resource Groups Group (%s) resource query: %s", d.Id(), err)
 		}
 	}
 
@@ -197,7 +200,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			// Attempting to get configuration on a query group returns BadRequestException.
 			hasConfiguration = false
 		} else {
-			return diag.Errorf("reading Resource Groups Group (%s) configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Resource Groups Group (%s) configuration: %s", d.Id(), err)
 		}
 	}
 
@@ -206,24 +209,25 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		resultQuery["query"] = aws.ToString(q.GroupQuery.ResourceQuery.Query)
 		resultQuery[names.AttrType] = q.GroupQuery.ResourceQuery.Type
 		if err := d.Set("resource_query", []map[string]interface{}{resultQuery}); err != nil {
-			return diag.Errorf("setting resource_query: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting resource_query: %s", err)
 		}
 	}
 	if hasConfiguration {
-		if err := d.Set("configuration", flattenGroupConfigurationItems(groupCfg.Configuration)); err != nil {
-			return diag.Errorf("setting configuration: %s", err)
+		if err := d.Set(names.AttrConfiguration, flattenGroupConfigurationItems(groupCfg.Configuration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	// Conversion between a resource-query and configuration group is not possible and vice-versa
-	if d.HasChange("configuration") && d.HasChange("resource_query") {
-		return diag.Errorf("conversion between resource-query and configuration group types is not possible")
+	if d.HasChange(names.AttrConfiguration) && d.HasChange("resource_query") {
+		return sdkdiag.AppendErrorf(diags, "conversion between resource-query and configuration group types is not possible")
 	}
 
 	if d.HasChange(names.AttrDescription) {
@@ -235,7 +239,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err := conn.UpdateGroup(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Resource Groups Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Resource Groups Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -248,31 +252,32 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err := conn.UpdateGroupQuery(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Resource Groups Group (%s) resource query: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Resource Groups Group (%s) resource query: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("configuration") {
+	if d.HasChange(names.AttrConfiguration) {
 		input := &resourcegroups.PutGroupConfigurationInput{
-			Configuration: expandGroupConfigurationItems(d.Get("configuration").(*schema.Set).List()),
+			Configuration: expandGroupConfigurationItems(d.Get(names.AttrConfiguration).(*schema.Set).List()),
 			Group:         aws.String(d.Id()),
 		}
 
 		_, err := conn.PutGroupConfiguration(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Resource Groups Group (%s) configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Resource Groups Group (%s) configuration: %s", d.Id(), err)
 		}
 
 		if _, err := waitGroupConfigurationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Resource Groups Group (%s) configuration update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Resource Groups Group (%s) configuration update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceGroupRead(ctx, d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Resource Groups Group: %s", d.Id())
@@ -281,14 +286,14 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Resource Groups Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Resource Groups Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findGroupByName(ctx context.Context, conn *resourcegroups.Client, name string) (*types.Group, error) {
@@ -384,7 +389,7 @@ func expandGroupConfigurationParameters(parameterList []interface{}) []types.Gro
 	for _, param := range parameterList {
 		parameter := param.(map[string]interface{})
 		var values []string
-		for _, val := range parameter["values"].([]interface{}) {
+		for _, val := range parameter[names.AttrValues].([]interface{}) {
 			values = append(values, val.(string))
 		}
 		parameters = append(parameters, types.GroupConfigurationParameter{
@@ -427,7 +432,7 @@ func flattenGroupConfigurationParameter(param types.GroupConfigurationParameter)
 	}
 
 	if v := param.Values; v != nil {
-		tfMap["values"] = v
+		tfMap[names.AttrValues] = v
 	}
 
 	return tfMap

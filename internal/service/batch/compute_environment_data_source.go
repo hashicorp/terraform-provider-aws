@@ -37,7 +37,7 @@ func DataSourceComputeEnvironment() *schema.Resource {
 				Computed: true,
 			},
 
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func DataSourceComputeEnvironment() *schema.Resource {
 				Computed: true,
 			},
 
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,10 +108,10 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
-	d.Set("service_role", computeEnvironment.ServiceRole)
+	d.Set(names.AttrServiceRole, computeEnvironment.ServiceRole)
 	d.Set(names.AttrType, computeEnvironment.Type)
 	d.Set(names.AttrStatus, computeEnvironment.Status)
-	d.Set("status_reason", computeEnvironment.StatusReason)
+	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrState, computeEnvironment.State)
 
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {

@@ -35,7 +35,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Optional: true,
 			},
 
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -52,7 +52,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 
 			"has_major_target": {
 				Type:     schema.TypeBool,
@@ -136,6 +136,11 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 			},
 
+			"supports_limitless_database": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
 			"supports_log_exports_to_cloudwatch": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -200,11 +205,11 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		ListSupportedTimezones:     aws.Bool(true),
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
@@ -226,7 +231,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	// Make sure any optional arguments in the schema are in this list except for "default_only"
 	if _, ok := d.GetOk("default_only"); !ok && !criteriaSet(d, []string{
-		"filter",
+		names.AttrFilter,
 		"has_major_target",
 		"has_minor_target",
 		"include_all",
@@ -415,7 +420,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("default_character_set", found.DefaultCharacterSet.CharacterSetName)
 	}
 
-	d.Set("engine", found.Engine)
+	d.Set(names.AttrEngine, found.Engine)
 	d.Set("engine_description", found.DBEngineDescription)
 	d.Set("exportable_log_types", found.ExportableLogTypes)
 	d.Set("parameter_group_family", found.DBParameterGroupFamily)
@@ -437,6 +442,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("supported_timezones", timezones)
 
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
+	d.Set("supports_limitless_database", found.SupportsLimitlessDatabase)
 	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
 	d.Set("supports_parallel_query", found.SupportsParallelQuery)
 	d.Set("supports_read_replica", found.SupportsReadReplica)

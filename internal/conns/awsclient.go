@@ -23,6 +23,7 @@ import (
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -297,7 +298,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 	if names.ClientSDKV1(servicePackageName) {
 		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
 
-		envvar := names.AwsServiceEnvVar(servicePackageName)
+		envvar := names.AWSServiceEnvVar(servicePackageName)
 		svc := os.Getenv(envvar)
 		if svc != "" {
 			return svc
@@ -307,7 +308,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 			return base
 		}
 
-		sdkId := names.SdkId(servicePackageName)
+		sdkId := names.SDKID(servicePackageName)
 		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
 		if found && err == nil {
 			return endpoint
@@ -344,6 +345,8 @@ func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 // This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
+	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
+
 	isDefault := len(extra) == 0
 	// Default service client is cached.
 	if isDefault {
@@ -404,6 +407,8 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 // This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
+	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
+
 	isDefault := len(extra) == 0
 	// Default service client is cached.
 	if isDefault {

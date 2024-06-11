@@ -59,7 +59,7 @@ func dataSourceServerCertificate() *schema.Resource {
 				Computed: true,
 			},
 
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func dataSourceServerCertificate() *schema.Resource {
 				Computed: true,
 			},
 
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,7 +147,7 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	metadata := metadatas[0]
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
 	d.Set(names.AttrARN, metadata.Arn)
-	d.Set("path", metadata.Path)
+	d.Set(names.AttrPath, metadata.Path)
 	d.Set(names.AttrName, metadata.ServerCertificateName)
 	if metadata.Expiration != nil {
 		d.Set("expiration_date", metadata.Expiration.Format(time.RFC3339))
@@ -162,7 +162,7 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("upload_date", serverCertificateResp.ServerCertificate.ServerCertificateMetadata.UploadDate.Format(time.RFC3339))
 	d.Set("certificate_body", serverCertificateResp.ServerCertificate.CertificateBody)
-	d.Set("certificate_chain", serverCertificateResp.ServerCertificate.CertificateChain)
+	d.Set(names.AttrCertificateChain, serverCertificateResp.ServerCertificate.CertificateChain)
 
 	return diags
 }

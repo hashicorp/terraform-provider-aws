@@ -39,7 +39,7 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -78,7 +78,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -134,7 +134,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -194,7 +194,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set(names.AttrPort, port)
 	}
 	d.Set("cluster_id", cluster.CacheClusterId)
-	d.Set("engine", cluster.Engine)
+	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set("ip_discovery", cluster.IpDiscovery)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
@@ -208,7 +208,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("num_cache_nodes", cluster.NumCacheNodes)
 	if cluster.CacheParameterGroup != nil {
-		d.Set("parameter_group_name", cluster.CacheParameterGroup.CacheParameterGroupName)
+		d.Set(names.AttrParameterGroupName, cluster.CacheParameterGroup.CacheParameterGroupName)
 	}
 	d.Set("preferred_outpost_arn", cluster.PreferredOutpostArn)
 	d.Set("replication_group_id", cluster.ReplicationGroupId)

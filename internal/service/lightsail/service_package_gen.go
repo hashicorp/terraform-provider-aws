@@ -32,6 +32,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Bucket",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Bucket",
 			},
 		},
 		{
@@ -48,6 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Certificate",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Certificate",
 			},
 		},
 		{
@@ -56,6 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Container Service",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "ContainerService",
 			},
 		},
 		{
@@ -68,6 +71,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Database",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Database",
 			},
 		},
 		{
@@ -76,6 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Disk",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Disk",
 			},
 		},
 		{
@@ -88,6 +93,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Distribution",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Distribution",
 			},
 		},
 		{
@@ -104,6 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Instance",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Instance",
 			},
 		},
 		{
@@ -116,6 +123,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "KeyPair",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "KeyPair",
 			},
 		},
 		{
@@ -124,6 +132,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "LB",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "LB",
 			},
 		},
 		{

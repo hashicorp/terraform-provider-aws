@@ -70,7 +70,7 @@ func ResourceGrantAccepter() *schema.Resource {
 				Computed:    true,
 				Description: "Parent ARN.",
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The grantee principal ARN.",
@@ -132,7 +132,7 @@ func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("license_arn", out.LicenseArn)
 	d.Set(names.AttrName, out.GrantName)
 	d.Set("parent_arn", out.ParentArn)
-	d.Set("principal", out.GranteePrincipalArn)
+	d.Set(names.AttrPrincipal, out.GranteePrincipalArn)
 	d.Set(names.AttrStatus, out.GrantStatus)
 	d.Set(names.AttrVersion, out.Version)
 

@@ -84,7 +84,7 @@ func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			principal := rs.Primary.Attributes["principal"]
+			principal := rs.Primary.Attributes[names.AttrPrincipal]
 			thing := rs.Primary.Attributes["thing"]
 
 			found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
@@ -117,7 +117,7 @@ func testAccCheckThingPrincipalAttachmentExists(ctx context.Context, n string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		thing := rs.Primary.Attributes["thing"]
-		principal := rs.Primary.Attributes["principal"]
+		principal := rs.Primary.Attributes[names.AttrPrincipal]
 
 		found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
 

@@ -32,7 +32,7 @@ func setResponsePlanResourceData(
 	d *schema.ResourceData,
 	getResponsePlanOutput *ssmincidents.GetResponsePlanOutput,
 ) (*schema.ResourceData, error) {
-	if err := d.Set("action", flattenAction(getResponsePlanOutput.Actions)); err != nil {
+	if err := d.Set(names.AttrAction, flattenAction(getResponsePlanOutput.Actions)); err != nil {
 		return d, err
 	}
 	if err := d.Set(names.AttrARN, getResponsePlanOutput.Arn); err != nil {
@@ -41,7 +41,7 @@ func setResponsePlanResourceData(
 	if err := d.Set("chat_channel", flattenChatChannel(getResponsePlanOutput.ChatChannel)); err != nil {
 		return d, err
 	}
-	if err := d.Set("display_name", getResponsePlanOutput.DisplayName); err != nil {
+	if err := d.Set(names.AttrDisplayName, getResponsePlanOutput.DisplayName); err != nil {
 		return d, err
 	}
 	if err := d.Set("engagements", flex.FlattenStringValueSet(getResponsePlanOutput.Engagements)); err != nil {

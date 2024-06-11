@@ -43,7 +43,7 @@ func ResourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func ResourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -82,6 +82,7 @@ const (
 )
 
 func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	in := &sfn.CreateStateMachineAliasInput{
@@ -95,19 +96,20 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	out, err := conn.CreateStateMachineAliasWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.StateMachineAliasArn == nil {
-		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
 
-	return resourceAliasRead(ctx, d, meta)
+	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
 func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	out, err := FindAliasByARN(ctx, conn, d.Id())
@@ -115,26 +117,27 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SFN Alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SFN, create.ErrActionReading, ResNameAlias, d.Id(), err)
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionReading, ResNameAlias, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.StateMachineAliasArn)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("creation_date", aws.TimeValue(out.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.TimeValue(out.CreationDate).Format(time.RFC3339))
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(out.RoutingConfiguration)); err != nil {
-		return create.DiagError(names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	update := false
@@ -154,31 +157,32 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating SFN Alias (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateStateMachineAliasWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SFN, create.ErrActionUpdating, ResNameAlias, d.Id(), err)
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionUpdating, ResNameAlias, d.Id(), err)
 	}
 
-	return resourceAliasRead(ctx, d, meta)
+	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
 func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
-	log.Printf("[INFO] Deleting SFN Alias %s", d.Id())
 
+	log.Printf("[INFO] Deleting SFN Alias %s", d.Id())
 	_, err := conn.DeleteStateMachineAliasWithContext(ctx, &sfn.DeleteStateMachineAliasInput{
 		StateMachineAliasArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return create.DiagError(names.SFN, create.ErrActionDeleting, ResNameAlias, d.Id(), err)
+		return create.AppendDiagError(diags, names.SFN, create.ErrActionDeleting, ResNameAlias, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindAliasByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.DescribeStateMachineAliasOutput, error) {
@@ -216,7 +220,7 @@ func flattenAliasRoutingConfigurationItem(apiObject *sfn.RoutingConfigurationLis
 	}
 
 	if v := apiObject.Weight; v != nil {
-		tfMap["weight"] = aws.Int64Value(v)
+		tfMap[names.AttrWeight] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -275,7 +279,7 @@ func expandAliasRoutingConfigurationItem(tfMap map[string]interface{}) *sfn.Rout
 		apiObject.StateMachineVersionArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrWeight].(int); ok && v != 0 {
 		apiObject.Weight = aws.Int64(int64(v))
 	}
 

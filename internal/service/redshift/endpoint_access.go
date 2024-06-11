@@ -34,7 +34,7 @@ func resourceEndpointAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +56,7 @@ func resourceEndpointAccess() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"resource_owner": {
+			names.AttrResourceOwner: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -96,7 +96,7 @@ func resourceEndpointAccess() *schema.Resource {
 								},
 							},
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -134,7 +134,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		createOpts.ClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("resource_owner"); ok {
+	if v, ok := d.GetOk(names.AttrResourceOwner); ok {
 		createOpts.ResourceOwner = aws.String(v.(string))
 	}
 
@@ -172,10 +172,10 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("endpoint_name", endpoint.EndpointName)
 	d.Set("subnet_group_name", endpoint.SubnetGroupName)
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
-	d.Set("resource_owner", endpoint.ResourceOwner)
+	d.Set(names.AttrResourceOwner, endpoint.ResourceOwner)
 	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
 	d.Set(names.AttrPort, endpoint.Port)
-	d.Set("address", endpoint.Address)
+	d.Set(names.AttrAddress, endpoint.Address)
 
 	if err := d.Set("vpc_endpoint", flattenVPCEndpoint(endpoint.VpcEndpoint)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
@@ -259,7 +259,7 @@ func flattenVPCEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {

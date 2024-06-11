@@ -85,7 +85,7 @@ func resourceRegisteredDomain() *schema.Resource {
 								Computed:         true,
 								ValidateDiagFunc: enum.Validate[types.CountryCode](),
 							},
-							"email": {
+							names.AttrEmail: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -170,7 +170,7 @@ func resourceRegisteredDomain() *schema.Resource {
 					Optional: true,
 					Default:  true,
 				},
-				"creation_date": {
+				names.AttrCreationDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -361,7 +361,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route 53 Domains Domain %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -380,9 +380,9 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("admin_privacy", domainDetail.AdminPrivacy)
 	d.Set("auto_renew", domainDetail.AutoRenew)
 	if domainDetail.CreationDate != nil {
-		d.Set("creation_date", aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set("creation_date", nil)
+		d.Set(names.AttrCreationDate, nil)
 	}
 	if domainDetail.BillingContact != nil {
 		if err := d.Set("billing_contact", []interface{}{flattenContactDetail(domainDetail.BillingContact)}); err != nil {
@@ -651,7 +651,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	tfMap["country_code"] = apiObject.CountryCode
 
 	if v := apiObject.Email; v != nil {
-		tfMap["email"] = aws.ToString(v)
+		tfMap[names.AttrEmail] = aws.ToString(v)
 	}
 
 	if v := apiObject.ExtraParams; v != nil {
@@ -730,7 +730,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.CountryCode = types.CountryCode(v)
 	}
 
-	if v, ok := tfMap["email"].(string); ok {
+	if v, ok := tfMap[names.AttrEmail].(string); ok {
 		apiObject.Email = aws.String(v)
 	}
 

@@ -177,7 +177,7 @@ func ResourceConnector() *schema.Resource {
 													ForceNew: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
-												"subnets": {
+												names.AttrSubnets: {
 													Type:     schema.TypeSet,
 													Required: true,
 													ForceNew: true,
@@ -245,7 +245,7 @@ func ResourceConnector() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cloudwatch_logs": {
+									names.AttrCloudWatchLogs: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
@@ -302,7 +302,7 @@ func ResourceConnector() *schema.Resource {
 													Required: true,
 													ForceNew: true,
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ForceNew: true,
@@ -793,7 +793,7 @@ func expandVPC(tfMap map[string]interface{}) *kafkaconnect.Vpc {
 		apiObject.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringSet(v)
 	}
 
@@ -907,7 +907,7 @@ func expandWorkerLogDelivery(tfMap map[string]interface{}) *kafkaconnect.WorkerL
 
 	apiObject := &kafkaconnect.WorkerLogDelivery{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		apiObject.CloudWatchLogs = expandCloudWatchLogsLogDelivery(v[0].(map[string]interface{}))
 	}
 
@@ -973,7 +973,7 @@ func expandS3LogDelivery(tfMap map[string]interface{}) *kafkaconnect.S3LogDelive
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -1136,7 +1136,7 @@ func flattenVPCDescription(apiObject *kafkaconnect.VpcDescription) map[string]in
 	}
 
 	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnets] = aws.StringValueSlice(v)
 	}
 
 	return tfMap
@@ -1242,7 +1242,7 @@ func flattenWorkerLogDeliveryDescription(apiObject *kafkaconnect.WorkerLogDelive
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
+		tfMap[names.AttrCloudWatchLogs] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
 	}
 
 	if v := apiObject.Firehose; v != nil {
@@ -1308,7 +1308,7 @@ func flattenS3LogDeliveryDescription(apiObject *kafkaconnect.S3LogDeliveryDescri
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.StringValue(v)
+		tfMap[names.AttrPrefix] = aws.StringValue(v)
 	}
 
 	return tfMap

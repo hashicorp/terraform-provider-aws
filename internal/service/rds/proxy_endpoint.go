@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_db_proxy_endpoint", name="DB Proxy Endpoint")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceProxyEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyEndpointCreate,
@@ -66,7 +67,7 @@ func resourceProxyEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -160,7 +161,7 @@ func resourceProxyEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, dbProxyEndpoint.DBProxyEndpointArn)
 	d.Set("db_proxy_endpoint_name", dbProxyEndpoint.DBProxyEndpointName)
 	d.Set("db_proxy_name", dbProxyEndpoint.DBProxyName)
-	d.Set("endpoint", dbProxyEndpoint.Endpoint)
+	d.Set(names.AttrEndpoint, dbProxyEndpoint.Endpoint)
 	d.Set("is_default", dbProxyEndpoint.IsDefault)
 	d.Set("target_role", dbProxyEndpoint.TargetRole)
 	d.Set(names.AttrVPCID, dbProxyEndpoint.VpcId)

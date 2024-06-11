@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,14 +21,14 @@ import (
 
 func TestAccTransferConnector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedConnector
+	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -40,8 +40,8 @@ func TestAccTransferConnector_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "http://www.example.com"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "http://www.example.com"),
 				),
 			},
 			{
@@ -53,8 +53,8 @@ func TestAccTransferConnector_basic(t *testing.T) {
 				Config: testAccConnectorConfig_basic(rName, "http://www.example.net"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "http://www.example.net"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "http://www.example.net"),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 
 func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedConnector
+	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
@@ -71,7 +71,7 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -83,8 +83,8 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 
 func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedConnector
+	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
@@ -108,7 +108,7 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -133,14 +133,14 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 
 func TestAccTransferConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedConnector
+	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -161,14 +161,14 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 
 func TestAccTransferConnector_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedConnector
+	var conf awstypes.DescribedConnector
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -176,11 +176,11 @@ func TestAccTransferConnector_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", "key1", "value1"),
+				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -189,27 +189,27 @@ func TestAccTransferConnector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorConfig_tags2(rName, "http://www.example.com", "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectorConfig_tags2(rName, "http://www.example.com", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", "key2", "value2"),
+				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectorExists(ctx context.Context, n string, v *transfer.DescribedConnector) resource.TestCheckFunc {
+func testAccCheckConnectorExists(ctx context.Context, n string, v *awstypes.DescribedConnector) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -220,7 +220,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string, v *transfer.Desc
 			return fmt.Errorf("No Transfer Connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindConnectorByID(ctx, conn, rs.Primary.ID)
 
@@ -236,7 +236,7 @@ func testAccCheckConnectorExists(ctx context.Context, n string, v *transfer.Desc
 
 func testAccCheckConnectorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_connector" {

@@ -156,7 +156,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"namespace": schema.StringAttribute{
+									names.AttrNamespace: schema.StringAttribute{
 										Optional: true,
 									},
 								},
@@ -198,7 +198,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"table_name": schema.StringAttribute{
+									names.AttrTableName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -239,7 +239,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"endpoint": schema.StringAttribute{
+									names.AttrEndpoint: schema.StringAttribute{
 										Required: true,
 									},
 									"vector_index_name": schema.StringAttribute{

@@ -33,7 +33,7 @@ func DataSourceImageRecipe() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -46,11 +46,11 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -58,19 +58,19 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -81,7 +81,7 @@ func DataSourceImageRecipe() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -97,7 +97,7 @@ func DataSourceImageRecipe() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -128,7 +128,7 @@ func DataSourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,7 +187,7 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
-	d.Set("owner", imageRecipe.Owner)
+	d.Set(names.AttrOwner, imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
 	d.Set(names.AttrTags, KeyValueTags(ctx, imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
