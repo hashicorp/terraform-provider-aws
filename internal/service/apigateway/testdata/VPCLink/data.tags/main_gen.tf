@@ -1,6 +1,10 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+data "aws_api_gateway_vpc_link" "test" {
+  name = aws_api_gateway_vpc_link.test.name
+}
+
 resource "aws_api_gateway_vpc_link" "test" {
   name        = var.rName
   target_arns = [aws_lb.test.arn]
