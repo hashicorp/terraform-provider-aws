@@ -16,8 +16,8 @@ Terraform resource for managing an AWS AppFabric AppBundle.
 
 ```terraform
 resource "aws_appfabric_app_bundle" "example" {
-	customer_managed_key_arn = awms_kms_key.example.arn
-	tags = {
+  customer_managed_key_arn = awms_kms_key.example.arn
+  tags = {
     Environment = "test"
   }
 }
@@ -43,7 +43,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_appfabric_appbundle.example
+  to = aws_appfabric_app_bundle.example
   id = "arn:aws:appfabric:[region]:[account]:appbundle/ee5587b4-5765-4288-a202-xxxxxxxxxx"
 }
 ```
@@ -51,5 +51,5 @@ import {
 Using `terraform import`, import AppFabric AppBundle using the `arn`. For example:
 
 ```console
-% terraform import aws_appfabric_appbundle.example arn:aws:appfabric:[region]:[account]:appbundle/ee5587b4-5765-4288-a202-xxxxxxxxxx
+% terraform import aws_appfabric_app_bundle.example arn:aws:appfabric:[region]:[account]:appbundle/ee5587b4-5765-4288-a202-xxxxxxxxxx
 ```
