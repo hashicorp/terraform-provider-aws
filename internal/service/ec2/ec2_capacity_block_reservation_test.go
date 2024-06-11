@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,7 +28,7 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set to true", key)
 	}
 
-	var reservation ec2.CapacityReservation
+	var reservation awstypes.CapacityReservation
 	resourceName := "aws_ec2_capacity_block_reservation.test"
 	dataSourceName := "data.aws_ec2_capacity_block_offering.test"
 	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
@@ -59,7 +59,7 @@ func TestAccEC2CapacityBlockReservation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckCapacityBlockReservationExists(ctx context.Context, n string, v *ec2.CapacityReservation) resource.TestCheckFunc {
+func testAccCheckCapacityBlockReservationExists(ctx context.Context, n string, v *awstypes.CapacityReservation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -70,7 +70,7 @@ func testAccCheckCapacityBlockReservationExists(ctx context.Context, n string, v
 			return fmt.Errorf("No EC2 Capacity Reservation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindCapacityReservationByID(ctx, conn, rs.Primary.ID)
 
