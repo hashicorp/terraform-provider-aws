@@ -71,7 +71,10 @@ func (c *AWSClient) DSClientForRegion(ctx context.Context, region string) *direc
 	if region == c.Region {
 		return c.DSClient(ctx)
 	}
-	return directoryservice_sdkv2.New(directoryservice_sdkv2.Options{Region: region})
+	return directoryservice_sdkv2.New(directoryservice_sdkv2.Options{
+		Region:      region,
+		Credentials: c.CredentialsProvider(ctx),
+	})
 }
 
 // EFSConnForRegion returns an AWS SDK For Go v1 EFS API client for the specified AWS Region.
