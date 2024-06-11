@@ -24,11 +24,11 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"tags":               testAccAppBundle_tags,
 		},
 		"AppAuthorization": {
-			"basic":        testAccAppAuthorization_basic,
-			"disappears":   testAccAppAuthorization_disappears,
-			"apiKeyUpdate": testAccAppAuthorization_apiKeyUpdate,
-			"oath2Update":  testAccAppAuthorization_oath2Update,
-			"tags":         testAccAppAuthorization_tags,
+			acctest.CtBasic:      testAccAppAuthorization_basic,
+			acctest.CtDisappears: testAccAppAuthorization_disappears,
+			"apiKeyUpdate":       testAccAppAuthorization_apiKeyUpdate,
+			"oath2Update":        testAccAppAuthorization_oath2Update,
+			"tags":               testAccAppAuthorization_tags,
 		},
 	}
 

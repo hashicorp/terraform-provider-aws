@@ -16,9 +16,9 @@ Terraform resource for managing an AWS AppFabric App Authorization.
 
 ```terraform
 resource "aws_appfabric_app_authorization" "example" {
-  app                   = "TERRAFORMCLOUD"
-  app_bundle_identifier = aws_appfabric_app_bundle.arn
-  auth_type             = "apiKey"
+  app            = "TERRAFORMCLOUD"
+  app_bundle_arn = aws_appfabric_app_bundle.arn
+  auth_type      = "apiKey"
 
   credential {
     api_key_credential {
@@ -37,7 +37,7 @@ resource "aws_appfabric_app_authorization" "example" {
 The following arguments are required:
 
 * `app` - (Required) The name of the application for valid values see https://docs.aws.amazon.com/appfabric/latest/api/API_CreateAppAuthorization.html.
-* `app_bundle_identifier` - (Required) The Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app bundle to use for the request.
+* `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `auth_type` - (Required) The authorization type for the app authorization valid values are oauth2 and apiKey.
 * `credential` - (Required) Contains credentials for the application, such as an API key or OAuth2 client ID and secret.
 Specify credentials that match the authorization type for your request. For example, if the authorization type for your request is OAuth2 (oauth2), then you should provide only the OAuth2 credentials.
@@ -67,7 +67,6 @@ Tenant support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the App Authorization. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `app_bundle_arn` - The Amazon Resource Name (ARN) of the app bundle for the app authorization.
 * `auth_url` - The application URL for the OAuth flow.
 * `persona` - The user persona of the app authorization.
 
@@ -75,6 +74,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
