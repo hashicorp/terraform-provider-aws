@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2CapacityBlockOffering_basic(t *testing.T) {
+func TestAccEC2CapacityBlockOfferingDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_capacity_block_offering.test"
 	startDate := time.Now().UTC().Add(25 * time.Hour).Format(time.RFC3339)
@@ -28,7 +28,7 @@ func TestAccEC2CapacityBlockOffering_basic(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityBlockOfferingConfig_basic(startDate, endDate),
+				Config: testAccCapacityBlockOfferingDataSourceConfig_basic(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(dataSourceName, "capacity_duration_hours", "24"),
@@ -43,7 +43,7 @@ func TestAccEC2CapacityBlockOffering_basic(t *testing.T) {
 	})
 }
 
-func testAccCapacityBlockOfferingConfig_basic(startDate, endDate string) string {
+func testAccCapacityBlockOfferingDataSourceConfig_basic(startDate, endDate string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_capacity_block_offering" "test" {
   instance_type           = "p4d.24xlarge"
