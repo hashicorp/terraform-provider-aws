@@ -107,54 +107,145 @@ func main() {
 		resource.PackageProviderNameUpper = svc.PackageProviderNameUpper()
 		resource.ProviderPackage = servicePackage
 
-		filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
+		if !resource.DataSource {
+			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
-		d := g.NewGoFileDestination(filename)
-		templates, err := template.New("taggingtests").Parse(testGoTmpl)
-		if err != nil {
-			g.Fatalf("parsing base Go test template: %w", err)
-		}
-
-		if err := d.WriteTemplateSet(templates, resource); err != nil {
-			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
-		}
-
-		if err := d.Write(); err != nil {
-			g.Fatalf("generating file (%s): %s", filename, err)
-		}
-
-		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
-		var configTmpl string
-		if _, err := os.Stat(configTmplFile); err == nil {
-			b, err := os.ReadFile(configTmplFile)
+			d := g.NewGoFileDestination(filename)
+			templates, err := template.New("taggingtests").Parse(resourceTestGoTmpl)
 			if err != nil {
-				g.Fatalf("reading %q: %w", configTmplFile, err)
+				g.Fatalf("parsing base Go test template: %w", err)
 			}
-			configTmpl = string(b)
-			resource.GenerateConfig = true
-		} else if errors.Is(err, os.ErrNotExist) {
-			g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
-			failed = true
+
+			if err := d.WriteTemplateSet(templates, resource); err != nil {
+				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", filename, err)
+			}
 		} else {
-			g.Fatalf("opening config template %q: %w", configTmplFile, err)
+			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
+
+			d := g.NewGoFileDestination(filename)
+			templates, err := template.New("taggingtests").Parse(dataSourceTestGoTmpl)
+			if err != nil {
+				g.Fatalf("parsing base Go test template: %w", err)
+			}
+
+			if err := d.WriteTemplateSet(templates, resource); err != nil {
+				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", filename, err)
+			}
 		}
 
-		if resource.GenerateConfig {
-			additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
-			slices.Sort(additionalTfVars)
-			testDirPath := path.Join("testdata", resource.Name)
-
-			common := commonConfig{
-				AdditionalTfVars:        additionalTfVars,
-				WithRName:               (resource.Generator != ""),
-				AlternateRegionProvider: resource.AlternateRegionProvider,
+		if !resource.DataSource {
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			var configTmpl string
+			if _, err := os.Stat(configTmplFile); err == nil {
+				b, err := os.ReadFile(configTmplFile)
+				if err != nil {
+					g.Fatalf("reading %q: %w", configTmplFile, err)
+				}
+				configTmpl = string(b)
+				resource.GenerateConfig = true
+			} else if errors.Is(err, os.ErrNotExist) {
+				g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
+				failed = true
+			} else {
+				g.Fatalf("opening config template %q: %w", configTmplFile, err)
 			}
 
-			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, common)
-			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
-			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
-			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
-			generateTestConfig(g, testDirPath, "tags_ignore", false, configTmplFile, configTmpl, common)
+			if resource.GenerateConfig {
+				additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+				slices.Sort(additionalTfVars)
+				testDirPath := path.Join("testdata", resource.Name)
+
+				tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
+				if err != nil {
+					g.Fatalf("parsing base Terraform config template: %s", err)
+				}
+
+				_, err = tfTemplates.New("body").Parse(configTmpl)
+				if err != nil {
+					g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+				}
+
+				common := commonConfig{
+					AdditionalTfVars:        additionalTfVars,
+					WithRName:               (resource.Generator != ""),
+					AlternateRegionProvider: resource.AlternateRegionProvider,
+				}
+
+				generateTestConfig(g, testDirPath, "tags", false, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tags", true, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tagsComputed1", false, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tagsComputed2", false, tfTemplates, common)
+				generateTestConfig(g, testDirPath, "tags_ignore", false, tfTemplates, common)
+			}
+		} else {
+			sourceName = strings.TrimSuffix(sourceName, "_data_source")
+			configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+			var configTmpl string
+			if _, err := os.Stat(configTmplFile); err == nil {
+				b, err := os.ReadFile(configTmplFile)
+				if err != nil {
+					g.Fatalf("reading %q: %w", configTmplFile, err)
+				}
+				configTmpl = string(b)
+				resource.GenerateConfig = true
+			} else if errors.Is(err, os.ErrNotExist) {
+				g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
+				failed = true
+			} else {
+				g.Fatalf("opening config template %q: %w", configTmplFile, err)
+			}
+
+			if resource.GenerateConfig {
+				dataSourceConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags_data_source.gtpl", sourceName))
+				var dataSourceConfigTmpl string
+				if _, err := os.Stat(dataSourceConfigTmplFile); err == nil {
+					b, err := os.ReadFile(dataSourceConfigTmplFile)
+					if err != nil {
+						g.Fatalf("reading %q: %w", dataSourceConfigTmplFile, err)
+					}
+					dataSourceConfigTmpl = string(b)
+				} else if errors.Is(err, os.ErrNotExist) {
+					g.Errorf("no data source template found for %s at %q", sourceName, dataSourceConfigTmplFile)
+					failed = true
+				} else {
+					g.Fatalf("opening data source config template %q: %w", dataSourceConfigTmplFile, err)
+				}
+
+				additionalTfVars := tfmaps.Keys(resource.additionalTfVars)
+				slices.Sort(additionalTfVars)
+				testDirPath := path.Join("testdata", resource.Name)
+
+				tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
+				if err != nil {
+					g.Fatalf("parsing base Terraform config template: %s", err)
+				}
+
+				_, err = tfTemplates.New("body").Parse(configTmpl)
+				if err != nil {
+					g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+				}
+
+				_, err = tfTemplates.New("data_source").Parse(dataSourceConfigTmpl)
+				if err != nil {
+					g.Fatalf("parsing data source config template %q: %s", configTmplFile, err)
+				}
+
+				common := commonConfig{
+					AdditionalTfVars:        additionalTfVars,
+					WithRName:               (resource.Generator != ""),
+					AlternateRegionProvider: resource.AlternateRegionProvider,
+				}
+
+				generateTestConfig(g, testDirPath, "data.tags", false, tfTemplates, common)
+			}
 		}
 	}
 
@@ -249,6 +340,7 @@ type ResourceDatum struct {
 	AlternateRegionProvider   bool
 	TagsUpdateForceNew        bool
 	CheckDestroyNoop          bool
+	DataSource                bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -279,8 +371,11 @@ type ConfigDatum struct {
 	commonConfig
 }
 
-//go:embed test.go.gtpl
-var testGoTmpl string
+//go:embed resource_test.go.gtpl
+var resourceTestGoTmpl string
+
+//go:embed data_source_test.go.gtpl
+var dataSourceTestGoTmpl string
 
 //go:embed test.tf.gtpl
 var testTfTmpl string
@@ -345,7 +440,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		FileName:         v.fileName,
 		additionalTfVars: make(map[string]string),
 	}
-	dataSource := false
 	tagged := false
 	skip := false
 	generatorSeen := false
@@ -370,6 +464,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
 
+			case "SDKDataSource":
+				d.DataSource = true
+				fallthrough
+
 			case "SDKResource":
 				d.Implementation = implementationSDK
 				args := common.ParseArgs(m[3])
@@ -382,10 +480,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					attr = strings.ReplaceAll(attr, " ", "")
 					d.Name = strings.ReplaceAll(attr, "-", "")
 				}
-
-			case "SDKDataSource":
-				dataSource = true
-				break
 
 			case "Tags":
 				tagged = true
@@ -570,9 +664,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 
 	if tagged {
-		if dataSource {
-			v.g.Infof("Skipping tags test for %s.%s: Data Source", v.packageName, v.functionName)
-		} else if !skip {
+		if !skip {
 			if !generatorSeen {
 				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
 				d.GoImports = append(d.GoImports,
@@ -602,7 +694,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string, common commonConfig) {
+func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, tfTemplates *template.Template, common commonConfig) {
 	testName := test
 	if withDefaults {
 		testName += "_defaults"
@@ -614,16 +706,6 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 
 	mainPath := path.Join(dirPath, "main_gen.tf")
 	tf := g.NewUnformattedFileDestination(mainPath)
-
-	tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
-	if err != nil {
-		g.Fatalf("parsing base Terraform config template: %s", err)
-	}
-
-	_, err = tfTemplates.New("body").Parse(configTmpl)
-	if err != nil {
-		g.Fatalf("parsing config template %q: %s", configTmplFile, err)
-	}
 
 	configData := ConfigDatum{
 		Tags:            test,
