@@ -28,7 +28,7 @@ import (
 )
 
 // @FrameworkResource(name="App Bundle")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="id")
 func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appBundleResource{}
 
