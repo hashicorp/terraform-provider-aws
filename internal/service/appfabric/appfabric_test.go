@@ -4,10 +4,13 @@
 package appfabric_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 const serializeDelay = 10 * time.Second
@@ -23,7 +26,26 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"cmk":                testAccAppBundle_cmk,
 			"tags":               testAccAppBundle_tags,
 		},
+		"Ingestion": {
+			acctest.CtBasic:      testAccIngestion_basic,
+			acctest.CtDisappears: testAccIngestion_disappears,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+
+	input := &appfabric.ListAppBundlesInput{}
+	_, err := conn.ListAppBundles(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }

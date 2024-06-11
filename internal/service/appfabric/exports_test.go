@@ -8,5 +8,6 @@ var (
 	ResourceAppBundle = newAppBundleResource
 	ResourceIngestion = newIngestionResource
 
-	FindAppBundleByID = findAppBundleByID
+	FindAppBundleByID         = findAppBundleByID
+	FindIngestionByTwoPartKey = findIngestionByTwoPartKey
 )

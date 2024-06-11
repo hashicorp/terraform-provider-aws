@@ -16,10 +16,10 @@ Terraform resource for managing an AWS AppFabric Ingestion.
 
 ```terraform
 resource "aws_appfabric_ingestion" "example" {
-  app                   = "OKTA"
-  app_bundle_identifier = "[App Bundle ARN]"
-  tenant_id             = "example.okta.com"
-  ingestion_type        = "auditLog"
+  app            = "OKTA"
+  app_bundle_arn = aws_appfabric_app_bundle.example.arn
+  tenant_id      = "example.okta.com"
+  ingestion_type = "auditLog"
   tags = {
     Environment = "test"
   }
@@ -32,26 +32,18 @@ The following arguments are required:
 
 * `app` - (Required) Name of the application.
 Refer to the AWS Documentation for the [list of valid values](https://docs.aws.amazon.com/appfabric/latest/api/API_CreateIngestion.html#appfabric-CreateIngestion-request-app)
-
-* `app_bundle_identifier` - (Required) Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app bundle to use for the request.
+* `app_bundle_arn` - (Required) Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `ingestion_type` - (Required) Ingestion type. Valid values are `auditLog`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenant_id` - (Required) ID of the application tenant.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `app_bundle_arn` - Amazon Resource Name (ARN) of the app bundle to use for the request.
 * `arn` - ARN of the Ingestion.
 * `state` - Status of the Ingestion. Valid values are: `enabled` or `disabled`
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `5m`)
-* `update` - (Default `5m`)
-* `delete` - (Default `5m`)
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
