@@ -15,6 +15,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceCapacityBlockOffering,
+			Name:    "Capacity Block Offering",
+		},
+		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
 		},
@@ -45,6 +49,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newInstanceMetadataDefaultsResource,
 			Name:    "Instance Metadata Defaults",
+		},
+		{
+			Factory: newResourceCapacityBlockReservation,
+			Name:    "Capacity Block Reservation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
 		},
 		{
 			Factory: newResourceEndpointPrivateDNS,
