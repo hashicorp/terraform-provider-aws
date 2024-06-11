@@ -5,56 +5,56 @@ package appfabric
 
 import (
 	"context"
-	"errors"
-	"time"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-//@FrameworkResource(name="App Bundle")
+// @FrameworkResource(name="App Bundle")
 // @Tags(identifierAttribute="arn")
+func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &appBundleResource{}
 
-func newResourceAppBundle(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAppBundle{}
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute)
-	r.SetDefaultDeleteTimeout(5 * time.Minute)
 	return r, nil
 }
 
-const (
-	ResNameAppBundle = "AppBundle"
-)
-
-type resourceAppBundle struct {
+type appBundleResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
+	framework.WithNoOpUpdate[appBundleResourceModel]
+	framework.WithImportByID
 }
 
-func (r *resourceAppBundle) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_appfabric_app_bundle"
+func (*appBundleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_appfabric_app_bundle"
 }
 
-func (r *resourceAppBundle) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *appBundleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"customer_managed_key_identifier": schema.StringAttribute{
-				Optional: true,
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"customer_managed_key_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -63,142 +63,136 @@ func (r *resourceAppBundle) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *resourceAppBundle) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *appBundleResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data appBundleResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().AppFabricClient(ctx)
 
-	var plan resourceAppBundleData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	in := &appfabric.CreateAppBundleInput{
-		Tags: getTagsIn(ctx),
+	input := &appfabric.CreateAppBundleInput{
+		ClientToken:                  aws.String(sdkid.UniqueId()),
+		CustomerManagedKeyIdentifier: fwflex.StringFromFramework(ctx, data.CustomerManagedKeyARN),
+		Tags:                         getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateAppBundle(ctx, in)
+	output, err := conn.CreateAppBundle(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameAppBundle, plan.ARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.AppBundle == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameAppBundle, plan.ARN.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating AppFabric App Bundle", err.Error())
+
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.AppBundle.Arn)
-	plan.CustomerManagedKeyArn = flex.StringToFramework(ctx, out.AppBundle.CustomerManagedKeyArn)
-	plan.ID = types.StringValue(string(*out.AppBundle.Arn))
+	// Set values for unknowns.
+	data.ARN = fwflex.StringToFramework(ctx, output.AppBundle.Arn)
+	data.setID()
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceAppBundle) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AppFabricClient(ctx)
+func (r *appBundleResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data appBundleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
-	var state resourceAppBundleData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findAppBundleByID(ctx, conn, state.ARN.ValueString())
+	conn := r.Meta().AppFabricClient(ctx)
+
+	appBundle, err := findAppBundleByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionSetting, ResNameAppBundle, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading AppFabric App Bundle (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.CustomerManagedKeyArn = flex.StringToFramework(ctx, out.CustomerManagedKeyArn)
-	state.ID = types.StringValue(string(*out.Arn))
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, appBundle, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// There is no update API, so this method is a no-op
-func (r *resourceAppBundle) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
-
-func (r *resourceAppBundle) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data appBundleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	var state resourceAppBundleData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	_, err := conn.DeleteAppBundle(ctx, &appfabric.DeleteAppBundleInput{
+		AppBundleIdentifier: aws.String(data.ID.ValueString()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
-
-	in := &appfabric.DeleteAppBundleInput{
-		AppBundleIdentifier: aws.String(state.ARN.ValueString()),
-	}
-
-	_, err := conn.DeleteAppBundle(ctx, in)
 
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionDeleting, ResNameAppBundle, state.ARN.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting AppFabric App Bundle (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceAppBundle) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
-}
-
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
 func findAppBundleByID(ctx context.Context, conn *appfabric.Client, arn string) (*awstypes.AppBundle, error) {
-	in := &appfabric.GetAppBundleInput{
+	input := &appfabric.GetAppBundleInput{
 		AppBundleIdentifier: aws.String(arn),
 	}
 
-	out, err := conn.GetAppBundle(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	output, err := conn.GetAppBundle(ctx, input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.AppBundle == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.AppBundle == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.AppBundle, nil
+	return output.AppBundle, nil
 }
 
-type resourceAppBundleData struct {
+type appBundleResourceModel struct {
 	ARN                   types.String `tfsdk:"arn"`
-	CustomerManagedKeyArn types.String `tfsdk:"customer_managed_key_identifier"`
+	CustomerManagedKeyARN types.String `tfsdk:"customer_managed_key_arn"`
 	ID                    types.String `tfsdk:"id"`
 	Tags                  types.Map    `tfsdk:"tags"`
 	TagsAll               types.Map    `tfsdk:"tags_all"`
+}
+
+func (data *appBundleResourceModel) InitFromID() error {
+	data.ARN = data.ID
+
+	return nil
+}
+
+func (data *appBundleResourceModel) setID() {
+	data.ID = data.ARN
 }

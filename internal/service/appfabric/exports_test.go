@@ -3,6 +3,9 @@
 
 package appfabric
 
+// Exports for use in tests only.
 var (
-	ResourceAppBundle = newResourceAppBundle
+	ResourceAppBundle = newAppBundleResource
+
+	FindAppBundleByID = findAppBundleByID
 )
