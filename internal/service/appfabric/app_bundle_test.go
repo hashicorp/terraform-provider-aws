@@ -19,12 +19,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAppFabricAppBundle_basic(t *testing.T) {
+func testAccAppBundle_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -50,12 +50,12 @@ func TestAccAppFabricAppBundle_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppFabricAppBundle_disappears(t *testing.T) {
+func testAccAppBundle_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -76,13 +76,13 @@ func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAppFabricAppBundle_cmk(t *testing.T) {
+func testAccAppBundle_cmk(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appbundle awstypes.AppBundle
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -107,12 +107,12 @@ func TestAccAppFabricAppBundle_cmk(t *testing.T) {
 	})
 }
 
-func TestAccAppFabricAppBundle_tags(t *testing.T) {
+func testAccAppBundle_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appbundle awstypes.AppBundle
 	resourceName := "aws_appfabric_app_bundle.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
