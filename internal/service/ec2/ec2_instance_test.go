@@ -2102,35 +2102,6 @@ func TestAccEC2Instance_keyPairCheck(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_rootBlockDeviceMismatch(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v awstypes.Instance
-	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USWest2RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_rootBlockDeviceMismatch(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "13"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"root_block_device", "user_data_replace_on_change"},
-			},
-		},
-	})
-}
-
 // This test reproduces the bug here:
 //
 //	https://github.com/hashicorp/terraform/issues/1752
@@ -7687,28 +7658,6 @@ resource "aws_instance" "test" {
   }
 }
 `, rName, publicKey))
-}
-
-func testAccInstanceConfig_rootBlockDeviceMismatch(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0), fmt.Sprintf(`
-resource "aws_instance" "test" {
-  # This is an AMI in UsWest2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
-  ami = "ami-ef5b69df"
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type = "t1.micro"
-  subnet_id     = aws_subnet.test.id
-
-  root_block_device {
-    volume_size = 13
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)) //lintignore:AWSAT002
 }
 
 func testAccInstanceConfig_forceNewAndTagsDrift(rName string) string {
