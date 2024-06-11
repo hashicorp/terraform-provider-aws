@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -73,7 +73,7 @@ func (r *appBundleResource) Create(ctx context.Context, request resource.CreateR
 	conn := r.Meta().AppFabricClient(ctx)
 
 	input := &appfabric.CreateAppBundleInput{
-		ClientToken:                  aws.String(sdkid.UniqueId()),
+		ClientToken:                  aws.String(errs.Must(uuid.GenerateUUID())),
 		CustomerManagedKeyIdentifier: fwflex.StringFromFramework(ctx, data.CustomerManagedKeyARN),
 		Tags:                         getTagsIn(ctx),
 	}
