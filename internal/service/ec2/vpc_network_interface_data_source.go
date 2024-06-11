@@ -179,7 +179,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 		input.NetworkInterfaceIds = []string{v.(string)}
 	}
 
-	eni, err := findNetworkInterfaceV2(ctx, conn, input)
+	eni, err := findNetworkInterface(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Network Interface", err))

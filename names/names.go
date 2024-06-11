@@ -30,6 +30,7 @@ const (
 	AMPEndpointID                        = "aps"
 	AppStreamEndpointID                  = "appstream2"
 	ApplicationAutoscalingEndpointID     = "application-autoscaling"
+	AppFabricEndpointID                  = "appfabric"
 	AppIntegrationsEndpointID            = "app-integrations"
 	AppConfigEndpointID                  = "appconfig"
 	AmplifyEndpointID                    = "amplify"

@@ -874,7 +874,7 @@ func flattenRoutes(ctx context.Context, conn *ec2.Client, d *schema.ResourceData
 
 		// Skip cross-account ENIs for AWS services.
 		if networkInterfaceID := aws.ToString(apiObject.NetworkInterfaceId); networkInterfaceID != "" {
-			networkInterface, err := findNetworkInterfaceByIDV2(ctx, conn, networkInterfaceID)
+			networkInterface, err := findNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 
 			if err == nil && networkInterface.Attachment != nil {
 				if ownerID, instanceOwnerID := aws.ToString(networkInterface.OwnerId), aws.ToString(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {
