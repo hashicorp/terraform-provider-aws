@@ -32,18 +32,12 @@ jobs:
       VIEW_WORKING_BOARD: ${{ vars.team_project_view_working_board }}
 
     steps:
-      - name: Generate GitHub Authentication Token
+      - name: Generate GitHub App Token
         id: token
-        uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a # v2.1.0
+        uses: actions/create-github-app-token@c8f55efbd427e7465d6da1106e7979bc8aaee856 # v1.10.1
         with:
-          app_id: ${{ secrets.APP_ID }}
-          installation_retrieval_mode: id
-          installation_retrieval_payload: ${{ secrets.INSTALLATION_ID }}
-          private_key: ${{ secrets.APP_PEM }}
-          permissions: >-
-            {
-              "organization_projects": "write"
-            }
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
 
       - name: Check if Author is Maintainer
         id: author
