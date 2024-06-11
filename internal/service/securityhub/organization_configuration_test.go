@@ -33,7 +33,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
 				),
 			},
@@ -46,7 +46,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
 				),
 			},
@@ -68,7 +68,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("DEFAULT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
 				),
 			},
@@ -81,7 +81,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "NONE"),
 				),
 			},
@@ -116,9 +116,9 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_centralConfiguration(false, "NONE", "CENTRAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "CENTRAL"),
 				),
 			},
@@ -131,9 +131,9 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_centralConfiguration(true, "DEFAULT", "LOCAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
-					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "LOCAL"),
 				),
 			},

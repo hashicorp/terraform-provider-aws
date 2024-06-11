@@ -29,11 +29,11 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceAPIKeyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKey),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_role", managedgrafana.RoleEditor),
 					resource.TestCheckResourceAttr(resourceName, "seconds_to_live", "3600"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 				),
 			},
 		},

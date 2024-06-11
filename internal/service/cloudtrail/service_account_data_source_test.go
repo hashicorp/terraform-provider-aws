@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
@@ -25,8 +26,8 @@ func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
 			{
 				Config: testAccServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedAccountID),
+					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, names.AttrARN, expectedAccountID, "iam", "root"),
 				),
 			},
 		},
@@ -47,8 +48,8 @@ func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
 			{
 				Config: testAccServiceAccountDataSourceConfig_region,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedAccountID),
+					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, names.AttrARN, expectedAccountID, "iam", "root"),
 				),
 			},
 		},

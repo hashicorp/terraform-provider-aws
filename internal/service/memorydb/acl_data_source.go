@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_acl")
@@ -22,7 +23,7 @@ func DataSourceACL() *schema.Resource {
 		ReadWithoutTimeout: dataSourceACLRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -30,11 +31,11 @@ func DataSourceACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"user_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -50,7 +51,7 @@ func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	acl, err := FindACLByName(ctx, conn, name)
 
@@ -60,18 +61,18 @@ func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(acl.Name))
 
-	d.Set("arn", acl.ARN)
+	d.Set(names.AttrARN, acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
-	d.Set("name", acl.Name)
+	d.Set(names.AttrName, acl.Name)
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB ACL (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -106,17 +106,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import BCM Data Exports Export using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import BCM Data Exports Export using the export ARN. For example:
 
 ```terraform
 import {
   to = aws_bcmdataexports_export.example
-  id = "export-id-12345678"
+  id = "arn:aws:bcm-data-exports:us-east-1:123456789012:export/CostUsageReport-9f1c75f3-f982-4d9a-b936-1e7ecab814b7"
 }
 ```
 
-Using `terraform import`, import BCM Data Exports Export using the `export_arn`. For example:
+Using `terraform import`, import BCM Data Exports Export using the export ARN. For example:
 
 ```console
-% terraform import aws_bcmdataexports_export.example export-id-12345678
+% terraform import aws_bcmdataexports_export.example arn:aws:bcm-data-exports:us-east-1:123456789012:export/CostUsageReport-9f1c75f3-f982-4d9a-b936-1e7ecab814b7
 ```

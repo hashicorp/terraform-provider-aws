@@ -105,6 +105,8 @@ service/budgets:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_budgets_'
 service/ce:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ce_'
+service/chatbot:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chatbot_'
 service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
@@ -667,6 +669,8 @@ service/synthetics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_synthetics_'
 service/textract:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_textract_'
+service/timestreaminfluxdb:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_timestreaminfluxdb_'
 service/timestreamquery:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_timestreamquery_'
 service/timestreamwrite:

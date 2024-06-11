@@ -41,7 +41,7 @@ func ResourceClusterEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,17 +51,17 @@ func ResourceClusterEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -91,8 +91,8 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 
 	input := &neptune.CreateDBClusterEndpointInput{
 		DBClusterEndpointIdentifier: aws.String(d.Get("cluster_endpoint_identifier").(string)),
-		DBClusterIdentifier:         aws.String(d.Get("cluster_identifier").(string)),
-		EndpointType:                aws.String(d.Get("endpoint_type").(string)),
+		DBClusterIdentifier:         aws.String(d.Get(names.AttrClusterIdentifier).(string)),
+		EndpointType:                aws.String(d.Get(names.AttrEndpointType).(string)),
 		Tags:                        getTagsIn(ctx),
 	}
 
@@ -146,11 +146,11 @@ func resourceClusterEndpointRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", ep.DBClusterEndpointArn)
+	d.Set(names.AttrARN, ep.DBClusterEndpointArn)
 	d.Set("cluster_endpoint_identifier", ep.DBClusterEndpointIdentifier)
-	d.Set("cluster_identifier", ep.DBClusterIdentifier)
-	d.Set("endpoint", ep.Endpoint)
-	d.Set("endpoint_type", ep.CustomEndpointType)
+	d.Set(names.AttrClusterIdentifier, ep.DBClusterIdentifier)
+	d.Set(names.AttrEndpoint, ep.Endpoint)
+	d.Set(names.AttrEndpointType, ep.CustomEndpointType)
 	d.Set("excluded_members", aws.StringValueSlice(ep.ExcludedMembers))
 	d.Set("static_members", aws.StringValueSlice(ep.StaticMembers))
 
@@ -161,7 +161,7 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		clusterID, clusterEndpointID, err := clusterEndpointParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -171,8 +171,8 @@ func resourceClusterEndpointUpdate(ctx context.Context, d *schema.ResourceData, 
 			DBClusterEndpointIdentifier: aws.String(clusterEndpointID),
 		}
 
-		if d.HasChange("endpoint_type") {
-			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
+		if d.HasChange(names.AttrEndpointType) {
+			input.EndpointType = aws.String(d.Get(names.AttrEndpointType).(string))
 		}
 
 		if d.HasChange("excluded_members") {

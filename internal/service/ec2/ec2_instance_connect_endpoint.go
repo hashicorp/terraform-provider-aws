@@ -31,8 +31,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Instance Connect Endpoint")
+// @FrameworkResource("aws_ec2_instance_connect_endpoint", name="Instance Connect Endpoint")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func newInstanceConnectEndpointResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &instanceConnectEndpointResource{}
 
@@ -56,19 +57,19 @@ func (r *instanceConnectEndpointResource) Metadata(_ context.Context, request re
 func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"dns_name": schema.StringAttribute{
+			names.AttrDNSName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -88,7 +89,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"owner_id": schema.StringAttribute{
+			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -102,7 +103,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
@@ -110,7 +111,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					setplanmodifier.RequiresReplace(),
 				},
 			},
-			"subnet_id": schema.StringAttribute{
+			names.AttrSubnetID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -118,7 +119,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"vpc_id": schema.StringAttribute{
+			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

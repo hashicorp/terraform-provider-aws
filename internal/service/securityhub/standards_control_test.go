@@ -99,7 +99,7 @@ func testAccStandardsControl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "control_id", "CIS.1.10"),
 					resource.TestCheckResourceAttr(resourceName, "control_status", "ENABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "control_status_updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "description", "IAM password policies can prevent the reuse of a given password by the same user. It is recommended that the password policy prevent the reuse of passwords."),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "IAM password policies can prevent the reuse of a given password by the same user. It is recommended that the password policy prevent the reuse of passwords."),
 					resource.TestCheckResourceAttr(resourceName, "disabled_reason", ""),
 					resource.TestCheckResourceAttr(resourceName, "related_requirements.0", "CIS AWS Foundations 1.10"),
 					resource.TestCheckResourceAttrSet(resourceName, "remediation_url"),

@@ -20,8 +20,10 @@ import (
 )
 
 var (
-	out     string
-	service string
+	importalias string
+	multiclient bool
+	out         string
+	service     string
 
 	//go:embed patch.tmpl
 	patchTemplate string
@@ -31,10 +33,13 @@ type TemplateData struct {
 	GoV1Package        string
 	GoV1ClientTypeName string
 	GoV2Package        string
+	MultiClient        bool
+	ImportAlias        string
 	ProviderPackage    string
 	InputOutputTypes   []string
 	ContextFunctions   []string
 	Exceptions         []string
+	EnumTypes          []string
 }
 
 func main() {
@@ -44,6 +49,8 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags]\n\nFlags:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
+	flag.StringVar(&importalias, "importalias", "", "alias that the service package is imported as (optional)")
+	flag.BoolVar(&multiclient, "multiclient", false, "whether the service supports both v1 and v2 clients (optional)")
 	flag.StringVar(&out, "out", "awssdk.patch", "output file (optional)")
 	flag.StringVar(&service, "service", "", "service to migrate (required)")
 	flag.Parse()
@@ -108,7 +115,13 @@ func getPackageData(sd data.ServiceRecord) (TemplateData, error) {
 		GoV1Package:        goV1Package,
 		GoV1ClientTypeName: sd.GoV1ClientTypeName(),
 		GoV2Package:        sd.GoV2Package(),
+		ImportAlias:        importalias,
+		MultiClient:        multiclient,
 		ProviderPackage:    providerPackage,
+	}
+
+	if importalias == "" {
+		td.ImportAlias = td.GoV2Package
 	}
 
 	config := &packages.Config{
@@ -133,6 +146,10 @@ func getPackageData(sd data.ServiceRecord) (TemplateData, error) {
 
 			if o.Kind == ast.Typ && strings.HasSuffix(n, "Exception") {
 				td.Exceptions = append(td.Exceptions, strings.TrimPrefix(n, "ErrCode"))
+			}
+
+			if o.Kind == ast.Fun && strings.HasSuffix(n, "_Values") {
+				td.EnumTypes = append(td.EnumTypes, strings.TrimSuffix(n, "_Values"))
 			}
 		}
 	}

@@ -50,7 +50,7 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 
 func testAccCheckVPCEndpointConnectionAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_connection_accepter" {
@@ -63,7 +63,7 @@ func testAccCheckVPCEndpointConnectionAccepterDestroy(ctx context.Context) resou
 				return err
 			}
 
-			_, err = tfec2.FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
+			_, err = tfec2.FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx, conn, serviceID, vpcEndpointID)
 
 			if tfresource.NotFound(err) {
 				continue
