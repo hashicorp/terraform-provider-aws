@@ -15,35 +15,99 @@ Consumers of `names` include:
 
 After any edits to `data/names_data.hcl`, run `make gen`. Doing so regenerates code and performs checks on `data/names_data.hcl`.
 
-The attributes and blocks of `data/names_data.csv` are as follows:
+The schema of the attributes and blocks of `data/names_data.csv` are as follows:
+```hcl
+service "" { //  TF AWS provide package name 
 
-| Index | Name | Use | Description |
-| --- | --- | --- | --- |
-| 0 | **AWSCLIV2Command** | Reference | Service command in [AWS CLI v2](https://awscli.amazonaws.com/v2/documentation/api/latest/index.html) |
-| 1 | **AWSCLIV2CommandNoDashes** | Reference | Same as **AWSCLIV2Command** without dashes |
-| 2 | **GoV1Package** | Code | [AWS SDK for Go v1](https://docs.aws.amazon.com/sdk-for-go/api/) package name |
-| 3 | **GoV2Package** | Code | [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2) package name |
-| 4 | **ProviderPackageActual** | Code | Actual TF AWS provide package name _if_ **ProviderPackageCorrect** is not used; takes precedence over **ProviderPackageCorrect** if both are defined |
-| 5 | **ProviderPackageCorrect** | Code | Shorter of **AWSCLIV2CommandNoDashes** and **GoV2Package**; should _not_ be blank if either exists; same as [Service Identifier](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier); what the TF AWS Provider package name _should be_; **ProviderPackageActual** takes precedence |
-| 6 | **SplitPackageRealPackage** | Code | If multiple "services" live in one service, this is the package where the service's Go files live (_e.g._, VPC is part of EC2) |
-| 7 | **Aliases** | Code | _Semicolon_-separated list of name variations (_e.g._, for "AMP", `prometheus;prometheusservice`). Do not include **ProviderPackageActual** (or **ProviderPackageCorrect**, if blank) since that will create duplicates in the [Custom Endpoints guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/custom-service-endpoints). |
-| 8 | **ProviderNameUpper** | Code | [Correctly capitalized](https://hashicorp.github.io/terraform-provider-aws/naming/#mixed-caps) **ProviderPackageActual**, if it exists, otherwise **ProviderPackageCorrect** |
-| 9 | **GoV1ClientTypeName** | Code | _Exact name_ (_i.e._, spelling and capitalization) of the AWS SDK for Go v1 client type (_e.g._, see the [`New()` return type](https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#New) for SES) |
-| 10 | **SkipClientGenerate** | Code | Some service clients need special configuration rather than the default generated configuration; use a non-empty value to skip generation but you must then manually configure the client in `internal/conns/config.go` |
-| 11 | **ClientSDKV1** | Code | Whether, in the TF AWS Provider, the service currently uses AWS SDK for Go v1; use `1` or leave empty |
-| 12 | **ClientSDKV2** | Code | Whether, in the TF AWS Provider, the service currently uses AWS SDK for Go v2; use `2` or leave emtpy |
-| 13 | **ResourcePrefixActual** | Code | Regular expression to match anomalous TF resource name prefixes (_e.g._, for the resource name `aws_config_config_rule`, `aws_config_` will match all resources); only use if **ResourcePrefixCorrect** is not suitable (_e.g._, `aws_codepipeline_` won't work as there is only one resource named `aws_codepipeline`); takes precedence over **ResourcePrefixCorrect** |
-| 14 | **ResourcePrefixCorrect** | Code | Regular expression to match what resource name prefixes _should be_ (_i.e._, `aws_` + **ProviderPackageCorrect** + `_`); used if **ResourcePrefixActual** is blank |
-| 15 | **FilePrefix** | Code | If multiple "services" live in one service, this is the prefix that files must have to be associated with this sub-service (_e.g._, VPC files in the EC2 service are prefixed with `vpc_`); see also **SplitPackageRealPackage** |
-| 16 | **DocPrefix** | Code | _Semicolon_-separated list of prefixes for service documentation files in `website/docs/r` and `website/docs/d`; usually only one prefix, _i.e._, `<**ProviderPackageCorrect**>_` |
-| 17 | **HumanFriendly** | Code | [REQUIRED] Human-friendly name of service as used by AWS; documentation `subcategory` must exactly match this value; used in website navigation and error messages |
-| 18 | **Brand** | Code | Either `Amazon`, `AWS`, or blank (rare) as used by AWS; used in error messages |
-| 19 | **Exclude** | Code | Whether the service should be included; if included (blank), **ProviderPackageActual** or **ProviderPackageCorrect** must have a value |
-| 20 | **NotImplemented** | Code | Whether the service is implemented by the provider |
-| 21 | **EndpointOnly** | Code | If **NotImplemented** is non-blank, whether the service endpoint should be included in the provider `endpoints` configuration |
-| 22 | **AllowedSubcategory** | Code | If **Exclude** is non-blank, whether to include **HumanFriendly** in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides **Exclude** in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if **Exclude** is non-blank. |
-| 23 | **DeprecatedEnvVar** | Code | Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services |
-| 24 | **TFAWSEnvVar** | Code | `TF_AWS_<service>_ENDPOINT` envvar defined for some services |
-| 25 | **Note** | Reference | Very brief note usually to explain why excluded |
+  cli_v2_command { // If both of these attributes are the same as the service block's name, this block will be ommitted
+    aws_cli_v2_command           = ""
+    aws_cli_v2_command_no_dashes = ""
+  } 
+
+  go_packages { // If both of these attributes are the same as the service block's name, this block will be ommitted
+    v1_package = ""
+    v2_package = ""
+  } 
+
+  sdk {
+    id             = "" 
+    client_version = [] 
+  }
+
+  names {
+    aliases             = [""]
+    provider_name_upper = ""
+    human_friendly      = ""
+  }
+
+  client {
+    go_v1_client_typename = ""
+    skip_client_generate  = bool
+  }
+
+  env_var {
+    deprecated_env_var = ""
+    tf_aws_env_var     = ""
+  }
+
+  endpoint_info {
+    endpoint_api_call        = ""
+    endpoint_api_params      = ""
+    endpoint_region_override = ""
+    endpoint_only            = bool
+  }
+
+  resource_prefix {
+    actual  = ""
+    correct = "aws_accessanalyzer_"
+  }
+  	
+  split_package       = ""
+  file_prefix         = ""
+  doc_prefix          = [""]
+  brand               = ""
+  exclude             = bool
+  not_implemented     = bool
+  allowed_subcategory = bool
+  note                = ""
+}
+
+The explanation of the attributes of `data/names_data.csv` are as follows:
+
+```
+
+| Name | Use | Description |
+| --- | --- | --- |
+| **ProviderPackageActual** | Code | Actual TF AWS provide package name _if_ **ProviderPackageCorrect** is not used; takes precedence over **ProviderPackageCorrect** for service block name if both are defined |
+| **ProviderPackageCorrect** | Code | Shorter of **aws_cli_v2_command_no_dashes** and **v2_package**; should _not_ be blank if either exists; same as [Service Identifier](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier); what the TF AWS Provider package name _should be_; **ProviderPackageActual** takes precedence |
+| **aws_cli_v2_command** | Reference | Service command in [AWS CLI v2](https://awscli.amazonaws.com/v2/documentation/api/latest/index.html) |
+| **aws_cli_v2_command_no_dashes** | Reference | Same as **AWSCLIV2Command** without dashes |
+| **v1_package** | Code | [AWS SDK for Go v1](https://docs.aws.amazon.com/sdk-for-go/api/) package name |
+| **v2_package** | Code | [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2) package name |
+| **id** | Code | Either `Amazon`, `AWS`, or blank (rare) as used by AWS; used in error messages |
+| **client_version** | Code | HCL int list containing if in the TF AWS Provider, the service currently uses AWS SDK for Go v1 and/or v2; each integer represents the correlating version|
+| **aliases** | Code | HCL string list of name variations (_e.g._, for "AMP", `prometheus,prometheusservice`). Do not include **ProviderPackageActual** (or **ProviderPackageCorrect**, if blank) since that will create duplicates in the [Custom Endpoints guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/custom-service-endpoints). |
+| **provider_name_upper** | Code | [Correctly capitalized](https://hashicorp.github.io/terraform-provider-aws/naming/#mixed-caps) **ProviderPackageActual**, if it exists, otherwise **ProviderPackageCorrect** |
+| **human_friendly** | Code | [REQUIRED] Human-friendly name of service as used by AWS; documentation `subcategory` must exactly match this value; used in website navigation and error messages |
+| **go_v1_client_typename** | Code | _Exact name_ (_i.e._, spelling and capitalization) of the AWS SDK for Go v1 client type (_e.g._, see the [`New()` return type](https://docs.aws.amazon.com/sdk-for-go/api/service/ses/#New) for SES) |
+| **skip_client_generate** | Code | Some service clients need special configuration rather than the default generated configuration; use a non-empty value to skip generation but you must then manually configure the client in `internal/conns/config.go` |
+| **deprecated_env_var** | Code | Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services |
+| **tf_aws_env_var** | Code | `TF_AWS_<service>_ENDPOINT` envvar defined for some services |
+| **endpoint_api_call** | Code | AWS cli command to describe current service |
+| **endpoint_api_params** | Code | Used in service_endpoints_gen_test.go files for API calls that require a configured value |
+| **endpoint_region_override** | Code | Specified alternate regional [endpoint]([https://docs.aws.amazon.com/general/latest/gr/rande.html) for API requests |
+| **endpoint_only** | Code | Bool based on if **not_implemented** is non-blank, whether the service endpoint should be included in the provider `endpoints` configuration |
+| **resource_prefix_actual** | Code | Regular expression to match anomalous TF resource name prefixes (_e.g._, for the resource name `aws_config_config_rule`, `aws_config_` will match all resources); only use if **ResourcePrefixCorrect** is not suitable (_e.g._, `aws_codepipeline_` won't work as there is only one resource named `aws_codepipeline`); takes precedence over **ResourcePrefixCorrect** |
+| **resource_prefix_correct** | Code | Regular expression to match what resource name prefixes _should be_ (_i.e._, `aws_` + **ProviderPackageCorrect** + `_`); used if **resource_prefix_actual** is blank |
+| **split_package_real_package** | Code | If multiple "services" live in one service, this is the package where the service's Go files live (_e.g._, VPC is part of EC2) |
+| **file_prefix** | Code | If multiple "services" live in one service, this is the prefix that files must have to be associated with this sub-service (_e.g._, VPC files in the EC2 service are prefixed with `vpc_`); see also **split_packages_real_packages** |
+| **doc_prefix** | Code | Hcl string list of prefixes for service documentation files in `website/docs/r` and `website/docs/d`; usually only one prefix, _i.e._, `<**ProviderPackageCorrect**>_` |
+| **brand** | Code | Either `Amazon`, `AWS`, or blank (rare) as used by AWS; used in error messages |
+| **exclude** | Code | Bool based on whether the service should be included; if included (blank), **ProviderPackageActual** or **ProviderPackageCorrect** must have a value |
+| **allowed_subcategory** | Code | Bool based on if **Exclude** is non-blank, whether to include **HumanFriendly** in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides **Exclude** in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if **Exclude** is non-blank. |
+| **not_implemented** | Code | Bool based on whether the service is implemented by the provider |
+| **note** | Reference | Very brief note usually to explain why excluded |
+
+
 
 For more information about service naming, see [the Naming Guide](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier).
