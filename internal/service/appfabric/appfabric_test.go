@@ -29,6 +29,7 @@ func TestAccAppFabric_serial(t *testing.T) {
 		"Ingestion": {
 			acctest.CtBasic:      testAccIngestion_basic,
 			acctest.CtDisappears: testAccIngestion_disappears,
+			"tags":               testAccIngestion_tags,
 		},
 	}
 

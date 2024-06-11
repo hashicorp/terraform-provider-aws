@@ -37,7 +37,7 @@ func testAccIngestion_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIngestionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, "app", "OKTA"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -79,6 +79,56 @@ func testAccIngestion_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceIngestion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccIngestion_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ingestion awstypes.Ingestion
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appfabric_ingestion.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIngestionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIngestionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccIngestionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -146,4 +196,47 @@ resource "aws_appfabric_ingestion" "test" {
   ingestion_type = "auditLog"
 }
 `, rName)
+}
+
+func testAccIngestionConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_appfabric_ingestion" "test" {
+  app            = "OKTA"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  tenant_id      = "test-tenant-id"
+  ingestion_type = "auditLog"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccIngestionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_appfabric_ingestion" "test" {
+  app            = "OKTA"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  tenant_id      = "test-tenant-id"
+  ingestion_type = "auditLog"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

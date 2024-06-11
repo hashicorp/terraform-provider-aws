@@ -40,7 +40,7 @@ func newIngestionResource(context.Context) (resource.ResourceWithConfigure, erro
 
 type ingestionResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoUpdate
+	framework.WithNoOpUpdate[ingestionResourceModel]
 	framework.WithImportByID
 }
 
