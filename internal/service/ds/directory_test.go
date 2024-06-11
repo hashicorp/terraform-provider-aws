@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccDSDirectory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -73,7 +73,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 
 func TestAccDSDirectory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -102,7 +102,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 
 func TestAccDSDirectory_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -156,7 +156,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 
 func TestAccDSDirectory_microsoft(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -204,7 +204,7 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 
 func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -252,7 +252,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 
 func TestAccDSDirectory_connector(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -306,7 +306,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 
 func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -373,7 +373,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 
 func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ds directoryservice.DirectoryDescription
+	var ds awstypes.DirectoryDescription
 	resourceName := "aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -435,7 +435,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 
 func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_directory" {
@@ -459,7 +459,7 @@ func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDirectoryExists(ctx context.Context, n string, v *directoryservice.DirectoryDescription) resource.TestCheckFunc {
+func testAccCheckDirectoryExists(ctx context.Context, n string, v *awstypes.DirectoryDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -470,7 +470,7 @@ func testAccCheckDirectoryExists(ctx context.Context, n string, v *directoryserv
 			return fmt.Errorf("No Directory Service Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		output, err := tfds.FindDirectoryByID(ctx, conn, rs.Primary.ID)
 

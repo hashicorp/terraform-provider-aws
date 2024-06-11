@@ -8,24 +8,26 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
+func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration) (*awstypes.DomainController, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DomainControllerStatusCreating},
-		Target:  []string{directoryservice.DomainControllerStatusActive},
+		Pending: enum.Slice(awstypes.DomainControllerStatusCreating),
+		Target:  enum.Slice(awstypes.DomainControllerStatusActive),
 		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*directoryservice.DomainController); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+	if output, ok := outputRaw.(*awstypes.DomainController); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -33,9 +35,9 @@ func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.Dir
 	return nil, err
 }
 
-func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
+func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, domainControllerID string, timeout time.Duration) (*awstypes.DomainController, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DomainControllerStatusDeleting},
+		Pending: enum.Slice(awstypes.DomainControllerStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDomainController(ctx, conn, directoryID, domainControllerID),
 		Timeout: timeout,
@@ -43,8 +45,8 @@ func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Dir
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*directoryservice.DomainController); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusReason)))
+	if output, ok := outputRaw.(*awstypes.DomainController); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
 
 		return output, err
 	}
@@ -52,43 +54,43 @@ func waitDomainControllerDeleted(ctx context.Context, conn *directoryservice.Dir
 	return nil, err
 }
 
-func waitRadiusCompleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) { //nolint:unparam
+func waitRadiusCompleted(ctx context.Context, conn *directoryservice.Client, directoryID string, timeout time.Duration) (*awstypes.DirectoryDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.RadiusStatusCreating},
-		Target:  []string{directoryservice.RadiusStatusCompleted},
+		Pending: enum.Slice(awstypes.RadiusStatusCreating),
+		Target:  enum.Slice(awstypes.RadiusStatusCompleted),
 		Refresh: statusRadius(ctx, conn, directoryID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
+	if output, ok := outputRaw.(*awstypes.DirectoryDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitRegionCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string, timeout time.Duration) (*directoryservice.RegionDescription, error) {
+func waitRegionCreated(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration) (*awstypes.RegionDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
-		Target:  []string{directoryservice.DirectoryStageActive},
+		Pending: enum.Slice(awstypes.DirectoryStageRequested, awstypes.DirectoryStageCreating, awstypes.DirectoryStageCreated),
+		Target:  enum.Slice(awstypes.DirectoryStageActive),
 		Refresh: statusRegion(ctx, conn, directoryID, regionName),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*directoryservice.RegionDescription); ok {
+	if output, ok := outputRaw.(*awstypes.RegionDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitRegionDeleted(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string, timeout time.Duration) (*directoryservice.RegionDescription, error) {
+func waitRegionDeleted(ctx context.Context, conn *directoryservice.Client, directoryID, regionName string, timeout time.Duration) (*awstypes.RegionDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
+		Pending: enum.Slice(awstypes.DirectoryStageActive, awstypes.DirectoryStageDeleting),
 		Target:  []string{},
 		Refresh: statusRegion(ctx, conn, directoryID, regionName),
 		Timeout: timeout,
@@ -96,23 +98,23 @@ func waitRegionDeleted(ctx context.Context, conn *directoryservice.DirectoryServ
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*directoryservice.RegionDescription); ok {
+	if output, ok := outputRaw.(*awstypes.RegionDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string, timeout time.Duration) (*directoryservice.SharedDirectory, error) {
+func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Client, ownerDirectoryID, sharedDirectoryID string, timeout time.Duration) (*awstypes.SharedDirectory, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			directoryservice.ShareStatusDeleting,
-			directoryservice.ShareStatusShared,
-			directoryservice.ShareStatusPendingAcceptance,
-			directoryservice.ShareStatusRejectFailed,
-			directoryservice.ShareStatusRejected,
-			directoryservice.ShareStatusRejecting,
-		},
+		Pending: enum.Slice(
+			awstypes.ShareStatusDeleting,
+			awstypes.ShareStatusShared,
+			awstypes.ShareStatusPendingAcceptance,
+			awstypes.ShareStatusRejectFailed,
+			awstypes.ShareStatusRejected,
+			awstypes.ShareStatusRejecting,
+		),
 		Target:                    []string{},
 		Refresh:                   statusSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID),
 		Timeout:                   timeout,
@@ -122,17 +124,17 @@ func waitSharedDirectoryDeleted(ctx context.Context, conn *directoryservice.Dire
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*directoryservice.SharedDirectory); ok {
+	if output, ok := outputRaw.(*awstypes.SharedDirectory); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDirectoryShared(ctx context.Context, conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.SharedDirectory, error) {
+func waitDirectoryShared(ctx context.Context, conn *directoryservice.Client, id string, timeout time.Duration) (*awstypes.SharedDirectory, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{directoryservice.ShareStatusPendingAcceptance, directoryservice.ShareStatusSharing},
-		Target:                    []string{directoryservice.ShareStatusShared},
+		Pending:                   enum.Slice(awstypes.ShareStatusPendingAcceptance, awstypes.ShareStatusSharing),
+		Target:                    enum.Slice(awstypes.ShareStatusShared),
 		Refresh:                   statusDirectoryShareStatus(ctx, conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
@@ -140,7 +142,7 @@ func waitDirectoryShared(ctx context.Context, conn *directoryservice.DirectorySe
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*directoryservice.SharedDirectory); ok {
+	if output, ok := outputRaw.(*awstypes.SharedDirectory); ok {
 		return output, err
 	}
 

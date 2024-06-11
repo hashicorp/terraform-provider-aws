@@ -9,13 +9,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -69,15 +70,15 @@ func ResourceSharedDirectoryAccepter() *schema.Resource {
 func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	input := directoryservice.AcceptSharedDirectoryInput{
 		SharedDirectoryId: aws.String(d.Get("shared_directory_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Accepting shared directory: %s", input)
+	log.Printf("[DEBUG] Accepting shared directory: %+v", input)
 
-	output, err := conn.AcceptSharedDirectoryWithContext(ctx, &input)
+	output, err := conn.AcceptSharedDirectory(ctx, &input)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), err)
@@ -103,7 +104,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
@@ -122,16 +123,16 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).DSConn(ctx)
+	conn := meta.(*conns.AWSClient).DSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ClientException](ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectory(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})
-	}, directoryservice.ErrCodeClientException, "authorized applications")
+	}, "authorized applications")
 
-	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
+	if errs.IsA[*awstypes.EntityDoesNotExistException](err) {
 		return diags
 	}
 

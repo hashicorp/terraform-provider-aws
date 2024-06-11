@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +28,7 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v directoryservice.RadiusSettings
+	var v awstypes.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -76,7 +76,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v directoryservice.RadiusSettings
+	var v awstypes.RadiusSettings
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -104,7 +104,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 
 func testAccCheckRadiusSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_radius_settings" {
@@ -128,7 +128,7 @@ func testAccCheckRadiusSettingsDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckRadiusSettingsExists(ctx context.Context, n string, v *directoryservice.RadiusSettings) resource.TestCheckFunc {
+func testAccCheckRadiusSettingsExists(ctx context.Context, n string, v *awstypes.RadiusSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -139,7 +139,7 @@ func testAccCheckRadiusSettingsExists(ctx context.Context, n string, v *director
 			return fmt.Errorf("No Directory Service RADIUS Settings ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		output, err := tfds.FindRadiusSettings(ctx, conn, rs.Primary.ID)
 

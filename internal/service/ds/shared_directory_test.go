@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccDSSharedDirectory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.SharedDirectory
+	var v awstypes.SharedDirectory
 	resourceName := "aws_directory_service_shared_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -53,7 +53,7 @@ func TestAccDSSharedDirectory_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *directoryservice.SharedDirectory) resource.TestCheckFunc {
+func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *awstypes.SharedDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -64,7 +64,7 @@ func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *directo
 			return fmt.Errorf("No Directory Service Shared Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		output, err := tfds.FindSharedDirectory(ctx, conn, rs.Primary.Attributes["directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
@@ -80,7 +80,7 @@ func testAccCheckSharedDirectoryExists(ctx context.Context, n string, v *directo
 
 func testAccCheckSharedDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_shared_directory" {

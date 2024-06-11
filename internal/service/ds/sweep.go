@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	tferrs "github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -45,7 +46,7 @@ func sweepDirectories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.DSConn(ctx)
+	conn := client.DSClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -58,7 +59,7 @@ func sweepDirectories(region string) error {
 		for _, directory := range page.DirectoryDescriptions {
 			r := ResourceDirectory()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(directory.DirectoryId))
+			d.SetId(aws.ToString(directory.DirectoryId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -66,7 +67,7 @@ func sweepDirectories(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Directory Service Directory sweep for %s: %s", region, err)
 		return nil
 	}
@@ -91,7 +92,7 @@ func sweepRegions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.DSConn(ctx)
+	conn := client.DSClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -103,10 +104,6 @@ func sweepRegions(region string) error {
 		}
 
 		for _, directory := range page.DirectoryDescriptions {
-			if directory == nil {
-				continue
-			}
-
 			if directory.RegionsInfo == nil || len(directory.RegionsInfo.AdditionalRegions) == 0 {
 				continue
 			}
@@ -119,10 +116,10 @@ func sweepRegions(region string) error {
 				}
 
 				for _, region := range page.RegionsDescription {
-					if region != nil && aws.StringValue(region.RegionType) != directoryservice.RegionTypePrimary {
+					if region.RegionType != awstypes.RegionTypePrimary {
 						r := ResourceRegion()
 						d := r.Data(nil)
-						d.SetId(RegionCreateResourceID(aws.StringValue(region.DirectoryId), aws.StringValue(region.RegionName)))
+						d.SetId(RegionCreateResourceID(aws.ToString(region.DirectoryId), aws.ToString(region.RegionName)))
 						sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 					}
 				}
@@ -130,12 +127,12 @@ func sweepRegions(region string) error {
 				return !lastPage
 			})
 
-			if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeUnsupportedOperationException, "Multi-region replication") {
-				log.Printf("[INFO] Skipping Directory Service Regions for %s", aws.StringValue(directory.DirectoryId))
+			if tferrs.IsAErrorMessageContains[*awstypes.UnsupportedOperationException](err, "Multi-region replication") {
+				log.Printf("[INFO] Skipping Directory Service Regions for %s", aws.ToString(directory.DirectoryId))
 				continue
 			}
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("describing Directory Service Regions for %s: %w", aws.StringValue(directory.DirectoryId), err))
+				errs = multierror.Append(errs, fmt.Errorf("describing Directory Service Regions for %s: %w", aws.ToString(directory.DirectoryId), err))
 				continue
 			}
 		}
@@ -151,7 +148,7 @@ func sweepRegions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Directory Service Regions for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Directory Service Regions sweep for %s: %s", region, errs)
 		return nil
 	}

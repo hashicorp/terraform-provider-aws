@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccDSRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -56,7 +56,7 @@ func TestAccDSRegion_basic(t *testing.T) {
 
 func TestAccDSRegion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -85,7 +85,7 @@ func TestAccDSRegion_disappears(t *testing.T) {
 
 func TestAccDSRegion_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -136,7 +136,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 
 func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v directoryservice.RegionDescription
+	var v awstypes.RegionDescription
 	resourceName := "aws_directory_service_region.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -176,7 +176,7 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 
 func testAccCheckRegionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_directory_service_region" {
@@ -206,7 +206,7 @@ func testAccCheckRegionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRegionExists(ctx context.Context, n string, v *directoryservice.RegionDescription) resource.TestCheckFunc {
+func testAccCheckRegionExists(ctx context.Context, n string, v *awstypes.RegionDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -223,7 +223,7 @@ func testAccCheckRegionExists(ctx context.Context, n string, v *directoryservice
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		output, err := tfds.FindRegion(ctx, conn, directoryID, regionName)
 

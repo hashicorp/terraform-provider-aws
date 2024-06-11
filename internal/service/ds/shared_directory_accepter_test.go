@@ -8,7 +8,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -38,7 +38,7 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 				Config: testAccSharedDirectoryAccepterConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSharedDirectoryAccepterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "method", directoryservice.ShareMethodHandshake),
+					resource.TestCheckResourceAttr(resourceName, "method", string(awstypes.ShareMethodHandshake)),
 					resource.TestCheckResourceAttr(resourceName, "notes", "There were hints and allegations"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrOwnerAccountID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_directory_id"),
@@ -68,7 +68,7 @@ func testAccCheckSharedDirectoryAccepterExists(ctx context.Context, n string) re
 			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, n, errors.New("no ID is set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSClient(ctx)
 
 		_, err := tfds.FindSharedDirectory(ctx, conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
 

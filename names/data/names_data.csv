@@ -125,7 +125,7 @@ dms,dms,databasemigrationservice,databasemigrationservice,,dms,,databasemigratio
 docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,,2,,aws_docdb_,,docdb_,DocumentDB,Amazon,,,,,,,DocDB,DescribeDBClusters,,,
 docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocumentDB Elastic,Amazon,,,,,,,DocDB Elastic,ListClusters,,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,,2,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,,,,,,DRS,DescribeJobs,,,
-ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,,
+ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,,
 dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,x,,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,,
 dax,dax,dax,dax,,dax,,,DAX,DAX,,,2,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,,,DAX,DescribeClusters,,,
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,x,,,,,DynamoDB Streams,,,,
