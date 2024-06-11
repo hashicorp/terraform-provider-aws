@@ -1824,7 +1824,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			if tfresource.NotFound(err) {
 				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
 				d.SetId("")
-				return nil
+				return diags
 			}
 		}
 	}
@@ -2518,7 +2518,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
@@ -2529,7 +2529,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) delete: %s", d.Get(names.AttrIdentifier).(string), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

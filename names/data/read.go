@@ -171,6 +171,10 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 	return sr[colEndpointAPIParams]
 }
 
+func (sr ServiceRecord) EndpointOverrideRegion() string {
+	return sr[colEndpointOverrideRegion]
+}
+
 func (sr ServiceRecord) Note() string {
 	return sr[colNote]
 }
@@ -231,5 +235,6 @@ const (
 	colSDKID             // Service SDK ID from AWS SDK for Go v2
 	colEndpointAPICall   // API call to use for endpoint tests
 	colEndpointAPIParams // Any needed parameters for endpoint tests
+	colEndpointOverrideRegion
 	colNote
 )
