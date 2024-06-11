@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.18
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.5
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.24
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.8
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.30.3
@@ -33,7 +33,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.11
 	github.com/aws/aws-sdk-go-v2/service/batch v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.10
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.7
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.8
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.2.3
@@ -158,7 +158,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.24.10
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.2
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.9
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.10
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.10
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.10
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.29.6
