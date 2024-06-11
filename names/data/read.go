@@ -4,12 +4,12 @@
 package data
 
 import (
-	"bytes"
 	_ "embed"
-	"encoding/csv"
-	"errors"
-	"io"
+	"log"
 	"strings"
+
+	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hclparse"
 )
 
 type ServiceRecord []string
@@ -179,32 +179,197 @@ func (sr ServiceRecord) Note() string {
 	return sr[colNote]
 }
 
-func ReadAllServiceData() (results []ServiceRecord, err error) {
-	reader := csv.NewReader(bytes.NewReader(namesData))
-	// reader.ReuseRecord = true
+func (curr Service) parseService() ServiceRecord {
 
-	// Skip the header
-	_, err = reader.Read()
-	if err != nil {
-		return
+	record := make(ServiceRecord, colNote+1)
+
+	// provider packages/label
+	record[colProviderPackageActual] = curr.Label
+	record[colProviderPackageCorrect] = curr.Label
+
+	// cli_v2_command
+	if len(curr.ServiceCli) > 0 {
+		record[colAWSCLIV2Command] = curr.ServiceCli[0].AWSCLIV2Command
+		record[colAWSCLIV2CommandNoDashes] = curr.ServiceCli[0].AWSCLIV2CommandNoDashes
+	} else {
+		record[colAWSCLIV2Command] = curr.Label
+		record[colAWSCLIV2CommandNoDashes] = curr.Label
 	}
 
-	for {
-		r, err := reader.Read()
-		if errors.Is(err, io.EOF) {
-			break
+	// go_packages
+	if len(curr.ServiceGoPackages) > 0 {
+		record[colGoV1Package] = curr.ServiceGoPackages[0].V1Package
+		record[colGoV2Package] = curr.ServiceGoPackages[0].V2Package
+	} else {
+		record[colGoV1Package] = curr.Label
+		record[colGoV2Package] = curr.Label
+	}
+
+	// sdk
+	record[colSDKID] = curr.ServiceSDK.ID
+	for _, i := range curr.ServiceSDK.Version {
+		if i == 1 {
+			record[colClientSDKV1] = "1"
 		}
-		if err != nil {
-			return nil, err
+		if i == 2 {
+			record[colClientSDKV2] = "2"
 		}
-		results = append(results, ServiceRecord(r))
+	}
+
+	// names
+	record[colAliases] = strings.Join(curr.ServiceNames.Aliases, ";")
+	record[colProviderNameUpper] = curr.ServiceNames.ProviderNameUpper
+	record[colHumanFriendly] = curr.ServiceNames.HumanFriendly
+
+	// client
+	record[colGoV1ClientTypeName] = curr.ServiceClient.GoV1ClientTypeName
+	if curr.ServiceClient.SkipClientGenerate {
+		record[colSkipClientGenerate] = "x"
+	} else {
+		record[colSkipClientGenerate] = ""
+	}
+
+	// env_var
+	record[colDeprecatedEnvVar] = curr.ServiceEnvVars.DeprecatedEnvVar
+	record[colTFAWSEnvVar] = curr.ServiceEnvVars.TFAWSEnvVar
+
+	// endpoint_info
+	record[colEndpointAPICall] = curr.ServiceEndpoints.EndpointAPICall
+	record[colEndpointAPIParams] = curr.ServiceEndpoints.EndpointAPIParams
+	record[colEndpointOverrideRegion] = curr.ServiceEndpoints.EndpointRegionOverride
+	if curr.ServiceEndpoints.EndpointOnly {
+		record[colEndpointOnly] = "x"
+	} else {
+		record[colEndpointOnly] = ""
+	}
+
+	// resource_prefix
+	record[colResourcePrefixActual] = curr.ServiceResourcePrefix.ResourcePrefixActual
+	record[colResourcePrefixCorrect] = curr.ServiceResourcePrefix.ResourcePrefixCorrect
+
+	// rest
+	record[colSplitPackageRealPackage] = curr.ServiceSplitPackage
+	record[colFilePrefix] = curr.FilePrefix
+	record[colDocPrefix] = strings.Join(curr.DocPrefix, ";")
+	record[colBrand] = curr.Brand
+	if curr.Exclude {
+		record[colExclude] = "x"
+	} else {
+		record[colExclude] = ""
+	}
+	if curr.NotImplemented {
+		record[colNotImplemented] = "x"
+	} else {
+		record[colNotImplemented] = ""
+	}
+	if curr.AllowedSubcategory {
+		record[colAllowedSubcategory] = "x"
+	} else {
+		record[colAllowedSubcategory] = ""
+	}
+	record[colNote] = curr.Note
+
+	return record
+}
+
+func ReadAllServiceData() (results []ServiceRecord, err error) {
+	var decodedServiceList Services
+	parser := hclparse.NewParser()
+	toParse, parseErr := parser.ParseHCLFile("/Users/thomas.zalewski/code/hashi_repos/for_official/terraform_hc_change/terraform-provider-aws/names/data/names_data.hcl")
+	if parseErr.HasErrors() {
+		log.Fatalf("parser error : ", parseErr)
+	}
+	Derr := gohcl.DecodeBody(toParse.Body, nil, &decodedServiceList)
+	if Derr.HasErrors() {
+		log.Fatalf("Decode error", Derr)
+	}
+	for _, curr := range decodedServiceList.ServiceList {
+		if len(curr.SubService) > 0 {
+			for _, sub := range curr.SubService {
+				results = append(results, sub.parseService())
+			}
+		}
+		results = append(results, curr.parseService())
 	}
 
 	return
 }
 
-//go:embed names_data.csv
-var namesData []byte
+type CLIV2Command struct {
+	AWSCLIV2Command         string `hcl:"aws_cli_v2_command,attr"`
+	AWSCLIV2CommandNoDashes string `hcl:"aws_cli_v2_command_no_dashes,attr"`
+}
+
+type GoPackages struct {
+	V1Package string `hcl:"v1_package,optional"`
+	V2Package string `hcl:"v2_package,optional"`
+}
+
+type ResourcePrefix struct {
+	ResourcePrefixActual  string `hcl:"actual,attr"`
+	ResourcePrefixCorrect string `hcl:"correct,attr"`
+}
+
+type SDK struct {
+	ID      string `hcl:"id,attr"`
+	Version []int  `hcl:"client_version,attr"`
+}
+
+type Names struct {
+	Aliases           []string `hcl:"aliases,attr"`
+	ProviderNameUpper string   `hcl:"provider_name_upper,attr"`
+	HumanFriendly     string   `hcl:"human_friendly,attr"`
+}
+
+type ProviderPackage struct {
+	Actual  string `hcl:"actual,attr"`
+	Correct string `hcl:"correct,attr"`
+}
+
+type Client struct {
+	GoV1ClientTypeName string `hcl:"go_v1_client_typename,attr"`
+	SkipClientGenerate bool   `hcl:"skip_client_generate,attr"`
+}
+
+type EnvVar struct {
+	DeprecatedEnvVar string `hcl:"deprecated_env_var,attr"`
+	TFAWSEnvVar      string `hcl:"tf_aws_env_var,attr"`
+}
+
+type EndpointInfo struct {
+	EndpointAPICall        string `hcl:"endpoint_api_call,attr"`
+	EndpointAPIParams      string `hcl:"endpoint_api_params,attr"`
+	EndpointRegionOverride string `hcl:"endpoint_region_override,attr"`
+	EndpointOnly           bool   `hcl:"endpoint_only,attr"`
+}
+
+type Service struct {
+	Label             string         `hcl:"CLIV2Command,label"`
+	ServiceCli        []CLIV2Command `hcl:"cli_v2_command,block"`
+	ServiceGoPackages []GoPackages   `hcl:"go_packages,block"`
+	ServiceSDK        SDK            `hcl:"sdk,block"`
+	ServiceNames      Names          `hcl:"names,block"`
+
+	ServiceClient         Client         `hcl:"client,block"`
+	ServiceEnvVars        EnvVar         `hcl:"env_var,block"`
+	ServiceEndpoints      EndpointInfo   `hcl:"endpoint_info,block"`
+	ServiceResourcePrefix ResourcePrefix `hcl:"resource_prefix,block"`
+
+	SubService []Service `hcl:"sub_service,block"`
+
+	ServiceSplitPackage string   `hcl:"split_package,attr"`
+	FilePrefix          string   `hcl:"file_prefix,attr"`
+	DocPrefix           []string `hcl:"doc_prefix,attr"`
+	Brand               string   `hcl:"brand,attr"`
+	Exclude             bool     `hcl:"exclude,attr"`
+	NotImplemented      bool     `hcl:"not_implemented,attr"`
+	AllowedSubcategory  bool     `hcl:"allowed_subcategory,attr"`
+	Note                string   `hcl:"note,attr"`
+}
+
+type Services struct {
+	ServiceList []Service `hcl:"service,block"`
+}
 
 const (
 	colAWSCLIV2Command = iota
