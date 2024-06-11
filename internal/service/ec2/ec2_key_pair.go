@@ -92,6 +92,10 @@ func resourceKeyPair() *schema.Resource {
 						return ""
 					}
 				},
+				DiffSuppressFunc: func(_k, oldValue, newValue string, _d *schema.ResourceData) bool {
+					// Ignore differences that don't change the actual key, such as differences in the comment
+					return OpenSSHPublicKeysEqual(oldValue, newValue)
+				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -150,6 +154,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
+	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
 	setTagsOutV2(ctx, keyPair.Tags)
 
