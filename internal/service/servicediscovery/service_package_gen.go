@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_service_discovery_instance",
 		},
 		{
-			Factory:  ResourcePrivateDNSNamespace,
+			Factory:  resourcePrivateDNSNamespace,
 			TypeName: "aws_service_discovery_private_dns_namespace",
 			Name:     "Private DNS Namespace",
 			Tags: &types.ServicePackageResourceTags{
