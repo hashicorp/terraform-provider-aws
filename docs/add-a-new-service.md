@@ -32,7 +32,7 @@ To add an AWS SDK for Go service client:
     !!! tip
         Be very careful when adding or changing data in `names_data.hcl`!
         The Provider and generators depend on the file being correct.
-        We strongly recommend using an editor with CSV support.
+        We strongly recommend using an editor with HCL support.
 
 Once the names data is ready, create a new service directory with the appropriate service name.
 
@@ -70,7 +70,7 @@ Once the service client has been added, implement the first [resource](./add-a-n
 
 If an AWS service must be created in a non-standard way, for example, the service API's endpoint must be accessed via a single AWS Region, then:
 
-1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
+1. Make the **SkipClientGenerate** attribute true for the service in [`names/data/names_data.hcl`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
 
 1. Run `make gen`
 
