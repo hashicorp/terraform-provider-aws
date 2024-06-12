@@ -72,18 +72,6 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, if Exclude is blank, either AWSCLIV2CommandNoDashes or GoV2Package must have values", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ProviderPackageActual() != "" && l.ProviderPackageCorrect() == "" {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual can't be non-blank if ProviderPackageCorrect is blank", i+lineOffset, l.HumanFriendly())
-		}
-
-		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" && !l.Exclude() {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual and ProviderPackageCorrect cannot both be blank unless Exclude is non-blank", i+lineOffset, l.HumanFriendly())
-		}
-
-		if l.ProviderPackageCorrect() != "" && l.ProviderPackageActual() == l.ProviderPackageCorrect() {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual should only be used if different from ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
-		}
-
 		packageToUse := l.ProviderPackageCorrect()
 
 		if l.ProviderPackageActual() != "" {
@@ -112,10 +100,6 @@ func main() {
 
 		if l.ResourcePrefixCorrect() == "" && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect must have a value if Exclude is blank", i+lineOffset, l.HumanFriendly())
-		}
-
-		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
-			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
 		}
 
 		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixActual() == l.ResourcePrefixCorrect() {
