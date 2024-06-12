@@ -202,7 +202,7 @@ func testAccView_scope(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrScope, "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrScope),
 				),
 			},
 			{
@@ -389,8 +389,8 @@ resource "aws_resourceexplorer2_index" "test" {
 }
 
 resource "aws_resourceexplorer2_view" "test" {
-  name = %[1]q
-
+  name  = %[1]q
+  scope = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
   depends_on = [aws_resourceexplorer2_index.test]
 }
 `, rName)
