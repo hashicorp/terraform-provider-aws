@@ -26,6 +26,7 @@ func testAccAppAuthorization_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -63,6 +64,7 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -96,6 +98,7 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -153,6 +156,7 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -212,6 +216,7 @@ func testAccAppAuthorization_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -306,8 +311,6 @@ func testAccCheckAppAuthorizationExists(ctx context.Context, n string, v *types.
 
 func testAccAppAuthorizationConfig_basic() string {
 	return `
-
-
 resource "aws_appfabric_app_authorization" "test" {
   app_bundle_identifier = aws_appfabric_app_bundle.arn
   app                   = "TERRAFORMCLOUD"
@@ -327,8 +330,6 @@ resource "aws_appfabric_app_authorization" "test" {
 
 func testAccAppAuthorizationConfig_updatedAPIkey() string {
 	return `
-
-
 resource "aws_appfabric_app_authorization" "test" {
   app_bundle_identifier = aws_appfabric_app_bundle.arn
   app                   = "TERRAFORMCLOUD"
@@ -388,8 +389,6 @@ resource "aws_appfabric_app_authorization" "test" {
 
 func testAccAppAuthorizationConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-
-
 resource "aws_appfabric_app_authorization" "test" {
   app_bundle_identifier = aws_appfabric_app_bundle.arn
   app                   = "TERRAFORMCLOUD"
@@ -413,8 +412,6 @@ resource "aws_appfabric_app_authorization" "test" {
 
 func testAccAppAuthorizationConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-
-
 resource "aws_appfabric_app_authorization" "test" {
   app_bundle_identifier = aws_appfabric_app_bundle.arn
   app                   = "TERRAFORMCLOUD"
