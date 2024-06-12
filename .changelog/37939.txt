@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_instance_connect_endpoint: Fix known-after-apply loops when fips_dns_name is missing in non-US regions
+```
