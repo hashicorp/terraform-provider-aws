@@ -33,15 +33,15 @@ service "accessanalyzer" {
     actual  = ""
     correct = "aws_accessanalyzer_"
   }
-  	
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["accessanalyzer_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "accessanalyzer"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["accessanalyzer_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "account" {
 
@@ -77,14 +77,15 @@ service "account" {
     actual  = ""
     correct = "aws_account_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["account_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "account"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["account_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "acm" {
 
@@ -120,14 +121,15 @@ service "acm" {
     actual  = ""
     correct = "aws_acm_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["acm_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "acm"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["acm_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "acmpca" {
 
@@ -168,14 +170,15 @@ service "acmpca" {
     actual  = ""
     correct = "aws_acmpca_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["acmpca_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "acmpca"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["acmpca_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "alexaforbusiness" {
 
@@ -211,14 +214,15 @@ service "alexaforbusiness" {
     actual  = ""
     correct = "aws_alexaforbusiness_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["alexaforbusiness_"]
-  brand               = ""
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "alexaforbusiness"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["alexaforbusiness_"]
+  brand                    = ""
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "amp" {
 
@@ -259,14 +263,15 @@ service "amp" {
     actual  = "aws_prometheus_"
     correct = "aws_amp_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["prometheus_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "amp"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["prometheus_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "amplify" {
 
@@ -302,14 +307,15 @@ service "amplify" {
     actual  = ""
     correct = "aws_amplify_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["amplify_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "amplify"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["amplify_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "amplifybackend" {
 
@@ -345,14 +351,15 @@ service "amplifybackend" {
     actual  = ""
     correct = "aws_amplifybackend_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["amplifybackend_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "amplifybackend"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["amplifybackend_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "amplifyuibuilder" {
 
@@ -388,14 +395,15 @@ service "amplifyuibuilder" {
     actual  = ""
     correct = "aws_amplifyuibuilder_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["amplifyuibuilder_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "amplifyuibuilder"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["amplifyuibuilder_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "apigateway" {
 
@@ -431,14 +439,15 @@ service "apigateway" {
     actual  = "aws_api_gateway_"
     correct = "aws_apigateway_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["api_gateway_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "apigateway"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["api_gateway_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "apigatewaymanagementapi" {
 
@@ -474,14 +483,15 @@ service "apigatewaymanagementapi" {
     actual  = ""
     correct = "aws_apigatewaymanagementapi_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["apigatewaymanagementapi_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "apigatewaymanagementapi"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["apigatewaymanagementapi_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "apigatewayv2" {
 
@@ -517,14 +527,15 @@ service "apigatewayv2" {
     actual  = ""
     correct = "aws_apigatewayv2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["apigatewayv2_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "apigatewayv2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["apigatewayv2_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appfabric" {
 
@@ -560,14 +571,15 @@ service "appfabric" {
     actual  = ""
     correct = "aws_appfabric_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appfabric_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appfabric"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appfabric_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appmesh" {
 
@@ -603,14 +615,15 @@ service "appmesh" {
     actual  = ""
     correct = "aws_appmesh_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appmesh_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appmesh"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appmesh_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "apprunner" {
 
@@ -646,14 +659,15 @@ service "apprunner" {
     actual  = ""
     correct = "aws_apprunner_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["apprunner_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "apprunner"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["apprunner_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appconfig" {
 
@@ -689,14 +703,15 @@ service "appconfig" {
     actual  = ""
     correct = "aws_appconfig_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appconfig_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appconfig"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appconfig_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appconfigdata" {
 
@@ -732,14 +747,15 @@ service "appconfigdata" {
     actual  = ""
     correct = "aws_appconfigdata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appconfigdata_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appconfigdata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appconfigdata_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appflow" {
 
@@ -775,14 +791,15 @@ service "appflow" {
     actual  = ""
     correct = "aws_appflow_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appflow_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appflow"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appflow_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appintegrations" {
 
@@ -823,14 +840,15 @@ service "appintegrations" {
     actual  = ""
     correct = "aws_appintegrations_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appintegrations_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appintegrations"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appintegrations_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appautoscaling" {
 
@@ -876,14 +894,15 @@ service "appautoscaling" {
     actual  = "aws_appautoscaling_"
     correct = "aws_applicationautoscaling_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appautoscaling_"]
-  brand               = ""
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "applicationautoscaling"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appautoscaling_"]
+  brand                    = ""
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "applicationcostprofiler" {
 
@@ -919,14 +938,15 @@ service "applicationcostprofiler" {
     actual  = ""
     correct = "aws_applicationcostprofiler_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["applicationcostprofiler_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "applicationcostprofiler"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["applicationcostprofiler_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "discovery" {
 
@@ -967,14 +987,15 @@ service "discovery" {
     actual  = ""
     correct = "aws_discovery_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["discovery_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "discovery"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["discovery_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mgn" {
 
@@ -1010,14 +1031,15 @@ service "mgn" {
     actual  = ""
     correct = "aws_mgn_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mgn_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mgn"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mgn_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appstream" {
 
@@ -1053,14 +1075,15 @@ service "appstream" {
     actual  = ""
     correct = "aws_appstream_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appstream_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appstream"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appstream_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "appsync" {
 
@@ -1096,14 +1119,15 @@ service "appsync" {
     actual  = ""
     correct = "aws_appsync_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["appsync_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "appsync"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["appsync_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "athena" {
 
@@ -1139,14 +1163,15 @@ service "athena" {
     actual  = ""
     correct = "aws_athena_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["athena_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "athena"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["athena_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "auditmanager" {
 
@@ -1182,14 +1207,15 @@ service "auditmanager" {
     actual  = ""
     correct = "aws_auditmanager_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["auditmanager_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "auditmanager"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["auditmanager_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "autoscaling" {
 
@@ -1225,14 +1251,15 @@ service "autoscaling" {
     actual  = "aws_(autoscaling_|launch_configuration)"
     correct = "aws_autoscaling_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["autoscaling_", "launch_configuration"]
-  brand               = ""
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "autoscaling"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["autoscaling_", "launch_configuration"]
+  brand                    = ""
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "autoscalingplans" {
 
@@ -1273,14 +1300,15 @@ service "autoscalingplans" {
     actual  = ""
     correct = "aws_autoscalingplans_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["autoscalingplans_"]
-  brand               = ""
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "autoscalingplans"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["autoscalingplans_"]
+  brand                    = ""
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "backup" {
 
@@ -1316,14 +1344,15 @@ service "backup" {
     actual  = ""
     correct = "aws_backup_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["backup_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "backup"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["backup_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "backupgateway" {
 
@@ -1364,14 +1393,15 @@ service "backupgateway" {
     actual  = ""
     correct = "aws_backupgateway_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["backupgateway_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "backupgateway"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["backupgateway_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "batch" {
 
@@ -1407,14 +1437,15 @@ service "batch" {
     actual  = ""
     correct = "aws_batch_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["batch_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "batch"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["batch_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "bedrock" {
 
@@ -1450,14 +1481,15 @@ service "bedrock" {
     actual  = ""
     correct = "aws_bedrock_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["bedrock_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "bedrock"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["bedrock_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "bedrockagent" {
 
@@ -1498,14 +1530,15 @@ service "bedrockagent" {
     actual  = ""
     correct = "aws_bedrockagent_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["bedrockagent_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "bedrockagent"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["bedrockagent_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "bcmdataexports" {
 
@@ -1541,14 +1574,15 @@ service "bcmdataexports" {
     actual  = ""
     correct = "aws_bcmdataexports_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["bcmdataexports_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "bcmdataexports"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["bcmdataexports_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "billingconductor" {
 
@@ -1589,14 +1623,15 @@ service "billingconductor" {
     actual  = ""
     correct = "aws_billingconductor_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["billingconductor_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "billingconductor"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["billingconductor_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "braket" {
 
@@ -1632,14 +1667,15 @@ service "braket" {
     actual  = ""
     correct = "aws_braket_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["braket_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "braket"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["braket_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ce" {
 
@@ -1680,14 +1716,15 @@ service "ce" {
     actual  = ""
     correct = "aws_ce_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ce_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ce"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ce_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "chatbot" {
 
@@ -1723,14 +1760,15 @@ service "chatbot" {
     actual  = ""
     correct = "aws_chatbot_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["chatbot_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "chatbot"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["chatbot_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "chime" {
 
@@ -1766,14 +1804,15 @@ service "chime" {
     actual  = ""
     correct = "aws_chime_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["chime_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "chime"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["chime_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "chimesdkidentity" {
 
@@ -1814,14 +1853,15 @@ service "chimesdkidentity" {
     actual  = ""
     correct = "aws_chimesdkidentity_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["chimesdkidentity_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "chimesdkidentity"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["chimesdkidentity_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "chimesdkmediapipelines" {
 
@@ -1862,14 +1902,15 @@ service "chimesdkmediapipelines" {
     actual  = ""
     correct = "aws_chimesdkmediapipelines_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["chimesdkmediapipelines_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "chimesdkmediapipelines"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["chimesdkmediapipelines_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "chimesdkmeetings" {
 
@@ -1910,14 +1951,15 @@ service "chimesdkmeetings" {
     actual  = ""
     correct = "aws_chimesdkmeetings_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["chimesdkmeetings_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "chimesdkmeetings"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["chimesdkmeetings_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "chimesdkmessaging" {
 
@@ -1958,14 +2000,15 @@ service "chimesdkmessaging" {
     actual  = ""
     correct = "aws_chimesdkmessaging_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["chimesdkmessaging_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "chimesdkmessaging"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["chimesdkmessaging_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "chimesdkvoice" {
 
@@ -2006,14 +2049,15 @@ service "chimesdkvoice" {
     actual  = ""
     correct = "aws_chimesdkvoice_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["chimesdkvoice_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "chimesdkvoice"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["chimesdkvoice_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cleanrooms" {
 
@@ -2049,14 +2093,15 @@ service "cleanrooms" {
     actual  = ""
     correct = "aws_cleanrooms_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cleanrooms_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cleanrooms"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cleanrooms_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudcontrol" {
 
@@ -2097,14 +2142,15 @@ service "cloudcontrol" {
     actual  = "aws_cloudcontrolapi_"
     correct = "aws_cloudcontrol_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudcontrolapi_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudcontrol"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudcontrolapi_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "clouddirectory" {
 
@@ -2140,14 +2186,15 @@ service "clouddirectory" {
     actual  = ""
     correct = "aws_clouddirectory_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["clouddirectory_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "clouddirectory"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["clouddirectory_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "servicediscovery" {
 
@@ -2183,14 +2230,15 @@ service "servicediscovery" {
     actual  = "aws_service_discovery_"
     correct = "aws_servicediscovery_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["service_discovery_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "servicediscovery"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["service_discovery_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloud9" {
 
@@ -2226,14 +2274,15 @@ service "cloud9" {
     actual  = ""
     correct = "aws_cloud9_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloud9_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloud9"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloud9_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudformation" {
 
@@ -2269,14 +2318,15 @@ service "cloudformation" {
     actual  = ""
     correct = "aws_cloudformation_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudformation_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudformation"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudformation_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudfront" {
 
@@ -2312,14 +2362,15 @@ service "cloudfront" {
     actual  = ""
     correct = "aws_cloudfront_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudfront_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudfront"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudfront_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudfrontkeyvaluestore" {
 
@@ -2365,14 +2416,15 @@ service "cloudfrontkeyvaluestore" {
     actual  = ""
     correct = "aws_cloudfrontkeyvaluestore_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudfrontkeyvaluestore_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudfrontkeyvaluestore"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudfrontkeyvaluestore_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudhsmv2" {
 
@@ -2408,14 +2460,15 @@ service "cloudhsmv2" {
     actual  = "aws_cloudhsm_v2_"
     correct = "aws_cloudhsmv2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudhsm"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudhsmv2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudhsm"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudsearch" {
 
@@ -2451,14 +2504,15 @@ service "cloudsearch" {
     actual  = ""
     correct = "aws_cloudsearch_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudsearch_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudsearch"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudsearch_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudsearchdomain" {
 
@@ -2494,14 +2548,15 @@ service "cloudsearchdomain" {
     actual  = ""
     correct = "aws_cloudsearchdomain_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudsearchdomain_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudsearchdomain"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudsearchdomain_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudtrail" {
 
@@ -2537,14 +2592,15 @@ service "cloudtrail" {
     actual  = "aws_cloudtrail"
     correct = "aws_cloudtrail_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudtrail"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudtrail"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudtrail"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cloudwatch" {
 
@@ -2580,14 +2636,15 @@ service "cloudwatch" {
     actual  = "aws_cloudwatch_(?!(event_|log_|query_))"
     correct = "aws_cloudwatch_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cloudwatch"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "applicationinsights" {
 
@@ -2628,14 +2685,15 @@ service "applicationinsights" {
     actual  = ""
     correct = "aws_applicationinsights_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["applicationinsights_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "applicationinsights"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["applicationinsights_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "evidently" {
 
@@ -2676,14 +2734,15 @@ service "evidently" {
     actual  = ""
     correct = "aws_evidently_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["evidently_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "evidently"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["evidently_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "internetmonitor" {
 
@@ -2719,14 +2778,15 @@ service "internetmonitor" {
     actual  = ""
     correct = "aws_internetmonitor_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["internetmonitor_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "internetmonitor"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["internetmonitor_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "logs" {
 
@@ -2767,14 +2827,15 @@ service "logs" {
     actual  = "aws_cloudwatch_(log_|query_)"
     correct = "aws_logs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudwatch_log_", "cloudwatch_query_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "logs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudwatch_log_", "cloudwatch_query_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "rum" {
 
@@ -2815,14 +2876,15 @@ service "rum" {
     actual  = ""
     correct = "aws_rum_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["rum_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "rum"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["rum_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "synthetics" {
 
@@ -2858,14 +2920,15 @@ service "synthetics" {
     actual  = ""
     correct = "aws_synthetics_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["synthetics_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "synthetics"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["synthetics_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codeartifact" {
 
@@ -2901,14 +2964,15 @@ service "codeartifact" {
     actual  = ""
     correct = "aws_codeartifact_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codeartifact_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codeartifact"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codeartifact_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codebuild" {
 
@@ -2944,14 +3008,15 @@ service "codebuild" {
     actual  = ""
     correct = "aws_codebuild_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codebuild_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codebuild"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codebuild_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codecommit" {
 
@@ -2987,14 +3052,15 @@ service "codecommit" {
     actual  = ""
     correct = "aws_codecommit_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codecommit_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codecommit"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codecommit_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "deploy" {
 
@@ -3035,14 +3101,15 @@ service "deploy" {
     actual  = "aws_codedeploy_"
     correct = "aws_deploy_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codedeploy_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "deploy"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codedeploy_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codeguruprofiler" {
 
@@ -3078,14 +3145,15 @@ service "codeguruprofiler" {
     actual  = ""
     correct = "aws_codeguruprofiler_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codeguruprofiler_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codeguruprofiler"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codeguruprofiler_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codegurureviewer" {
 
@@ -3126,14 +3194,15 @@ service "codegurureviewer" {
     actual  = ""
     correct = "aws_codegurureviewer_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codegurureviewer_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codegurureviewer"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codegurureviewer_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codepipeline" {
 
@@ -3169,14 +3238,15 @@ service "codepipeline" {
     actual  = "aws_codepipeline"
     correct = "aws_codepipeline_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codepipeline"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codepipeline"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codepipeline"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codestar" {
 
@@ -3212,14 +3282,15 @@ service "codestar" {
     actual  = ""
     correct = "aws_codestar_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codestar_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codestar"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codestar_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codestarconnections" {
 
@@ -3260,14 +3331,15 @@ service "codestarconnections" {
     actual  = ""
     correct = "aws_codestarconnections_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codestarconnections_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codestarconnections"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codestarconnections_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codestarnotifications" {
 
@@ -3308,14 +3380,15 @@ service "codestarnotifications" {
     actual  = ""
     correct = "aws_codestarnotifications_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codestarnotifications_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codestarnotifications"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codestarnotifications_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cognitoidentity" {
 
@@ -3356,14 +3429,15 @@ service "cognitoidentity" {
     actual  = "aws_cognito_identity_(?!provider)"
     correct = "aws_cognitoidentity_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cognito_identity_pool"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cognitoidentity"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cognito_identity_pool"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cognitoidp" {
 
@@ -3409,14 +3483,15 @@ service "cognitoidp" {
     actual  = "aws_cognito_(identity_provider|resource|user|risk)"
     correct = "aws_cognitoidp_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cognitoidp"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cognitosync" {
 
@@ -3457,14 +3532,15 @@ service "cognitosync" {
     actual  = ""
     correct = "aws_cognitosync_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cognitosync_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cognitosync"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cognitosync_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "comprehend" {
 
@@ -3500,14 +3576,15 @@ service "comprehend" {
     actual  = ""
     correct = "aws_comprehend_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["comprehend_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "comprehend"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["comprehend_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "comprehendmedical" {
 
@@ -3543,14 +3620,15 @@ service "comprehendmedical" {
     actual  = ""
     correct = "aws_comprehendmedical_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["comprehendmedical_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "comprehendmedical"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["comprehendmedical_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "computeoptimizer" {
 
@@ -3591,14 +3669,15 @@ service "computeoptimizer" {
     actual  = ""
     correct = "aws_computeoptimizer_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["computeoptimizer_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "computeoptimizer"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["computeoptimizer_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "configservice" {
 
@@ -3634,14 +3713,15 @@ service "configservice" {
     actual  = "aws_config_"
     correct = "aws_configservice_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["config_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "configservice"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["config_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "connect" {
 
@@ -3677,14 +3757,15 @@ service "connect" {
     actual  = ""
     correct = "aws_connect_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["connect_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "connect"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["connect_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "connectcases" {
 
@@ -3720,14 +3801,15 @@ service "connectcases" {
     actual  = ""
     correct = "aws_connectcases_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["connectcases_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "connectcases"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["connectcases_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "connectcontactlens" {
 
@@ -3768,14 +3850,15 @@ service "connectcontactlens" {
     actual  = ""
     correct = "aws_connectcontactlens_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["connectcontactlens_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "connectcontactlens"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["connectcontactlens_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "customerprofiles" {
 
@@ -3816,14 +3899,15 @@ service "customerprofiles" {
     actual  = ""
     correct = "aws_customerprofiles_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["customerprofiles_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "customerprofiles"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["customerprofiles_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "connectparticipant" {
 
@@ -3859,14 +3943,15 @@ service "connectparticipant" {
     actual  = ""
     correct = "aws_connectparticipant_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["connectparticipant_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "connectparticipant"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["connectparticipant_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "voiceid" {
 
@@ -3907,14 +3992,15 @@ service "voiceid" {
     actual  = ""
     correct = "aws_voiceid_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["voiceid_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "voiceid"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["voiceid_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "wisdom" {
 
@@ -3955,14 +4041,15 @@ service "wisdom" {
     actual  = ""
     correct = "aws_wisdom_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["wisdom_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "wisdom"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["wisdom_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "controltower" {
 
@@ -3998,14 +4085,15 @@ service "controltower" {
     actual  = ""
     correct = "aws_controltower_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["controltower_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "controltower"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["controltower_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "costoptimizationhub" {
 
@@ -4046,14 +4134,15 @@ service "costoptimizationhub" {
     actual  = ""
     correct = "aws_costoptimizationhub_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["costoptimizationhub_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "costoptimizationhub"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["costoptimizationhub_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "cur" {
 
@@ -4094,14 +4183,15 @@ service "cur" {
     actual  = ""
     correct = "aws_cur_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cur_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "cur"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cur_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "dataexchange" {
 
@@ -4137,14 +4227,15 @@ service "dataexchange" {
     actual  = ""
     correct = "aws_dataexchange_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["dataexchange_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "dataexchange"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["dataexchange_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "datapipeline" {
 
@@ -4180,14 +4271,15 @@ service "datapipeline" {
     actual  = ""
     correct = "aws_datapipeline_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["datapipeline_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "datapipeline"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["datapipeline_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "datasync" {
 
@@ -4223,14 +4315,15 @@ service "datasync" {
     actual  = ""
     correct = "aws_datasync_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["datasync_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "datasync"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["datasync_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "datazone" {
 
@@ -4266,14 +4359,15 @@ service "datazone" {
     actual  = ""
     correct = "aws_datazone_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["datazone_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "datazone"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["datazone_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "detective" {
 
@@ -4309,14 +4403,15 @@ service "detective" {
     actual  = ""
     correct = "aws_detective_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["detective_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "detective"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["detective_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "devicefarm" {
 
@@ -4352,14 +4447,15 @@ service "devicefarm" {
     actual  = ""
     correct = "aws_devicefarm_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["devicefarm_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "devicefarm"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["devicefarm_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "devopsguru" {
 
@@ -4400,14 +4496,15 @@ service "devopsguru" {
     actual  = ""
     correct = "aws_devopsguru_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["devopsguru_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "devopsguru"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["devopsguru_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "directconnect" {
 
@@ -4443,14 +4540,15 @@ service "directconnect" {
     actual  = "aws_dx_"
     correct = "aws_directconnect_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["dx_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "directconnect"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["dx_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "dlm" {
 
@@ -4486,14 +4584,15 @@ service "dlm" {
     actual  = ""
     correct = "aws_dlm_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["dlm_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "dlm"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["dlm_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "dms" {
 
@@ -4534,14 +4633,15 @@ service "dms" {
     actual  = ""
     correct = "aws_dms_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["dms_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "dms"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["dms_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "docdb" {
 
@@ -4577,14 +4677,15 @@ service "docdb" {
     actual  = ""
     correct = "aws_docdb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["docdb_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "docdb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["docdb_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "docdbelastic" {
 
@@ -4625,14 +4726,15 @@ service "docdbelastic" {
     actual  = ""
     correct = "aws_docdbelastic_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["docdbelastic_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "docdbelastic"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["docdbelastic_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "drs" {
 
@@ -4668,14 +4770,15 @@ service "drs" {
     actual  = ""
     correct = "aws_drs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["drs_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "drs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["drs_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ds" {
 
@@ -4716,14 +4819,15 @@ service "ds" {
     actual  = "aws_directory_service_"
     correct = "aws_ds_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["directory_service_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ds"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["directory_service_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "dax" {
 
@@ -4759,14 +4863,15 @@ service "dax" {
     actual  = ""
     correct = "aws_dax_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["dax_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "dax"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["dax_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "dynamodbstreams" {
 
@@ -4802,14 +4907,15 @@ service "dynamodbstreams" {
     actual  = ""
     correct = "aws_dynamodbstreams_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["dynamodbstreams_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "dynamodbstreams"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["dynamodbstreams_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ebs" {
 
@@ -4845,14 +4951,15 @@ service "ebs" {
     actual  = ""
     correct = "aws_ebs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["changewhenimplemented"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ebs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["changewhenimplemented"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "imagebuilder" {
 
@@ -4888,14 +4995,15 @@ service "imagebuilder" {
     actual  = ""
     correct = "aws_imagebuilder_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["imagebuilder_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "imagebuilder"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["imagebuilder_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ec2instanceconnect" {
 
@@ -4936,14 +5044,15 @@ service "ec2instanceconnect" {
     actual  = ""
     correct = "aws_ec2instanceconnect_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ec2instanceconnect_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ec2instanceconnect"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ec2instanceconnect_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ecr" {
 
@@ -4979,14 +5088,15 @@ service "ecr" {
     actual  = ""
     correct = "aws_ecr_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ecr_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ecr"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ecr_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ecrpublic" {
 
@@ -5027,14 +5137,15 @@ service "ecrpublic" {
     actual  = ""
     correct = "aws_ecrpublic_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ecrpublic_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ecrpublic"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ecrpublic_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ecs" {
 
@@ -5070,14 +5181,15 @@ service "ecs" {
     actual  = ""
     correct = "aws_ecs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ecs_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ecs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ecs_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "efs" {
 
@@ -5113,14 +5225,15 @@ service "efs" {
     actual  = ""
     correct = "aws_efs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["efs_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "efs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["efs_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "eks" {
 
@@ -5156,14 +5269,15 @@ service "eks" {
     actual  = ""
     correct = "aws_eks_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["eks_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "eks"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["eks_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "elasticbeanstalk" {
 
@@ -5199,14 +5313,15 @@ service "elasticbeanstalk" {
     actual  = "aws_elastic_beanstalk_"
     correct = "aws_elasticbeanstalk_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["elastic_beanstalk_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "elasticbeanstalk"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["elastic_beanstalk_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "elasticinference" {
 
@@ -5247,14 +5362,15 @@ service "elasticinference" {
     actual  = ""
     correct = "aws_elasticinference_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["elasticinference_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "elasticinference"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["elasticinference_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "elastictranscoder" {
 
@@ -5290,14 +5406,15 @@ service "elastictranscoder" {
     actual  = ""
     correct = "aws_elastictranscoder_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["elastictranscoder_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "elastictranscoder"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["elastictranscoder_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "elasticache" {
 
@@ -5333,14 +5450,15 @@ service "elasticache" {
     actual  = ""
     correct = "aws_elasticache_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["elasticache_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "elasticache"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["elasticache_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "elasticsearch" {
 
@@ -5386,14 +5504,15 @@ service "elasticsearch" {
     actual  = "aws_elasticsearch_"
     correct = "aws_es_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["elasticsearch_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "es"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["elasticsearch_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "elbv2" {
 
@@ -5434,14 +5553,15 @@ service "elbv2" {
     actual  = "aws_a?lb(\\b|_listener|_target_group|s|_trust_store)"
     correct = "aws_elbv2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lbs?\\.", "lb_listener", "lb_target_group", "lb_hosted", "lb_trust_store"]
-  brand               = ""
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "elbv2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lbs?\\.", "lb_listener", "lb_target_group", "lb_hosted", "lb_trust_store"]
+  brand                    = ""
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "elb" {
 
@@ -5482,14 +5602,15 @@ service "elb" {
     actual  = "aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)"
     correct = "aws_elb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
-  brand               = ""
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "elb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
+  brand                    = ""
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediaconnect" {
 
@@ -5525,14 +5646,15 @@ service "mediaconnect" {
     actual  = ""
     correct = "aws_mediaconnect_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mediaconnect_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediaconnect"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mediaconnect_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediaconvert" {
 
@@ -5568,14 +5690,15 @@ service "mediaconvert" {
     actual  = "aws_media_convert_"
     correct = "aws_mediaconvert_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["media_convert_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediaconvert"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["media_convert_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "medialive" {
 
@@ -5611,14 +5734,15 @@ service "medialive" {
     actual  = ""
     correct = "aws_medialive_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["medialive_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "medialive"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["medialive_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediapackage" {
 
@@ -5654,14 +5778,15 @@ service "mediapackage" {
     actual  = "aws_media_package_"
     correct = "aws_mediapackage_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["media_package_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediapackage"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["media_package_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediapackagevod" {
 
@@ -5702,14 +5827,15 @@ service "mediapackagevod" {
     actual  = ""
     correct = "aws_mediapackagevod_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mediapackagevod_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediapackagevod"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mediapackagevod_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediastore" {
 
@@ -5745,14 +5871,15 @@ service "mediastore" {
     actual  = "aws_media_store_"
     correct = "aws_mediastore_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["media_store_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediastore"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["media_store_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediastoredata" {
 
@@ -5793,14 +5920,15 @@ service "mediastoredata" {
     actual  = ""
     correct = "aws_mediastoredata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mediastoredata_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediastoredata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mediastoredata_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediatailor" {
 
@@ -5836,14 +5964,15 @@ service "mediatailor" {
     actual  = ""
     correct = "aws_mediatailor_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["media_tailor_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediatailor"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["media_tailor_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "emr" {
 
@@ -5879,14 +6008,15 @@ service "emr" {
     actual  = ""
     correct = "aws_emr_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["emr_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "emr"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["emr_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "emrcontainers" {
 
@@ -5927,14 +6057,15 @@ service "emrcontainers" {
     actual  = ""
     correct = "aws_emrcontainers_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["emrcontainers_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "emrcontainers"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["emrcontainers_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "emrserverless" {
 
@@ -5975,14 +6106,15 @@ service "emrserverless" {
     actual  = ""
     correct = "aws_emrserverless_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["emrserverless_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "emrserverless"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["emrserverless_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "events" {
 
@@ -6023,14 +6155,15 @@ service "events" {
     actual  = "aws_cloudwatch_event_"
     correct = "aws_events_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["cloudwatch_event_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "events"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["cloudwatch_event_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "schemas" {
 
@@ -6066,14 +6199,15 @@ service "schemas" {
     actual  = ""
     correct = "aws_schemas_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["schemas_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "schemas"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["schemas_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "fis" {
 
@@ -6109,14 +6243,15 @@ service "fis" {
     actual  = ""
     correct = "aws_fis_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["fis_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "fis"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["fis_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "finspace" {
 
@@ -6152,14 +6287,15 @@ service "finspace" {
     actual  = ""
     correct = "aws_finspace_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["finspace_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "finspace"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["finspace_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "finspacedata" {
 
@@ -6200,14 +6336,15 @@ service "finspacedata" {
     actual  = ""
     correct = "aws_finspacedata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["finspacedata_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "finspacedata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["finspacedata_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "fms" {
 
@@ -6243,14 +6380,15 @@ service "fms" {
     actual  = ""
     correct = "aws_fms_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["fms_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "fms"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["fms_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "forecast" {
 
@@ -6291,14 +6429,15 @@ service "forecast" {
     actual  = ""
     correct = "aws_forecast_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["forecast_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "forecast"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["forecast_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "forecastquery" {
 
@@ -6339,14 +6478,15 @@ service "forecastquery" {
     actual  = ""
     correct = "aws_forecastquery_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["forecastquery_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "forecastquery"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["forecastquery_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "frauddetector" {
 
@@ -6382,14 +6522,15 @@ service "frauddetector" {
     actual  = ""
     correct = "aws_frauddetector_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["frauddetector_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "frauddetector"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["frauddetector_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "fsx" {
 
@@ -6425,14 +6566,15 @@ service "fsx" {
     actual  = ""
     correct = "aws_fsx_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["fsx_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "fsx"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["fsx_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "gamelift" {
 
@@ -6468,14 +6610,15 @@ service "gamelift" {
     actual  = ""
     correct = "aws_gamelift_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["gamelift_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "gamelift"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["gamelift_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "globalaccelerator" {
 
@@ -6511,14 +6654,15 @@ service "globalaccelerator" {
     actual  = ""
     correct = "aws_globalaccelerator_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["globalaccelerator_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "globalaccelerator"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["globalaccelerator_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "glue" {
 
@@ -6554,14 +6698,15 @@ service "glue" {
     actual  = ""
     correct = "aws_glue_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["glue_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "glue"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["glue_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "databrew" {
 
@@ -6602,14 +6747,15 @@ service "databrew" {
     actual  = ""
     correct = "aws_databrew_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["databrew_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "databrew"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["databrew_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "groundstation" {
 
@@ -6645,20 +6791,21 @@ service "groundstation" {
     actual  = ""
     correct = "aws_groundstation_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["groundstation_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "groundstation"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["groundstation_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "guardduty" {
 
   sdk {
     id             = "GuardDuty"
-    client_version = [1]
+    client_version = [1, 2]
   }
 
   names {
@@ -6688,14 +6835,15 @@ service "guardduty" {
     actual  = ""
     correct = "aws_guardduty_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["guardduty_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "guardduty"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["guardduty_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "health" {
 
@@ -6731,14 +6879,15 @@ service "health" {
     actual  = ""
     correct = "aws_health_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["health_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "health"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["health_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "healthlake" {
 
@@ -6774,14 +6923,15 @@ service "healthlake" {
     actual  = ""
     correct = "aws_healthlake_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["healthlake_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "healthlake"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["healthlake_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "honeycode" {
 
@@ -6817,14 +6967,15 @@ service "honeycode" {
     actual  = ""
     correct = "aws_honeycode_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["honeycode_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "honeycode"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["honeycode_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iam" {
 
@@ -6860,14 +7011,15 @@ service "iam" {
     actual  = ""
     correct = "aws_iam_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iam_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iam"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iam_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "inspector" {
 
@@ -6903,14 +7055,15 @@ service "inspector" {
     actual  = ""
     correct = "aws_inspector_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["inspector_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "inspector"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["inspector_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "inspector2" {
 
@@ -6946,14 +7099,15 @@ service "inspector2" {
     actual  = ""
     correct = "aws_inspector2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["inspector2_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "inspector2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["inspector2_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iot1clickdevices" {
 
@@ -6999,14 +7153,15 @@ service "iot1clickdevices" {
     actual  = ""
     correct = "aws_iot1clickdevices_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iot1clickdevices_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iot1clickdevices"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iot1clickdevices_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iot1clickprojects" {
 
@@ -7047,14 +7202,15 @@ service "iot1clickprojects" {
     actual  = ""
     correct = "aws_iot1clickprojects_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iot1clickprojects_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iot1clickprojects"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iot1clickprojects_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotanalytics" {
 
@@ -7090,14 +7246,15 @@ service "iotanalytics" {
     actual  = ""
     correct = "aws_iotanalytics_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotanalytics_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotanalytics"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotanalytics_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotdata" {
 
@@ -7143,14 +7300,15 @@ service "iotdata" {
     actual  = ""
     correct = "aws_iotdata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotdata_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotdata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotdata_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotdeviceadvisor" {
 
@@ -7186,14 +7344,15 @@ service "iotdeviceadvisor" {
     actual  = ""
     correct = "aws_iotdeviceadvisor_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotdeviceadvisor_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotdeviceadvisor"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotdeviceadvisor_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotevents" {
 
@@ -7229,14 +7388,15 @@ service "iotevents" {
     actual  = ""
     correct = "aws_iotevents_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotevents_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotevents"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotevents_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ioteventsdata" {
 
@@ -7277,14 +7437,15 @@ service "ioteventsdata" {
     actual  = ""
     correct = "aws_ioteventsdata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ioteventsdata_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ioteventsdata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ioteventsdata_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotfleethub" {
 
@@ -7320,14 +7481,15 @@ service "iotfleethub" {
     actual  = ""
     correct = "aws_iotfleethub_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotfleethub_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotfleethub"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotfleethub_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "greengrass" {
 
@@ -7363,14 +7525,15 @@ service "greengrass" {
     actual  = ""
     correct = "aws_greengrass_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["greengrass_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "greengrass"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["greengrass_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "greengrassv2" {
 
@@ -7406,14 +7569,15 @@ service "greengrassv2" {
     actual  = ""
     correct = "aws_greengrassv2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["greengrassv2_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "greengrassv2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["greengrassv2_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotjobsdata" {
 
@@ -7459,14 +7623,15 @@ service "iotjobsdata" {
     actual  = ""
     correct = "aws_iotjobsdata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotjobsdata_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotjobsdata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotjobsdata_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotsecuretunneling" {
 
@@ -7502,14 +7667,15 @@ service "iotsecuretunneling" {
     actual  = ""
     correct = "aws_iotsecuretunneling_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotsecuretunneling_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotsecuretunneling"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotsecuretunneling_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotsitewise" {
 
@@ -7545,14 +7711,15 @@ service "iotsitewise" {
     actual  = ""
     correct = "aws_iotsitewise_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotsitewise_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotsitewise"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotsitewise_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotthingsgraph" {
 
@@ -7588,14 +7755,15 @@ service "iotthingsgraph" {
     actual  = ""
     correct = "aws_iotthingsgraph_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotthingsgraph_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotthingsgraph"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotthingsgraph_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iottwinmaker" {
 
@@ -7631,14 +7799,15 @@ service "iottwinmaker" {
     actual  = ""
     correct = "aws_iottwinmaker_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iottwinmaker_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iottwinmaker"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iottwinmaker_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iotwireless" {
 
@@ -7674,14 +7843,15 @@ service "iotwireless" {
     actual  = ""
     correct = "aws_iotwireless_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iotwireless_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iotwireless"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iotwireless_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ivs" {
 
@@ -7717,14 +7887,15 @@ service "ivs" {
     actual  = ""
     correct = "aws_ivs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ivs_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ivs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ivs_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ivschat" {
 
@@ -7760,14 +7931,15 @@ service "ivschat" {
     actual  = ""
     correct = "aws_ivschat_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ivschat_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ivschat"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ivschat_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kendra" {
 
@@ -7803,14 +7975,15 @@ service "kendra" {
     actual  = ""
     correct = "aws_kendra_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kendra_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kendra"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kendra_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "keyspaces" {
 
@@ -7846,14 +8019,15 @@ service "keyspaces" {
     actual  = ""
     correct = "aws_keyspaces_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["keyspaces_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "keyspaces"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["keyspaces_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kinesis" {
 
@@ -7889,14 +8063,15 @@ service "kinesis" {
     actual  = "aws_kinesis_stream"
     correct = "aws_kinesis_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesis_stream", "kinesis_resource_policy"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kinesis"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesis_stream", "kinesis_resource_policy"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kinesisanalytics" {
 
@@ -7932,14 +8107,15 @@ service "kinesisanalytics" {
     actual  = "aws_kinesis_analytics_"
     correct = "aws_kinesisanalytics_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesis_analytics_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kinesisanalytics"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesis_analytics_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kinesisanalyticsv2" {
 
@@ -7975,14 +8151,15 @@ service "kinesisanalyticsv2" {
     actual  = ""
     correct = "aws_kinesisanalyticsv2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesisanalyticsv2_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kinesisanalyticsv2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesisanalyticsv2_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "firehose" {
 
@@ -8018,14 +8195,15 @@ service "firehose" {
     actual  = "aws_kinesis_firehose_"
     correct = "aws_firehose_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesis_firehose_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "firehose"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesis_firehose_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kinesisvideo" {
 
@@ -8061,14 +8239,15 @@ service "kinesisvideo" {
     actual  = ""
     correct = "aws_kinesisvideo_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesis_video_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kinesisvideo"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesis_video_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kinesisvideoarchivedmedia" {
 
@@ -8109,14 +8288,15 @@ service "kinesisvideoarchivedmedia" {
     actual  = ""
     correct = "aws_kinesisvideoarchivedmedia_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesisvideoarchivedmedia_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kinesisvideoarchivedmedia"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesisvideoarchivedmedia_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kinesisvideomedia" {
 
@@ -8157,14 +8337,15 @@ service "kinesisvideomedia" {
     actual  = ""
     correct = "aws_kinesisvideomedia_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesisvideomedia_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kinesisvideomedia"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesisvideomedia_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kinesisvideosignaling" {
 
@@ -8210,14 +8391,15 @@ service "kinesisvideosignaling" {
     actual  = ""
     correct = "aws_kinesisvideosignaling_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kinesisvideosignaling_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kinesisvideosignaling"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kinesisvideosignaling_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kms" {
 
@@ -8253,14 +8435,15 @@ service "kms" {
     actual  = ""
     correct = "aws_kms_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["kms_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kms"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["kms_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lakeformation" {
 
@@ -8296,14 +8479,15 @@ service "lakeformation" {
     actual  = ""
     correct = "aws_lakeformation_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lakeformation_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lakeformation"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lakeformation_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lambda" {
 
@@ -8339,14 +8523,15 @@ service "lambda" {
     actual  = ""
     correct = "aws_lambda_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lambda_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lambda"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lambda_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "launchwizard" {
 
@@ -8387,14 +8572,15 @@ service "launchwizard" {
     actual  = ""
     correct = "aws_launchwizard_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["launchwizard_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "launchwizard"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["launchwizard_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lexmodels" {
 
@@ -8440,14 +8626,15 @@ service "lexmodels" {
     actual  = "aws_lex_"
     correct = "aws_lexmodels_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lex_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lexmodels"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lex_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lexv2models" {
 
@@ -8493,14 +8680,15 @@ service "lexv2models" {
     actual  = ""
     correct = "aws_lexv2models_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lexv2models_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lexv2models"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lexv2models_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lexruntime" {
 
@@ -8546,14 +8734,15 @@ service "lexruntime" {
     actual  = ""
     correct = "aws_lexruntime_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lexruntime_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lexruntime"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lexruntime_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lexruntimev2" {
 
@@ -8594,14 +8783,15 @@ service "lexruntimev2" {
     actual  = ""
     correct = "aws_lexruntimev2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lexruntimev2_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lexruntimev2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lexruntimev2_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "licensemanager" {
 
@@ -8642,14 +8832,15 @@ service "licensemanager" {
     actual  = ""
     correct = "aws_licensemanager_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["licensemanager_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "licensemanager"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["licensemanager_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lightsail" {
 
@@ -8685,14 +8876,15 @@ service "lightsail" {
     actual  = ""
     correct = "aws_lightsail_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lightsail_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lightsail"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lightsail_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "location" {
 
@@ -8733,14 +8925,15 @@ service "location" {
     actual  = ""
     correct = "aws_location_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["location_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "location"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["location_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lookoutequipment" {
 
@@ -8776,14 +8969,15 @@ service "lookoutequipment" {
     actual  = ""
     correct = "aws_lookoutequipment_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lookoutequipment_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lookoutequipment"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lookoutequipment_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lookoutmetrics" {
 
@@ -8819,14 +9013,15 @@ service "lookoutmetrics" {
     actual  = ""
     correct = "aws_lookoutmetrics_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lookoutmetrics_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lookoutmetrics"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lookoutmetrics_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "lookoutvision" {
 
@@ -8867,14 +9062,15 @@ service "lookoutvision" {
     actual  = ""
     correct = "aws_lookoutvision_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["lookoutvision_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "lookoutvision"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["lookoutvision_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "machinelearning" {
 
@@ -8910,14 +9106,15 @@ service "machinelearning" {
     actual  = ""
     correct = "aws_machinelearning_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["machinelearning_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "machinelearning"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["machinelearning_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "macie2" {
 
@@ -8953,14 +9150,15 @@ service "macie2" {
     actual  = ""
     correct = "aws_macie2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["macie2_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "macie2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["macie2_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "macie" {
 
@@ -8996,14 +9194,15 @@ service "macie" {
     actual  = ""
     correct = "aws_macie_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["macie_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "macie"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["macie_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "m2" {
 
@@ -9039,14 +9238,15 @@ service "m2" {
     actual  = ""
     correct = "aws_m2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["m2_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "m2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["m2_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "managedblockchain" {
 
@@ -9082,14 +9282,15 @@ service "managedblockchain" {
     actual  = ""
     correct = "aws_managedblockchain_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["managedblockchain_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "managedblockchain"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["managedblockchain_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "grafana" {
 
@@ -9130,14 +9331,15 @@ service "grafana" {
     actual  = ""
     correct = "aws_grafana_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["grafana_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "grafana"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["grafana_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kafka" {
 
@@ -9173,14 +9375,15 @@ service "kafka" {
     actual  = "aws_msk_"
     correct = "aws_kafka_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["msk_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kafka"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["msk_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "kafkaconnect" {
 
@@ -9216,14 +9419,15 @@ service "kafkaconnect" {
     actual  = "aws_mskconnect_"
     correct = "aws_kafkaconnect_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mskconnect_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "kafkaconnect"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mskconnect_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "marketplacecatalog" {
 
@@ -9264,14 +9468,15 @@ service "marketplacecatalog" {
     actual  = ""
     correct = "aws_marketplacecatalog_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["marketplace_catalog_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "marketplacecatalog"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["marketplace_catalog_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "marketplacecommerceanalytics" {
 
@@ -9307,14 +9512,15 @@ service "marketplacecommerceanalytics" {
     actual  = ""
     correct = "aws_marketplacecommerceanalytics_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["marketplacecommerceanalytics_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "marketplacecommerceanalytics"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["marketplacecommerceanalytics_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "marketplaceentitlement" {
 
@@ -9360,14 +9566,15 @@ service "marketplaceentitlement" {
     actual  = ""
     correct = "aws_marketplaceentitlement_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["marketplaceentitlement_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "marketplaceentitlement"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["marketplaceentitlement_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "marketplacemetering" {
 
@@ -9408,14 +9615,15 @@ service "marketplacemetering" {
     actual  = ""
     correct = "aws_marketplacemetering_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["marketplacemetering_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "marketplacemetering"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["marketplacemetering_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "memorydb" {
 
@@ -9451,14 +9659,15 @@ service "memorydb" {
     actual  = ""
     correct = "aws_memorydb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["memorydb_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "memorydb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["memorydb_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "meta" {
 
@@ -9504,14 +9713,15 @@ service "meta" {
     actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$"
     correct = "aws_meta_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\."]
-  brand               = ""
-  exclude             = true
-  not_implemented     = false
-  allowed_subcategory = true
-  note                = "Not an AWS service (metadata)"
+  provider_package_correct = "meta"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\."]
+  brand                    = ""
+  exclude                  = true
+  not_implemented          = false
+  allowed_subcategory      = true
+  note                     = "Not an AWS service (metadata)"
 }
 service "mgh" {
 
@@ -9552,14 +9762,15 @@ service "mgh" {
     actual  = ""
     correct = "aws_mgh_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mgh_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mgh"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mgh_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "migrationhubconfig" {
 
@@ -9600,14 +9811,15 @@ service "migrationhubconfig" {
     actual  = ""
     correct = "aws_migrationhubconfig_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["migrationhubconfig_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "migrationhubconfig"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["migrationhubconfig_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "migrationhubrefactorspaces" {
 
@@ -9648,14 +9860,15 @@ service "migrationhubrefactorspaces" {
     actual  = ""
     correct = "aws_migrationhubrefactorspaces_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["migrationhubrefactorspaces_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "migrationhubrefactorspaces"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["migrationhubrefactorspaces_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "migrationhubstrategy" {
 
@@ -9696,14 +9909,15 @@ service "migrationhubstrategy" {
     actual  = ""
     correct = "aws_migrationhubstrategy_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["migrationhubstrategy_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "migrationhubstrategy"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["migrationhubstrategy_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mobile" {
 
@@ -9739,14 +9953,15 @@ service "mobile" {
     actual  = ""
     correct = "aws_mobile_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mobile_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mobile"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mobile_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mq" {
 
@@ -9782,14 +9997,15 @@ service "mq" {
     actual  = ""
     correct = "aws_mq_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mq_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mq"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mq_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mturk" {
 
@@ -9825,14 +10041,15 @@ service "mturk" {
     actual  = ""
     correct = "aws_mturk_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mturk_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mturk"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mturk_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mwaa" {
 
@@ -9868,14 +10085,15 @@ service "mwaa" {
     actual  = ""
     correct = "aws_mwaa_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["mwaa_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mwaa"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["mwaa_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "neptune" {
 
@@ -9911,14 +10129,15 @@ service "neptune" {
     actual  = ""
     correct = "aws_neptune_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["neptune_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "neptune"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["neptune_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "neptunegraph" {
 
@@ -9964,14 +10183,15 @@ service "neptunegraph" {
     actual  = ""
     correct = "aws_neptunegraph_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["neptunegraph_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "neptunegraph"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["neptunegraph_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "networkfirewall" {
 
@@ -10012,14 +10232,15 @@ service "networkfirewall" {
     actual  = ""
     correct = "aws_networkfirewall_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["networkfirewall_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "networkfirewall"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["networkfirewall_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "networkmanager" {
 
@@ -10055,14 +10276,15 @@ service "networkmanager" {
     actual  = ""
     correct = "aws_networkmanager_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["networkmanager_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "networkmanager"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["networkmanager_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "nimble" {
 
@@ -10103,14 +10325,15 @@ service "nimble" {
     actual  = ""
     correct = "aws_nimble_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["nimble_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "nimble"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["nimble_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "oam" {
 
@@ -10146,14 +10369,15 @@ service "oam" {
     actual  = ""
     correct = "aws_oam_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["oam_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "oam"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["oam_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "opensearch" {
 
@@ -10194,14 +10418,15 @@ service "opensearch" {
     actual  = ""
     correct = "aws_opensearch_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["opensearch_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "opensearch"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["opensearch_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "opensearchserverless" {
 
@@ -10237,14 +10462,15 @@ service "opensearchserverless" {
     actual  = ""
     correct = "aws_opensearchserverless_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["opensearchserverless_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "opensearchserverless"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["opensearchserverless_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "osis" {
 
@@ -10280,14 +10506,15 @@ service "osis" {
     actual  = ""
     correct = "aws_osis_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["osis_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "osis"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["osis_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "opsworks" {
 
@@ -10323,14 +10550,15 @@ service "opsworks" {
     actual  = ""
     correct = "aws_opsworks_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["opsworks_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "opsworks"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["opsworks_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "opsworkscm" {
 
@@ -10371,14 +10599,15 @@ service "opsworkscm" {
     actual  = ""
     correct = "aws_opsworkscm_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["opsworkscm_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "opsworkscm"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["opsworkscm_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "organizations" {
 
@@ -10414,14 +10643,15 @@ service "organizations" {
     actual  = ""
     correct = "aws_organizations_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["organizations_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "organizations"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["organizations_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "outposts" {
 
@@ -10457,14 +10687,15 @@ service "outposts" {
     actual  = ""
     correct = "aws_outposts_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["outposts_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "outposts"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["outposts_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "panorama" {
 
@@ -10500,14 +10731,15 @@ service "panorama" {
     actual  = ""
     correct = "aws_panorama_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["panorama_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "panorama"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["panorama_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "paymentcryptography" {
 
@@ -10548,14 +10780,15 @@ service "paymentcryptography" {
     actual  = ""
     correct = "aws_paymentcryptography_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["paymentcryptography_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "paymentcryptography"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["paymentcryptography_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "pcaconnectorad" {
 
@@ -10596,14 +10829,15 @@ service "pcaconnectorad" {
     actual  = ""
     correct = "aws_pcaconnectorad_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["pcaconnectorad_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "pcaconnectorad"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["pcaconnectorad_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "personalize" {
 
@@ -10639,14 +10873,15 @@ service "personalize" {
     actual  = ""
     correct = "aws_personalize_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["personalize_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "personalize"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["personalize_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "personalizeevents" {
 
@@ -10687,14 +10922,15 @@ service "personalizeevents" {
     actual  = ""
     correct = "aws_personalizeevents_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["personalizeevents_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "personalizeevents"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["personalizeevents_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "personalizeruntime" {
 
@@ -10735,14 +10971,15 @@ service "personalizeruntime" {
     actual  = ""
     correct = "aws_personalizeruntime_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["personalizeruntime_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "personalizeruntime"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["personalizeruntime_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "pinpoint" {
 
@@ -10778,14 +11015,15 @@ service "pinpoint" {
     actual  = ""
     correct = "aws_pinpoint_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["pinpoint_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "pinpoint"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["pinpoint_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "pinpointemail" {
 
@@ -10826,14 +11064,15 @@ service "pinpointemail" {
     actual  = ""
     correct = "aws_pinpointemail_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["pinpointemail_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "pinpointemail"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["pinpointemail_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "pinpointsmsvoice" {
 
@@ -10874,14 +11113,15 @@ service "pinpointsmsvoice" {
     actual  = ""
     correct = "aws_pinpointsmsvoice_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["pinpointsmsvoice_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "pinpointsmsvoice"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["pinpointsmsvoice_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "pipes" {
 
@@ -10917,14 +11157,15 @@ service "pipes" {
     actual  = ""
     correct = "aws_pipes_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["pipes_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "pipes"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["pipes_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "polly" {
 
@@ -10960,14 +11201,15 @@ service "polly" {
     actual  = ""
     correct = "aws_polly_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["polly_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "polly"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["polly_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "pricing" {
 
@@ -11003,14 +11245,15 @@ service "pricing" {
     actual  = ""
     correct = "aws_pricing_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["pricing_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "pricing"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["pricing_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "proton" {
 
@@ -11046,14 +11289,15 @@ service "proton" {
     actual  = ""
     correct = "aws_proton_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["proton_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "proton"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["proton_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "qbusiness" {
 
@@ -11089,14 +11333,15 @@ service "qbusiness" {
     actual  = ""
     correct = "aws_qbusiness_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["qbusiness_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "qbusiness"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["qbusiness_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "qldb" {
 
@@ -11132,14 +11377,15 @@ service "qldb" {
     actual  = ""
     correct = "aws_qldb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["qldb_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "qldb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["qldb_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "qldbsession" {
 
@@ -11180,14 +11426,15 @@ service "qldbsession" {
     actual  = ""
     correct = "aws_qldbsession_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["qldbsession_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "qldbsession"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["qldbsession_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "quicksight" {
 
@@ -11223,14 +11470,15 @@ service "quicksight" {
     actual  = ""
     correct = "aws_quicksight_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["quicksight_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "quicksight"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["quicksight_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ram" {
 
@@ -11266,14 +11514,15 @@ service "ram" {
     actual  = ""
     correct = "aws_ram_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ram_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ram"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ram_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "rds" {
 
@@ -11309,14 +11558,15 @@ service "rds" {
     actual  = "aws_(db_|rds_)"
     correct = "aws_rds_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["rds_", "db_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "rds"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["rds_", "db_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "rdsdata" {
 
@@ -11362,14 +11612,15 @@ service "rdsdata" {
     actual  = ""
     correct = "aws_rdsdata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["rdsdata_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "rdsdata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["rdsdata_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "pi" {
 
@@ -11405,14 +11656,15 @@ service "pi" {
     actual  = ""
     correct = "aws_pi_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["pi_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "pi"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["pi_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "rbin" {
 
@@ -11453,14 +11705,15 @@ service "rbin" {
     actual  = ""
     correct = "aws_rbin_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["rbin_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "rbin"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["rbin_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "redshift" {
 
@@ -11496,14 +11749,15 @@ service "redshift" {
     actual  = ""
     correct = "aws_redshift_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["redshift_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "redshift"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["redshift_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "redshiftdata" {
 
@@ -11549,14 +11803,15 @@ service "redshiftdata" {
     actual  = ""
     correct = "aws_redshiftdata_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["redshiftdata_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "redshiftdata"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["redshiftdata_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "redshiftserverless" {
 
@@ -11597,14 +11852,15 @@ service "redshiftserverless" {
     actual  = ""
     correct = "aws_redshiftserverless_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["redshiftserverless_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "redshiftserverless"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["redshiftserverless_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "rekognition" {
 
@@ -11640,14 +11896,15 @@ service "rekognition" {
     actual  = ""
     correct = "aws_rekognition_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["rekognition_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "rekognition"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["rekognition_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "resiliencehub" {
 
@@ -11683,14 +11940,15 @@ service "resiliencehub" {
     actual  = ""
     correct = "aws_resiliencehub_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["resiliencehub_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "resiliencehub"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["resiliencehub_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "resourceexplorer2" {
 
@@ -11731,14 +11989,15 @@ service "resourceexplorer2" {
     actual  = ""
     correct = "aws_resourceexplorer2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["resourceexplorer2_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "resourceexplorer2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["resourceexplorer2_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "resourcegroups" {
 
@@ -11779,14 +12038,15 @@ service "resourcegroups" {
     actual  = ""
     correct = "aws_resourcegroups_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["resourcegroups_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "resourcegroups"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["resourcegroups_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "resourcegroupstaggingapi" {
 
@@ -11822,14 +12082,15 @@ service "resourcegroupstaggingapi" {
     actual  = ""
     correct = "aws_resourcegroupstaggingapi_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["resourcegroupstaggingapi_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "resourcegroupstaggingapi"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["resourcegroupstaggingapi_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "robomaker" {
 
@@ -11865,14 +12126,15 @@ service "robomaker" {
     actual  = ""
     correct = "aws_robomaker_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["robomaker_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "robomaker"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["robomaker_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "rolesanywhere" {
 
@@ -11908,14 +12170,15 @@ service "rolesanywhere" {
     actual  = ""
     correct = "aws_rolesanywhere_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["rolesanywhere_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "rolesanywhere"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["rolesanywhere_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "route53" {
 
@@ -11951,14 +12214,15 @@ service "route53" {
     actual  = "aws_route53_(?!resolver_)"
     correct = "aws_route53_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["route53_cidr_", "route53_delegation_", "route53_health_", "route53_hosted_", "route53_key_", "route53_query_", "route53_record", "route53_traffic_", "route53_vpc_", "route53_zone"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "route53"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["route53_cidr_", "route53_delegation_", "route53_health_", "route53_hosted_", "route53_key_", "route53_query_", "route53_record", "route53_traffic_", "route53_vpc_", "route53_zone"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "route53domains" {
 
@@ -11994,14 +12258,15 @@ service "route53domains" {
     actual  = ""
     correct = "aws_route53domains_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["route53domains_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "route53domains"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["route53domains_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "route53profiles" {
 
@@ -12037,14 +12302,15 @@ service "route53profiles" {
     actual  = ""
     correct = "aws_route53profiles_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["route53profiles_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "route53profiles"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["route53profiles_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "route53recoverycluster" {
 
@@ -12085,14 +12351,15 @@ service "route53recoverycluster" {
     actual  = ""
     correct = "aws_route53recoverycluster_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["route53recoverycluster_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "route53recoverycluster"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["route53recoverycluster_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "route53recoverycontrolconfig" {
 
@@ -12133,14 +12400,15 @@ service "route53recoverycontrolconfig" {
     actual  = ""
     correct = "aws_route53recoverycontrolconfig_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["route53recoverycontrolconfig_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "route53recoverycontrolconfig"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["route53recoverycontrolconfig_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "route53recoveryreadiness" {
 
@@ -12181,14 +12449,15 @@ service "route53recoveryreadiness" {
     actual  = ""
     correct = "aws_route53recoveryreadiness_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["route53recoveryreadiness_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "route53recoveryreadiness"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["route53recoveryreadiness_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "route53resolver" {
 
@@ -12224,14 +12493,15 @@ service "route53resolver" {
     actual  = "aws_route53_resolver_"
     correct = "aws_route53resolver_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["route53_resolver_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "route53resolver"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["route53_resolver_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "s3" {
 
@@ -12272,14 +12542,15 @@ service "s3" {
     actual  = "aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)"
     correct = "aws_s3_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["s3_bucket", "s3_directory_bucket", "s3_object", "canonical_user_id"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "s3"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["s3_bucket", "s3_directory_bucket", "s3_object", "canonical_user_id"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "s3control" {
 
@@ -12315,14 +12586,15 @@ service "s3control" {
     actual  = "aws_(s3_account_|s3control_|s3_access_)"
     correct = "aws_s3control_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["s3control", "s3_account_", "s3_access_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "s3control"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["s3control", "s3_account_", "s3_access_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "glacier" {
 
@@ -12358,14 +12630,15 @@ service "glacier" {
     actual  = ""
     correct = "aws_glacier_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["glacier_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "glacier"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["glacier_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "s3outposts" {
 
@@ -12401,14 +12674,15 @@ service "s3outposts" {
     actual  = ""
     correct = "aws_s3outposts_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["s3outposts_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "s3outposts"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["s3outposts_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sagemaker" {
 
@@ -12444,14 +12718,15 @@ service "sagemaker" {
     actual  = ""
     correct = "aws_sagemaker_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sagemaker_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sagemaker"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sagemaker_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sagemakera2iruntime" {
 
@@ -12497,14 +12772,15 @@ service "sagemakera2iruntime" {
     actual  = ""
     correct = "aws_sagemakera2iruntime_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sagemakera2iruntime_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sagemakera2iruntime"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sagemakera2iruntime_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sagemakeredge" {
 
@@ -12550,14 +12826,15 @@ service "sagemakeredge" {
     actual  = ""
     correct = "aws_sagemakeredge_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sagemakeredge_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sagemakeredge"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sagemakeredge_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sagemakerfeaturestoreruntime" {
 
@@ -12598,14 +12875,15 @@ service "sagemakerfeaturestoreruntime" {
     actual  = ""
     correct = "aws_sagemakerfeaturestoreruntime_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sagemakerfeaturestoreruntime_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sagemakerfeaturestoreruntime"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sagemakerfeaturestoreruntime_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sagemakerruntime" {
 
@@ -12646,14 +12924,15 @@ service "sagemakerruntime" {
     actual  = ""
     correct = "aws_sagemakerruntime_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sagemakerruntime_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sagemakerruntime"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sagemakerruntime_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "savingsplans" {
 
@@ -12689,14 +12968,15 @@ service "savingsplans" {
     actual  = ""
     correct = "aws_savingsplans_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["savingsplans_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "savingsplans"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["savingsplans_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "simpledb" {
 
@@ -12742,14 +13022,15 @@ service "simpledb" {
     actual  = "aws_simpledb_"
     correct = "aws_sdb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["simpledb_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sdb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["simpledb_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "scheduler" {
 
@@ -12785,14 +13066,15 @@ service "scheduler" {
     actual  = ""
     correct = "aws_scheduler_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["scheduler_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "scheduler"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["scheduler_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "secretsmanager" {
 
@@ -12828,14 +13110,15 @@ service "secretsmanager" {
     actual  = ""
     correct = "aws_secretsmanager_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["secretsmanager_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "secretsmanager"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["secretsmanager_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "securityhub" {
 
@@ -12871,14 +13154,15 @@ service "securityhub" {
     actual  = ""
     correct = "aws_securityhub_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["securityhub_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "securityhub"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["securityhub_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "securitylake" {
 
@@ -12914,14 +13198,15 @@ service "securitylake" {
     actual  = ""
     correct = "aws_securitylake_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["securitylake_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "securitylake"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["securitylake_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "serverlessrepo" {
 
@@ -12962,14 +13247,15 @@ service "serverlessrepo" {
     actual  = "aws_serverlessapplicationrepository_"
     correct = "aws_serverlessrepo_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["serverlessapplicationrepository_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "serverlessrepo"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["serverlessapplicationrepository_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "servicecatalog" {
 
@@ -13005,14 +13291,15 @@ service "servicecatalog" {
     actual  = ""
     correct = "aws_servicecatalog_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["servicecatalog_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "servicecatalog"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["servicecatalog_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "servicecatalogappregistry" {
 
@@ -13058,14 +13345,15 @@ service "servicecatalogappregistry" {
     actual  = ""
     correct = "aws_servicecatalogappregistry_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["servicecatalogappregistry_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "servicecatalogappregistry"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["servicecatalogappregistry_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "servicequotas" {
 
@@ -13106,14 +13394,15 @@ service "servicequotas" {
     actual  = ""
     correct = "aws_servicequotas_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["servicequotas_"]
-  brand               = ""
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "servicequotas"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["servicequotas_"]
+  brand                    = ""
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ses" {
 
@@ -13149,14 +13438,15 @@ service "ses" {
     actual  = ""
     correct = "aws_ses_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ses_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ses"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ses_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sesv2" {
 
@@ -13192,14 +13482,15 @@ service "sesv2" {
     actual  = ""
     correct = "aws_sesv2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sesv2_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sesv2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sesv2_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sfn" {
 
@@ -13240,14 +13531,15 @@ service "sfn" {
     actual  = ""
     correct = "aws_sfn_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sfn_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sfn"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sfn_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "shield" {
 
@@ -13283,14 +13575,15 @@ service "shield" {
     actual  = ""
     correct = "aws_shield_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["shield_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "shield"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["shield_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "signer" {
 
@@ -13326,14 +13619,15 @@ service "signer" {
     actual  = ""
     correct = "aws_signer_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["signer_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "signer"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["signer_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sms" {
 
@@ -13369,14 +13663,15 @@ service "sms" {
     actual  = ""
     correct = "aws_sms_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sms_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sms"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sms_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "snowdevicemanagement" {
 
@@ -13417,14 +13712,15 @@ service "snowdevicemanagement" {
     actual  = ""
     correct = "aws_snowdevicemanagement_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["snowdevicemanagement_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "snowdevicemanagement"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["snowdevicemanagement_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "snowball" {
 
@@ -13460,14 +13756,15 @@ service "snowball" {
     actual  = ""
     correct = "aws_snowball_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["snowball_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "snowball"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["snowball_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sns" {
 
@@ -13503,14 +13800,15 @@ service "sns" {
     actual  = ""
     correct = "aws_sns_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sns_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sns"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sns_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sqs" {
 
@@ -13546,14 +13844,15 @@ service "sqs" {
     actual  = ""
     correct = "aws_sqs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sqs_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sqs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sqs_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ssm" {
 
@@ -13589,14 +13888,15 @@ service "ssm" {
     actual  = ""
     correct = "aws_ssm_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ssm_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ssm"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ssm_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ssmcontacts" {
 
@@ -13637,14 +13937,15 @@ service "ssmcontacts" {
     actual  = ""
     correct = "aws_ssmcontacts_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ssmcontacts_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ssmcontacts"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ssmcontacts_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ssmincidents" {
 
@@ -13685,14 +13986,15 @@ service "ssmincidents" {
     actual  = ""
     correct = "aws_ssmincidents_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ssmincidents_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ssmincidents"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ssmincidents_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ssmsap" {
 
@@ -13733,14 +14035,15 @@ service "ssmsap" {
     actual  = ""
     correct = "aws_ssmsap_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ssmsap_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ssmsap"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ssmsap_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sso" {
 
@@ -13776,14 +14079,15 @@ service "sso" {
     actual  = ""
     correct = "aws_sso_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["sso_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sso"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["sso_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ssoadmin" {
 
@@ -13824,14 +14128,15 @@ service "ssoadmin" {
     actual  = ""
     correct = "aws_ssoadmin_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ssoadmin_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ssoadmin"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ssoadmin_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "identitystore" {
 
@@ -13867,14 +14172,15 @@ service "identitystore" {
     actual  = ""
     correct = "aws_identitystore_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["identitystore_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "identitystore"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["identitystore_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ssooidc" {
 
@@ -13915,14 +14221,15 @@ service "ssooidc" {
     actual  = ""
     correct = "aws_ssooidc_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["ssooidc_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ssooidc"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["ssooidc_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "storagegateway" {
 
@@ -13958,14 +14265,15 @@ service "storagegateway" {
     actual  = ""
     correct = "aws_storagegateway_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["storagegateway_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "storagegateway"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["storagegateway_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "sts" {
 
@@ -14001,14 +14309,15 @@ service "sts" {
     actual  = "aws_caller_identity"
     correct = "aws_sts_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["caller_identity"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "sts"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["caller_identity"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "support" {
 
@@ -14044,14 +14353,15 @@ service "support" {
     actual  = ""
     correct = "aws_support_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["support_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "support"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["support_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "swf" {
 
@@ -14087,14 +14397,15 @@ service "swf" {
     actual  = ""
     correct = "aws_swf_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["swf_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "swf"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["swf_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "textract" {
 
@@ -14130,14 +14441,15 @@ service "textract" {
     actual  = ""
     correct = "aws_textract_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["textract_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "textract"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["textract_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "timestreaminfluxdb" {
 
@@ -14178,14 +14490,15 @@ service "timestreaminfluxdb" {
     actual  = ""
     correct = "aws_timestreaminfluxdb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["timestreaminfluxdb_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "timestreaminfluxdb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["timestreaminfluxdb_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "timestreamquery" {
 
@@ -14226,14 +14539,15 @@ service "timestreamquery" {
     actual  = ""
     correct = "aws_timestreamquery_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["timestreamquery_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "timestreamquery"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["timestreamquery_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "timestreamwrite" {
 
@@ -14274,14 +14588,15 @@ service "timestreamwrite" {
     actual  = ""
     correct = "aws_timestreamwrite_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["timestreamwrite_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "timestreamwrite"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["timestreamwrite_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "transcribe" {
 
@@ -14322,14 +14637,15 @@ service "transcribe" {
     actual  = ""
     correct = "aws_transcribe_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["transcribe_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "transcribe"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["transcribe_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "transcribestreaming" {
 
@@ -14375,14 +14691,15 @@ service "transcribestreaming" {
     actual  = ""
     correct = "aws_transcribestreaming_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["transcribestreaming_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "transcribestreaming"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["transcribestreaming_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "transfer" {
 
@@ -14418,14 +14735,15 @@ service "transfer" {
     actual  = ""
     correct = "aws_transfer_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["transfer_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "transfer"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["transfer_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "translate" {
 
@@ -14461,14 +14779,15 @@ service "translate" {
     actual  = ""
     correct = "aws_translate_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["translate_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "translate"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["translate_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "vpclattice" {
 
@@ -14509,14 +14828,15 @@ service "vpclattice" {
     actual  = ""
     correct = "aws_vpclattice_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["vpclattice_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "vpclattice"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["vpclattice_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "wafv2" {
 
@@ -14552,14 +14872,15 @@ service "wafv2" {
     actual  = ""
     correct = "aws_wafv2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["wafv2_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "wafv2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["wafv2_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "waf" {
 
@@ -14595,14 +14916,15 @@ service "waf" {
     actual  = ""
     correct = "aws_waf_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["waf_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "waf"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["waf_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "wafregional" {
 
@@ -14643,14 +14965,15 @@ service "wafregional" {
     actual  = ""
     correct = "aws_wafregional_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["wafregional_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "wafregional"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["wafregional_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "budgets" {
 
@@ -14686,14 +15009,15 @@ service "budgets" {
     actual  = ""
     correct = "aws_budgets_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["budgets_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "budgets"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["budgets_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "wellarchitected" {
 
@@ -14729,14 +15053,15 @@ service "wellarchitected" {
     actual  = ""
     correct = "aws_wellarchitected_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["wellarchitected_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "wellarchitected"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["wellarchitected_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "workdocs" {
 
@@ -14772,14 +15097,15 @@ service "workdocs" {
     actual  = ""
     correct = "aws_workdocs_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["workdocs_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "workdocs"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["workdocs_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "worklink" {
 
@@ -14815,14 +15141,15 @@ service "worklink" {
     actual  = ""
     correct = "aws_worklink_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["worklink_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "worklink"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["worklink_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "workmail" {
 
@@ -14858,14 +15185,15 @@ service "workmail" {
     actual  = ""
     correct = "aws_workmail_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["workmail_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "workmail"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["workmail_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "workmailmessageflow" {
 
@@ -14901,14 +15229,15 @@ service "workmailmessageflow" {
     actual  = ""
     correct = "aws_workmailmessageflow_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["workmailmessageflow_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = true
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "workmailmessageflow"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["workmailmessageflow_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = true
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "workspaces" {
 
@@ -14944,14 +15273,15 @@ service "workspaces" {
     actual  = ""
     correct = "aws_workspaces_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["workspaces_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "workspaces"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["workspaces_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "workspacesweb" {
 
@@ -14992,14 +15322,15 @@ service "workspacesweb" {
     actual  = ""
     correct = "aws_workspacesweb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["workspacesweb_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "workspacesweb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["workspacesweb_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "xray" {
 
@@ -15035,14 +15366,15 @@ service "xray" {
     actual  = ""
     correct = "aws_xray_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["xray_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "xray"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["xray_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "verifiedpermissions" {
 
@@ -15078,14 +15410,15 @@ service "verifiedpermissions" {
     actual  = ""
     correct = "aws_verifiedpermissions_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["verifiedpermissions_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "verifiedpermissions"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["verifiedpermissions_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "codecatalyst" {
 
@@ -15121,14 +15454,15 @@ service "codecatalyst" {
     actual  = ""
     correct = "aws_codecatalyst_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["codecatalyst_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "codecatalyst"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["codecatalyst_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "mediapackagev2" {
 
@@ -15164,14 +15498,15 @@ service "mediapackagev2" {
     actual  = "aws_media_packagev2_"
     correct = "aws_mediapackagev2_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["media_packagev2_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "mediapackagev2"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["media_packagev2_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "iot" {
 
@@ -15207,14 +15542,15 @@ service "iot" {
     actual  = ""
     correct = "aws_iot_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["iot_"]
-  brand               = "AWS"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "iot"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["iot_"]
+  brand                    = "AWS"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "dynamodb" {
 
@@ -15250,14 +15586,15 @@ service "dynamodb" {
     actual  = ""
     correct = "aws_dynamodb_"
   }
-  split_package       = ""
-  file_prefix         = ""
-  doc_prefix          = ["dynamodb_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "dynamodb"
+  split_package            = ""
+  file_prefix              = ""
+  doc_prefix               = ["dynamodb_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
 service "ec2" {
 
@@ -15338,14 +15675,15 @@ service "ec2" {
       actual  = "aws_(ebs_|volume_attach|snapshot_create)"
       correct = "aws_ec2ebs_"
     }
-    split_package       = "ec2"
-    file_prefix         = "ebs_"
-    doc_prefix          = ["ebs_", "volume_attachment", "snapshot_"]
-    brand               = "Amazon"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "ebs_"
+    doc_prefix               = ["ebs_", "volume_attachment", "snapshot_"]
+    brand                    = "Amazon"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "ec2outposts" {
 
@@ -15391,14 +15729,15 @@ service "ec2" {
       actual  = "aws_ec2_(coip_pool|local_gateway)"
       correct = "aws_ec2outposts_"
     }
-    split_package       = "ec2"
-    file_prefix         = "outposts_"
-    doc_prefix          = ["ec2_coip_pool", "ec2_local_gateway"]
-    brand               = "AWS"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "outposts_"
+    doc_prefix               = ["ec2_coip_pool", "ec2_local_gateway"]
+    brand                    = "AWS"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "transitgateway" {
 
@@ -15444,14 +15783,15 @@ service "ec2" {
       actual  = "aws_ec2_transit_gateway"
       correct = "aws_transitgateway_"
     }
-    split_package       = "ec2"
-    file_prefix         = "transitgateway_"
-    doc_prefix          = ["ec2_transit_gateway"]
-    brand               = "AWS"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "transitgateway_"
+    doc_prefix               = ["ec2_transit_gateway"]
+    brand                    = "AWS"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "verifiedaccess" {
 
@@ -15497,14 +15837,15 @@ service "ec2" {
       actual  = "aws_verifiedaccess"
       correct = "aws_verifiedaccess_"
     }
-    split_package       = "ec2"
-    file_prefix         = "verifiedaccess_"
-    doc_prefix          = ["verifiedaccess_"]
-    brand               = "AWS"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "verifiedaccess_"
+    doc_prefix               = ["verifiedaccess_"]
+    brand                    = "AWS"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "vpc" {
 
@@ -15550,14 +15891,15 @@ service "ec2" {
       actual  = "aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\\b)"
       correct = "aws_vpc_"
     }
-    split_package       = "ec2"
-    file_prefix         = "vpc_"
-    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\."]
-    brand               = "Amazon"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "vpc_"
+    doc_prefix               = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\."]
+    brand                    = "Amazon"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "ipam" {
 
@@ -15603,14 +15945,15 @@ service "ec2" {
       actual  = "aws_vpc_ipam"
       correct = "aws_ipam_"
     }
-    split_package       = "ec2"
-    file_prefix         = "ipam_"
-    doc_prefix          = ["vpc_ipam"]
-    brand               = "Amazon"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "ipam_"
+    doc_prefix               = ["vpc_ipam"]
+    brand                    = "Amazon"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "vpnclient" {
 
@@ -15656,14 +15999,15 @@ service "ec2" {
       actual  = "aws_ec2_client_vpn"
       correct = "aws_vpnclient_"
     }
-    split_package       = "ec2"
-    file_prefix         = "vpnclient_"
-    doc_prefix          = ["ec2_client_vpn_"]
-    brand               = "AWS"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "vpnclient_"
+    doc_prefix               = ["ec2_client_vpn_"]
+    brand                    = "AWS"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "vpnsite" {
 
@@ -15709,14 +16053,15 @@ service "ec2" {
       actual  = "aws_(customer_gateway|vpn_)"
       correct = "aws_vpnsite_"
     }
-    split_package       = "ec2"
-    file_prefix         = "vpnsite_"
-    doc_prefix          = ["customer_gateway", "vpn_"]
-    brand               = "AWS"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "vpnsite_"
+    doc_prefix               = ["customer_gateway", "vpn_"]
+    brand                    = "AWS"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
   sub_service "wavelength" {
 
@@ -15762,23 +16107,24 @@ service "ec2" {
       actual  = "aws_ec2_carrier_gateway"
       correct = "aws_wavelength_"
     }
-    split_package       = "ec2"
-    file_prefix         = "wavelength_"
-    doc_prefix          = ["ec2_carrier_"]
-    brand               = "AWS"
-    exclude             = true
-    not_implemented     = false
-    allowed_subcategory = true
-    note                = "Part of EC2"
+    provider_package_correct = ""
+    split_package            = "ec2"
+    file_prefix              = "wavelength_"
+    doc_prefix               = ["ec2_carrier_"]
+    brand                    = "AWS"
+    exclude                  = true
+    not_implemented          = false
+    allowed_subcategory      = true
+    note                     = "Part of EC2"
   }
 
-  split_package       = "ec2"
-  file_prefix         = "ec2_"
-  doc_prefix          = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
-  brand               = "Amazon"
-  exclude             = false
-  not_implemented     = false
-  allowed_subcategory = false
-  note                = ""
+  provider_package_correct = "ec2"
+  split_package            = "ec2"
+  file_prefix              = "ec2_"
+  doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
+  brand                    = "Amazon"
+  exclude                  = false
+  not_implemented          = false
+  allowed_subcategory      = false
+  note                     = ""
 }
-

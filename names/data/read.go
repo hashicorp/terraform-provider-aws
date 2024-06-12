@@ -179,7 +179,7 @@ func (sr ServiceRecord) Note() string {
 	return sr[colNote]
 }
 
-func (curr Service) parseService() ServiceRecord {
+func parseService(curr Service) ServiceRecord {
 
 	record := make(ServiceRecord, colNote+1)
 
@@ -268,6 +268,9 @@ func (curr Service) parseService() ServiceRecord {
 		record[colAllowedSubcategory] = ""
 	}
 	record[colNote] = curr.Note
+	if len(curr.ServiceProviderPackageCorrect) > 0 {
+		record[colProviderPackageCorrect] = curr.ServiceProviderPackageCorrect
+	}
 
 	return record
 }
@@ -275,21 +278,21 @@ func (curr Service) parseService() ServiceRecord {
 func ReadAllServiceData() (results []ServiceRecord, err error) {
 	var decodedServiceList Services
 	parser := hclparse.NewParser()
-	toParse, parseErr := parser.ParseHCLFile("/Users/thomas.zalewski/code/hashi_repos/for_official/terraform_hc_change/terraform-provider-aws/names/data/names_data.hcl")
+	toParse, parseErr := parser.ParseHCLFile("/Users/thomas.zalewski/Downloads/june12/fix_guard_duty/terraform-provider-aws/names/data/names_data.hcl")
 	if parseErr.HasErrors() {
-		log.Fatalf("parser error : ", parseErr)
+		log.Fatal("parser error : ", parseErr)
 	}
 	Derr := gohcl.DecodeBody(toParse.Body, nil, &decodedServiceList)
 	if Derr.HasErrors() {
-		log.Fatalf("Decode error", Derr)
+		log.Fatal("Decode error", Derr)
 	}
 	for _, curr := range decodedServiceList.ServiceList {
 		if len(curr.SubService) > 0 {
 			for _, sub := range curr.SubService {
-				results = append(results, sub.parseService())
+				results = append(results, parseService(sub))
 			}
 		}
-		results = append(results, curr.parseService())
+		results = append(results, parseService(curr))
 	}
 
 	return
@@ -344,12 +347,11 @@ type EndpointInfo struct {
 }
 
 type Service struct {
-	Label             string         `hcl:"CLIV2Command,label"`
-	ServiceCli        []CLIV2Command `hcl:"cli_v2_command,block"`
-	ServiceGoPackages []GoPackages   `hcl:"go_packages,block"`
-	ServiceSDK        SDK            `hcl:"sdk,block"`
-	ServiceNames      Names          `hcl:"names,block"`
-
+	Label                 string         `hcl:"CLIV2Command,label"`
+	ServiceCli            []CLIV2Command `hcl:"cli_v2_command,block"`
+	ServiceGoPackages     []GoPackages   `hcl:"go_packages,block"`
+	ServiceSDK            SDK            `hcl:"sdk,block"`
+	ServiceNames          Names          `hcl:"names,block"`
 	ServiceClient         Client         `hcl:"client,block"`
 	ServiceEnvVars        EnvVar         `hcl:"env_var,block"`
 	ServiceEndpoints      EndpointInfo   `hcl:"endpoint_info,block"`
@@ -357,14 +359,15 @@ type Service struct {
 
 	SubService []Service `hcl:"sub_service,block"`
 
-	ServiceSplitPackage string   `hcl:"split_package,attr"`
-	FilePrefix          string   `hcl:"file_prefix,attr"`
-	DocPrefix           []string `hcl:"doc_prefix,attr"`
-	Brand               string   `hcl:"brand,attr"`
-	Exclude             bool     `hcl:"exclude,attr"`
-	NotImplemented      bool     `hcl:"not_implemented,attr"`
-	AllowedSubcategory  bool     `hcl:"allowed_subcategory,attr"`
-	Note                string   `hcl:"note,attr"`
+	ServiceProviderPackageCorrect string   `hcl:"provider_package_correct,attr"`
+	ServiceSplitPackage           string   `hcl:"split_package,attr"`
+	FilePrefix                    string   `hcl:"file_prefix,attr"`
+	DocPrefix                     []string `hcl:"doc_prefix,attr"`
+	Brand                         string   `hcl:"brand,attr"`
+	Exclude                       bool     `hcl:"exclude,attr"`
+	NotImplemented                bool     `hcl:"not_implemented,attr"`
+	AllowedSubcategory            bool     `hcl:"allowed_subcategory,attr"`
+	Note                          string   `hcl:"note,attr"`
 }
 
 type Services struct {
