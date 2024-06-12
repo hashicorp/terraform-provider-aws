@@ -59,7 +59,7 @@ cli-dev,clidev,,,,,,,,,,,,,,,,CLI Internal commands for development,AWS,x,,,,,,,
 cloudcontrol,cloudcontrol,cloudcontrolapi,cloudcontrol,,cloudcontrol,,cloudcontrolapi,CloudControl,CloudControlApi,,,2,aws_cloudcontrolapi_,aws_cloudcontrol_,,cloudcontrolapi_,Cloud Control API,AWS,,,,,,,CloudControl,ListResourceRequests,,,
 ,,,,,,,,,,,,,,,,,Cloud Digital Interface SDK,AWS,x,,,,,,,,,,No SDK support
 clouddirectory,clouddirectory,clouddirectory,clouddirectory,,clouddirectory,,,CloudDirectory,CloudDirectory,,1,,,aws_clouddirectory_,,clouddirectory_,Cloud Directory,Amazon,,x,,,,,CloudDirectory,,,,
-servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicediscovery,,,ServiceDiscovery,ServiceDiscovery,,1,,aws_service_discovery_,aws_servicediscovery_,,service_discovery_,Cloud Map,AWS,,,,,,,ServiceDiscovery,ListNamespaces,,,
+servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicediscovery,,,ServiceDiscovery,ServiceDiscovery,,,2,aws_service_discovery_,aws_servicediscovery_,,service_discovery_,Cloud Map,AWS,,,,,,,ServiceDiscovery,ListNamespaces,,,
 cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,,
 cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,x,,2,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,"StackSetName: aws_sdkv2.String(""test"")",,
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,,
