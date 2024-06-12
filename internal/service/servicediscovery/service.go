@@ -547,25 +547,3 @@ func flattenHealthCheckCustomConfig(apiObject *servicediscovery.HealthCheckCusto
 
 	return tfMap
 }
-
-func deregisterInstance(ctx context.Context, conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
-	input := &servicediscovery.DeregisterInstanceInput{
-		InstanceId: aws.String(instanceID),
-		ServiceId:  aws.String(serviceID),
-	}
-
-	log.Printf("[INFO] Deregistering Service Discovery Service (%s) Instance: %s", serviceID, instanceID)
-	output, err := conn.DeregisterInstanceWithContext(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
-	}
-
-	if output != nil && output.OperationId != nil {
-		if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
-		}
-	}
-
-	return nil
-}

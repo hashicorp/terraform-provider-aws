@@ -6,9 +6,11 @@ package servicediscovery
 // Exports for use in tests only.
 var (
 	ResourceHTTPNamespace       = resourceHTTPNamespace
+	ResourceInstance            = resourceInstance
 	ResourcePrivateDNSNamespace = resourcePrivateDNSNamespace
 	ResourcePublicDNSNamespace  = resourcePublicDNSNamespace
 
-	FindNamespaceByID  = findNamespaceByID
-	ValidNamespaceName = validNamespaceName
+	FindInstanceByTwoPartKey = findInstanceByTwoPartKey
+	FindNamespaceByID        = findNamespaceByID
+	ValidNamespaceName       = validNamespaceName
 )

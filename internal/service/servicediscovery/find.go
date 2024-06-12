@@ -13,32 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindInstanceByServiceIDAndInstanceID(ctx context.Context, conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) (*servicediscovery.Instance, error) {
-	input := &servicediscovery.GetInstanceInput{
-		InstanceId: aws.String(instanceID),
-		ServiceId:  aws.String(serviceID),
-	}
-
-	output, err := conn.GetInstanceWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeInstanceNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Instance == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Instance, nil
-}
-
 func findServices(ctx context.Context, conn *servicediscovery.ServiceDiscovery, input *servicediscovery.ListServicesInput) ([]*servicediscovery.ServiceSummary, error) {
 	var output []*servicediscovery.ServiceSummary
 

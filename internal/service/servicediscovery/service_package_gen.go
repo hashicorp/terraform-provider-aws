@@ -53,8 +53,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstance,
+			Factory:  resourceInstance,
 			TypeName: "aws_service_discovery_instance",
+			Name:     "Instance",
 		},
 		{
 			Factory:  resourcePrivateDNSNamespace,
