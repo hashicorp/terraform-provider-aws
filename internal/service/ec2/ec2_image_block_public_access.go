@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
-func ResourceImageBlockPublicAccess() *schema.Resource {
+func resourceImageBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceImageBlockPublicAccessPut,
 		ReadWithoutTimeout:   resourceImageBlockPublicAccessRead,
@@ -73,7 +73,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 		d.SetId(meta.(*conns.AWSClient).Region)
 	}
 
-	if err := WaitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitImageBlockPublicAccessState(ctx, conn, state, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Image Block Public Access state (%s): %s", state, err)
 	}
 
@@ -84,7 +84,7 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := FindImageBlockPublicAccessState(ctx, conn)
+	output, err := findImageBlockPublicAccessState(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Image Block Public Access %s not found, removing from state", d.Id())

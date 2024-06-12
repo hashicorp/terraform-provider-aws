@@ -541,7 +541,7 @@ func testAccCheckDefaultRouteTableDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfec2.FindRouteTableByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindRouteTableByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
