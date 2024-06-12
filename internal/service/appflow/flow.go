@@ -30,7 +30,7 @@ import (
 )
 
 // @SDKResource("aws_appflow_flow", name="Flow")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appflow/types;types.FlowDefinition")
 func resourceFlow() *schema.Resource {
 	return &schema.Resource{
