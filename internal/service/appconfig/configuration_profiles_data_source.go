@@ -21,7 +21,7 @@ func DataSourceConfigurationProfiles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationProfilesRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,7 +42,7 @@ func dataSourceConfigurationProfilesRead(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
-	appId := d.Get("application_id").(string)
+	appId := d.Get(names.AttrApplicationID).(string)
 
 	out, err := findConfigurationProfileSummariesByApplication(ctx, conn, appId)
 	if err != nil {

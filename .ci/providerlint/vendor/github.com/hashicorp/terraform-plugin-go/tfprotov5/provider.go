@@ -53,10 +53,7 @@ type ProviderServer interface {
 	// are a handy interface for defining what a function is to
 	// terraform-plugin-go, so they are their own interface that is composed
 	// into ProviderServer.
-	//
-	// This will be required in an upcoming release.
-	// Reference: https://github.com/hashicorp/terraform-plugin-go/issues/353
-	// FunctionServer
+	FunctionServer
 }
 
 // GetMetadataRequest represents a GetMetadata RPC request.
@@ -211,6 +208,10 @@ type ConfigureProviderRequest struct {
 	// known values. Values that are not set in the configuration will be
 	// null.
 	Config *DynamicValue
+
+	// ClientCapabilities defines optionally supported protocol features for the
+	// ConfigureProvider RPC, such as forward-compatible Terraform behavior changes.
+	ClientCapabilities *ConfigureProviderClientCapabilities
 }
 
 // ConfigureProviderResponse represents a Terraform RPC response to the

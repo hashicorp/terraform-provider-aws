@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_storagegateway_working_storage")
+// @SDKResource("aws_storagegateway_working_storage", name="Working Storage")
 func ResourceWorkingStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkingStorageCreate,
 		ReadWithoutTimeout:   resourceWorkingStorageRead,
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

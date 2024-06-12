@@ -26,6 +26,7 @@ BCM Data Exports
 Backup
 Batch
 CE (Cost Explorer)
+Chatbot
 Chime
 Chime SDK Media Pipelines
 Chime SDK Voice
@@ -70,6 +71,7 @@ Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
+DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
 DataSync
@@ -157,6 +159,7 @@ Managed Streaming for Kafka Connect
 MemoryDB for Redis
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
@@ -186,6 +189,7 @@ Resource Groups Tagging
 Roles Anywhere
 Route 53
 Route 53 Domains
+Route 53 Profiles
 Route 53 Recovery Control Config
 Route 53 Recovery Readiness
 Route 53 Resolver
@@ -219,6 +223,7 @@ Signer
 Storage Gateway
 Systems Manager for SAP
 Timestream Write
+Timestream for InfluxDB
 Transcribe
 Transfer Family
 Transit Gateway
@@ -237,4 +242,5 @@ Web Services Budgets
 Well-Architected Tool
 WorkLink
 WorkSpaces
+WorkSpaces Web
 X-Ray

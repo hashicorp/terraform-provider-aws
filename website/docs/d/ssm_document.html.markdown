@@ -38,14 +38,14 @@ data "aws_ssm_document" "test" {
 
 This data source supports the following arguments:
 
-* `name` - (Required) Name of the Systems Manager document.
-* `document_format` - (Optional) Returns the document in the specified format. The document format can be either `JSON`, `YAML` and `TEXT`. JSON is the default format.
-* `document_version` - (Optional) Document version for which you want information.
+* `name` - (Required) The name of the document.
+* `document_format` - The format of the document. Valid values: `JSON`, `TEXT`, `YAML`.
+* `document_version` - The document version.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the document. If the document is an AWS managed document, this value will be set to the name of the document instead.
-* `content` - Contents of the document.
-* `document_type` - Type of the document.
+* `content` - The content for the SSM document in JSON or YAML format.
+* `document_type` - The type of the document.

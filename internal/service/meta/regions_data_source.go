@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name=Regions)
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -41,17 +41,17 @@ func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaReq
 			"all_regions": schema.BoolAttribute{
 				Optional: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"names": schema.SetAttribute{
+			names.AttrNames: schema.SetAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"filter": tfec2.CustomFiltersBlock(),
+			names.AttrFilter: tfec2.CustomFiltersBlock(),
 		},
 	}
 }
