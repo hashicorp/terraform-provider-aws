@@ -153,7 +153,7 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, request resource.
 											stringvalidator.LengthBetween(1, 2048),
 										},
 									},
-									"client_secret": schema.StringAttribute{
+									names.AttrClientSecret: schema.StringAttribute{
 										Required:  true,
 										Sensitive: true,
 										Validators: []validator.String{
