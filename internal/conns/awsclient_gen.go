@@ -17,6 +17,7 @@ import (
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	applicationsignals_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationsignals"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
@@ -325,6 +326,10 @@ func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
 
 func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationinsights_sdkv1.ApplicationInsights {
 	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights, make(map[string]any)))
+}
+
+func (c *AWSClient) ApplicationSignalsClient(ctx context.Context) *applicationsignals_sdkv2.Client {
+	return errs.Must(client[*applicationsignals_sdkv2.Client](ctx, c, names.ApplicationSignals, make(map[string]any)))
 }
 
 func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
