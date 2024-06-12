@@ -6,7 +6,7 @@ package servicediscovery
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -112,7 +112,7 @@ func DataSourceService() *schema.Resource {
 }
 
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -122,7 +122,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("reading Service Discovery Service (%s): %s", name, err)
 	}
 
-	serviceID := aws.ToString(serviceSummary.Id)
+	serviceID := aws.StringValue(serviceSummary.Id)
 
 	service, err := FindServiceByID(ctx, conn, serviceID)
 
@@ -131,7 +131,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(serviceID)
-	arn := aws.ToString(service.Arn)
+	arn := aws.StringValue(service.Arn)
 	d.Set("arn", arn)
 	d.Set("description", service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {

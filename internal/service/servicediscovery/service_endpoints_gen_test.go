@@ -4,17 +4,17 @@ package servicediscovery_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -212,42 +212,32 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := servicediscovery_sdkv2.NewDefaultEndpointResolverV2()
+	r := endpoints.DefaultResolver()
 
-	ep, err := r.ResolveEndpoint(context.Background(), servicediscovery_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
-	})
+	ep, err := r.EndpointFor(servicediscovery_sdkv1.EndpointsID, region)
 	if err != nil {
 		return err.Error()
 	}
 
-	if ep.URI.Path == "" {
-		ep.URI.Path = "/"
+	url, _ := url.Parse(ep.URL)
+
+	if url.Path == "" {
+		url.Path = "/"
 	}
 
-	return ep.URI.String()
+	return url.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
-	var endpoint string
+	client := meta.ServiceDiscoveryConn(ctx)
 
-	client := meta.ServiceDiscoveryClient(ctx)
+	req, _ := client.ListNamespacesRequest(&servicediscovery_sdkv1.ListNamespacesInput{})
 
-	_, err := client.ListNamespaces(ctx, &servicediscovery_sdkv2.ListNamespacesInput{},
-		func(opts *servicediscovery_sdkv2.Options) {
-			opts.APIOptions = append(opts.APIOptions,
-				addRetrieveEndpointURLMiddleware(t, &endpoint),
-				addCancelRequestMiddleware(),
-			)
-		},
-	)
-	if err == nil {
-		t.Fatal("Expected an error, got none")
-	} else if !errors.Is(err, errCancelOperation) {
-		t.Fatalf("Unexpected error: %s", err)
-	}
+	req.HTTPRequest.URL.Path = "/"
+
+	endpoint := req.HTTPRequest.URL.String()
 
 	return endpoint
 }

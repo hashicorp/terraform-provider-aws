@@ -77,7 +77,6 @@ const (
 	SchedulerEndpointID                  = "scheduler"
 	ServiceQuotasEndpointID              = "servicequotas"
 	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
-	ServiceDiscoveryEndpointID           = "servicediscovery"
 	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
 	SSMIncidentsEndpointID               = "ssm-incidents"

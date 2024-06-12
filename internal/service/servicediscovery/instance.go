@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,18 +65,18 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	input := &servicediscovery.RegisterInstanceInput{
-		Attributes:       flex.ExpandStringValueMap(d.Get("attributes").(map[string]interface{})),
+		Attributes:       flex.ExpandStringMap(d.Get("attributes").(map[string]interface{})),
 		CreatorRequestId: aws.String(id.UniqueId()),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Registering Service Discovery Instance: %+v", input)
-	output, err := conn.RegisterInstance(ctx, input)
+	log.Printf("[DEBUG] Registering Service Discovery Instance: %s", input)
+	output, err := conn.RegisterInstanceWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("registering Service Discovery Instance (%s): %s", instanceID, err)
@@ -85,7 +85,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 			return diag.Errorf("waiting for Service Discovery Instance (%s) create: %s", d.Id(), err)
 		}
 	}
@@ -94,7 +94,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	instance, err := FindInstanceByServiceIDAndInstanceID(ctx, conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
@@ -115,14 +115,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		delete(attributes, "AWS_INSTANCE_IPV4")
 	}
 
-	d.Set("attributes", attributes)
+	d.Set("attributes", aws.StringValueMap(attributes))
 	d.Set("instance_id", instance.Id)
 
 	return nil
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	err := deregisterInstance(ctx, conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 

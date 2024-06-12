@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +28,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -91,7 +92,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
@@ -157,10 +158,7 @@ func TestAccServiceDiscoveryService_private_http(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -191,10 +189,7 @@ func TestAccServiceDiscoveryService_http(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -224,10 +219,7 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -250,10 +242,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
@@ -295,7 +284,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 
 func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_service_discovery_service" {
@@ -330,7 +319,7 @@ func testAccCheckServiceExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("No Service Discovery Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 		_, err := tfservicediscovery.FindServiceByID(ctx, conn, rs.Primary.ID)
 

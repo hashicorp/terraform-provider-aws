@@ -9,15 +9,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -62,10 +61,10 @@ func ResourceService() *schema.Resource {
 										Required: true,
 									},
 									"type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ForceNew:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RecordType](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(servicediscovery.RecordType_Values(), false),
 									},
 								},
 							},
@@ -76,11 +75,11 @@ func ResourceService() *schema.Resource {
 							ForceNew: true,
 						},
 						"routing_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.RoutingPolicyMultivalue,
-							ValidateDiagFunc: enum.Validate[awstypes.RoutingPolicy](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      servicediscovery.RoutingPolicyMultivalue,
+							ValidateFunc: validation.StringInSlice(servicediscovery.RoutingPolicy_Values(), false),
 						},
 					},
 				},
@@ -105,10 +104,10 @@ func ResourceService() *schema.Resource {
 							Optional: true,
 						},
 						"type": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(servicediscovery.HealthCheckType_Values(), false),
 						},
 					},
 				},
@@ -142,11 +141,11 @@ func ResourceService() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ServiceTypeOption](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(servicediscovery.ServiceTypeOption_Values(), false),
 			},
 		},
 
@@ -155,7 +154,7 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &servicediscovery.CreateServiceInput{
@@ -185,22 +184,22 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("type"); ok {
-		input.Type = awstypes.ServiceTypeOption(v.(string))
+		input.Type = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateService(ctx, input)
+	output, err := conn.CreateServiceWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating Service Discovery Service (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.Service.Id))
+	d.SetId(aws.StringValue(output.Service.Id))
 
 	return resourceServiceRead(ctx, d, meta)
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	service, err := FindServiceByID(ctx, conn, d.Id())
 
@@ -214,7 +213,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading Service Discovery Service (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.ToString(service.Arn)
+	arn := aws.StringValue(service.Arn)
 	d.Set("arn", arn)
 	d.Set("description", service.Description)
 	if tfMap := flattenDNSConfig(service.DnsConfig); len(tfMap) > 0 {
@@ -246,12 +245,12 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicediscovery.UpdateServiceInput{
 			Id: aws.String(d.Id()),
-			Service: &awstypes.ServiceChange{
+			Service: &servicediscovery.ServiceChange{
 				Description: aws.String(d.Get("description").(string)),
 			},
 		}
@@ -264,14 +263,14 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.Service.HealthCheckConfig = expandHealthCheckConfig(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateService(ctx, input)
+		output, err := conn.UpdateServiceWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Service Discovery Service (%s): %s", d.Id(), err)
 		}
 
 		if output != nil && output.OperationId != nil {
-			if _, err := WaitOperationSuccess(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+			if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 				return diag.Errorf("waiting for Service Discovery Service (%s) update: %s", d.Id(), err)
 			}
 		}
@@ -281,7 +280,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	if d.Get("force_destroy").(bool) {
 		var errs []error
@@ -289,17 +288,13 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 			ServiceId: aws.String(d.Id()),
 		}
 
-		pages := servicediscovery.NewListInstancesPaginator(conn, input)
-
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-
-			if err != nil {
-				errs = append(errs, fmt.Errorf("listing Service Discovery Instances: %w", err))
+		err := conn.ListInstancesPagesWithContext(ctx, input, func(page *servicediscovery.ListInstancesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
 
 			for _, instance := range page.Instances {
-				err := deregisterInstance(ctx, conn, d.Id(), aws.ToString(instance.Id))
+				err := deregisterInstance(ctx, conn, d.Id(), aws.StringValue(instance.Id))
 
 				if err != nil {
 					errs = append(errs, err)
@@ -307,9 +302,15 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 					continue
 				}
 			}
+
+			return !lastPage
+		})
+
+		if err != nil {
+			errs = append(errs, fmt.Errorf("listing Service Discovery Instances: %w", err))
 		}
 
-		err := errors.Join(errs...)
+		err = errors.Join(errs...)
 
 		if err != nil {
 			return diag.FromErr(err)
@@ -317,11 +318,11 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[INFO] Deleting Service Discovery Service: %s", d.Id())
-	_, err := conn.DeleteService(ctx, &servicediscovery.DeleteServiceInput{
+	_, err := conn.DeleteServiceWithContext(ctx, &servicediscovery.DeleteServiceInput{
 		Id: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.ServiceNotFound](err) {
+	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeServiceNotFound) {
 		return nil
 	}
 
@@ -332,12 +333,12 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func expandDNSConfig(tfMap map[string]interface{}) *awstypes.DnsConfig {
+func expandDNSConfig(tfMap map[string]interface{}) *servicediscovery.DnsConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	apiObject := &awstypes.DnsConfig{}
+	apiObject := &servicediscovery.DnsConfig{}
 
 	if v, ok := tfMap["dns_records"].([]interface{}); ok && len(v) > 0 {
 		apiObject.DnsRecords = expandDNSRecords(v)
@@ -348,18 +349,18 @@ func expandDNSConfig(tfMap map[string]interface{}) *awstypes.DnsConfig {
 	}
 
 	if v, ok := tfMap["routing_policy"].(string); ok && v != "" {
-		apiObject.RoutingPolicy = awstypes.RoutingPolicy(v)
+		apiObject.RoutingPolicy = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandDNSConfigChange(tfMap map[string]interface{}) *awstypes.DnsConfigChange {
+func expandDNSConfigChange(tfMap map[string]interface{}) *servicediscovery.DnsConfigChange {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	apiObject := &awstypes.DnsConfigChange{}
+	apiObject := &servicediscovery.DnsConfigChange{}
 
 	if v, ok := tfMap["dns_records"].([]interface{}); ok && len(v) > 0 {
 		apiObject.DnsRecords = expandDNSRecords(v)
@@ -368,26 +369,30 @@ func expandDNSConfigChange(tfMap map[string]interface{}) *awstypes.DnsConfigChan
 	return apiObject
 }
 
-func expandDNSRecord(tfMap map[string]interface{}) awstypes.DnsRecord {
-	apiObject := awstypes.DnsRecord{}
+func expandDNSRecord(tfMap map[string]interface{}) *servicediscovery.DnsRecord {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	apiObject := &servicediscovery.DnsRecord{}
 
 	if v, ok := tfMap["ttl"].(int); ok {
 		apiObject.TTL = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = awstypes.RecordType(v)
+		apiObject.Type = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandDNSRecords(tfList []interface{}) []awstypes.DnsRecord {
+func expandDNSRecords(tfList []interface{}) []*servicediscovery.DnsRecord {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []awstypes.DnsRecord
+	var apiObjects []*servicediscovery.DnsRecord
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -398,13 +403,17 @@ func expandDNSRecords(tfList []interface{}) []awstypes.DnsRecord {
 
 		apiObject := expandDNSRecord(tfMap)
 
+		if apiObject == nil {
+			continue
+		}
+
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenDNSConfig(apiObject *awstypes.DnsConfig) map[string]interface{} {
+func flattenDNSConfig(apiObject *servicediscovery.DnsConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -416,27 +425,35 @@ func flattenDNSConfig(apiObject *awstypes.DnsConfig) map[string]interface{} {
 	}
 
 	if v := apiObject.NamespaceId; v != nil {
-		tfMap["namespace_id"] = aws.ToString(v)
+		tfMap["namespace_id"] = aws.StringValue(v)
 	}
 
-	tfMap["routing_policy"] = string(apiObject.RoutingPolicy)
+	if v := apiObject.RoutingPolicy; v != nil {
+		tfMap["routing_policy"] = aws.StringValue(v)
+	}
 
 	return tfMap
 }
 
-func flattenDNSRecord(apiObject awstypes.DnsRecord) map[string]interface{} {
+func flattenDNSRecord(apiObject *servicediscovery.DnsRecord) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.TTL; v != nil {
-		tfMap["ttl"] = aws.ToInt64(v)
+		tfMap["ttl"] = aws.Int64Value(v)
 	}
 
-	tfMap["type"] = string(apiObject.Type)
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
 
 	return tfMap
 }
 
-func flattenDNSRecords(apiObjects []awstypes.DnsRecord) []interface{} {
+func flattenDNSRecords(apiObjects []*servicediscovery.DnsRecord) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -444,21 +461,25 @@ func flattenDNSRecords(apiObjects []awstypes.DnsRecord) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
 		tfList = append(tfList, flattenDNSRecord(apiObject))
 	}
 
 	return tfList
 }
 
-func expandHealthCheckConfig(tfMap map[string]interface{}) *awstypes.HealthCheckConfig {
+func expandHealthCheckConfig(tfMap map[string]interface{}) *servicediscovery.HealthCheckConfig {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	apiObject := &awstypes.HealthCheckConfig{}
+	apiObject := &servicediscovery.HealthCheckConfig{}
 
 	if v, ok := tfMap["failure_threshold"].(int); ok && v != 0 {
-		apiObject.FailureThreshold = aws.Int32(int32(v))
+		apiObject.FailureThreshold = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["resource_path"].(string); ok && v != "" {
@@ -466,13 +487,13 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *awstypes.HealthCheck
 	}
 
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = awstypes.HealthCheckType(v)
+		apiObject.Type = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenHealthCheckConfig(apiObject *awstypes.HealthCheckConfig) map[string]interface{} {
+func flattenHealthCheckConfig(apiObject *servicediscovery.HealthCheckConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -480,33 +501,35 @@ func flattenHealthCheckConfig(apiObject *awstypes.HealthCheckConfig) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FailureThreshold; v != nil {
-		tfMap["failure_threshold"] = aws.ToInt32(v)
+		tfMap["failure_threshold"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.ResourcePath; v != nil {
-		tfMap["resource_path"] = aws.ToString(v)
+		tfMap["resource_path"] = aws.StringValue(v)
 	}
 
-	tfMap["type"] = string(apiObject.Type)
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
 
 	return tfMap
 }
 
-func expandHealthCheckCustomConfig(tfMap map[string]interface{}) *awstypes.HealthCheckCustomConfig {
+func expandHealthCheckCustomConfig(tfMap map[string]interface{}) *servicediscovery.HealthCheckCustomConfig {
 	if len(tfMap) < 1 {
 		return nil
 	}
 
-	apiObject := &awstypes.HealthCheckCustomConfig{}
+	apiObject := &servicediscovery.HealthCheckCustomConfig{}
 
 	if v, ok := tfMap["failure_threshold"].(int); ok && v != 0 {
-		apiObject.FailureThreshold = aws.Int32(int32(v))
+		apiObject.FailureThreshold = aws.Int64(int64(v))
 	}
 
 	return apiObject
 }
 
-func flattenHealthCheckCustomConfig(apiObject *awstypes.HealthCheckCustomConfig) map[string]interface{} {
+func flattenHealthCheckCustomConfig(apiObject *servicediscovery.HealthCheckCustomConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -514,27 +537,27 @@ func flattenHealthCheckCustomConfig(apiObject *awstypes.HealthCheckCustomConfig)
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FailureThreshold; v != nil {
-		tfMap["failure_threshold"] = aws.ToInt32(v)
+		tfMap["failure_threshold"] = aws.Int64Value(v)
 	}
 
 	return tfMap
 }
 
-func deregisterInstance(ctx context.Context, conn *servicediscovery.Client, serviceID, instanceID string) error {
+func deregisterInstance(ctx context.Context, conn *servicediscovery.ServiceDiscovery, serviceID, instanceID string) error {
 	input := &servicediscovery.DeregisterInstanceInput{
 		InstanceId: aws.String(instanceID),
 		ServiceId:  aws.String(serviceID),
 	}
 
 	log.Printf("[INFO] Deregistering Service Discovery Service (%s) Instance: %s", serviceID, instanceID)
-	output, err := conn.DeregisterInstance(ctx, input)
+	output, err := conn.DeregisterInstanceWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
 		}
 	}

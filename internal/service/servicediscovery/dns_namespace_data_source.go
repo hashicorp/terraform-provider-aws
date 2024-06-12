@@ -6,13 +6,12 @@ package servicediscovery
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -43,14 +42,17 @@ func DataSourceDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				// HTTP namespaces are handled via the aws_service_discovery_http_namespace data source.
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.NamespaceTypeDnsPublic, awstypes.NamespaceTypeDnsPrivate), false),
+				ValidateFunc: validation.StringInSlice([]string{
+					servicediscovery.NamespaceTypeDnsPublic,
+					servicediscovery.NamespaceTypeDnsPrivate,
+				}, false),
 			},
 		},
 	}
 }
 
 func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -61,7 +63,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
 	}
 
-	namespaceID := aws.ToString(nsSummary.Id)
+	namespaceID := aws.StringValue(nsSummary.Id)
 
 	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
 
@@ -70,7 +72,7 @@ func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(namespaceID)
-	arn := aws.ToString(ns.Arn)
+	arn := aws.StringValue(ns.Arn)
 	d.Set("arn", arn)
 	d.Set("description", ns.Description)
 	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
