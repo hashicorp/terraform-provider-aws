@@ -62,7 +62,7 @@ func (d *dataSourceRegistry) Read(ctx context.Context, req datasource.ReadReques
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, DSNameRegistry, data.Name.String(), err),
+			create.ProblemStandardMessage(names.Glue, create.ErrActionReading, DSNameRegistry, data.RegistryName.String(), err),
 			err.Error(),
 		)
 		return
