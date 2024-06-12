@@ -67,7 +67,7 @@ func sweepHTTPNamespaces(region string) error {
 	}
 
 	for _, v := range namespaces {
-		r := ResourceHTTPNamespace()
+		r := resourceHTTPNamespace()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.Id))
 

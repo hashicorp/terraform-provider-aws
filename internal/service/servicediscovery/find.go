@@ -91,56 +91,6 @@ func findNamespaceByNameAndType(ctx context.Context, conn *servicediscovery.Serv
 	return nil, &retry.NotFoundError{}
 }
 
-func FindNamespaceByID(ctx context.Context, conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Namespace, error) {
-	input := &servicediscovery.GetNamespaceInput{
-		Id: aws.String(id),
-	}
-
-	output, err := conn.GetNamespaceWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Namespace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Namespace, nil
-}
-
-func FindOperationByID(ctx context.Context, conn *servicediscovery.ServiceDiscovery, id string) (*servicediscovery.Operation, error) {
-	input := &servicediscovery.GetOperationInput{
-		OperationId: aws.String(id),
-	}
-
-	output, err := conn.GetOperationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeOperationNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Operation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Operation, nil
-}
-
 func findServices(ctx context.Context, conn *servicediscovery.ServiceDiscovery, input *servicediscovery.ListServicesInput) ([]*servicediscovery.ServiceSummary, error) {
 	var output []*servicediscovery.ServiceSummary
 
