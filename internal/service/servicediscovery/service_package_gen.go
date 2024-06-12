@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDNSNamespace,
+			Factory:  dataSourceDNSNamespace,
 			TypeName: "aws_service_discovery_dns_namespace",
+			Name:     "DNS Namespace",
 		},
 		{
 			Factory:  dataSourceHTTPNamespace,
