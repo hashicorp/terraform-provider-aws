@@ -39,7 +39,7 @@ func testAccIngestion_basic(t *testing.T) {
 				Config: testAccIngestionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
-					resource.TestCheckResourceAttr(resourceName, "app", "OKTA"),
+					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", "auditLog"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
@@ -181,7 +181,7 @@ func testAccCheckIngestionExists(ctx context.Context, n string, v *awstypes.Inge
 	}
 }
 
-func testAccIngestionConfig_basic(rName string) string {
+func testAccIngestionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
   tags = {
@@ -189,54 +189,67 @@ resource "aws_appfabric_app_bundle" "test" {
   }
 }
 
-resource "aws_appfabric_ingestion" "test" {
-  app            = "OKTA"
+resource "aws_appfabric_app_authorization" "test" {
   app_bundle_arn = aws_appfabric_app_bundle.test.arn
-  tenant_id      = "test-tenant-id"
-  ingestion_type = "auditLog"
+  app            = "TERRAFORMCLOUD"
+  auth_type      = "apiKey"
+
+  credential {
+    api_key_credential {
+      api_key = "ApiExampleKey"
+    }
+  }
+
+  tenant {
+    tenant_display_name = "test"
+    tenant_identifier   = "test-tenant-id"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
 }
 
-func testAccIngestionConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_appfabric_app_bundle" "test" {
-  tags = {
-    Name = %[1]q
-  }
+func testAccIngestionConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccIngestionConfig_base(rName), `
+resource "aws_appfabric_ingestion" "test" {
+  app            = aws_appfabric_app_authorization.test.app
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  tenant_id      = "test-tenant-id"
+  ingestion_type = "auditLog"
+}
+`)
 }
 
+func testAccIngestionConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccIngestionConfig_base(rName), fmt.Sprintf(`
 resource "aws_appfabric_ingestion" "test" {
-  app            = "OKTA"
+  app            = aws_appfabric_app_authorization.test.app
   app_bundle_arn = aws_appfabric_app_bundle.test.arn
   tenant_id      = "test-tenant-id"
   ingestion_type = "auditLog"
 
   tags = {
-    %[2]q = %[3]q
+    %[1]q = %[2]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccIngestionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_appfabric_app_bundle" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccIngestionConfig_base(rName), fmt.Sprintf(`
 resource "aws_appfabric_ingestion" "test" {
-  app            = "OKTA"
+  app            = aws_appfabric_app_authorization.test.app
   app_bundle_arn = aws_appfabric_app_bundle.test.arn
   tenant_id      = "test-tenant-id"
   ingestion_type = "auditLog"
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
