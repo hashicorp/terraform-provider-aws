@@ -17,14 +17,16 @@ After any edits to `data/names_data.hcl`, run `make gen`. Doing so regenerates c
 
 The schema of the attributes and blocks of `data/names_data.csv` are as follows:
 ```hcl
-service "" { 
+service "" {
 
-  cli_v2_command { // If both of these attributes are the same as the service block's name, this block will be ommitted
+  // If both of these attributes are the same as the service block's name, this block will be ommitted
+  cli_v2_command { 
     aws_cli_v2_command           = ""
     aws_cli_v2_command_no_dashes = ""
-  } 
+  }
 
-  go_packages { // If both of these attributes are the same as the service block's name, this block will be ommitted
+  // If both of these attributes are the same as the service block's name, this block will be ommitted
+  go_packages { 
     v1_package = ""
     v2_package = ""
   } 
