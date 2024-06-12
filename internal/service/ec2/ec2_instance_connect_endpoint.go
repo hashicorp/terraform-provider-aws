@@ -179,6 +179,11 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 		return
 	}
 
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if data.FipsDnsName.IsNull() {
+		data.FipsDnsName = types.StringValue("")
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -210,6 +215,11 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if data.FipsDnsName.IsNull() {
+		data.FipsDnsName = types.StringValue("")
 	}
 
 	setTagsOutV2(ctx, instanceConnectEndpoint.Tags)
