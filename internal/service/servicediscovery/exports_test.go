@@ -9,8 +9,10 @@ var (
 	ResourceInstance            = resourceInstance
 	ResourcePrivateDNSNamespace = resourcePrivateDNSNamespace
 	ResourcePublicDNSNamespace  = resourcePublicDNSNamespace
+	ResourceService             = resourceService
 
 	FindInstanceByTwoPartKey = findInstanceByTwoPartKey
 	FindNamespaceByID        = findNamespaceByID
+	FindServiceByID          = findServiceByID
 	ValidNamespaceName       = validNamespaceName
 )

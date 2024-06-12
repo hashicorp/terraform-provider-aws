@@ -74,7 +74,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceService,
+			Factory:  resourceService,
 			TypeName: "aws_service_discovery_service",
 			Name:     "Service",
 			Tags: &types.ServicePackageResourceTags{
