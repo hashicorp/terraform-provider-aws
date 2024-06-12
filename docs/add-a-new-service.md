@@ -19,18 +19,18 @@ Before new resources are submitted, please raise a separate pull request contain
 
 To add an AWS SDK for Go service client:
 
-1. Check the file `names/data/names_data.csv` for the service.
+1. Check the file `names/data/names_data.hcl` for the service.
 
-1. If the service is there and there is no value in the `NotImplmented` column, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
+1. If the service is there and the `NotImplmented` attribute is false, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
 
-1. If the service is there and there is a value in the `NotImplemented` column, remove it and submit the client pull request as described below.
+1. If the service is there and the `NotImplmented` attribute is true, remove it and submit the client pull request as described below.
 
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
-1. In `names/data/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
+1. In `names/data/names_data.hcl`, add a new hcl block with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
 
     !!! tip
-        Be very careful when adding or changing data in `names_data.csv`!
+        Be very careful when adding or changing data in `names_data.hcl`!
         The Provider and generators depend on the file being correct.
         We strongly recommend using an editor with CSV support.
 
