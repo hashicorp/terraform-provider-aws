@@ -39,58 +39,6 @@ func FindInstanceByServiceIDAndInstanceID(ctx context.Context, conn *servicedisc
 	return output.Instance, nil
 }
 
-func findNamespaces(ctx context.Context, conn *servicediscovery.ServiceDiscovery, input *servicediscovery.ListNamespacesInput) ([]*servicediscovery.NamespaceSummary, error) {
-	var output []*servicediscovery.NamespaceSummary
-
-	err := conn.ListNamespacesPagesWithContext(ctx, input, func(page *servicediscovery.ListNamespacesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Namespaces {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func findNamespacesByType(ctx context.Context, conn *servicediscovery.ServiceDiscovery, nsType string) ([]*servicediscovery.NamespaceSummary, error) {
-	input := &servicediscovery.ListNamespacesInput{
-		Filters: []*servicediscovery.NamespaceFilter{{
-			Condition: aws.String(servicediscovery.FilterConditionEq),
-			Name:      aws.String(servicediscovery.NamespaceFilterNameType),
-			Values:    aws.StringSlice([]string{nsType}),
-		}},
-	}
-
-	return findNamespaces(ctx, conn, input)
-}
-
-func findNamespaceByNameAndType(ctx context.Context, conn *servicediscovery.ServiceDiscovery, name, nsType string) (*servicediscovery.NamespaceSummary, error) {
-	output, err := findNamespacesByType(ctx, conn, nsType)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range output {
-		if aws.StringValue(v.Name) == name {
-			return v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
-}
-
 func findServices(ctx context.Context, conn *servicediscovery.ServiceDiscovery, input *servicediscovery.ListServicesInput) ([]*servicediscovery.ServiceSummary, error) {
 	var output []*servicediscovery.ServiceSummary
 

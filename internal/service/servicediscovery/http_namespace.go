@@ -16,8 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -86,7 +88,7 @@ func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "creating Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
-	operation, err := waitOperationSuccess(ctx, conn, aws.ToString(output.OperationId))
+	operation, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery HTTP Namespace (%s) create: %s", name, err)
@@ -154,12 +156,69 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if output := outputRaw.(*servicediscovery.DeleteNamespaceOutput); output != nil && output.OperationId != nil {
-		if _, err := waitOperationSuccess(ctx, conn, aws.ToString(output.OperationId)); err != nil {
+		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery HTTP Namespace (%s) delete: %s", d.Id(), err)
 		}
 	}
 
 	return diags
+}
+
+func findNamespace(ctx context.Context, conn *servicediscovery.Client, input *servicediscovery.ListNamespacesInput, filter tfslices.Predicate[*awstypes.NamespaceSummary]) (*awstypes.NamespaceSummary, error) {
+	output, err := findNamespaces(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNamespaces(ctx context.Context, conn *servicediscovery.Client, input *servicediscovery.ListNamespacesInput, filter tfslices.Predicate[*awstypes.NamespaceSummary]) ([]awstypes.NamespaceSummary, error) {
+	var output []awstypes.NamespaceSummary
+
+	pages := servicediscovery.NewListNamespacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Namespaces {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func namespaceTypeFilter(nsType awstypes.NamespaceType) awstypes.NamespaceFilter {
+	return awstypes.NamespaceFilter{
+		Condition: awstypes.FilterConditionEq,
+		Name:      awstypes.NamespaceFilterNameType,
+		Values:    enum.Slice(nsType),
+	}
+}
+
+func findNamespacesByType(ctx context.Context, conn *servicediscovery.Client, nsType awstypes.NamespaceType) ([]awstypes.NamespaceSummary, error) {
+	input := &servicediscovery.ListNamespacesInput{
+		Filters: []awstypes.NamespaceFilter{namespaceTypeFilter(nsType)},
+	}
+
+	return findNamespaces(ctx, conn, input, tfslices.PredicateTrue[*awstypes.NamespaceSummary]())
+}
+
+func findNamespaceByNameAndType(ctx context.Context, conn *servicediscovery.Client, name string, nsType awstypes.NamespaceType) (*awstypes.NamespaceSummary, error) {
+	input := &servicediscovery.ListNamespacesInput{
+		Filters: []awstypes.NamespaceFilter{namespaceTypeFilter(nsType)},
+	}
+
+	return findNamespace(ctx, conn, input, func(v *awstypes.NamespaceSummary) bool {
+		return aws.ToString(v.Name) == name
+	})
 }
 
 func findNamespaceByID(ctx context.Context, conn *servicediscovery.Client, id string) (*awstypes.Namespace, error) {

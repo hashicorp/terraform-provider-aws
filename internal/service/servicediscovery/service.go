@@ -274,7 +274,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if output != nil && output.OperationId != nil {
-			if _, err := waitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+			if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Service (%s) update: %s", d.Id(), err)
 			}
 		}
@@ -562,7 +562,7 @@ func deregisterInstance(ctx context.Context, conn *servicediscovery.ServiceDisco
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 			return fmt.Errorf("waiting for Service Discovery Service (%s) Instance (%s) delete: %w", serviceID, instanceID, err)
 		}
 	}

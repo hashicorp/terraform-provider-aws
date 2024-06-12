@@ -81,7 +81,7 @@ func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "creating Service Discovery Public DNS Namespace (%s): %s", name, err)
 	}
 
-	operation, err := waitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId))
+	operation, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationId))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Public DNS Namespace (%s) create: %s", name, err)
@@ -147,7 +147,7 @@ func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if output != nil && output.OperationId != nil {
-			if _, err := waitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+			if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Public DNS Namespace (%s) update: %s", d.Id(), err)
 			}
 		}
@@ -170,7 +170,7 @@ func resourcePublicDNSNamespaceDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Public DNS Namespace (%s) delete: %s", d.Id(), err)
 		}
 	}

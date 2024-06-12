@@ -88,7 +88,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
-		if _, err := waitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := waitOperationSucceeded(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Discovery Instance (%s) create: %s", d.Id(), err)
 		}
 	}

@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_service_discovery_dns_namespace",
 		},
 		{
-			Factory:  DataSourceHTTPNamespace,
+			Factory:  dataSourceHTTPNamespace,
 			TypeName: "aws_service_discovery_http_namespace",
+			Name:     "HTTP Namespace",
 		},
 		{
 			Factory:  DataSourceService,
