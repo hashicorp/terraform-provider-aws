@@ -26,6 +26,13 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"cmk":                testAccAppBundle_cmk,
 			"tags":               testAccAppBundle_tags,
 		},
+		"AppAuthorization": {
+			acctest.CtBasic:      testAccAppAuthorization_basic,
+			acctest.CtDisappears: testAccAppAuthorization_disappears,
+			"apiKeyUpdate":       testAccAppAuthorization_apiKeyUpdate,
+			"oath2Update":        testAccAppAuthorization_oath2Update,
+			"tags":               testAccAppAuthorization_tags,
+		},
 		"Ingestion": {
 			acctest.CtBasic:      testAccIngestion_basic,
 			acctest.CtDisappears: testAccIngestion_disappears,
