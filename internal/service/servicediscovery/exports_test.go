@@ -7,6 +7,7 @@ package servicediscovery
 var (
 	ResourceHTTPNamespace       = resourceHTTPNamespace
 	ResourcePrivateDNSNamespace = resourcePrivateDNSNamespace
+	ResourcePublicDNSNamespace  = resourcePublicDNSNamespace
 
 	FindNamespaceByID  = findNamespaceByID
 	ValidNamespaceName = validNamespaceName
