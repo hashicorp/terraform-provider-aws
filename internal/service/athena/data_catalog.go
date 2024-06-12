@@ -44,15 +44,15 @@ func resourceDataCatalog() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +61,7 @@ func resourceDataCatalog() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[\w@-]*`), ""),
 				),
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -72,7 +72,7 @@ func resourceDataCatalog() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.DataCatalogType](),
@@ -86,15 +86,15 @@ func resourceDataCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &athena.CreateDataCatalogInput{
 		Name:        aws.String(name),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:        getTagsIn(ctx),
-		Type:        types.DataCatalogType(d.Get("type").(string)),
+		Type:        types.DataCatalogType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
 		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
@@ -133,14 +133,14 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("datacatalog/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", dataCatalog.Description)
-	d.Set("name", dataCatalog.Name)
-	d.Set("type", dataCatalog.Type)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, dataCatalog.Description)
+	d.Set(names.AttrName, dataCatalog.Name)
+	d.Set(names.AttrType, dataCatalog.Type)
 
 	// NOTE: This is a workaround for the fact that the API sets default values for parameters that are not set.
 	// Because the API sets default values, what's returned by the API is different than what's set by the user.
-	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
 		parameters := make(map[string]string, 0)
 
 		for key, val := range v.(map[string]interface{}) {
@@ -151,9 +151,9 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 		}
 
-		d.Set("parameters", parameters)
+		d.Set(names.AttrParameters, parameters)
 	} else {
-		d.Set("parameters", nil)
+		d.Set(names.AttrParameters, nil)
 	}
 
 	return diags
@@ -164,15 +164,15 @@ func resourceDataCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &athena.UpdateDataCatalogInput{
 			Name:        aws.String(d.Id()),
-			Type:        types.DataCatalogType(d.Get("type").(string)),
-			Description: aws.String(d.Get("description").(string)),
+			Type:        types.DataCatalogType(d.Get(names.AttrType).(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
-		if d.HasChange("parameters") {
-			if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
+		if d.HasChange(names.AttrParameters) {
+			if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
 				input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 			}
 		}

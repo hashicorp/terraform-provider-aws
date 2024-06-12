@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_logging_options")
@@ -35,7 +36,7 @@ func ResourceLoggingOptions() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -59,7 +60,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 		input.DisableAllLogs = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -92,7 +93,7 @@ func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("default_log_level", output.DefaultLogLevel)
 	d.Set("disable_all_logs", output.DisableAllLogs)
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 
 	return diags
 }

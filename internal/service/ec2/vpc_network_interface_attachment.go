@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_interface_attachment")
@@ -34,17 +35,17 @@ func ResourceNetworkInterfaceAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,8 +58,8 @@ func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	attachmentID, err := attachNetworkInterface(ctx, conn,
-		d.Get("network_interface_id").(string),
-		d.Get("instance_id").(string),
+		d.Get(names.AttrNetworkInterfaceID).(string),
+		d.Get(names.AttrInstanceID).(string),
 		d.Get("device_index").(int),
 		networkInterfaceAttachedTimeout,
 	)
@@ -90,11 +91,11 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("network_interface_id", network_interface.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, network_interface.NetworkInterfaceId)
 	d.Set("attachment_id", network_interface.Attachment.AttachmentId)
 	d.Set("device_index", network_interface.Attachment.DeviceIndex)
-	d.Set("instance_id", network_interface.Attachment.InstanceId)
-	d.Set("status", network_interface.Attachment.Status)
+	d.Set(names.AttrInstanceID, network_interface.Attachment.InstanceId)
+	d.Set(names.AttrStatus, network_interface.Attachment.Status)
 
 	return diags
 }
@@ -103,7 +104,7 @@ func resourceNetworkInterfaceAttachmentDelete(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := detachNetworkInterface(ctx, conn, d.Get("network_interface_id").(string), d.Id(), NetworkInterfaceDetachedTimeout); err != nil {
+	if err := detachNetworkInterface(ctx, conn, d.Get(names.AttrNetworkInterfaceID).(string), d.Id(), NetworkInterfaceDetachedTimeout); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 

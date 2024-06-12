@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_macie2_classification_export_configuration")
@@ -36,7 +37,7 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 				AtLeastOneOf: []string{"s3_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -44,7 +45,7 @@ func ResourceClassificationExportConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -169,7 +170,7 @@ func expandClassificationExportConfiguration(tfMap map[string]interface{}) *maci
 
 	apiObject := &macie2.S3Destination{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -177,7 +178,7 @@ func expandClassificationExportConfiguration(tfMap map[string]interface{}) *maci
 		apiObject.KeyPrefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["kms_key_arn"].(string); ok {
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok {
 		apiObject.KmsKeyArn = aws.String(v)
 	}
 
@@ -192,7 +193,7 @@ func flattenClassificationExportConfigurationS3DestinationResult(apiObject *maci
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		tfMap["bucket_name"] = aws.StringValue(v)
+		tfMap[names.AttrBucketName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.KeyPrefix; v != nil {
@@ -200,7 +201,7 @@ func flattenClassificationExportConfigurationS3DestinationResult(apiObject *maci
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {
-		tfMap["kms_key_arn"] = aws.StringValue(v)
+		tfMap[names.AttrKMSKeyARN] = aws.StringValue(v)
 	}
 
 	return tfMap

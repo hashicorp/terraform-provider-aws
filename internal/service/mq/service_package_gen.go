@@ -7,6 +7,7 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,7 +50,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_mq_broker",
 			Name:     "Broker",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -57,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_mq_configuration",
 			Name:     "Configuration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -72,8 +73,16 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return mq_sdkv2.NewFromConfig(cfg, func(o *mq_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
 		}
 	}), nil
 }

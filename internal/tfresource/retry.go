@@ -162,9 +162,19 @@ func RetryWhenIsA[T error](ctx context.Context, timeout time.Duration, f func() 
 	})
 }
 
-func RetryWhenIsOneOf[T1, T2 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+func RetryWhenIsOneOf2[T1, T2 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if errs.IsA[T1](err) || errs.IsA[T2](err) {
+			return true, err
+		}
+
+		return false, err
+	})
+}
+
+func RetryWhenIsOneOf3[T1, T2, T3 error](ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		if errs.IsA[T1](err) || errs.IsA[T2](err) || errs.IsA[T3](err) {
 			return true, err
 		}
 

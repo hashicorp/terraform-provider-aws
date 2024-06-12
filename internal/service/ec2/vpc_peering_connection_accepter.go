@@ -20,6 +20,7 @@ import (
 
 // @SDKResource("aws_vpc_peering_connection_accepter", name="VPC Peering Connection")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCPeeringAccepterCreate,
@@ -72,7 +73,7 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 			"requester":       vpcPeeringConnectionOptionsSchema,
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

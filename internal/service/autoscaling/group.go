@@ -37,6 +37,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_group", name="Group")
@@ -66,11 +67,11 @@ func resourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -109,7 +110,7 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -159,7 +160,7 @@ func resourceGroup() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -180,7 +181,7 @@ func resourceGroup() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -306,7 +307,7 @@ func resourceGroup() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.RefreshStrategy](),
 						},
-						"triggers": {
+						names.AttrTriggers: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -320,30 +321,30 @@ func resourceGroup() *schema.Resource {
 			"launch_configuration": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
+				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
 							ValidateFunc:  verify.ValidLaunchTemplateID,
 							ConflictsWith: []string{"launch_template.0.name"},
 						},
-						"name": {
+						names.AttrName: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
 							ValidateFunc:  verify.ValidLaunchTemplateName,
 							ConflictsWith: []string{"launch_template.0.id"},
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -351,7 +352,7 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
+				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
 			},
 			"load_balancers": {
 				Type:          schema.TypeSet,
@@ -437,7 +438,7 @@ func resourceGroup() *schema.Resource {
 								},
 							},
 						},
-						"launch_template": {
+						names.AttrLaunchTemplate: {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
@@ -461,7 +462,7 @@ func resourceGroup() *schema.Resource {
 													Optional: true,
 													Computed: true,
 												},
-												"version": {
+												names.AttrVersion: {
 													Type:     schema.TypeString,
 													Optional: true,
 													Computed: true,
@@ -487,12 +488,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(0),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
@@ -522,12 +523,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
@@ -560,12 +561,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
@@ -619,12 +620,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeFloat,
 																			Optional:     true,
 																			ValidateFunc: verify.FloatGreaterThan(0.0),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeFloat,
 																			Optional:     true,
 																			ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -638,12 +639,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
@@ -657,12 +658,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeFloat,
 																			Optional:     true,
 																			ValidateFunc: verify.FloatGreaterThan(0.0),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeFloat,
 																			Optional:     true,
 																			ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -676,12 +677,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
@@ -709,12 +710,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeFloat,
 																			Optional:     true,
 																			ValidateFunc: verify.FloatGreaterThan(0.0),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeFloat,
 																			Optional:     true,
 																			ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -728,12 +729,12 @@ func resourceGroup() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"max": {
+																		names.AttrMax: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
 																		},
-																		"min": {
+																		names.AttrMin: {
 																			Type:         schema.TypeInt,
 																			Optional:     true,
 																			ValidateFunc: validation.IntAtLeast(1),
@@ -744,7 +745,7 @@ func resourceGroup() *schema.Resource {
 														},
 													},
 												},
-												"instance_type": {
+												names.AttrInstanceType: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -765,7 +766,7 @@ func resourceGroup() *schema.Resource {
 																Optional: true,
 																Computed: true,
 															},
-															"version": {
+															names.AttrVersion: {
 																Type:     schema.TypeString,
 																Optional: true,
 																Computed: true,
@@ -786,23 +787,23 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
+				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringLenBetween(0, 255),
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			"placement_group": {
 				Type:     schema.TypeString,
@@ -832,7 +833,7 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -840,7 +841,7 @@ func resourceGroup() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -865,12 +866,12 @@ func resourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -884,7 +885,7 @@ func resourceGroup() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"availability_zones"},
+				ConflictsWith: []string{names.AttrAvailabilityZones},
 			},
 			"wait_for_capacity_timeout": {
 				Type:         schema.TypeString,
@@ -942,7 +943,7 @@ func resourceGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			launchTemplateCustomDiff("launch_template", "launch_template.0.name"),
+			launchTemplateCustomDiff(names.AttrLaunchTemplate, "launch_template.0.name"),
 			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
 			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.override"),
 		),
@@ -972,9 +973,9 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 				return nil
 			}
 
-			if baseAttribute == "launch_template" {
+			if baseAttribute == names.AttrLaunchTemplate {
 				launchTemplate := ba[0].(map[string]interface{})
-				launchTemplate["id"] = launchTemplateIDUnknown
+				launchTemplate[names.AttrID] = launchTemplateIDUnknown
 
 				if err := diff.SetNew(baseAttribute, ba); err != nil {
 					return err
@@ -982,7 +983,7 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			}
 
 			if baseAttribute == "mixed_instances_policy" && !strings.Contains(subAttribute, "override") {
-				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
+				launchTemplate := ba[0].(map[string]interface{})[names.AttrLaunchTemplate].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
 				launchTemplateSpecification := launchTemplate.(map[string]interface{})
 				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
 
@@ -992,7 +993,7 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			}
 
 			if baseAttribute == "mixed_instances_policy" && strings.Contains(subAttribute, "override") {
-				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
+				launchTemplate := ba[0].(map[string]interface{})[names.AttrLaunchTemplate].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
 
 				for i := range launchTemplate {
 					key := fmt.Sprintf("mixed_instances_policy.0.launch_template.0.override.%d.launch_template_specification.0.launch_template_name", i)
@@ -1019,7 +1020,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	startTime := time.Now()
 
-	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	asgName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	inputCASG := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
@@ -1062,7 +1063,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		inputCASG.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -1098,7 +1099,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		inputCASG.LaunchConfigurationName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		inputCASG.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 	}
 
@@ -1264,8 +1265,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", g.AutoScalingGroupARN)
-	d.Set("availability_zones", g.AvailabilityZones)
+	d.Set(names.AttrARN, g.AutoScalingGroupARN)
+	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
@@ -1286,11 +1287,11 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
-		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
+		if err := d.Set(names.AttrLaunchTemplate, []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	} else {
-		d.Set("launch_template", nil)
+		d.Set(names.AttrLaunchTemplate, nil)
 	}
 	d.Set("load_balancers", g.LoadBalancerNames)
 	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
@@ -1303,8 +1304,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("mixed_instances_policy", nil)
 	}
-	d.Set("name", g.AutoScalingGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(g.AutoScalingGroupName)))
+	d.Set(names.AttrName, g.AutoScalingGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(g.AutoScalingGroupName)))
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("predicted_capacity", g.PredictedCapacity)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
@@ -1366,8 +1367,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 		}
 
-		if d.HasChange("availability_zones") {
-			if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		if d.HasChange(names.AttrAvailabilityZones) {
+			if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 				input.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 			}
 		}
@@ -1424,8 +1425,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			shouldRefreshInstances = true
 		}
 
-		if d.HasChange("launch_template") {
-			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrLaunchTemplate) {
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 			shouldRefreshInstances = true
@@ -1626,7 +1627,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		if !shouldRefreshInstances {
-			if v, ok := tfMap["triggers"].(*schema.Set); ok && v.Len() > 0 {
+			if v, ok := tfMap[names.AttrTriggers].(*schema.Set); ok && v.Len() > 0 {
 				var triggers []string
 
 				for _, v := range v.List() {
@@ -1642,7 +1643,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if shouldRefreshInstances {
 			var launchTemplate *awstypes.LaunchTemplateSpecification
 
-			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 
@@ -1663,7 +1664,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// No warm pool exists in new config. Delete it.
 		if len(w) == 0 || w[0] == nil {
-			forceDeleteWarmPool := d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool)
+			forceDeleteWarmPool := d.Get(names.AttrForceDelete).(bool) || d.Get("force_delete_warm_pool").(bool)
 
 			if err := deleteWarmPool(ctx, conn, d.Id(), forceDeleteWarmPool, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -1791,7 +1792,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	forceDeleteGroup := d.Get("force_delete").(bool)
+	forceDeleteGroup := d.Get(names.AttrForceDelete).(bool)
 	forceDeleteWarmPool := forceDeleteGroup || d.Get("force_delete_warm_pool").(bool)
 
 	group, err := findGroupByName(ctx, conn, d.Id())
@@ -2790,7 +2791,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}, hasDefaultVersi
 		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
@@ -2932,12 +2933,12 @@ func expandAcceleratorCountRequest(tfMap map[string]interface{}) *awstypes.Accel
 	apiObject := &awstypes.AcceleratorCountRequest{}
 
 	var min int
-	if v, ok := tfMap["min"].(int); ok {
+	if v, ok := tfMap[names.AttrMin].(int); ok {
 		min = v
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -2952,12 +2953,12 @@ func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *awsty
 	apiObject := &awstypes.AcceleratorTotalMemoryMiBRequest{}
 
 	var min int
-	if v, ok := tfMap["min"].(int); ok {
+	if v, ok := tfMap[names.AttrMin].(int); ok {
 		min = v
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -2972,12 +2973,12 @@ func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]interface{}) *awstyp
 	apiObject := &awstypes.BaselineEbsBandwidthMbpsRequest{}
 
 	var min int
-	if v, ok := tfMap["min"].(int); ok {
+	if v, ok := tfMap[names.AttrMin].(int); ok {
 		min = v
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -2992,12 +2993,12 @@ func expandMemoryGiBPerVCPURequest(tfMap map[string]interface{}) *awstypes.Memor
 	apiObject := &awstypes.MemoryGiBPerVCpuRequest{}
 
 	var min float64
-	if v, ok := tfMap["min"].(float64); ok {
+	if v, ok := tfMap[names.AttrMin].(float64); ok {
 		min = v
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["max"].(float64); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(float64); ok && v >= min {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -3012,12 +3013,12 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *awstypes.MemoryMiBReq
 	apiObject := &awstypes.MemoryMiBRequest{}
 
 	var min int
-	if v, ok := tfMap["min"].(int); ok {
+	if v, ok := tfMap[names.AttrMin].(int); ok {
 		min = v
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -3032,12 +3033,12 @@ func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *awstypes.N
 	apiObject := &awstypes.NetworkBandwidthGbpsRequest{}
 
 	var min float64
-	if v, ok := tfMap["min"].(float64); ok {
+	if v, ok := tfMap[names.AttrMin].(float64); ok {
 		min = v
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["max"].(float64); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(float64); ok && v >= min {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -3052,12 +3053,12 @@ func expandNetworkInterfaceCountRequest(tfMap map[string]interface{}) *awstypes.
 	apiObject := &awstypes.NetworkInterfaceCountRequest{}
 
 	var min int
-	if v, ok := tfMap["min"].(int); ok {
+	if v, ok := tfMap[names.AttrMin].(int); ok {
 		min = v
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -3072,12 +3073,12 @@ func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *awstypes.To
 	apiObject := &awstypes.TotalLocalStorageGBRequest{}
 
 	var min float64
-	if v, ok := tfMap["min"].(float64); ok {
+	if v, ok := tfMap[names.AttrMin].(float64); ok {
 		min = v
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["max"].(float64); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(float64); ok && v >= min {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -3092,12 +3093,12 @@ func expandVCPUCountRequest(tfMap map[string]interface{}) *awstypes.VCpuCountReq
 	apiObject := &awstypes.VCpuCountRequest{}
 
 	min := 0
-	if v, ok := tfMap["min"].(int); ok {
+	if v, ok := tfMap[names.AttrMin].(int); ok {
 		min = v
 		apiObject.Min = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["max"].(int); ok && v >= min {
+	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
 		apiObject.Max = aws.Int32(int32(v))
 	}
 
@@ -3124,7 +3125,7 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 		apiObject.Version = aws.String("$Default")
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -3140,9 +3141,9 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}, hasDefaultV
 
 	// DescribeAutoScalingGroups returns both name and id but LaunchTemplateSpecification
 	// allows only one of them to be set.
-	if v, ok := tfMap["id"]; ok && v != "" && v != launchTemplateIDUnknown {
+	if v, ok := tfMap[names.AttrID]; ok && v != "" && v != launchTemplateIDUnknown {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
-	} else if v, ok := tfMap["name"]; ok && v != "" {
+	} else if v, ok := tfMap[names.AttrName]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
@@ -3150,7 +3151,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}, hasDefaultV
 		apiObject.Version = aws.String("$Default")
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -3168,7 +3169,7 @@ func expandMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion 
 		apiObject.InstancesDistribution = expandInstancesDistribution(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrLaunchTemplate].([]interface{}); ok && len(v) > 0 {
 		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
@@ -3192,7 +3193,7 @@ func expandPutLifecycleHookInput(name string, tfMap map[string]interface{}) *aut
 		apiObject.HeartbeatTimeout = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.LifecycleHookName = aws.String(v)
 	}
 
@@ -3208,7 +3209,7 @@ func expandPutLifecycleHookInput(name string, tfMap map[string]interface{}) *aut
 		apiObject.NotificationTargetARN = aws.String(v)
 	}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleARN = aws.String(v)
 	}
 
@@ -3392,11 +3393,11 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 func expandTrafficSourceIdentifier(tfMap map[string]interface{}) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIdentifier].(string); ok && v != "" {
 		apiObject.Identifier = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -3444,15 +3445,15 @@ func flattenLaunchTemplateSpecification(apiObject *awstypes.LaunchTemplateSpecif
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
-		tfMap["id"] = aws.ToString(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := apiObject.LaunchTemplateName; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.ToString(v)
+		tfMap[names.AttrVersion] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -3470,7 +3471,7 @@ func flattenMixedInstancesPolicy(apiObject *awstypes.MixedInstancesPolicy) map[s
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {
-		tfMap["launch_template"] = []interface{}{flattenLaunchTemplate(v)}
+		tfMap[names.AttrLaunchTemplate] = []interface{}{flattenLaunchTemplate(v)}
 	}
 
 	return tfMap
@@ -3574,7 +3575,7 @@ func flattenLaunchTemplateSpecificationForMixedInstancesPolicy(apiObject *awstyp
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.ToString(v)
+		tfMap[names.AttrVersion] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -3588,7 +3589,7 @@ func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) 
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.ToString(v)
+		tfMap[names.AttrInstanceType] = aws.ToString(v)
 	}
 
 	if v := apiObject.LaunchTemplateSpecification; v != nil {
@@ -3720,11 +3721,11 @@ func flattenAcceleratorCount(apiObject *awstypes.AcceleratorCountRequest) map[st
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToInt32(v)
+		tfMap[names.AttrMax] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToInt32(v)
+		tfMap[names.AttrMin] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -3738,11 +3739,11 @@ func flattenAcceleratorTotalMemoryMiB(apiObject *awstypes.AcceleratorTotalMemory
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToInt32(v)
+		tfMap[names.AttrMax] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToInt32(v)
+		tfMap[names.AttrMin] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -3756,11 +3757,11 @@ func flattenBaselineEBSBandwidthMbps(apiObject *awstypes.BaselineEbsBandwidthMbp
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToInt32(v)
+		tfMap[names.AttrMax] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToInt32(v)
+		tfMap[names.AttrMin] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -3774,11 +3775,11 @@ func flattenMemoryGiBPerVCPU(apiObject *awstypes.MemoryGiBPerVCpuRequest) map[st
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToFloat64(v)
+		tfMap[names.AttrMax] = aws.ToFloat64(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToFloat64(v)
+		tfMap[names.AttrMin] = aws.ToFloat64(v)
 	}
 
 	return tfMap
@@ -3792,11 +3793,11 @@ func flattenMemoryMiB(apiObject *awstypes.MemoryMiBRequest) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToInt32(v)
+		tfMap[names.AttrMax] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToInt32(v)
+		tfMap[names.AttrMin] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -3810,11 +3811,11 @@ func flattenNetworkBandwidthGbps(apiObject *awstypes.NetworkBandwidthGbpsRequest
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToFloat64(v)
+		tfMap[names.AttrMax] = aws.ToFloat64(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToFloat64(v)
+		tfMap[names.AttrMin] = aws.ToFloat64(v)
 	}
 
 	return tfMap
@@ -3828,11 +3829,11 @@ func flattenNetworkInterfaceCount(apiObject *awstypes.NetworkInterfaceCountReque
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToInt32(v)
+		tfMap[names.AttrMax] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToInt32(v)
+		tfMap[names.AttrMin] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -3846,11 +3847,11 @@ func flattentTotalLocalStorageGB(apiObject *awstypes.TotalLocalStorageGBRequest)
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToFloat64(v)
+		tfMap[names.AttrMax] = aws.ToFloat64(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToFloat64(v)
+		tfMap[names.AttrMin] = aws.ToFloat64(v)
 	}
 
 	return tfMap
@@ -3860,11 +3861,11 @@ func flattenTrafficSourceIdentifier(apiObject awstypes.TrafficSourceIdentifier) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.ToString(v)
+		tfMap[names.AttrIdentifier] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -3892,11 +3893,11 @@ func flattenVCPUCount(apiObject *awstypes.VCpuCountRequest) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.ToInt32(v)
+		tfMap[names.AttrMax] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap["min"] = aws.ToInt32(v)
+		tfMap[names.AttrMin] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -4016,7 +4017,7 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 		return sdkdiag.AppendErrorf(diags, "expected type to be string")
 	}
 
-	if v == "launch_configuration" || v == "launch_template" || v == "mixed_instances_policy" {
+	if v == "launch_configuration" || v == names.AttrLaunchTemplate || v == "mixed_instances_policy" {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
