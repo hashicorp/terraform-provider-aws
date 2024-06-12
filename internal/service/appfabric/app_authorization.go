@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -222,6 +223,8 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 		return
 	}
 
+	input.AppBundleIdentifier = aws.String(data.AppBundleARN.ValueString())
+	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
 	input.Credential = credential
 	input.Tags = getTagsIn(ctx)
 

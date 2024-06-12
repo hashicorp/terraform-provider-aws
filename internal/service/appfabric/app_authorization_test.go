@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,9 +22,10 @@ import (
 func testAccAppAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var appauthorization types.AppAuthorization
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -33,7 +35,7 @@ func testAccAppAuthorization_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppAuthorizationConfig_basic(),
+				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
@@ -59,9 +61,10 @@ func testAccAppAuthorization_basic(t *testing.T) {
 func testAccAppAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var appauthorization types.AppAuthorization
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_app_authorization.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -71,7 +74,7 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppAuthorizationConfig_basic(),
+				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppAuthorization, resourceName),
@@ -93,9 +96,10 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var appauthorization types.AppAuthorization
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -105,7 +109,7 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppAuthorizationConfig_basic(),
+				Config: testAccAppAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
@@ -125,7 +129,7 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"credential"},
 			},
 			{
-				Config: testAccAppAuthorizationConfig_updatedAPIkey(),
+				Config: testAccAppAuthorizationConfig_updatedAPIkey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
@@ -151,9 +155,10 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 func testAccAppAuthorization_oath2Update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var appauthorization types.AppAuthorization
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -163,7 +168,7 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppAuthorizationConfig_oath2(),
+				Config: testAccAppAuthorizationConfig_oath2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
@@ -184,7 +189,7 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"credential"},
 			},
 			{
-				Config: testAccAppAuthorizationConfig_updatedOath2(),
+				Config: testAccAppAuthorizationConfig_updatedOath2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
@@ -211,9 +216,10 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 func testAccAppAuthorization_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var appauthorization types.AppAuthorization
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
@@ -223,7 +229,7 @@ func testAccAppAuthorization_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppAuthorizationConfig_tags1(acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccAppAuthorizationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 				),
@@ -235,7 +241,7 @@ func testAccAppAuthorization_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"credential"},
 			},
 			{
-				Config: testAccAppAuthorizationConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccAppAuthorizationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 				),
@@ -247,7 +253,7 @@ func testAccAppAuthorization_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"credential"},
 			},
 			{
-				Config: testAccAppAuthorizationConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Config: testAccAppAuthorizationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 				),
@@ -271,7 +277,7 @@ func testAccCheckAppAuthorizationDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"])
+			_, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -297,7 +303,7 @@ func testAccCheckAppAuthorizationExists(ctx context.Context, n string, v *types.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 
-		output, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"])
+		output, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_arn"])
 
 		if err != nil {
 			return err
@@ -309,12 +315,19 @@ func testAccCheckAppAuthorizationExists(ctx context.Context, n string, v *types.
 	}
 }
 
-func testAccAppAuthorizationConfig_basic() string {
-	return `
+func testAccAppAuthorizationConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier = aws_appfabric_app_bundle.arn
-  app                   = "TERRAFORMCLOUD"
-  auth_type             = "apiKey"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app            = "TERRAFORMCLOUD"
+  auth_type      = "apiKey"
+
   credential {
     api_key_credential {
       api_key = "ApiExampleKey"
@@ -325,15 +338,22 @@ resource "aws_appfabric_app_authorization" "test" {
     tenant_identifier   = "test"
   }
 }
-`
+`, rName)
 }
 
-func testAccAppAuthorizationConfig_updatedAPIkey() string {
-	return `
+func testAccAppAuthorizationConfig_updatedAPIkey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier = aws_appfabric_app_bundle.arn
-  app                   = "TERRAFORMCLOUD"
-  auth_type             = "apiKey"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app            = "TERRAFORMCLOUD"
+  auth_type      = "apiKey"
+
   credential {
     api_key_credential {
       api_key = "updatedApiExampleKey"
@@ -344,15 +364,22 @@ resource "aws_appfabric_app_authorization" "test" {
     tenant_identifier   = "test"
   }
 }
-`
+`, rName)
 }
 
-func testAccAppAuthorizationConfig_oath2() string {
-	return `
+func testAccAppAuthorizationConfig_oath2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier = aws_appfabric_app_bundle.arn
-  app                   = "DROPBOX"
-  auth_type             = "oauth2"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app            = "DROPBOX"
+  auth_type      = "oauth2"
+
   credential {
     oauth2_credential {
       client_id     = "ClinentID"
@@ -364,15 +391,22 @@ resource "aws_appfabric_app_authorization" "test" {
     tenant_identifier   = "test"
   }
 }
-`
+`, rName)
 }
 
-func testAccAppAuthorizationConfig_updatedOath2() string {
-	return `
+func testAccAppAuthorizationConfig_updatedOath2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier = aws_appfabric_app_bundle.arn
-  app                   = "DROPBOX"
-  auth_type             = "oauth2"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app            = "DROPBOX"
+  auth_type      = "oauth2"
+
   credential {
     oauth2_credential {
       client_id     = "newClinentID"
@@ -384,15 +418,22 @@ resource "aws_appfabric_app_authorization" "test" {
     tenant_identifier   = "test"
   }
 }
-`
+`, rName)
 }
 
-func testAccAppAuthorizationConfig_tags1(tagKey1, tagValue1 string) string {
+func testAccAppAuthorizationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier = aws_appfabric_app_bundle.arn
-  app                   = "TERRAFORMCLOUD"
-  auth_type             = "apiKey"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app            = "TERRAFORMCLOUD"
+  auth_type      = "apiKey"
+
   credential {
     api_key_credential {
       api_key = "apiexamplekeytest"
@@ -404,18 +445,25 @@ resource "aws_appfabric_app_authorization" "test" {
   }
 
   tags = {
-    %[1]q = %[2]q
+    %[2]q = %[3]q
   }
 }
-`, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccAppAuthorizationConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAppAuthorizationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
+resource "aws_appfabric_app_bundle" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier = aws_appfabric_app_bundle.arn
-  app                   = "TERRAFORMCLOUD"
-  auth_type             = "apiKey"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app            = "TERRAFORMCLOUD"
+  auth_type      = "apiKey"
+
   credential {
     api_key_credential {
       api_key = "apiexamplekeytest"
@@ -426,9 +474,9 @@ resource "aws_appfabric_app_authorization" "test" {
     tenant_identifier   = "test"
   }
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
