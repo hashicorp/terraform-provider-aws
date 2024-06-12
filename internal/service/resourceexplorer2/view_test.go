@@ -379,6 +379,7 @@ resource "aws_resourceexplorer2_view" "test" {
 func testAccViewConfig_scope(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_resourceexplorer2_index" "test" {
   type = "LOCAL"
@@ -389,8 +390,8 @@ resource "aws_resourceexplorer2_index" "test" {
 }
 
 resource "aws_resourceexplorer2_view" "test" {
-  name  = %[1]q
-  scope = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+  name       = %[1]q
+  scope      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
   depends_on = [aws_resourceexplorer2_index.test]
 }
 `, rName)
