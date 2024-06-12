@@ -96,7 +96,7 @@ func ResourceDomain() *schema.Resource {
 
 				return false
 			}),
-			customdiff.ForceNewIfChange("ip_address_type", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrIPAddressType, func(_ context.Context, old, new, meta interface{}) bool {
 				return (old.(string) == opensearchservice.IPAddressTypeDualstack) && old.(string) != new.(string)
 			}),
 			verify.SetTagsDiff,
@@ -466,7 +466,7 @@ func ResourceDomain() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -654,7 +654,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EngineVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		input.IPAddressType = aws.String(v.(string))
 	}
 
@@ -862,7 +862,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("domain_id", ds.DomainId)
 	d.Set(names.AttrDomainName, ds.DomainName)
 	d.Set(names.AttrEngineVersion, ds.EngineVersion)
-	d.Set("ip_address_type", ds.IPAddressType)
+	d.Set(names.AttrIPAddressType, ds.IPAddressType)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
@@ -994,8 +994,8 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.DomainEndpointOptions = expandDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
 		}
 
-		if d.HasChange("ip_address_type") {
-			input.IPAddressType = aws.String(d.Get("ip_address_type").(string))
+		if d.HasChange(names.AttrIPAddressType) {
+			input.IPAddressType = aws.String(d.Get(names.AttrIPAddressType).(string))
 		}
 
 		if d.HasChanges("ebs_options", "cluster_config") {
