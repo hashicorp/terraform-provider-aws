@@ -96,6 +96,9 @@ func ResourceDomain() *schema.Resource {
 
 				return false
 			}),
+			customdiff.ForceNewIfChange("ip_address_type", func(_ context.Context, old, new, meta interface{}) bool {
+				return (old.(string) == opensearchservice.IPAddressTypeDualstack) && old.(string) != new.(string)
+			}),
 			verify.SetTagsDiff,
 		),
 

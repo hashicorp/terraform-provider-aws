@@ -781,12 +781,12 @@ func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_ipAddressType(rName),
+				Config: testAccDomainConfig_ipAddressType(rName, "dualstack"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
 				),
 			},
 			{
@@ -794,6 +794,15 @@ func TestAccOpenSearchDomain_ipAddressType(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     rName,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_ipAddressType(rName, "ipv4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+				),
 			},
 		},
 	})
@@ -2283,18 +2292,18 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_ipAddressType(rName string) string {
+func testAccDomainConfig_ipAddressType(rName, ipAddressType string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name     = %[1]q
-  ip_address_type = "ipv4"
+  ip_address_type = %[2]q
 
   ebs_options {
     ebs_enabled = true
     volume_size = 10
   }
 }
-`, rName)
+`, rName, ipAddressType)
 }
 
 func testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime string) string {
