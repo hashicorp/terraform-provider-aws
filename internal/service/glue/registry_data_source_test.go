@@ -15,19 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this data source's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
 func TestAccGlueRegistryDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

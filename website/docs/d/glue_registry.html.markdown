@@ -24,6 +24,7 @@ Terraform data source for managing an AWS Glue Registry.
 
 ```terraform
 data "aws_glue_registry" "example" {
+  id = "arn:aws:glue:us-west-2:123456789012:registry/example"
 }
 ```
 
@@ -31,15 +32,12 @@ data "aws_glue_registry" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - (Required) Amazon Resource Name (ARN) of Glue Registry.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Registry. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - Amazon Resource Name (ARN) of Glue Registry.
+* `description` - A description of the registry.
+* `registry_name` - The Name of the registry.
