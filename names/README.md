@@ -17,7 +17,7 @@ After any edits to `data/names_data.hcl`, run `make gen`. Doing so regenerates c
 
 The schema of the attributes and blocks of `data/names_data.csv` are as follows:
 ```hcl
-service "" { //  TF AWS provide package name 
+service "" { 
 
   cli_v2_command { // If both of these attributes are the same as the service block's name, this block will be ommitted
     aws_cli_v2_command           = ""
@@ -59,7 +59,7 @@ service "" { //  TF AWS provide package name
 
   resource_prefix {
     actual  = ""
-    correct = "aws_accessanalyzer_"
+    correct = ""
   }
   	
   split_package       = ""
