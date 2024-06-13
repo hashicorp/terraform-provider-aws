@@ -78,6 +78,10 @@ func main() {
 			packageToUse = l.ProviderPackageActual()
 		}
 
+		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
+			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
+		}
+
 		if p := l.Aliases(); len(p) > 0 && packageToUse != "" {
 			for _, v := range p {
 				if v == packageToUse {
