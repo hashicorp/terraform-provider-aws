@@ -112,6 +112,4 @@ The explanation of the attributes of `data/names_data.csv` are as follows:
 | `not_implemented` | Code | Bool based on whether the service is implemented by the provider |
 | `note` | Reference | Very brief note usually to explain why excluded |
 
-
-
 For more information about service naming, see [the Naming Guide](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier).
