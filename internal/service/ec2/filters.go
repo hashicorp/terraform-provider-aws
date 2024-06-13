@@ -213,7 +213,7 @@ func newCustomFilterListV2(s *schema.Set) []awstypes.Filter {
 
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.Filter {
 		tfMap := tfList.(map[string]interface{})
-		return newFilterV2(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap[names.AttrValues].(*schema.Set)))
+		return newFilterV2(tfMap[names.AttrName].(string), flex.ExpandStringValueEmptySet(tfMap[names.AttrValues].(*schema.Set)))
 	})
 }
 
