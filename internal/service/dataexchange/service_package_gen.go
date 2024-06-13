@@ -6,8 +6,10 @@ import (
 	"context"
 
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +36,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dataexchange_data_set",
 			Name:     "Data Set",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -42,7 +44,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dataexchange_revision",
 			Name:     "Revision",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -54,9 +56,23 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*dataexchange_sdkv1.DataExchange, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return dataexchange_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	cfg := aws_sdkv1.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws_sdkv1.String(endpoint)
+
+		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
+			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+		}
+	}
+
+	return dataexchange_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

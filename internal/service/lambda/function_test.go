@@ -63,12 +63,13 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					testAccCheckFunctionName(&conf, funcName),
-					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttrSet(resourceName, "code_sha256"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "512"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "Text"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_group", fmt.Sprintf("/aws/lambda/%s", funcName)),
@@ -76,8 +77,8 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
 				),
 			},
 			{
@@ -114,53 +115,6 @@ func TestAccLambdaFunction_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf lambda.GetFunctionOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lambda_function.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFunctionConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
-			},
-			{
-				Config: testAccFunctionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccFunctionConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -190,7 +144,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_filename(initialFilename, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
 				),
 			},
@@ -204,7 +158,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_filename(updatedFilename, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
@@ -246,7 +200,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				Config: testAccFunctionConfig_cscCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -259,7 +213,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				Config: testAccFunctionConfig_cscUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscUpdateResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscUpdateResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -404,7 +358,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", acctest.Ct0),
 				),
 			},
 			{
@@ -432,7 +386,7 @@ func TestAccLambdaFunction_envVariables(t *testing.T) {
 				Config: testAccFunctionConfig_envVariablesModifiedNoEnvironment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", acctest.Ct0),
 				),
 			},
 		},
@@ -493,7 +447,7 @@ func TestAccLambdaFunction_EnvironmentVariables_emptyUpgrade(t *testing.T) {
 				Config: testAccFunctionConfig_EmptyEnv_envVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "environment.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.#", acctest.Ct0),
 				),
 				// We know a persistent diff is present in this version
 				ExpectNonEmptyPlan: true,
@@ -541,7 +495,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKey1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKey1ResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -555,7 +509,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKey2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, kmsKey2ResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -563,7 +517,7 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 				),
 			},
 		},
@@ -599,8 +553,6 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
-	version := "1"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
@@ -611,8 +563,8 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", version),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, version)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, acctest.Ct1)),
 				),
 			},
 			{
@@ -643,8 +595,8 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 
 	var timeBeforeUpdate time.Time
 
-	version := "2"
-	versionUpdated := "3"
+	version := acctest.Ct2
+	versionUpdated := acctest.Ct3
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -655,8 +607,8 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 			{
 				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, acctest.Ct1)),
 				),
 			},
 			{
@@ -670,7 +622,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_publishable(path, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", version),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, version),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, version)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
@@ -685,7 +637,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_versionedNodeJs20xRuntime(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", versionUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, versionUpdated),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, versionUpdated)),
 					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.RuntimeNodejs20x)),
 					func(s *terraform.State) error {
@@ -715,7 +667,6 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 	fileName := "test-fixtures/lambdatest.zip"
 
 	unpublishedVersion := tflambda.FunctionVersionLatest
-	publishedVersion := "1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -727,8 +678,8 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 				Config: testAccFunctionConfig_publishable(fileName, rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "version", unpublishedVersion),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, unpublishedVersion),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, unpublishedVersion)),
 				),
 			},
@@ -737,9 +688,9 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 				Config: testAccFunctionConfig_publishable(fileName, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, publishedVersion)),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, acctest.Ct1)),
 				),
 			},
 			{
@@ -753,8 +704,8 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 				Config: testAccFunctionConfig_publishable(fileName, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf3),
-					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, publishedVersion)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, acctest.Ct1)),
 				),
 			},
 		},
@@ -772,9 +723,6 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 	fileName := "test-fixtures/lambdatest.zip"
 
-	publishedVersion := "1"
-	unpublishedVersion := publishedVersion // Should remain the last published version
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
@@ -785,9 +733,9 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 				Config: testAccFunctionConfig_publishable(fileName, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, publishedVersion)),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, acctest.Ct1)),
 				),
 			},
 			{
@@ -795,9 +743,9 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 				Config: testAccFunctionConfig_publishable(fileName, rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "version", unpublishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, unpublishedVersion)),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, acctest.Ct1)),
 				),
 			},
 			{
@@ -830,8 +778,8 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 				Config: testAccFunctionConfig_deadLetter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.0", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.0", names.AttrARN),
 				),
 			},
 			// Ensure configuration can be imported
@@ -846,7 +794,7 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", acctest.Ct0),
 				),
 			},
 		},
@@ -873,16 +821,16 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 				Config: testAccFunctionConfig_deadLetter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.0", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.0", names.AttrARN),
 				),
 			},
 			{
 				Config: testAccFunctionConfig_deadLetterUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.1", names.AttrARN),
 				),
 			},
 			{
@@ -941,8 +889,8 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_efs_access_point.test1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_efs_access_point.test1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/efs"),
 				),
 			},
@@ -958,8 +906,8 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 				Config: testAccFunctionConfig_fileSystemUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_efs_access_point.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_efs_access_point.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/lambda"),
 				),
 			},
@@ -968,7 +916,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", acctest.Ct0),
 				),
 			},
 		},
@@ -1070,7 +1018,7 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 				),
@@ -1089,7 +1037,7 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 				),
@@ -1121,7 +1069,7 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 				),
@@ -1140,7 +1088,7 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 				),
@@ -1173,7 +1121,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureArm64)),
-					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "layers.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 				),
 			},
@@ -1192,7 +1140,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
-					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "layers.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 				),
 			},
@@ -1217,7 +1165,7 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 				Config: testAccFunctionConfig_ephemeralStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "1024"),
 				),
 			},
@@ -1231,7 +1179,7 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 				Config: testAccFunctionConfig_updateEphemeralStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "2048"),
 				),
 			},
@@ -1256,7 +1204,7 @@ func TestAccLambdaFunction_loggingConfig(t *testing.T) {
 				Config: testAccFunctionConfig_loggingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "Text"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_group", fmt.Sprintf("/aws/lambda/%s_custom", rName)),
@@ -1273,7 +1221,7 @@ func TestAccLambdaFunction_loggingConfig(t *testing.T) {
 				Config: testAccFunctionConfig_updateLoggingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", "TRACE"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "JSON"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", "DEBUG"),
@@ -1283,7 +1231,7 @@ func TestAccLambdaFunction_loggingConfig(t *testing.T) {
 				Config: testAccFunctionConfig_updateLoggingConfigLevelsUnspecified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", "TRACE"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", "DEBUG"),
 				),
@@ -1292,7 +1240,7 @@ func TestAccLambdaFunction_loggingConfig(t *testing.T) {
 				Config: testAccFunctionConfig_loggingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "Text"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
@@ -1322,7 +1270,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 				Config: testAccFunctionConfig_tracing(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tracing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.0.mode", "Active"),
 				),
 			},
@@ -1336,7 +1284,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 				Config: testAccFunctionConfig_tracingUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tracing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.0.mode", "PassThrough"),
 				),
 			},
@@ -1368,7 +1316,7 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 				Config: testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &function1),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1403,7 +1351,7 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
-					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "layers.#", acctest.Ct1),
 				),
 			},
 			{
@@ -1437,7 +1385,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
-					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "layers.#", acctest.Ct1),
 				),
 			},
 			{
@@ -1451,7 +1399,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
-					resource.TestCheckResourceAttr(resourceName, "layers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "layers.#", acctest.Ct2),
 				),
 			},
 		},
@@ -1478,9 +1426,9 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 				Config: testAccFunctionConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
@@ -1514,7 +1462,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 				Config: testAccFunctionConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
 				),
 			},
 			{
@@ -1527,7 +1475,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 		},
@@ -1554,9 +1502,9 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
@@ -1571,9 +1519,9 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
@@ -1638,7 +1586,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 				Config: testAccFunctionConfig_vpcPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -1651,7 +1599,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 				Config: testAccFunctionConfig_vpcPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 		},
@@ -1681,7 +1629,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 				Config: testAccFunctionConfig_vpcPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -1694,7 +1642,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 				Config: testAccFunctionConfig_vpcUpdatedPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct2),
 				),
 			},
 		},
@@ -1723,10 +1671,10 @@ func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 				Config: testAccFunctionConfig_vpcProperIAMDependencies(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &function),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, names.AttrID),
 				),
 			},
 		},
@@ -1754,11 +1702,11 @@ func TestAccLambdaFunction_VPC_replaceSGWithDefault(t *testing.T) {
 				Config: testAccFunctionConfig_vpcReplaceSGWithDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &function),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "replace_security_groups_on_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "replace_security_groups_on_destroy", acctest.CtTrue),
 				),
 			},
 		},
@@ -1787,13 +1735,13 @@ func TestAccLambdaFunction_VPC_replaceSGWithCustom(t *testing.T) {
 				Config: testAccFunctionConfig_vpcReplaceSGWithCustom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &function),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "replace_security_groups_on_destroy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "replacement_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replacement_security_group_ids.0", replacementSGName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "replace_security_groups_on_destroy", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "replacement_security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "replacement_security_group_ids.0", replacementSGName, names.AttrID),
 				),
 			},
 		},
@@ -1816,7 +1764,7 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 				Config: testAccFunctionConfig_emptyVPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
 				),
 			},
 			{
@@ -1852,7 +1800,7 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "s3_bucket", "s3_key"},
+				ImportStateVerifyIgnore: []string{"publish", names.AttrS3Bucket, "s3_key"},
 			},
 		},
 	})
@@ -1898,7 +1846,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "source_code_hash"},
 			},
 			{
 				PreConfig: func() {
@@ -2019,7 +1967,7 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key", "s3_object_version"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", names.AttrS3Bucket, "s3_key", "s3_object_version"},
 			},
 			{
 				PreConfig: func() {
@@ -2075,7 +2023,7 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish", "s3_bucket", "s3_key"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", names.AttrS3Bucket, "s3_key"},
 			},
 			{
 				PreConfig: func() {
@@ -2110,7 +2058,7 @@ func TestAccLambdaFunction_snapStart(t *testing.T) {
 				Config: testAccFunctionConfig_snapStartEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "snap_start.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "snap_start.0.apply_on", "PublishedVersions"),
 				),
 			},
@@ -2124,7 +2072,7 @@ func TestAccLambdaFunction_snapStart(t *testing.T) {
 				Config: testAccFunctionConfig_snapStartDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "snap_start.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.#", acctest.Ct0),
 				),
 			},
 		},
@@ -2246,7 +2194,7 @@ func TestAccLambdaFunction_ipv6AllowedForDualStack(t *testing.T) {
 				Config: testAccFunctionConfig_ipv6AllowedForDualStackDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
 				),
 			},
 			{
@@ -2259,8 +2207,8 @@ func TestAccLambdaFunction_ipv6AllowedForDualStack(t *testing.T) {
 				Config: testAccFunctionConfig_ipv6AllowedForDualStackEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", "true"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", acctest.CtTrue),
 				),
 			},
 		},
@@ -2283,7 +2231,7 @@ func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 				Config: testAccFunctionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 		},
@@ -2312,7 +2260,7 @@ func TestAccLambdaFunction_skipDestroyInconsistentPlan(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckNoResourceAttr(resourceName, "skip_destroy"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSkipDestroy),
 				),
 			},
 			{
@@ -2320,7 +2268,7 @@ func TestAccLambdaFunction_skipDestroyInconsistentPlan(t *testing.T) {
 				Config:                   testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 				),
 			},
 		},
@@ -2633,43 +2581,6 @@ resource "aws_lambda_function" "test" {
   runtime       = "java11"
 }
 `, rName))
-}
-
-func testAccFunctionConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs16.x"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccFunctionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs16.x"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccFunctionConfig_filename(fileName, rName string) string {

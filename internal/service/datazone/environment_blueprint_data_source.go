@@ -42,17 +42,17 @@ func (d *dataSourceEnvironmentBlueprint) Schema(ctx context.Context, req datasou
 			"blueprint_provider": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
 			"domain_id": schema.StringAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"managed": schema.BoolAttribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 		},

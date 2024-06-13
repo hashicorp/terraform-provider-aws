@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_db_option_group", name="DB Option Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceOptionGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOptionGroupCreate,
@@ -43,7 +44,7 @@ func ResourceOptionGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,20 +58,20 @@ func ResourceOptionGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validOptionGroupName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validOptionGroupNamePrefix,
 			},
 			"option": {
@@ -92,22 +93,22 @@ func ResourceOptionGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -137,7 +138,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateOptionGroupInput{
 		EngineName:             aws.String(d.Get("engine_name").(string)),
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
@@ -173,11 +174,11 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Option Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", option.OptionGroupArn)
+	d.Set(names.AttrARN, option.OptionGroupArn)
 	d.Set("engine_name", option.EngineName)
 	d.Set("major_engine_version", option.MajorEngineVersion)
-	d.Set("name", option.OptionGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(option.OptionGroupName)))
+	d.Set(names.AttrName, option.OptionGroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(option.OptionGroupName)))
 	if err := d.Set("option", flattenOptions(option.Options, expandOptionConfiguration(d.Get("option").(*schema.Set).List()))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}

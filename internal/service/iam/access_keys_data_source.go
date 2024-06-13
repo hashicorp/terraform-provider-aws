@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_access_keys", name="Access Keys")
@@ -33,7 +34,7 @@ func dataSourceAccessKeys() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -99,7 +100,7 @@ func flattenAccessKey(apiObject awstypes.AccessKeyMetadata) map[string]interface
 		m["create_date"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 	if v := apiObject.Status; v != "" {
-		m["status"] = v
+		m[names.AttrStatus] = v
 	}
 
 	return m

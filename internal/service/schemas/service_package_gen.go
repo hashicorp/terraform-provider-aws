@@ -5,9 +5,6 @@ package schemas
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,31 +27,32 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDiscoverer,
+			Factory:  resourceDiscoverer,
 			TypeName: "aws_schemas_discoverer",
 			Name:     "Discoverer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceRegistry,
+			Factory:  resourceRegistry,
 			TypeName: "aws_schemas_registry",
 			Name:     "Registry",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceRegistryPolicy,
+			Factory:  resourceRegistryPolicy,
 			TypeName: "aws_schemas_registry_policy",
+			Name:     "Registry Policy",
 		},
 		{
-			Factory:  ResourceSchema,
+			Factory:  resourceSchema,
 			TypeName: "aws_schemas_schema",
 			Name:     "Schema",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -62,13 +60,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.Schemas
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*schemas_sdkv1.Schemas, error) {
-	sess := config["session"].(*session_sdkv1.Session)
-
-	return schemas_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

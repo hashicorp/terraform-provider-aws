@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_ec2_traffic_mirror_filter", name="Traffic Mirror Filter")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTrafficMirrorFilter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorFilterCreate,
@@ -39,11 +40,11 @@ func ResourceTrafficMirrorFilter() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -73,7 +74,7 @@ func resourceTrafficMirrorFilterCreate(ctx context.Context, d *schema.ResourceDa
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorFilter),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -124,8 +125,8 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("traffic-mirror-filter/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("description", trafficMirrorFilter.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, trafficMirrorFilter.Description)
 	d.Set("network_services", aws.StringValueSlice(trafficMirrorFilter.NetworkServices))
 
 	setTagsOut(ctx, trafficMirrorFilter.Tags)

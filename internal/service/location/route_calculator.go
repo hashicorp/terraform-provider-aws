@@ -53,7 +53,7 @@ func ResourceRouteCalculator() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +62,7 @@ func ResourceRouteCalculator() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
@@ -90,7 +90,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
@@ -127,9 +127,9 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set("calculator_arn", out.CalculatorArn)
 	d.Set("calculator_name", out.CalculatorName)
-	d.Set("create_time", aws.TimeValue(out.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.TimeValue(out.CreateTime).Format(time.RFC3339))
 	d.Set("data_source", out.DataSource)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
 
 	return diags
@@ -146,8 +146,8 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 		CalculatorName: aws.String(d.Get("calculator_name").(string)),
 	}
 
-	if d.HasChange("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 

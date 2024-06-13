@@ -9,8 +9,8 @@ import (
 	"log"
 	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,15 +43,15 @@ const (
 
 func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn(ctx)
+	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
-	output, err := conn.EnableSharingWithAwsOrganizationWithContext(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
+	output, err := conn.EnableSharingWithAwsOrganization(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling RAM Sharing With Organization: %s", err)
 	}
 
-	if !aws.BoolValue(output.ReturnValue) {
+	if !aws.ToBool(output.ReturnValue) {
 		return sdkdiag.AppendErrorf(diags, "RAM Sharing With Organization failed")
 	}
 
@@ -83,12 +83,12 @@ func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.Resour
 
 	// See https://docs.aws.amazon.com/ram/latest/userguide/security-disable-sharing-with-orgs.html.
 
-	if err := tforganizations.DisableServicePrincipal(ctx, meta.(*conns.AWSClient).OrganizationsConn(ctx), servicePrincipalName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling Organization service principal (%s): %s", servicePrincipalName, err)
+	if err := tforganizations.DisableServicePrincipal(ctx, meta.(*conns.AWSClient).OrganizationsClient(ctx), servicePrincipalName); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := tfiam.DeleteServiceLinkedRole(ctx, meta.(*conns.AWSClient).IAMClient(ctx), sharingWithOrganizationRoleName); err != nil {
-		return sdkdiag.AppendWarningf(diags, "deleting IAM service-linked Role (%s): %s", sharingWithOrganizationRoleName, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
@@ -103,7 +103,7 @@ func findSharingWithOrganization(ctx context.Context, awsClient *conns.AWSClient
 		return fmt.Errorf("reading IAM Role (%s): %w", sharingWithOrganizationRoleName, err)
 	}
 
-	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, awsClient.OrganizationsConn(ctx))
+	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, awsClient.OrganizationsClient(ctx))
 
 	if err != nil {
 		return fmt.Errorf("reading Organization service principals: %w", err)

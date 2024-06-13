@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_serverlessapplicationrepository_application")
@@ -21,7 +22,7 @@ func DataSourceApplication() *schema.Resource {
 		ReadWithoutTimeout: dataSourceApplicationRead,
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -31,7 +32,7 @@ func DataSourceApplication() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,7 +58,7 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServerlessRepoConn(ctx)
 
-	applicationID := d.Get("application_id").(string)
+	applicationID := d.Get(names.AttrApplicationID).(string)
 	semanticVersion := d.Get("semantic_version").(string)
 
 	output, err := findApplication(ctx, conn, applicationID, semanticVersion)
@@ -70,7 +71,7 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(applicationID)
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("semantic_version", output.Version.SemanticVersion)
 	d.Set("source_code_url", output.Version.SourceCodeUrl)
 	d.Set("template_url", output.Version.TemplateUrl)
