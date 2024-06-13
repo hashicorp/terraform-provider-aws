@@ -5087,3 +5087,58 @@ func findFastSnapshotRestoreByTwoPartKey(ctx context.Context, conn *ec2.Client, 
 
 	return output, nil
 }
+
+func findTrafficMirrorFilter(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorFiltersInput) (*awstypes.TrafficMirrorFilter, error) {
+	output, err := findTrafficMirrorFilters(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTrafficMirrorFilters(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorFiltersInput) ([]awstypes.TrafficMirrorFilter, error) {
+	var output []awstypes.TrafficMirrorFilter
+
+	pages := ec2.NewDescribeTrafficMirrorFiltersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TrafficMirrorFilters...)
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorFilterByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TrafficMirrorFilter, error) {
+	input := &ec2.DescribeTrafficMirrorFiltersInput{
+		TrafficMirrorFilterIds: []string{id},
+	}
+
+	output, err := findTrafficMirrorFilter(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TrafficMirrorFilterId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

@@ -743,7 +743,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "EC2 Resource Tag",
 		},
 		{
-			Factory:  ResourceTrafficMirrorFilter,
+			Factory:  resourceTrafficMirrorFilter,
 			TypeName: "aws_ec2_traffic_mirror_filter",
 			Name:     "Traffic Mirror Filter",
 			Tags: &types.ServicePackageResourceTags{
