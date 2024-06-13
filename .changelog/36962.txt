@@ -5,3 +5,7 @@ resource/aws_applicationinsights_application: Change `resource_group_name` to [F
 ```release-note:enhancement
 resource/aws_ec2_traffic_mirror_filter_rule: Add tagging support
 ```
+
+```release-note:enhancement
+resource/aws_ec2_traffic_mirror_session: Mark `packet_length` as Computed
+```

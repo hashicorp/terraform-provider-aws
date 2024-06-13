@@ -48,7 +48,7 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "packet_length", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "packet_length"),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
 					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexache.MustCompile(`\d+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -73,7 +73,6 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "packet_length", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
 					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexache.MustCompile(`\d+`)),
 				),

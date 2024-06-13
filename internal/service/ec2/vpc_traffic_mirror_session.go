@@ -61,6 +61,7 @@ func resourceTrafficMirrorSession() *schema.Resource {
 			"packet_length": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"session_number": {
 				Type:         schema.TypeInt,
