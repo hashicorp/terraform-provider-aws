@@ -31,11 +31,59 @@ func testAccRoutingControl_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRoutingControlDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
+				Config: testAccRoutingControlConfig_inDefaultPanel(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_arn", // not available in DescribeRoutingControlOutput
+				},
+			},
+		},
+	})
+}
+
+func testAccRoutingControl_updated(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, r53rcc.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingControlDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoutingControlConfig_inDefaultPanel(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingControlExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_arn", // not available in DescribeRoutingControlOutput
+				},
+			},
+			{
+				Config: testAccRoutingControlConfig_inDefaultPanel(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoutingControlExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "PENDING"),
 				),
 			},
 			{
@@ -62,7 +110,7 @@ func testAccRoutingControl_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckRoutingControlDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
+				Config: testAccRoutingControlConfig_inDefaultPanel(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoverycontrolconfig.ResourceRoutingControl(), resourceName),
@@ -147,14 +195,14 @@ resource "aws_route53recoverycontrolconfig_cluster" "test" {
 `, rName)
 }
 
-func testAccRoutingControlConfig_inDefaultPanel(rName string) string {
+func testAccRoutingControlConfig_inDefaultPanel(rName string, routingControlName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterBase(rName), fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_routing_control" "test" {
   name        = %[1]q
   cluster_arn = aws_route53recoverycontrolconfig_cluster.test.arn
 }
-`, rName))
+`, routingControlName))
 }
 
 func testAccControlPanelBase(rName string) string {
