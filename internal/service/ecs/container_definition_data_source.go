@@ -9,8 +9,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -73,13 +73,13 @@ func DataSourceContainerDefinition() *schema.Resource {
 
 func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	params := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 	}
 	log.Printf("[DEBUG] Reading ECS Container Definition: %s", params)
-	desc, err := conn.DescribeTaskDefinitionWithContext(ctx, params)
+	desc, err := conn.DescribeTaskDefinition(ctx, params)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition: %s", err)
@@ -91,13 +91,13 @@ func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceDa
 
 	taskDefinition := desc.TaskDefinition
 	for _, def := range taskDefinition.ContainerDefinitions {
-		if aws.StringValue(def.Name) != d.Get("container_name").(string) {
+		if aws.ToString(def.Name) != d.Get("container_name").(string) {
 			continue
 		}
 
-		d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(taskDefinition.TaskDefinitionArn), d.Get("container_name").(string)))
+		d.SetId(fmt.Sprintf("%s/%s", aws.ToString(taskDefinition.TaskDefinitionArn), d.Get("container_name").(string)))
 		d.Set("image", def.Image)
-		image := aws.StringValue(def.Image)
+		image := aws.ToString(def.Image)
 		if strings.Contains(image, ":") {
 			d.Set("image_digest", strings.Split(image, ":")[1])
 		}
@@ -105,11 +105,11 @@ func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceDa
 		d.Set("memory", def.Memory)
 		d.Set("memory_reservation", def.MemoryReservation)
 		d.Set("disable_networking", def.DisableNetworking)
-		d.Set("docker_labels", aws.StringValueMap(def.DockerLabels))
+		d.Set("docker_labels", def.DockerLabels)
 
 		var environment = map[string]string{}
 		for _, keyValuePair := range def.Environment {
-			environment[aws.StringValue(keyValuePair.Name)] = aws.StringValue(keyValuePair.Value)
+			environment[aws.ToString(keyValuePair.Name)] = aws.ToString(keyValuePair.Value)
 		}
 		d.Set(names.AttrEnvironment, environment)
 	}
