@@ -58,21 +58,20 @@ resource "aws_ec2_traffic_mirror_filter_rule" "rulein" {
 This resource supports the following arguments:
 
 * `description` - (Optional) Description of the traffic mirror filter rule.
-* `traffic_mirror_filter_id`  - (Required) ID of the traffic mirror filter to which this rule should be added.
+* `traffic_mirror_filter_id`  - (Required) ID of the traffic mirror filter to which this rule should be added
 * `destination_cidr_block` - (Required) Destination CIDR block to assign to the Traffic Mirror rule.
-* `destination_port_range` - (Optional) Destination port range. Supported only when the protocol is set to TCP(6) or UDP(17). See Traffic mirror port range documented below.
+* `destination_port_range` - (Optional) Destination port range. Supported only when the protocol is set to TCP(6) or UDP(17). See Traffic mirror port range documented below
 * `protocol` - (Optional) Protocol number, for example 17 (UDP), to assign to the Traffic Mirror rule. For information about the protocol value, see [Protocol Numbers](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml) on the Internet Assigned Numbers Authority (IANA) website.
-* `rule_action` - (Required) Action to take (accept | reject) on the filtered traffic. Valid values are `accept` and `reject`.
+* `rule_action` - (Required) Action to take (accept | reject) on the filtered traffic. Valid values are `accept` and `reject`
 * `rule_number` - (Required) Number of the Traffic Mirror rule. This number must be unique for each Traffic Mirror rule in a given direction. The rules are processed in ascending order by rule number.
 * `source_cidr_block` - (Required) Source CIDR block to assign to the Traffic Mirror rule.
-* `source_port_range` - (Optional) Source port range. Supported only when the protocol is set to TCP(6) or UDP(17). See Traffic mirror port range documented below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `traffic_direction` - (Required) Direction of traffic to be captured. Valid values are `ingress` and `egress`.
+* `source_port_range` - (Optional) Source port range. Supported only when the protocol is set to TCP(6) or UDP(17). See Traffic mirror port range documented below
+* `traffic_direction` - (Required) Direction of traffic to be captured. Valid values are `ingress` and `egress`
 
 Traffic mirror port range support following attributes:
 
-* `from_port` - (Optional) Starting port of the range.
-* `to_port` - (Optional) Ending port of the range.
+* `from_port` - (Optional) Starting port of the range
+* `to_port` - (Optional) Ending port of the range
 
 ## Attribute Reference
 
@@ -80,7 +79,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the traffic mirror filter rule.
 * `id` - Name of the traffic mirror filter rule.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

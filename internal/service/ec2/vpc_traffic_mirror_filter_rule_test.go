@@ -162,53 +162,6 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCTrafficMirrorFilterRule_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckTrafficMirrorFilterRule(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrafficMirrorFilterRuleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCTrafficMirrorFilterRuleConfig_tags1(acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCTrafficMirrorFilterRuleConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVPCTrafficMirrorFilterRuleConfig_tags1(acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccPreCheckTrafficMirrorFilterRule(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
@@ -277,7 +230,8 @@ func testAccTrafficMirrorFilterRuleImportStateIdFunc(n string) resource.ImportSt
 
 func testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, dir string, num int) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {}
+resource "aws_ec2_traffic_mirror_filter" "test" {
+}
 
 resource "aws_ec2_traffic_mirror_filter_rule" "test" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.test.id
@@ -313,43 +267,4 @@ resource "aws_ec2_traffic_mirror_filter_rule" "test" {
   }
 }
 `, dstCidr, action, ruleNum, srcCidr, dir, description, protocol, srcPortFrom, srcPortTo, dstPortFrom, dstPortTo)
-}
-
-func testAccVPCTrafficMirrorFilterRuleConfig_tags1(tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {}
-
-resource "aws_ec2_traffic_mirror_filter_rule" "test" {
-  traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.test.id
-  destination_cidr_block   = "10.0.0.0/8"
-  rule_action              = "0.0.0.0/0"
-  rule_number              = 1
-  source_cidr_block        = "accept"
-  traffic_direction        = "ingress"
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccVPCTrafficMirrorFilterRuleConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ec2_traffic_mirror_filter" "test" {}
-
-resource "aws_ec2_traffic_mirror_filter_rule" "test" {
-  traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.test.id
-  destination_cidr_block   = "10.0.0.0/8"
-  rule_action              = "0.0.0.0/0"
-  rule_number              = 1
-  source_cidr_block        = "accept"
-  traffic_direction        = "ingress"
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

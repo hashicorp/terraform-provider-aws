@@ -21,15 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_traffic_mirror_filter_rule", name="Traffic Mirror Filter Rule")
-// @Tags(identifierAttribute="id")
-// @Testing(tagsTest=false)
 func resourceTrafficMirrorFilterRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorFilterRuleCreate,
@@ -40,8 +37,6 @@ func resourceTrafficMirrorFilterRule() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceTrafficMirrorFilterRuleImport,
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -113,8 +108,6 @@ func resourceTrafficMirrorFilterRule() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"traffic_direction": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -139,7 +132,6 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 		RuleAction:            awstypes.TrafficMirrorRuleAction(d.Get("rule_action").(string)),
 		RuleNumber:            aws.Int32(int32(d.Get("rule_number").(int))),
 		SourceCidrBlock:       aws.String(d.Get("source_cidr_block").(string)),
-		TagSpecifications:     getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTrafficMirrorFilterRule),
 		TrafficDirection:      awstypes.TrafficDirection(d.Get("traffic_direction").(string)),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 	}
@@ -218,8 +210,6 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 	d.Set("traffic_direction", rule.TrafficDirection)
 	d.Set("traffic_mirror_filter_id", rule.TrafficMirrorFilterId)
 
-	setTagsOutV2(ctx, rule.Tags)
-
 	return diags
 }
 
@@ -227,78 +217,76 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &ec2.ModifyTrafficMirrorFilterRuleInput{
-			TrafficMirrorFilterRuleId: aws.String(d.Id()),
+	input := &ec2.ModifyTrafficMirrorFilterRuleInput{
+		TrafficMirrorFilterRuleId: aws.String(d.Id()),
+	}
+
+	var removeFields []awstypes.TrafficMirrorFilterRuleField
+
+	if d.HasChange(names.AttrDescription) {
+		if v := d.Get(names.AttrDescription).(string); v != "" {
+			input.Description = aws.String(v)
+		} else {
+			removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldDescription)
 		}
+	}
 
-		var removeFields []awstypes.TrafficMirrorFilterRuleField
+	if d.HasChange("destination_cidr_block") {
+		input.DestinationCidrBlock = aws.String(d.Get("destination_cidr_block").(string))
+	}
 
-		if d.HasChange(names.AttrDescription) {
-			if v := d.Get(names.AttrDescription).(string); v != "" {
-				input.Description = aws.String(v)
-			} else {
-				removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldDescription)
-			}
+	if d.HasChange("destination_port_range") {
+		if v, ok := d.GetOk("destination_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
+			// Modify request that adds port range seems to fail if protocol is not set in the request.
+			input.Protocol = aws.Int32(int32(d.Get(names.AttrProtocol).(int)))
+		} else {
+			removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldDestinationPortRange)
 		}
+	}
 
-		if d.HasChange("destination_cidr_block") {
-			input.DestinationCidrBlock = aws.String(d.Get("destination_cidr_block").(string))
+	if d.HasChange(names.AttrProtocol) {
+		if v := d.Get(names.AttrProtocol).(int); v != 0 {
+			input.Protocol = aws.Int32(int32(v))
+		} else {
+			removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldProtocol)
 		}
+	}
 
-		if d.HasChange("destination_port_range") {
-			if v, ok := d.GetOk("destination_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.DestinationPortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
-				// Modify request that adds port range seems to fail if protocol is not set in the request.
-				input.Protocol = aws.Int32(int32(d.Get(names.AttrProtocol).(int)))
-			} else {
-				removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldDestinationPortRange)
-			}
+	if d.HasChange("rule_action") {
+		input.RuleAction = awstypes.TrafficMirrorRuleAction(d.Get("rule_action").(string))
+	}
+
+	if d.HasChange("rule_number") {
+		input.RuleNumber = aws.Int32(int32(d.Get("rule_number").(int)))
+	}
+
+	if d.HasChange("source_cidr_block") {
+		input.SourceCidrBlock = aws.String(d.Get("source_cidr_block").(string))
+	}
+
+	if d.HasChange("source_port_range") {
+		if v, ok := d.GetOk("source_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
+			// Modify request that adds port range seems to fail if protocol is not set in the request.
+			input.Protocol = aws.Int32(int32(d.Get(names.AttrProtocol).(int)))
+		} else {
+			removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldSourcePortRange)
 		}
+	}
 
-		if d.HasChange(names.AttrProtocol) {
-			if v := d.Get(names.AttrProtocol).(int); v != 0 {
-				input.Protocol = aws.Int32(int32(v))
-			} else {
-				removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldProtocol)
-			}
-		}
+	if d.HasChange("traffic_direction") {
+		input.TrafficDirection = awstypes.TrafficDirection(d.Get("traffic_direction").(string))
+	}
 
-		if d.HasChange("rule_action") {
-			input.RuleAction = awstypes.TrafficMirrorRuleAction(d.Get("rule_action").(string))
-		}
+	if len(removeFields) > 0 {
+		input.RemoveFields = removeFields
+	}
 
-		if d.HasChange("rule_number") {
-			input.RuleNumber = aws.Int32(int32(d.Get("rule_number").(int)))
-		}
+	_, err := conn.ModifyTrafficMirrorFilterRule(ctx, input)
 
-		if d.HasChange("source_cidr_block") {
-			input.SourceCidrBlock = aws.String(d.Get("source_cidr_block").(string))
-		}
-
-		if d.HasChange("source_port_range") {
-			if v, ok := d.GetOk("source_port_range"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.SourcePortRange = expandTrafficMirrorPortRangeRequest(v.([]interface{})[0].(map[string]interface{}))
-				// Modify request that adds port range seems to fail if protocol is not set in the request.
-				input.Protocol = aws.Int32(int32(d.Get(names.AttrProtocol).(int)))
-			} else {
-				removeFields = append(removeFields, awstypes.TrafficMirrorFilterRuleFieldSourcePortRange)
-			}
-		}
-
-		if d.HasChange("traffic_direction") {
-			input.TrafficDirection = awstypes.TrafficDirection(d.Get("traffic_direction").(string))
-		}
-
-		if len(removeFields) > 0 {
-			input.RemoveFields = removeFields
-		}
-
-		_, err := conn.ModifyTrafficMirrorFilterRule(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTrafficMirrorFilterRuleRead(ctx, d, meta)...)
