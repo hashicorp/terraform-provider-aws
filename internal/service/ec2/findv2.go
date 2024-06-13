@@ -5155,3 +5155,58 @@ func findTrafficMirrorFilterRuleByTwoPartKey(ctx context.Context, conn *ec2.Clie
 		return aws.ToString(v.TrafficMirrorFilterRuleId) == ruleID
 	}))
 }
+
+func findTrafficMirrorSession(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorSessionsInput) (*awstypes.TrafficMirrorSession, error) {
+	output, err := findTrafficMirrorSessions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTrafficMirrorSessions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorSessionsInput) ([]awstypes.TrafficMirrorSession, error) {
+	var output []awstypes.TrafficMirrorSession
+
+	pages := ec2.NewDescribeTrafficMirrorSessionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorSessionIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TrafficMirrorSessions...)
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorSessionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TrafficMirrorSession, error) {
+	input := &ec2.DescribeTrafficMirrorSessionsInput{
+		TrafficMirrorSessionIds: []string{id},
+	}
+
+	output, err := findTrafficMirrorSession(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TrafficMirrorSessionId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
