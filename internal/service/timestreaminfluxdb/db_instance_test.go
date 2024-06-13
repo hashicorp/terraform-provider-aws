@@ -558,7 +558,7 @@ func testAccCheckDbInstanceNotRecreated(before, after *timestreaminfluxdb.GetDbI
 func testAccDbInstanceConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_vpc" {
-	cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test_subnet" {
@@ -567,7 +567,7 @@ resource "aws_subnet" "test_subnet" {
 }
 
 resource "aws_security_group" "test_security_group" {
-	vpc_id = aws_vpc.test_vpc.id
+  vpc_id = aws_vpc.test_vpc.id
 }
 `)
 }
@@ -576,12 +576,12 @@ resource "aws_security_group" "test_security_group" {
 func testAccDbInstanceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 }
 `, rName))
 }
@@ -590,43 +590,43 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_logDeliveryConfigurationEnabled(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test_s3_bucket" {
-	bucket = %[1]q
-	force_destroy = true
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 data "aws_iam_policy_document" "allow_timestreaminfluxdb" {
-	statement {
-		actions = ["s3:PutObject"]
-		principals {
-			type = "Service"
-			identifiers = ["timestream-influxdb.amazonaws.com"]
-		}
-		resources = [
-			"${aws_s3_bucket.test_s3_bucket.arn}/*"
-		]
-	}
+  statement {
+    actions = ["s3:PutObject"]
+    principals {
+      type        = "Service"
+      identifiers = ["timestream-influxdb.amazonaws.com"]
+    }
+    resources = [
+      "${aws_s3_bucket.test_s3_bucket.arn}/*"
+    ]
+  }
 }
 
 resource "aws_s3_bucket_policy" "allow_timestreaminfluxdb" {
-	bucket = aws_s3_bucket.test_s3_bucket.id
-	policy = data.aws_iam_policy_document.allow_timestreaminfluxdb.json
+  bucket = aws_s3_bucket.test_s3_bucket.id
+  policy = data.aws_iam_policy_document.allow_timestreaminfluxdb.json
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	publicly_accessible = false
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  publicly_accessible    = false
+  name                   = %[1]q
 
-	log_delivery_configuration {
-		s3_configuration {
-			bucket_name = %[1]q
-			enabled = true
-		}
-	}
+  log_delivery_configuration {
+    s3_configuration {
+      bucket_name = %[1]q
+      enabled     = true
+    }
+  }
 }
 `, rName))
 }
@@ -635,43 +635,43 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_logDeliveryConfigurationNotEnabled(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test_s3_bucket" {
-	bucket = %[1]q
-	force_destroy = true
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 data "aws_iam_policy_document" "allow_timestreaminfluxdb" {
-	statement {
-		actions = ["s3:PutObject"]
-		principals {
-			type = "Service"
-			identifiers = ["timestream-influxdb.amazonaws.com"]
-		}
-		resources = [
-			"${aws_s3_bucket.test_s3_bucket.arn}/*"
-		]
-	}
+  statement {
+    actions = ["s3:PutObject"]
+    principals {
+      type        = "Service"
+      identifiers = ["timestream-influxdb.amazonaws.com"]
+    }
+    resources = [
+      "${aws_s3_bucket.test_s3_bucket.arn}/*"
+    ]
+  }
 }
 
 resource "aws_s3_bucket_policy" "allow_timestreaminfluxdb" {
-	bucket = aws_s3_bucket.test_s3_bucket.id
-	policy = data.aws_iam_policy_document.allow_timestreaminfluxdb.json
+  bucket = aws_s3_bucket.test_s3_bucket.id
+  policy = data.aws_iam_policy_document.allow_timestreaminfluxdb.json
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	publicly_accessible = false
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  publicly_accessible    = false
+  name                   = %[1]q
 
-	log_delivery_configuration {
-		s3_configuration {
-			bucket_name = %[1]q
-			enabled = false
-		}
-	}
+  log_delivery_configuration {
+    s3_configuration {
+      bucket_name = %[1]q
+      enabled     = false
+    }
+  }
 }
 `, rName))
 }
@@ -685,9 +685,9 @@ resource "aws_internet_gateway" "test_internet_gateway" {
 }
 
 resource "aws_route" "test_route" {
-	route_table_id = aws_vpc.test_vpc.main_route_table_id
-	destination_cidr_block = "0.0.0.0/0"
-	gateway_id = aws_internet_gateway.test_internet_gateway.id
+  route_table_id         = aws_vpc.test_vpc.main_route_table_id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test_internet_gateway.id
 }
 
 resource "aws_route_table_association" "test_route_table_association" {
@@ -696,21 +696,21 @@ resource "aws_route_table_association" "test_route_table_association" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "test_vpc_security_group_ingress_rule_vpc" {
-	security_group_id = aws_security_group.test_security_group.id
-	referenced_security_group_id = aws_security_group.test_security_group.id
-	ip_protocol       = -1
+  security_group_id            = aws_security_group.test_security_group.id
+  referenced_security_group_id = aws_security_group.test_security_group.id
+  ip_protocol                  = -1
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	db_storage_type = "InfluxIOIncludedT1"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  db_storage_type        = "InfluxIOIncludedT1"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	publicly_accessible = true
+  publicly_accessible = true
 }
 `, rName))
 }
@@ -718,35 +718,35 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_deploymentTypeMultiAzStandby(rName string, regionName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_vpc" {
-	cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "test_subnet_1" {
-  vpc_id     = aws_vpc.test_vpc.id
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = aws_vpc.test_vpc.id
+  cidr_block        = "10.0.1.0/24"
   availability_zone = "%[2]sa"
 }
 
 resource "aws_subnet" "test_subnet_2" {
-  vpc_id     = aws_vpc.test_vpc.id
-  cidr_block = "10.0.2.0/24"
+  vpc_id            = aws_vpc.test_vpc.id
+  cidr_block        = "10.0.2.0/24"
   availability_zone = "%[2]sb"
 }
 
 resource "aws_security_group" "test_security_group" {
-	vpc_id = aws_vpc.test_vpc.id
+  vpc_id = aws_vpc.test_vpc.id
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	db_storage_type = "InfluxIOIncludedT1"
-	vpc_subnet_ids = [aws_subnet.test_subnet_1.id, aws_subnet.test_subnet_2.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  db_storage_type        = "InfluxIOIncludedT1"
+  vpc_subnet_ids         = [aws_subnet.test_subnet_1.id, aws_subnet.test_subnet_2.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	deployment_type = "WITH_MULTIAZ_STANDBY"
+  deployment_type = "WITH_MULTIAZ_STANDBY"
 }
 `, rName, regionName)
 }
@@ -754,15 +754,15 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_username(rName, username string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	db_storage_type = "InfluxIOIncludedT1"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  db_storage_type        = "InfluxIOIncludedT1"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	username = %[2]q
+  username = %[2]q
 }
 `, rName, username))
 }
@@ -770,15 +770,15 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_bucket(rName, bucketName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	db_storage_type = "InfluxIOIncludedT1"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  db_storage_type        = "InfluxIOIncludedT1"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	bucket = %[2]q
+  bucket = %[2]q
 }
 `, rName, bucketName))
 }
@@ -786,15 +786,15 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_organization(rName, organizationName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	db_storage_type = "InfluxIOIncludedT1"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  db_storage_type        = "InfluxIOIncludedT1"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	organization = %[2]q
+  organization = %[2]q
 }
 `, rName, organizationName))
 }
@@ -802,17 +802,17 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	db_storage_type = "InfluxIOIncludedT1"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  db_storage_type        = "InfluxIOIncludedT1"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	tags = {
-		%[2]q = %[3]q
-	}
+  tags = {
+    %[2]q = %[3]q
+  }
 }
 `, rName, tagKey1, tagValue1))
 }
@@ -820,18 +820,18 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	db_storage_type = "InfluxIOIncludedT1"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  db_storage_type        = "InfluxIOIncludedT1"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	tags = {
-		%[2]q = %[3]q
-		%[4]q = %[5]q
-	}
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
@@ -839,14 +839,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbStorageTypeT2(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	db_storage_type = "InfluxIOIncludedT2"
+  db_storage_type = "InfluxIOIncludedT2"
 }
 `, rName))
 }
@@ -854,14 +854,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbStorageTypeT3(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	db_instance_type = "db.influx.medium"
-	name = %[1]q
+  allocated_storage      = 20
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  db_instance_type       = "db.influx.medium"
+  name                   = %[1]q
 
-	db_storage_type = "InfluxIOIncludedT3"
+  db_storage_type = "InfluxIOIncludedT3"
 }
 `, rName))
 }
@@ -869,14 +869,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbInstanceTypeLarge(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	db_storage_type = "InfluxIOIncludedT1"
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	name = %[1]q
+  allocated_storage      = 20
+  db_storage_type        = "InfluxIOIncludedT1"
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  name                   = %[1]q
 
-	db_instance_type = "db.influx.large"
+  db_instance_type = "db.influx.large"
 }
 `, rName))
 }
@@ -884,14 +884,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbInstanceTypeXLarge(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	db_storage_type = "InfluxIOIncludedT1"
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	name = %[1]q
+  allocated_storage      = 20
+  db_storage_type        = "InfluxIOIncludedT1"
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  name                   = %[1]q
 
-	db_instance_type = "db.influx.xlarge"
+  db_instance_type = "db.influx.xlarge"
 }
 `, rName))
 }
@@ -899,14 +899,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbInstanceType2XLarge(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	db_storage_type = "InfluxIOIncludedT1"
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	name = %[1]q
+  db_storage_type        = "InfluxIOIncludedT1"
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  name                   = %[1]q
 
-	allocated_storage = 40
-	db_instance_type = "db.influx.2xlarge"
+  allocated_storage = 40
+  db_instance_type  = "db.influx.2xlarge"
 }
 `, rName))
 }
@@ -914,14 +914,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbInstanceType4XLarge(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	db_storage_type = "InfluxIOIncludedT1"
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	name = %[1]q
+  allocated_storage      = 20
+  db_storage_type        = "InfluxIOIncludedT1"
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  name                   = %[1]q
 
-	db_instance_type = "db.influx.4xlarge"
+  db_instance_type = "db.influx.4xlarge"
 }
 `, rName))
 }
@@ -929,14 +929,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbInstanceType8XLarge(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	db_storage_type = "InfluxIOIncludedT1"
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	name = %[1]q
+  allocated_storage      = 20
+  db_storage_type        = "InfluxIOIncludedT1"
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  name                   = %[1]q
 
-	db_instance_type = "db.influx.8xlarge"
+  db_instance_type = "db.influx.8xlarge"
 }
 `, rName))
 }
@@ -944,14 +944,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbInstanceType12XLarge(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	db_storage_type = "InfluxIOIncludedT1"
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	name = %[1]q
+  allocated_storage      = 20
+  db_storage_type        = "InfluxIOIncludedT1"
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  name                   = %[1]q
 
-	db_instance_type = "db.influx.12xlarge"
+  db_instance_type = "db.influx.12xlarge"
 }
 `, rName))
 }
@@ -959,14 +959,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDbInstanceConfig_dbInstanceType16XLarge(rName string) string {
 	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-	allocated_storage = 20
-	db_storage_type = "InfluxIOIncludedT1"
-	password = "testpassword"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.test_security_group.id]
-	name = %[1]q
+  allocated_storage      = 20
+  db_storage_type        = "InfluxIOIncludedT1"
+  password               = "testpassword"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.test_security_group.id]
+  name                   = %[1]q
 
-	db_instance_type = "db.influx.16xlarge"
+  db_instance_type = "db.influx.16xlarge"
 }
 `, rName))
 }
