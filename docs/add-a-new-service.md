@@ -23,7 +23,7 @@ To add an AWS SDK for Go service client:
 
 1. If the service is there and the `not_implemented` attribute is `false`, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
 
-1. If the service is there and the `NotImplmented` attribute is true, remove it and submit the client pull request as described below.
+1. If the service is there and the `not_implemented` attribute is true, remove it and submit the client pull request as described below.
 
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
