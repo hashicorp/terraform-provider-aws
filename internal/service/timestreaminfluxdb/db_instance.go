@@ -769,11 +769,11 @@ func waitDbInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDbInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.StatusDeleting), string(awstypes.StatusModifying), string(awstypes.StatusUpdating), string(awstypes.StatusAvailable)},
-		Target:  []string{},
-		Refresh: statusDbInstance(ctx, conn, id),
-		Timeout: timeout,
-		Delay: 30 * time.Second,
+		Pending:      []string{string(awstypes.StatusDeleting), string(awstypes.StatusModifying), string(awstypes.StatusUpdating), string(awstypes.StatusAvailable)},
+		Target:       []string{},
+		Refresh:      statusDbInstance(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        30 * time.Second,
 		PollInterval: 30 * time.Second,
 	}
 
