@@ -1071,24 +1071,6 @@ func FindVPCPeeringConnectionByID(ctx context.Context, conn *ec2.EC2, id string)
 	return output, nil
 }
 
-func FindTrafficMirrorFilterRuleByTwoPartKey(ctx context.Context, conn *ec2.EC2, filterID, ruleID string) (*ec2.TrafficMirrorFilterRule, error) {
-	output, err := FindTrafficMirrorFilterByID(ctx, conn, filterID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range [][]*ec2.TrafficMirrorFilterRule{output.IngressFilterRules, output.EgressFilterRules} {
-		for _, v := range v {
-			if aws.StringValue(v.TrafficMirrorFilterRuleId) == ruleID {
-				return v, nil
-			}
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
-}
-
 func FindTrafficMirrorSession(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeTrafficMirrorSessionsInput) (*ec2.TrafficMirrorSession, error) {
 	output, err := FindTrafficMirrorSessions(ctx, conn, input)
 

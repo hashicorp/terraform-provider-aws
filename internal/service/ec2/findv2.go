@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -5141,4 +5142,16 @@ func findTrafficMirrorFilterByID(ctx context.Context, conn *ec2.Client, id strin
 	}
 
 	return output, nil
+}
+
+func findTrafficMirrorFilterRuleByTwoPartKey(ctx context.Context, conn *ec2.Client, filterID, ruleID string) (*awstypes.TrafficMirrorFilterRule, error) {
+	output, err := findTrafficMirrorFilterByID(ctx, conn, filterID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(slices.Concat(output.IngressFilterRules, output.EgressFilterRules), func(v awstypes.TrafficMirrorFilterRule) bool {
+		return aws.ToString(v.TrafficMirrorFilterRuleId) == ruleID
+	}))
 }

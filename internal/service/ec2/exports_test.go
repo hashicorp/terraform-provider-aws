@@ -61,6 +61,7 @@ var (
 	ResourceSpotInstanceRequest                      = resourceSpotInstanceRequest
 	ResourceTag                                      = resourceTag
 	ResourceTrafficMirrorFilter                      = resourceTrafficMirrorFilter
+	ResourceTrafficMirrorFilterRule                  = resourceTrafficMirrorFilterRule
 	ResourceTransitGatewayConnect                    = resourceTransitGatewayConnect
 	ResourceTransitGatewayMulticastDomain            = resourceTransitGatewayMulticastDomain
 	ResourceTransitGatewayMulticastDomainAssociation = resourceTransitGatewayMulticastDomainAssociation
@@ -138,6 +139,7 @@ var (
 	FindSubnetsV2                                              = findSubnets
 	FindTag                                                    = findTag
 	FindTrafficMirrorFilterByID                                = findTrafficMirrorFilterByID
+	FindTrafficMirrorFilterRuleByTwoPartKey                    = findTrafficMirrorFilterRuleByTwoPartKey
 	FindTransitGatewayByID                                     = findTransitGatewayByID
 	FindTransitGatewayConnectByID                              = findTransitGatewayConnectByID
 	FindTransitGatewayConnectPeerByID                          = findTransitGatewayConnectPeerByID
