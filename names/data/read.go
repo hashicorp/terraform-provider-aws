@@ -4,7 +4,6 @@
 package data
 
 import (
-	_ "embed"
 	"log"
 	"strings"
 
@@ -180,7 +179,6 @@ func (sr ServiceRecord) Note() string {
 }
 
 func parseService(curr Service) ServiceRecord {
-
 	record := make(ServiceRecord, colNote+1)
 
 	// provider packages/label
