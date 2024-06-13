@@ -371,7 +371,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		if tfresource.NotFound(err) {
 			d.Set("cidr_blocks", nil)
 		} else {
-			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s) subnet configurations: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
 		}
 	} else {
 		d.Set("cidr_blocks", pl.Cidrs)
@@ -381,7 +381,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	subnetConfigurations, err := findSubnetConfigurationsByNetworkInterfaceIDs(ctx, conn, vpce.NetworkInterfaceIds)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
+		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s) subnet configurations: %s", d.Id(), err)
 	}
 
 	if err := d.Set("subnet_configuration", flattenSubnetConfigurations(subnetConfigurations)); err != nil {
