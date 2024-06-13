@@ -60,6 +60,7 @@ This data source exports the following attributes in addition to the arguments a
 * `costTypes` - Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `notification` - Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `plannedLimit` - Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `tags` - Map of tags assigned to the resource.
 * `timePeriodEnd` - The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `timePeriodStart` - The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `timeUnit` - The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
@@ -149,4 +150,4 @@ Valid keys for `plannedLimit` parameter.
 * `amount` - The cost or usage amount that's associated with a budget forecast, actual spend, or budget threshold. Length Constraints: Minimum length of `1`. Maximum length of `2147483647`.
 * `unit` - The unit of measurement that's used for the budget forecast, actual spend, or budget threshold, such as USD or GBP. Length Constraints: Minimum length of `1`. Maximum length of `2147483647`.
 
-<!-- cache-key: cdktf-0.20.1 input-b7c31c3ad39479e59da06d0c3fe09f56627948373042fa6519f4be932fdc9787 -->
+<!-- cache-key: cdktf-0.20.1 input-bcd14e9e19ad1a4d1b9b19c795525a25de63a23af5923dc78711d2a03e54d462 -->

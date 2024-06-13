@@ -51,6 +51,7 @@ const (
 )
 
 func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.PutEmailIdentityFeedbackAttributesInput{
@@ -60,19 +61,20 @@ func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schem
 
 	out, err := conn.PutEmailIdentityFeedbackAttributes(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("email_identity").(string))
 
-	return resourceEmailIdentityFeedbackAttributesRead(ctx, d, meta)
+	return append(diags, resourceEmailIdentityFeedbackAttributesRead(ctx, d, meta)...)
 }
 
 func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindEmailIdentityByID(ctx, conn, d.Id())
@@ -80,20 +82,21 @@ func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 EmailIdentityFeedbackAttributes (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
 	}
 
 	d.Set("email_identity", d.Id())
 	d.Set("email_forwarding_enabled", out.FeedbackForwardingStatus)
 
-	return nil
+	return diags
 }
 
 func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	update := false
@@ -108,19 +111,20 @@ func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schem
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating SESV2 EmailIdentityFeedbackAttributes (%s): %#v", d.Id(), in)
 	_, err := conn.PutEmailIdentityFeedbackAttributes(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
 	}
 
-	return resourceEmailIdentityFeedbackAttributesRead(ctx, d, meta)
+	return append(diags, resourceEmailIdentityFeedbackAttributesRead(ctx, d, meta)...)
 }
 
 func resourceEmailIdentityFeedbackAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 EmailIdentityFeedbackAttributes %s", d.Id())
@@ -132,11 +136,11 @@ func resourceEmailIdentityFeedbackAttributesDelete(ctx context.Context, d *schem
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

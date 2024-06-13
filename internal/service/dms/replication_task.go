@@ -73,10 +73,16 @@ func ResourceReplicationTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validReplicationTaskID,
 			},
+			// "replication_task_settings" is equivalent to "replication_settings" on "aws_dms_replication_config"
+			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_config"
 			"replication_task_settings": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ValidateFunc:          validation.StringIsJSON,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateDiagFunc: validation.AllDiag(
+					validation.ToDiagFunc(validation.StringIsJSON),
+					validateReplicationSettings,
+				),
 				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
 			},
@@ -102,7 +108,7 @@ func ResourceReplicationTask() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -206,7 +212,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
 	d.Set("replication_task_settings", task.ReplicationTaskSettings)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
-	d.Set("status", task.Status)
+	d.Set(names.AttrStatus, task.Status)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
@@ -217,7 +223,7 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "replication_instance_arn", "start_replication_task") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "replication_instance_arn", "start_replication_task") {
 		if err := stopReplicationTask(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -245,7 +251,11 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("replication_task_settings") {
 			if v, ok := d.GetOk("replication_task_settings"); ok {
-				input.ReplicationTaskSettings = aws.String(v.(string))
+				s, err := normalizeReplicationSettings(v.(string))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating DMS Replication Task (%s): %s", d.Id(), err)
+				}
+				input.ReplicationTaskSettings = aws.String(s)
 			}
 		}
 

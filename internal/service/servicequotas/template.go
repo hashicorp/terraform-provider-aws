@@ -54,7 +54,7 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"quota_code": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -67,7 +67,7 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -79,19 +79,19 @@ func (r *resourceTemplate) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"service_name": schema.StringAttribute{
+			names.AttrServiceName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"unit": schema.StringAttribute{
+			names.AttrUnit: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"value": schema.Float64Attribute{
+			names.AttrValue: schema.Float64Attribute{
 				Required: true,
 			},
 		},
@@ -260,7 +260,7 @@ func (r *resourceTemplate) Delete(ctx context.Context, req resource.DeleteReques
 }
 
 func (r *resourceTemplate) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindTemplateByID(ctx context.Context, conn *servicequotas.Client, id string) (*awstypes.ServiceQuotaIncreaseRequestInTemplate, error) {

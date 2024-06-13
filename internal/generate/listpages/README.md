@@ -17,6 +17,8 @@ Optional Flags:
 
 * `-Paginator`: Name of the pagination token field (default `NextToken`)
 * `-Export`: Whether to export the generated functions
+* `-AWSSDKVersion`: Version of the AWS Go SDK to use i.e. 1 or 2 (default `1`)
+* `-V2Suffix`: Whether to append a V2 suffix to the list functions
 
 To use with `go generate`, add the following directive to a Go file
 

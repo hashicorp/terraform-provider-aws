@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,11 +25,11 @@ func DataSourceDataSet() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -55,7 +56,7 @@ func DataSourceDataSet() *schema.Resource {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
-										"name": {
+										names.AttrName: {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
@@ -117,7 +118,7 @@ func DataSourceDataSet() *schema.Resource {
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"description": {
+							names.AttrDescription: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -133,21 +134,21 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem:     logicalTableMapDataSourceSchema(),
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -164,7 +165,7 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"arn": {
+							names.AttrARN: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -172,7 +173,7 @@ func DataSourceDataSet() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"namespace": {
+							names.AttrNamespace: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -180,7 +181,7 @@ func DataSourceDataSet() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"status": {
+							names.AttrStatus: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -192,7 +193,7 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"status": {
+							names.AttrStatus: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -223,8 +224,8 @@ func DataSourceDataSet() *schema.Resource {
 						},
 					},
 				},
-				"tags": tftags.TagsSchemaComputed(),
-				"tags_all": {
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: {
 					Type:       schema.TypeMap,
 					Optional:   true,
 					Computed:   true,
@@ -239,7 +240,7 @@ func DataSourceDataSet() *schema.Resource {
 func logicalTableMapDataSourceSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -257,7 +258,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -286,7 +287,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"expression": {
+												names.AttrExpression: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -346,7 +347,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"tags": {
+									names.AttrTags: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
@@ -399,7 +400,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -449,7 +450,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -480,11 +481,11 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -495,7 +496,7 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -528,22 +529,22 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -564,11 +565,11 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -588,7 +589,7 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -615,12 +616,13 @@ const (
 )
 
 func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	dataSetId := d.Get("data_set_id").(string)
@@ -632,66 +634,66 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	output, err := conn.DescribeDataSetWithContext(ctx, descOpts)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, DSNameDataSet, dataSetId, err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, DSNameDataSet, dataSetId, err)
 	}
 
 	dataSet := output.DataSet
 
 	d.SetId(createDataSetID(awsAccountId, dataSetId))
 
-	d.Set("arn", dataSet.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrARN, dataSet.Arn)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("data_set_id", dataSet.DataSetId)
-	d.Set("name", dataSet.Name)
+	d.Set(names.AttrName, dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
 
 	if err := d.Set("column_groups", flattenColumnGroups(dataSet.ColumnGroups)); err != nil {
-		return diag.Errorf("setting column_groups: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting column_groups: %s", err)
 	}
 
 	if err := d.Set("column_level_permission_rules", flattenColumnLevelPermissionRules(dataSet.ColumnLevelPermissionRules)); err != nil {
-		return diag.Errorf("setting column_level_permission_rules: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting column_level_permission_rules: %s", err)
 	}
 
 	if err := d.Set("data_set_usage_configuration", flattenDataSetUsageConfiguration(dataSet.DataSetUsageConfiguration)); err != nil {
-		return diag.Errorf("setting data_set_usage_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting data_set_usage_configuration: %s", err)
 	}
 
 	if err := d.Set("field_folders", flattenFieldFolders(dataSet.FieldFolders)); err != nil {
-		return diag.Errorf("setting field_folders: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting field_folders: %s", err)
 	}
 
 	if err := d.Set("logical_table_map", flattenLogicalTableMap(dataSet.LogicalTableMap, logicalTableMapDataSourceSchema())); err != nil {
-		return diag.Errorf("setting logical_table_map: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting logical_table_map: %s", err)
 	}
 
 	if err := d.Set("physical_table_map", flattenPhysicalTableMap(dataSet.PhysicalTableMap, physicalTableMapDataSourceSchema())); err != nil {
-		return diag.Errorf("setting physical_table_map: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting physical_table_map: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_data_set", flattenRowLevelPermissionDataSet(dataSet.RowLevelPermissionDataSet)); err != nil {
-		return diag.Errorf("setting row_level_permission_data_set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_data_set: %s", err)
 	}
 
 	if err := d.Set("row_level_permission_tag_configuration", flattenRowLevelPermissionTagConfiguration(dataSet.RowLevelPermissionTagConfiguration)); err != nil {
-		return diag.Errorf("setting row_level_permission_tag_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting row_level_permission_tag_configuration: %s", err)
 	}
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
-		return diag.Errorf("listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
+	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
@@ -700,11 +702,11 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("setting permissions: %s", err)
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting permissions: %s", err)
 	}
-	return nil
+	return diags
 }

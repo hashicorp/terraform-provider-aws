@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_applicationinsights_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationinsights/types;types.ApplicationInfo")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -45,7 +46,7 @@ func ResourceApplication() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -137,7 +138,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  "application/resource-group/" + aws.ToString(application.ResourceGroupName),
 		Service:   "applicationinsights",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("resource_group_name", application.ResourceGroupName)
 	d.Set("auto_config_enabled", application.AutoConfigEnabled)
 	d.Set("cwe_monitor_enabled", application.CWEMonitorEnabled)
@@ -151,7 +152,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &applicationinsights.UpdateApplicationInput{
 			ResourceGroupName: aws.String(d.Id()),
 		}

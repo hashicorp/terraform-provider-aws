@@ -37,11 +37,11 @@ func TestAccAppConfigExtension_basic(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`extension/*`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`extension/*`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action_point.0.point", "ON_DEPLOYMENT_COMPLETE"),
 					resource.TestCheckResourceAttr(resourceName, "action_point.0.action.0.name", "test"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
 			{
@@ -68,12 +68,12 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
-						"name": "test",
+						names.AttrName: "test",
 					}),
 				),
 			},
@@ -86,7 +86,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_actionPoint2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
@@ -94,10 +94,10 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 						"point": "ON_DEPLOYMENT_ROLLED_BACK",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
-						"name": "test",
+						names.AttrName: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
-						"name": "test2",
+						names.AttrName: "test2",
 					}),
 				),
 			},
@@ -105,12 +105,12 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
-						"name": "test",
+						names.AttrName: "test",
 					}),
 				),
 			},
@@ -124,10 +124,8 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 	resourceName := "aws_appconfig_extension.test"
 	pName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredTrue := "true"
 	pName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredFalse := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -136,14 +134,14 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionConfig_parameter1(rName, pName1, pDescription1, pRequiredTrue),
+				Config: testAccExtensionConfig_parameter1(rName, pName1, pDescription1, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":        pName1,
-						"description": pDescription1,
-						"required":    pRequiredTrue,
+						names.AttrName:        pName1,
+						names.AttrDescription: pDescription1,
+						"required":            acctest.CtTrue,
 					}),
 				),
 			},
@@ -156,28 +154,28 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				Config: testAccExtensionConfig_parameter2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":        "parameter1",
-						"description": "description1",
-						"required":    "true",
+						names.AttrName:        "parameter1",
+						names.AttrDescription: "description1",
+						"required":            acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":        "parameter2",
-						"description": "description2",
-						"required":    "false",
+						names.AttrName:        "parameter2",
+						names.AttrDescription: "description2",
+						"required":            acctest.CtFalse,
 					}),
 				),
 			},
 			{
-				Config: testAccExtensionConfig_parameter1(rName, pName2, pDescription2, pRequiredFalse),
+				Config: testAccExtensionConfig_parameter1(rName, pName2, pDescription2, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":        pName2,
-						"description": pDescription2,
-						"required":    pRequiredFalse,
+						names.AttrName:        pName2,
+						names.AttrDescription: pDescription2,
+						"required":            acctest.CtFalse,
 					}),
 				),
 			},
@@ -201,7 +199,7 @@ func TestAccAppConfigExtension_Name(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -213,7 +211,7 @@ func TestAccAppConfigExtension_Name(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -238,7 +236,7 @@ func TestAccAppConfigExtension_Description(t *testing.T) {
 				Config: testAccExtensionConfig_description(rName, rDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescription),
 				),
 			},
 			{
@@ -250,52 +248,7 @@ func TestAccAppConfigExtension_Description(t *testing.T) {
 				Config: testAccExtensionConfig_description(rName, rDescription2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rDescription2),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAppConfigExtension_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appconfig_extension.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExtensionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccExtensionConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccExtensionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccExtensionConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDescription2),
 				),
 			},
 		},
@@ -404,11 +357,12 @@ data "aws_iam_policy_document" "test" {
     }
   }
 }
+
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
-  `, rName)
+`, rName)
 }
 
 func testAccExtensionConfig_name(rName string) string {
@@ -447,49 +401,6 @@ resource "aws_appconfig_extension" "test" {
   }
 }
 `, rName, rDescription))
-}
-
-func testAccExtensionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_appconfig_extension" "test" {
-  name = %[1]q
-  action_point {
-    point = "ON_DEPLOYMENT_COMPLETE"
-    action {
-      name     = "test"
-      role_arn = aws_iam_role.test.arn
-      uri      = aws_sns_topic.test.arn
-    }
-  }
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccExtensionConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccExtensionConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_appconfig_extension" "test" {
-  name = %[1]q
-  action_point {
-    point = "ON_DEPLOYMENT_COMPLETE"
-    action {
-      name     = "test"
-      role_arn = aws_iam_role.test.arn
-      uri      = aws_sns_topic.test.arn
-    }
-  }
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccExtensionConfig_actionPoint2(rName string) string {
