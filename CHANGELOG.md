@@ -7,10 +7,16 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_ec2_capacity_block_offering` ([#37528](https://github.com/hashicorp/terraform-provider-aws/issues/37528))
+* **New Resource:** `aws_appfabric_app_authorization` ([#37468](https://github.com/hashicorp/terraform-provider-aws/issues/37468))
 * **New Resource:** `aws_appfabric_app_bundle` ([#37542](https://github.com/hashicorp/terraform-provider-aws/issues/37542))
 * **New Resource:** `aws_ec2_capacity_block_reservation` ([#37528](https://github.com/hashicorp/terraform-provider-aws/issues/37528))
 * **New Resource:** `aws_fms_resource_set` ([#37767](https://github.com/hashicorp/terraform-provider-aws/issues/37767))
 * **New Resource:** `aws_guardduty_malware_protection_plan` ([#37919](https://github.com/hashicorp/terraform-provider-aws/issues/37919))
+
+ENHANCEMENTS:
+
+* data-source/aws_opensearch_domain: Add `ip_address_type` argument ([#37237](https://github.com/hashicorp/terraform-provider-aws/issues/37237))
+* resource/aws_opensearch_domain: Add `ip_address_type` argument ([#37237](https://github.com/hashicorp/terraform-provider-aws/issues/37237))
 
 BUG FIXES:
 
