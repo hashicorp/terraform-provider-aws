@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -25,42 +24,40 @@ func RegisterSweepers() {
 func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	conn := client.ApplicationInsightsClient(ctx)
+	input := &applicationinsights.ListApplicationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	pages := applicationinsights.NewListApplicationsPaginator(conn, &applicationinsights.ListApplicationsInput{})
-
+	pages := applicationinsights.NewListApplicationsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("error describing ApplicationInsights Applications: %w", err))
-			// in case work can be done, don't jump out yet
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ApplicationInsights Application sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, c := range page.ApplicationInfoList {
-			r := ResourceApplication()
+		if err != nil {
+			return fmt.Errorf("error listing ApplicationInsights Applications (%s): %w", region, err)
+		}
+
+		for _, v := range page.ApplicationInfoList {
+			r := resourceApplication()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(c.ResourceGroupName))
+			d.SetId(aws.ToString(v.ResourceGroupName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping ApplicationInsights Applications for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ApplicationInsights Applications (%s): %w", region, err)
 	}
 
-	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping ApplicationInsights Application sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

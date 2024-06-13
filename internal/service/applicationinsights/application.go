@@ -6,12 +6,14 @@ package applicationinsights
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -26,12 +28,13 @@ import (
 // @SDKResource("aws_applicationinsights_application", name="Application")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/applicationinsights/types;types.ApplicationInfo")
-func ResourceApplication() *schema.Resource {
+func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
 		ReadWithoutTimeout:   resourceApplicationRead,
 		UpdateWithoutTimeout: resourceApplicationUpdate,
 		DeleteWithoutTimeout: resourceApplicationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -72,10 +75,12 @@ func ResourceApplication() *schema.Resource {
 			"resource_group_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -101,12 +106,13 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.OpsItemSNSTopicArn = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateApplication(ctx, input)
+	output, err := conn.CreateApplication(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ApplicationInsights Application: %s", err)
 	}
 
-	d.SetId(aws.ToString(out.ApplicationInfo.ResourceGroupName))
+	d.SetId(aws.ToString(output.ApplicationInfo.ResourceGroupName))
 
 	if _, err := waitApplicationCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ApplicationInsights Application (%s) create: %s", d.Id(), err)
@@ -119,7 +125,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
-	application, err := FindApplicationByName(ctx, conn, d.Id())
+	application, err := findApplicationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ApplicationInsights Application (%s) not found, removing from state", d.Id())
@@ -131,19 +137,20 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading ApplicationInsights Application (%s): %s", d.Id(), err)
 	}
 
+	rgName := aws.ToString(application.ResourceGroupName)
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "application/resource-group/" + aws.ToString(application.ResourceGroupName),
 		Service:   "applicationinsights",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  "application/resource-group/" + rgName,
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("resource_group_name", application.ResourceGroupName)
 	d.Set("auto_config_enabled", application.AutoConfigEnabled)
 	d.Set("cwe_monitor_enabled", application.CWEMonitorEnabled)
 	d.Set("ops_center_enabled", application.OpsCenterEnabled)
 	d.Set("ops_item_sns_topic_arn", application.OpsItemSNSTopicArn)
+	d.Set("resource_group_name", rgName)
 
 	return diags
 }
@@ -170,16 +177,15 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("ops_item_sns_topic_arn") {
-			_, n := d.GetChange("ops_item_sns_topic_arn")
-			if n != nil {
+			if _, n := d.GetChange("ops_item_sns_topic_arn"); n != nil {
 				input.OpsItemSNSTopicArn = aws.String(n.(string))
 			} else {
 				input.RemoveSNSTopic = aws.Bool(true)
 			}
 		}
 
-		log.Printf("[DEBUG] Updating ApplicationInsights Application: %s", d.Id())
 		_, err := conn.UpdateApplication(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ApplicationInsights Application (%s): %s", d.Id(), err)
 		}
@@ -192,16 +198,16 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
-	input := &applicationinsights.DeleteApplicationInput{
+	log.Printf("[DEBUG] Deleting ApplicationInsights Application: %s", d.Id())
+	_, err := conn.DeleteApplication(ctx, &applicationinsights.DeleteApplicationInput{
 		ResourceGroupName: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting ApplicationInsights Application: %s", d.Id())
-	_, err := conn.DeleteApplication(ctx, input)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting ApplicationInsights Application: %s", err)
 	}
 
@@ -210,4 +216,85 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func findApplicationByName(ctx context.Context, conn *applicationinsights.Client, name string) (*awstypes.ApplicationInfo, error) {
+	input := applicationinsights.DescribeApplicationInput{
+		ResourceGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeApplication(ctx, &input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ApplicationInfo, nil
+}
+
+func statusApplication(ctx context.Context, conn *applicationinsights.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findApplicationByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.LifeCycle), nil
+	}
+}
+
+func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Client, name string) (*awstypes.ApplicationInfo, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"CREATING"},
+		Target:  []string{"NOT_CONFIGURED", "ACTIVE"},
+		Refresh: statusApplication(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ApplicationInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Client, name string) (*awstypes.ApplicationInfo, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"ACTIVE", "NOT_CONFIGURED", "DELETING"},
+		Target:  []string{},
+		Refresh: statusApplication(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ApplicationInfo); ok {
+		return output, err
+	}
+
+	return nil, err
 }
