@@ -154,14 +154,14 @@ func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeListener_forwardTlsPassthrough(t *testing.T) {
+func TestAccVPCLatticeListener_forwardTLSPassthrough(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var listener vpclattice.GetListenerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_listener.test"
 	serviceName := "aws_vpclattice_service.test"
-	targetGroupResourceName := "aws_vpclattice_target_group.test"
+	targetGroupResourceName := "aws_vpclattice_target_group.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -174,7 +174,7 @@ func TestAccVPCLatticeListener_forwardTlsPassthrough(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_forwardTlsPassthrough(rName),
+				Config: testAccListenerConfig_forwardTLSPassthrough(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -594,8 +594,19 @@ resource "aws_vpclattice_listener" "test" {
 `, rName))
 }
 
-func testAccListenerConfig_forwardTlsPassthrough(rName string) string {
+func testAccListenerConfig_forwardTLSPassthrough(rName string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_basic(rName), fmt.Sprintf(`
+resource "aws_vpclattice_target_group" "test1" {
+  name = %[1]q
+  type = "INSTANCE"
+
+  config {
+    port           = 8080
+    protocol       = "TLS_PASSTHROUGH"
+    vpc_identifier = aws_vpc.test.id
+  }
+}
+
 resource "aws_vpclattice_listener" "test" {
   name               = %[1]q
   protocol           = "TLS_PASSTHROUGH"
@@ -603,7 +614,7 @@ resource "aws_vpclattice_listener" "test" {
   default_action {
     forward {
       target_groups {
-        target_group_identifier = aws_vpclattice_target_group.test.id
+        target_group_identifier = aws_vpclattice_target_group.test1.id
         weight                  = 80
       }
     }
