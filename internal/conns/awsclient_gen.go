@@ -198,7 +198,6 @@ import (
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -597,10 +596,6 @@ func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
 
 func (c *AWSClient) ECRPublicClient(ctx context.Context) *ecrpublic_sdkv2.Client {
 	return errs.Must(client[*ecrpublic_sdkv2.Client](ctx, c, names.ECRPublic, make(map[string]any)))
-}
-
-func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
-	return errs.Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS, make(map[string]any)))
 }
 
 func (c *AWSClient) ECSClient(ctx context.Context) *ecs_sdkv2.Client {
