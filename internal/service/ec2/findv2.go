@@ -5210,3 +5210,58 @@ func findTrafficMirrorSessionByID(ctx context.Context, conn *ec2.Client, id stri
 
 	return output, nil
 }
+
+func findTrafficMirrorTarget(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorTargetsInput) (*awstypes.TrafficMirrorTarget, error) {
+	output, err := findTrafficMirrorTargets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTrafficMirrorTargets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTrafficMirrorTargetsInput) ([]awstypes.TrafficMirrorTarget, error) {
+	var output []awstypes.TrafficMirrorTarget
+
+	pages := ec2.NewDescribeTrafficMirrorTargetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorTargetIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.TrafficMirrorTargets...)
+	}
+
+	return output, nil
+}
+
+func findTrafficMirrorTargetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TrafficMirrorTarget, error) {
+	input := &ec2.DescribeTrafficMirrorTargetsInput{
+		TrafficMirrorTargetIds: []string{id},
+	}
+
+	output, err := findTrafficMirrorTarget(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TrafficMirrorTargetId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

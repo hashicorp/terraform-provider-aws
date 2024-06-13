@@ -1889,7 +1889,7 @@ func sweepTrafficMirrorTargets(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorTargets {
-			r := ResourceTrafficMirrorTarget()
+			r := resourceTrafficMirrorTarget()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorTargetId))
 

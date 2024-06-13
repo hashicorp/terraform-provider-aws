@@ -1071,68 +1071,6 @@ func FindVPCPeeringConnectionByID(ctx context.Context, conn *ec2.EC2, id string)
 	return output, nil
 }
 
-func FindTrafficMirrorTarget(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeTrafficMirrorTargetsInput) (*ec2.TrafficMirrorTarget, error) {
-	output, err := FindTrafficMirrorTargets(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindTrafficMirrorTargets(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeTrafficMirrorTargetsInput) ([]*ec2.TrafficMirrorTarget, error) {
-	var output []*ec2.TrafficMirrorTarget
-
-	err := conn.DescribeTrafficMirrorTargetsPagesWithContext(ctx, input, func(page *ec2.DescribeTrafficMirrorTargetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.TrafficMirrorTargets {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorTargetIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindTrafficMirrorTargetByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.TrafficMirrorTarget, error) {
-	input := &ec2.DescribeTrafficMirrorTargetsInput{
-		TrafficMirrorTargetIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := FindTrafficMirrorTarget(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.TrafficMirrorTargetId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindDHCPOptions(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeDhcpOptionsInput) (*ec2.DhcpOptions, error) {
 	output, err := FindDHCPOptionses(ctx, conn, input)
 
