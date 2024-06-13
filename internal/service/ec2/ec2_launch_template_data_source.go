@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_launch_template", name="Launch Template")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchTemplateRead,

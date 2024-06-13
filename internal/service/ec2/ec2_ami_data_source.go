@@ -29,6 +29,7 @@ import (
 
 // @SDKDataSource("aws_ami", name="AMI")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceAMI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAMIRead,

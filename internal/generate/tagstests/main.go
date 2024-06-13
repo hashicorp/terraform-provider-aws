@@ -385,6 +385,10 @@ var (
 	annotation = regexp.MustCompile(`^//\s*@([0-9A-Za-z]+)(\((.*)\))?\s*$`) // nosemgrep:ci.calling-regexp.MustCompile-directly
 )
 
+var (
+	sdkNameRegexp = regexp.MustCompile(`^(?i:Resource|DataSource)(\w+)$`) // nosemgrep:ci.calling-regexp.MustCompile-directly
+)
+
 type visitor struct {
 	errs []error
 	g    *common.Generator
@@ -463,6 +467,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 				d.TypeName = args.Positional[0]
+
 				if attr, ok := args.Keyword["name"]; ok {
 					attr = strings.ReplaceAll(attr, " ", "")
 					d.Name = strings.ReplaceAll(attr, "-", "")
@@ -480,12 +485,17 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					continue
 				}
 				d.TypeName = args.Positional[0]
+
 				if attr, ok := args.Keyword["name"]; ok {
 					attr = strings.ReplaceAll(attr, " ", "")
 					d.Name = strings.ReplaceAll(attr, "-", "")
 				} else if d.DataSource {
-					v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-					continue
+					m := sdkNameRegexp.FindStringSubmatch(v.functionName)
+					if m == nil {
+						v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
+					d.Name = m[1]
 				}
 
 			case "Tags":
