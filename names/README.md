@@ -16,6 +16,7 @@ Consumers of `names` include:
 After any edits to `data/names_data.hcl`, run `make gen`. Doing so regenerates code and performs checks on `data/names_data.hcl`.
 
 The schema of the attributes and blocks of `data/names_data.csv` are as follows:
+
 ```hcl
 service "" {
 
