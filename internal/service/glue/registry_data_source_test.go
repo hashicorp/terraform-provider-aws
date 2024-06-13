@@ -28,7 +28,6 @@ func TestAccGlueRegistryDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.GlueServiceID)
 			testAccPreCheckRegistry(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
@@ -41,14 +40,8 @@ func TestAccGlueRegistryDataSource_basic(t *testing.T) {
 					testAccCheckRegistryExists(ctx, dataSourceName, &registry),
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "glue", fmt.Sprintf("registry/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckNoResourceAttr(dataSourceName, names.AttrDescription),
 				),
-			},
-			{
-				ResourceName:      dataSourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
