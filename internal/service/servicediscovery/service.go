@@ -501,7 +501,9 @@ func flattenDNSConfig(apiObject *awstypes.DnsConfig) map[string]interface{} {
 		tfMap["namespace_id"] = aws.ToString(v)
 	}
 
-	tfMap["routing_policy"] = apiObject.RoutingPolicy
+	if v := apiObject.RoutingPolicy; v != "" {
+		tfMap["routing_policy"] = v
+	}
 
 	return tfMap
 }
@@ -517,7 +519,9 @@ func flattenDNSRecord(apiObject *awstypes.DnsRecord) map[string]interface{} {
 		tfMap["ttl"] = aws.ToInt64(v)
 	}
 
-	tfMap[names.AttrType] = apiObject.Type
+	if v := apiObject.Type; v != "" {
+		tfMap[names.AttrType] = v
+	}
 
 	return tfMap
 }
@@ -573,7 +577,9 @@ func flattenHealthCheckConfig(apiObject *awstypes.HealthCheckConfig) map[string]
 		tfMap["resource_path"] = aws.ToString(v)
 	}
 
-	tfMap[names.AttrType] = apiObject.Type
+	if v := apiObject.Type; v != "" {
+		tfMap[names.AttrType] = v
+	}
 
 	return tfMap
 }
