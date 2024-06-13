@@ -111,8 +111,9 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
-	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Id())
+	cluster, err := FindClusterByNameOrARN(ctx, conn, partition, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		sdkdiag.AppendErrorf(diags, "[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
