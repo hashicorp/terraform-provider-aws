@@ -322,9 +322,9 @@ resource "aws_ec2_traffic_mirror_filter" "test" {}
 resource "aws_ec2_traffic_mirror_filter_rule" "test" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.test.id
   destination_cidr_block   = "10.0.0.0/8"
-  rule_action              = "accept"
+  rule_action              = "0.0.0.0/0"
   rule_number              = 1
-  source_cidr_block        = "0.0.0.0/0"
+  source_cidr_block        = "accept"
   traffic_direction        = "ingress"
 
   tags = {
@@ -341,9 +341,9 @@ resource "aws_ec2_traffic_mirror_filter" "test" {}
 resource "aws_ec2_traffic_mirror_filter_rule" "test" {
   traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.test.id
   destination_cidr_block   = "10.0.0.0/8"
-  rule_action              = "accept"
+  rule_action              = "0.0.0.0/0"
   rule_number              = 1
-  source_cidr_block        = "0.0.0.0/0"
+  source_cidr_block        = "accept"
   traffic_direction        = "ingress"
 
   tags = {
