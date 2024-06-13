@@ -4,6 +4,7 @@
 package data
 
 import (
+	_ "embed"
 	"log"
 	"strings"
 
@@ -276,13 +277,13 @@ func parseService(curr Service) ServiceRecord {
 func ReadAllServiceData() (results []ServiceRecord, err error) {
 	var decodedServiceList Services
 	parser := hclparse.NewParser()
-	toParse, parseErr := parser.ParseHCLFile("/Users/thomas.zalewski/Downloads/june12/fix_guard_duty/terraform-provider-aws/names/data/names_data.hcl")
+	toParse, parseErr := parser.ParseHCL(b, "names_data.hcl")
 	if parseErr.HasErrors() {
-		log.Fatal("parser error : ", parseErr)
+		log.Fatal("Parser error : ", parseErr)
 	}
-	Derr := gohcl.DecodeBody(toParse.Body, nil, &decodedServiceList)
-	if Derr.HasErrors() {
-		log.Fatal("Decode error", Derr)
+	decodeErr := gohcl.DecodeBody(toParse.Body, nil, &decodedServiceList)
+	if decodeErr.HasErrors() {
+		log.Fatal("Decode error", decodeErr)
 	}
 	for _, curr := range decodedServiceList.ServiceList {
 		if len(curr.SubService) > 0 {
@@ -371,6 +372,9 @@ type Service struct {
 type Services struct {
 	ServiceList []Service `hcl:"service,block"`
 }
+
+//go:embed names_data.hcl
+var b []byte
 
 const (
 	colAWSCLIV2Command = iota
