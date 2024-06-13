@@ -153,6 +153,7 @@ import (
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
+	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
@@ -245,7 +246,6 @@ import (
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
-	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
@@ -1159,8 +1159,8 @@ func (c *AWSClient) ServiceCatalogAppRegistryClient(ctx context.Context) *servic
 	return errs.Must(client[*servicecatalogappregistry_sdkv2.Client](ctx, c, names.ServiceCatalogAppRegistry, make(map[string]any)))
 }
 
-func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_sdkv1.ServiceDiscovery {
-	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery, make(map[string]any)))
+func (c *AWSClient) ServiceDiscoveryClient(ctx context.Context) *servicediscovery_sdkv2.Client {
+	return errs.Must(client[*servicediscovery_sdkv2.Client](ctx, c, names.ServiceDiscovery, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {
