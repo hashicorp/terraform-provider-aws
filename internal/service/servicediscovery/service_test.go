@@ -35,7 +35,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_private(rName, 5),
+				Config: testAccServiceConfig_private(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
@@ -48,7 +48,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "DNS_HTTP"),
 				),
@@ -60,7 +60,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccServiceConfig_privateUpdate(rName, 5),
+				Config: testAccServiceConfig_privateUpdate(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
@@ -74,7 +74,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "DNS_HTTP"),
 				),
