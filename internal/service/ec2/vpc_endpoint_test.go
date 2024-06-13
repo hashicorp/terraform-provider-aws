@@ -628,7 +628,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv4(t *testing.T) {
 						"ipv4": ipv4Address2,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -664,7 +664,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv4(t *testing.T) {
 						"ipv4": ipv4Address2Updated,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -707,7 +707,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
 					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -737,7 +737,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // Default SG.
 					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -789,7 +789,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedDualstack(t *testing.T) {
 						"ipv4": ipv4Address2,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -824,7 +824,7 @@ func TestAccVPCEndpoint_interfaceUserDefinedDualstack(t *testing.T) {
 						"ipv4": ipv4Address2Updated,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
 				),
 			},
@@ -1379,35 +1379,8 @@ resource "aws_vpc_endpoint" "test" {
 }
 
 func testAccVPCEndpointConfig_interfaceUserDefinedDualstackCombined(rName, ipv4Address1, ipv4Address2 string, ipv6HostNum int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  assign_generated_ipv6_cidr_block = true
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.1.0/24"
-  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
-}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
@@ -1417,50 +1390,28 @@ resource "aws_vpc_endpoint" "test" {
 
   subnet_configuration {
     ipv4      = %[2]q
-    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[4]d)
-    subnet_id = aws_subnet.test1.id
+    ipv6      = cidrhost(aws_subnet.test[0].ipv6_cidr_block, %[4]d)
+    subnet_id = aws_subnet.test[0].id
   }
 
   subnet_configuration {
     ipv4      = %[3]q
-    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[4]d)
-    subnet_id = aws_subnet.test2.id
+    ipv6      = cidrhost(aws_subnet.test[1].ipv6_cidr_block, %[4]d)
+    subnet_id = aws_subnet.test[1].id
   }
 
-  subnet_ids = [
-    aws_subnet.test1.id, aws_subnet.test2.id
-  ]
-}
-`, rName, ipv4Address1, ipv4Address2, ipv6HostNum)
-}
-
-func testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2 string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
+`, rName, ipv4Address1, ipv4Address2, ipv6HostNum))
 }
 
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.1.0/24"
-}
+func testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "test" {
   vpc_id            = aws_vpc.test.id
@@ -1469,56 +1420,51 @@ resource "aws_vpc_endpoint" "test" {
 
   subnet_configuration {
     ipv4      = %[2]q
-    subnet_id = aws_subnet.test1.id
+    subnet_id = aws_subnet.test[0].id
   }
 
   subnet_configuration {
     ipv4      = %[3]q
-    subnet_id = aws_subnet.test2.id
+    subnet_id = aws_subnet.test[1].id
   }
 
-  subnet_ids = [
-    aws_subnet.test1.id, aws_subnet.test2.id
-  ]
+  subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName, ipv4Address1, ipv4Address2)
+`, rName, ipv4Address1, ipv4Address2))
 }
 
 func testAccVPCEndpointConfig_interfaceUserDefinedIPv6(rName string, ipv6HostNum int) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   assign_generated_ipv6_cidr_block = true
+
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_subnet" "test1" {
-  vpc_id                                         = aws_vpc.test.id
-  availability_zone                              = data.aws_availability_zones.available.names[0]
-  assign_ipv6_address_on_creation                = true
-  enable_resource_name_dns_aaaa_record_on_launch = true
-  ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  ipv6_native                                    = true
-  private_dns_hostname_type_on_launch            = "resource-name"
-}
+resource "aws_subnet" "test" {
+  count = 2
 
-resource "aws_subnet" "test2" {
   vpc_id                                         = aws_vpc.test.id
-  availability_zone                              = data.aws_availability_zones.available.names[1]
+  availability_zone                              = data.aws_availability_zones.available.names[count.index]
   assign_ipv6_address_on_creation                = true
   enable_resource_name_dns_aaaa_record_on_launch = true
-  ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 2)
+  ipv6_cidr_block                                = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
   ipv6_native                                    = true
   private_dns_hostname_type_on_launch            = "resource-name"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
@@ -1528,20 +1474,22 @@ resource "aws_vpc_endpoint" "test" {
   ip_address_type   = "ipv6"
 
   subnet_configuration {
-    ipv6      = cidrhost(aws_subnet.test1.ipv6_cidr_block, %[2]d)
-    subnet_id = aws_subnet.test1.id
+    ipv6      = cidrhost(aws_subnet.test[0].ipv6_cidr_block, %[2]d)
+    subnet_id = aws_subnet.test[0].id
   }
 
   subnet_configuration {
-    ipv6      = cidrhost(aws_subnet.test2.ipv6_cidr_block, %[2]d)
-    subnet_id = aws_subnet.test2.id
+    ipv6      = cidrhost(aws_subnet.test[1].ipv6_cidr_block, %[2]d)
+    subnet_id = aws_subnet.test[1].id
   }
 
-  subnet_ids = [
-    aws_subnet.test1.id, aws_subnet.test2.id
-  ]
+  subnet_ids = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rName, ipv6HostNum)
+`, rName, ipv6HostNum))
 }
 
 func testAccVPCEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
