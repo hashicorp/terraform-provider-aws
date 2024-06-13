@@ -514,6 +514,7 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 					// the impacted attribute.
 					// Ref: https://github.com/hashicorp/terraform-plugin-testing/issues/269
 					"network_interface_ids",
+					"subnet_configuration",
 				},
 			},
 		},
