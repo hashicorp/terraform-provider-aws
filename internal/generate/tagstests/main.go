@@ -603,7 +603,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["tagsTest"]; ok {
 					switch attr {
 					case "true":
-						// no-op
+						// Add tagging tests for non-transparent tagging resources
+						tagged = true
 
 					case "false":
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
