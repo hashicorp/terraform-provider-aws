@@ -70,6 +70,8 @@ github.com/aws/aws-sdk-go-v2/service/appintegrations v1.25.10 h1:tCGbQBGGMcgHZmS
 github.com/aws/aws-sdk-go-v2/service/appintegrations v1.25.10/go.mod h1:DItbH9nkfmNQJKfARIjF8kktLUOv0lQ8oLeCoHX6P9Q=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.10 h1:ry4D6RPuF6FrVDaFaKgwkLYV5BrJE/rt3m6K6FQYZqw=
 github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.10/go.mod h1:0pzgHdeoNmeBekRPJl+DRXNJD6D9FqTcD+tFkK81NRg=
+github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.24.10 h1:5XwvSPLjQleCuojVnUqMqYiD7UHfrc29GOZmpj/bB0c=
+github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.24.10/go.mod h1:Xrzju78vcomnDMXDJ9T6qWk6wHJ6HgGUQ4Fh9reSFL0=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.10 h1:wGqe+j9Ab0kSbrSTI0AlLbd1xMp8vj916/pAAe2F48I=
 github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.10/go.mod h1:QqiGYjaeD3O+DGHeij4FZgMEW+pzqJUCQBbcseLQeJU=
 github.com/aws/aws-sdk-go-v2/service/appstream v1.34.10 h1:JhIT4EGxtjpmIC9l9iLWGw0j8FZezbsqADa6XwkD870=
