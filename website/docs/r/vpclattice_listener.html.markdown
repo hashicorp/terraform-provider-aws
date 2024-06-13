@@ -118,7 +118,7 @@ This resource supports the following arguments:
 * `default_action` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
 * `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `port` - (Optional, Forces new resource) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
-* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP` or `HTTPS`
+* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP` or `HTTPS` or `TLS_PASSTHROUGH`
 * `service_arn` - (Optional) Amazon Resource Name (ARN) of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 * `service_identifier` - (Optional) ID of the VPC Lattice service. You must include either the `service_arn` or `service_identifier` arguments.
 -> **NOTE:** You must specify one of the following arguments: `service_arn` or `service_identifier`.
