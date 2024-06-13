@@ -451,6 +451,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
+			case "FrameworkDataSource":
+				d.DataSource = true
+				fallthrough
+
 			case "FrameworkResource":
 				d.Implementation = implementationFramework
 				args := common.ParseArgs(m[3])
