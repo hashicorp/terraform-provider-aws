@@ -68,6 +68,7 @@ const (
 	DAX                          = "dax"
 	DLM                          = "dlm"
 	DMS                          = "dms"
+	DRS                          = "drs"
 	DS                           = "ds"
 	DataExchange                 = "dataexchange"
 	DataPipeline                 = "datapipeline"
@@ -223,6 +224,7 @@ const (
 	SimpleDB                     = "simpledb"
 	StorageGateway               = "storagegateway"
 	Synthetics                   = "synthetics"
+	TimestreamInfluxDB           = "timestreaminfluxdb"
 	TimestreamWrite              = "timestreamwrite"
 	Transcribe                   = "transcribe"
 	Transfer                     = "transfer"
@@ -234,6 +236,7 @@ const (
 	WellArchitected              = "wellarchitected"
 	WorkLink                     = "worklink"
 	WorkSpaces                   = "workspaces"
+	WorkSpacesWeb                = "workspacesweb"
 	XRay                         = "xray"
 )
 
@@ -306,6 +309,7 @@ const (
 	DAXServiceID                          = "DAX"
 	DLMServiceID                          = "DLM"
 	DMSServiceID                          = "Database Migration Service"
+	DRSServiceID                          = "DRS"
 	DSServiceID                           = "Directory Service"
 	DataExchangeServiceID                 = "DataExchange"
 	DataPipelineServiceID                 = "Data Pipeline"
@@ -461,6 +465,7 @@ const (
 	SimpleDBServiceID                     = "SimpleDB"
 	StorageGatewayServiceID               = "Storage Gateway"
 	SyntheticsServiceID                   = "synthetics"
+	TimestreamInfluxDBServiceID           = "Timestream InfluxDB"
 	TimestreamWriteServiceID              = "Timestream Write"
 	TranscribeServiceID                   = "Transcribe"
 	TransferServiceID                     = "Transfer"
@@ -472,5 +477,6 @@ const (
 	WellArchitectedServiceID              = "WellArchitected"
 	WorkLinkServiceID                     = "WorkLink"
 	WorkSpacesServiceID                   = "WorkSpaces"
+	WorkSpacesWebServiceID                = "WorkSpaces Web"
 	XRayServiceID                         = "XRay"
 )

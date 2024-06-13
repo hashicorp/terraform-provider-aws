@@ -39,9 +39,9 @@ func testAccAPIKey_basic(t *testing.T) {
 				Config: testAccAPIKeyConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					testAccCheckAPIKeyExpiresDate(&apiKey, dateAfterSevenDays),
-					resource.TestMatchResourceAttr(resourceName, "key", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrKey, regexache.MustCompile(`.+`)),
 				),
 			},
 			{
@@ -69,14 +69,14 @@ func testAccAPIKey_description(t *testing.T) {
 				Config: testAccAPIKeyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccAPIKeyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{

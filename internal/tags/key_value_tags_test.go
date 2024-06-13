@@ -1434,6 +1434,15 @@ func TestKeyValueTagsMap(t *testing.T) {
 			},
 		},
 		{
+			name: "empty_value",
+			tags: New(ctx, map[string]*string{
+				"key1": testStringPtr(""),
+			}),
+			want: map[string]string{
+				"key1": "",
+			},
+		},
+		{
 			name: "nil_value",
 			tags: New(ctx, map[string]*string{
 				"key1": nil,

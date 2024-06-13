@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_provisioned_concurrency_config", name="Provisioned Concurrency Config")
@@ -68,7 +69,7 @@ func resourceProvisionedConcurrencyConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -180,7 +181,7 @@ func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.R
 
 	functionName, qualifier := parts[0], parts[1]
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Provisioned Concurrency Config %q", d.Id())
 		return diags
 	}

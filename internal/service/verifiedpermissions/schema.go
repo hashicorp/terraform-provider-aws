@@ -52,7 +52,7 @@ func (r *resourceSchema) Metadata(_ context.Context, request resource.MetadataRe
 func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"namespaces": schema.SetAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
@@ -67,7 +67,7 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 					objectvalidator.IsRequired(),
 				},
 				Attributes: map[string]schema.Attribute{
-					"value": schema.StringAttribute{
+					names.AttrValue: schema.StringAttribute{
 						CustomType: jsontypes.NormalizedType{},
 						Required:   true,
 					},
@@ -216,7 +216,7 @@ func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 
 	tflog.Debug(ctx, "deleting Verified Permissions Policy Store Schema", map[string]interface{}{
-		"id": state.ID.ValueString(),
+		names.AttrID: state.ID.ValueString(),
 	})
 
 	input := &verifiedpermissions.PutSchemaInput{
@@ -292,7 +292,7 @@ func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchema
 
 	attributeTypes := fwtypes.AttributeTypesMust[definition](ctx)
 	attrs := map[string]attr.Value{}
-	attrs["value"] = jsontypes.NewNormalizedPointerValue(input.Schema)
+	attrs[names.AttrValue] = jsontypes.NewNormalizedPointerValue(input.Schema)
 
 	return types.ObjectValueMust(attributeTypes, attrs)
 }

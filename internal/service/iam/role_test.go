@@ -40,7 +40,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
 				),
 			},
@@ -69,8 +69,8 @@ func TestAccIAMRole_description(t *testing.T) {
 				Config: testAccRoleConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -82,8 +82,8 @@ func TestAccIAMRole_description(t *testing.T) {
 				Config: testAccRoleConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccIAMRole_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -113,8 +113,8 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 				Config: testAccRoleConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 				),
 			},
 			{
@@ -141,8 +141,8 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, acctest.ResourcePrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, acctest.ResourcePrefix),
 				),
 			},
 			{
@@ -533,7 +533,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			// Test removal
@@ -607,25 +607,25 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct0),
 				),
 			},
 			{
@@ -655,9 +655,9 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 				Config: testAccRoleConfig_policyInlineActionOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct0),
 				),
 			},
 			{
@@ -718,22 +718,22 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyManaged(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccRoleConfig_policyManagedUpdate(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccRoleConfig_policyManagedUpdateDown(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct1),
 				),
 			},
 			{
@@ -772,7 +772,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
 				Config: testAccRoleConfig_policyManaged(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct1),
 				),
 			},
 		},
@@ -806,7 +806,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 				Config: testAccRoleConfig_policyInline(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.Ct1),
 				),
 			},
 		},
@@ -841,7 +841,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 				Config: testAccRoleConfig_policyExtraManaged(rName, policyName1, policyName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct1),
 				),
 			},
 		},
@@ -876,8 +876,8 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.Ct0),
 				),
 			},
 		},
@@ -1689,107 +1689,6 @@ resource "aws_iam_role" "test" {
   })
 }
 `, rName)
-}
-
-func testAccRoleConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-}
-`, rName)
-}
-
-func testAccRoleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccRoleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccRoleConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }
 
 func testAccRoleConfig_policyInline(roleName, policyName string) string {

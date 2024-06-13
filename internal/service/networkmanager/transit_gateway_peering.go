@@ -45,7 +45,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +62,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,13 +143,13 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("peering/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("core_network_arn", p.CoreNetworkArn)
 	d.Set("core_network_id", p.CoreNetworkId)
 	d.Set("edge_location", p.EdgeLocation)
-	d.Set("owner_account_id", p.OwnerAccountId)
+	d.Set(names.AttrOwnerAccountID, p.OwnerAccountId)
 	d.Set("peering_type", p.PeeringType)
-	d.Set("resource_arn", p.ResourceArn)
+	d.Set(names.AttrResourceARN, p.ResourceArn)
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 

@@ -29,11 +29,11 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 				Config: testAccOrganizationDataSourceConfig_newOrganization,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.#", dataSourceName, "accounts.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_service_access_principals.#", dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "enabled_policy_types.#", dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "feature_set", dataSourceName, "feature_set"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_arn", dataSourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_email", dataSourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", dataSourceName, "master_account_id"),
@@ -65,7 +65,7 @@ func testAccOrganizationDataSource_memberAccount(t *testing.T) {
 				Config: testAccOrganizationDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr(dataSourceName, "accounts.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "feature_set"),
@@ -100,7 +100,7 @@ func testAccOrganizationDataSource_delegatedAdministrator(t *testing.T) {
 				Config: testAccOrganizationDataSourceConfig_delegatedAdministrator,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", 2),
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "aws_service_access_principals.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "enabled_policy_types.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "feature_set"),

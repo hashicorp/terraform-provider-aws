@@ -2099,6 +2099,12 @@ service/textract:
           - any-glob-to-any-file:
               - 'internal/service/textract/**/*'
               - 'website/**/textract_*'
+service/timestreaminfluxdb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/timestreaminfluxdb/**/*'
+              - 'website/**/timestreaminfluxdb_*'
 service/timestreamquery:
   - any:
       - changed-files:
