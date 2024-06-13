@@ -9,13 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,7 +38,7 @@ func TestAccECSAccountSettingDefault_serial(t *testing.T) {
 func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameContainerInstanceLongArnFormat
+	settingName := string(awstypes.SettingNameContainerInstanceLongArnFormat)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -66,7 +67,7 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameServiceLongArnFormat
+	settingName := string(awstypes.SettingNameServiceLongArnFormat)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -95,7 +96,7 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameTaskLongArnFormat
+	settingName := string(awstypes.SettingNameTaskLongArnFormat)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -124,7 +125,7 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameAwsvpcTrunking
+	settingName := string(awstypes.SettingNameAwsvpcTrunking)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -153,7 +154,7 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameContainerInsights
+	settingName := string(awstypes.SettingNameContainerInsights)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -182,7 +183,7 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameFargateTaskRetirementWaitPeriod
+	settingName := string(awstypes.SettingNameFargateTaskRetirementWaitPeriod)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -210,7 +211,7 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 
 func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_account_setting_default" {
@@ -220,13 +221,13 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			name := rs.Primary.Attributes[names.AttrName]
 
 			input := &ecs.ListAccountSettingsInput{
-				Name:              aws.String(name),
-				EffectiveSettings: aws.Bool(true),
+				Name:              awstypes.SettingName(name),
+				EffectiveSettings: true,
 			}
 
-			resp, err := conn.ListAccountSettingsWithContext(ctx, input)
+			resp, err := conn.ListAccountSettings(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -235,16 +236,16 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			}
 
 			for _, value := range resp.Settings {
-				if aws.StringValue(value.Value) != "disabled" && aws.StringValue(value.Value) != "7" {
-					switch name {
-					case ecs.SettingNameContainerInstanceLongArnFormat:
+				if aws.ToString(value.Value) != "disabled" && aws.ToString(value.Value) != "7" {
+					switch awstypes.SettingName(name) {
+					case awstypes.SettingNameContainerInstanceLongArnFormat:
 						return nil
-					case ecs.SettingNameServiceLongArnFormat:
+					case awstypes.SettingNameServiceLongArnFormat:
 						return nil
-					case ecs.SettingNameTaskLongArnFormat:
+					case awstypes.SettingNameTaskLongArnFormat:
 						return nil
 					default:
-						return fmt.Errorf("[Destroy Error] Account Settings (%s), still enabled", aws.StringValue(value.Name))
+						return fmt.Errorf("[Destroy Error] Account Settings (%s), still enabled", string(value.Name))
 					}
 				}
 			}
