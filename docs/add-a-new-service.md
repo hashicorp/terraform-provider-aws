@@ -70,7 +70,7 @@ Once the service client has been added, implement the first [resource](./add-a-n
 
 If an AWS service must be created in a non-standard way, for example, the service API's endpoint must be accessed via a single AWS Region, then:
 
-1. Make the `SkipClientGenerate` attribute `true` for the service in [`names/data/names_data.hcl`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
+1. Make the `skip_client_generate` attribute `true` for the service in [`names/data/names_data.hcl`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
 
 1. Run `make gen`
 
