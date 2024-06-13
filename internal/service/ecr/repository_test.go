@@ -173,7 +173,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", acctest.CtTrue),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "false"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", acctest.CtFalse),
 				),
 			},
 			{

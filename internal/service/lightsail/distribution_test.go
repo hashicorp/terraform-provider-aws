@@ -35,13 +35,14 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"distribution": {
 			acctest.CtBasic:           testAccDistribution_basic,
-			"disappears":              testAccDistribution_disappears,
+			acctest.CtDisappears:      testAccDistribution_disappears,
 			"is_enabled":              testAccDistribution_isEnabled,
 			"cache_behavior":          testAccDistribution_cacheBehavior,
 			"cache_behavior_settings": testAccDistribution_cacheBehaviorSettings,
 			"default_cache_behavior":  testAccDistribution_defaultCacheBehavior,
 			"ip_address_type":         testAccDistribution_ipAddressType,
 			"tags":                    testAccDistribution_tags,
+			"keyOnlyTags":             testAccDistribution_keyOnlyTags,
 		},
 	}
 
@@ -85,7 +86,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.maximum_ttl", "31536000"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -95,7 +96,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.region_name"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.name", bucketName),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.region_name"),
@@ -120,8 +121,6 @@ func testAccDistribution_isEnabled(t *testing.T) {
 	resourceName := "aws_lightsail_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	isEnabled := "true"
-	isDisabled := "false"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -135,10 +134,10 @@ func testAccDistribution_isEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isDisabled),
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", isDisabled),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -147,10 +146,10 @@ func testAccDistribution_isEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isEnabled),
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", isEnabled),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -344,7 +343,7 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "allow-list"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header2),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtTrue),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", "test"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", allow2),
 				),
@@ -373,7 +372,7 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
 				),
@@ -427,6 +426,58 @@ func testAccDistribution_tags(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccDistribution_keyOnlyTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test key-only tag if/when the CreateDistribution validation bug is fixed
+			{
+				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_tags2(rName, bucketName, acctest.CtKey1, "", acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_tags1(rName, bucketName, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 		},

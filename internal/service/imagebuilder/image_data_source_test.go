@@ -32,7 +32,7 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexache.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(dataSourceName, "image_recipe_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "image_scanning_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", acctest.Ct0),

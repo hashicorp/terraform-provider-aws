@@ -67,7 +67,7 @@ func (r *resourceConnectionAlias) Schema(ctx context.Context, req resource.Schem
 				},
 				Description: "The connection string specified for the connection alias. The connection string must be in the form of a fully qualified domain name (FQDN), such as www.example.com.",
 			},
-			"owner_account_id": schema.StringAttribute{
+			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed:    true,
 				Description: "The identifier of the Amazon Web Services account that owns the connection alias.",
 				PlanModifiers: []planmodifier.String{

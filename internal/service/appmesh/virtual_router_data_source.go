@@ -49,7 +49,7 @@ func dataSourceVirtualRouter() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -81,7 +81,7 @@ func dataSourceVirtualRouterRead(ctx context.Context, d *schema.ResourceData, me
 	meshOwner := aws.StringValue(vr.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, vr.VirtualRouterName)
-	d.Set("resource_owner", vr.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, vr.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualRouterSpec(vr.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

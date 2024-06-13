@@ -445,7 +445,7 @@ func sourceParametersSchema() *schema.Schema {
 									Schema: map[string]*schema.Schema{
 										"basic_auth": {
 											Type:         schema.TypeString,
-											Required:     true,
+											Optional:     true,
 											ValidateFunc: verifySecretsManagerARN,
 										},
 										"client_certificate_tls_auth": {

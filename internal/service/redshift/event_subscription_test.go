@@ -37,7 +37,7 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`eventsubscription:.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "severity", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "active"),
@@ -57,7 +57,7 @@ func TestAccRedshiftEventSubscription_basic(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "severity", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "cluster-snapshot"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "monitoring"),
@@ -86,7 +86,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_sourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "cluster-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", acctest.Ct1),
@@ -96,7 +96,7 @@ func TestAccRedshiftEventSubscription_withSourceIDs(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_updateSourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "cluster-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", acctest.Ct2),
@@ -127,7 +127,7 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccRedshiftEventSubscription_categoryUpdate(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_updateCategories(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "cluster"),
 				),
 			},

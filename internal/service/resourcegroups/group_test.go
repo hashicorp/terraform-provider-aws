@@ -195,7 +195,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.name", "auto-allocate-host"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},

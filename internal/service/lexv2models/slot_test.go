@@ -88,7 +88,7 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.allow_multiple_values", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.allow_multiple_values", acctest.CtTrue),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.allow_multiple_values", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.allow_multiple_values", acctest.CtFalse),
 				),
 			},
 		},

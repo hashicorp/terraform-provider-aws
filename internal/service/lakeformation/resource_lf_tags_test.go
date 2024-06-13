@@ -351,7 +351,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 					input.Resource.Table.Name = aws.String(v)
 				}
 
-				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 					input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 				}
 			}
@@ -377,7 +377,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 					input.Resource.TableWithColumns.ColumnNames = cols
 				}
 
-				if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == "true" {
+				if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == acctest.CtTrue {
 					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{}
 				}
 
@@ -458,7 +458,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 				input.Resource.Table.Name = aws.String(v)
 			}
 
-			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == acctest.CtTrue {
 				input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
 			}
 		}
@@ -484,7 +484,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 				input.Resource.TableWithColumns.ColumnNames = cols
 			}
 
-			if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == "true" {
+			if v, ok := rs.Primary.Attributes["table_with_columns.0.wildcard"]; ok && v == acctest.CtTrue {
 				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{}
 			}
 

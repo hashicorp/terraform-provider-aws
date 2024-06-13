@@ -182,6 +182,7 @@ const (
 )
 
 func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateConfigurationSetEventDestinationInput{
@@ -194,24 +195,25 @@ func resourceConfigurationSetEventDestinationCreate(ctx context.Context, d *sche
 
 	out, err := conn.CreateConfigurationSetEventDestination(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameConfigurationSetEventDestination, configurationSetEventDestinationID, err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameConfigurationSetEventDestination, configurationSetEventDestinationID, err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameConfigurationSetEventDestination, configurationSetEventDestinationID, errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameConfigurationSetEventDestination, configurationSetEventDestinationID, errors.New("empty output"))
 	}
 
 	d.SetId(configurationSetEventDestinationID)
 
-	return resourceConfigurationSetEventDestinationRead(ctx, d, meta)
+	return append(diags, resourceConfigurationSetEventDestinationRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	configurationSetName, _, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
 	out, err := FindConfigurationSetEventDestinationByID(ctx, conn, d.Id())
@@ -219,29 +221,30 @@ func resourceConfigurationSetEventDestinationRead(ctx context.Context, d *schema
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 ConfigurationSetEventDestination (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
 	d.Set("configuration_set_name", configurationSetName)
 	d.Set("event_destination_name", out.Name)
 
 	if err := d.Set("event_destination", []interface{}{flattenEventDestination(out)}); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
 	if d.HasChanges("event_destination") {
@@ -254,21 +257,22 @@ func resourceConfigurationSetEventDestinationUpdate(ctx context.Context, d *sche
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSetEventDestination (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateConfigurationSetEventDestination(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameConfigurationSetEventDestination, d.Id(), err)
 		}
 	}
 
-	return resourceConfigurationSetEventDestinationRead(ctx, d, meta)
+	return append(diags, resourceConfigurationSetEventDestinationRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	log.Printf("[INFO] Deleting SESV2 ConfigurationSetEventDestination %s", d.Id())
 
 	configurationSetName, eventDestinationName, err := ParseConfigurationSetEventDestinationID(d.Id())
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
 	_, err = conn.DeleteConfigurationSetEventDestination(ctx, &sesv2.DeleteConfigurationSetEventDestinationInput{
@@ -279,13 +283,13 @@ func resourceConfigurationSetEventDestinationDelete(ctx context.Context, d *sche
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameConfigurationSetEventDestination, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameConfigurationSetEventDestination, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.Client, id string) (types.EventDestination, error) {

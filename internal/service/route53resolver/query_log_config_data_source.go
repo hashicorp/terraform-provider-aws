@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -60,6 +61,7 @@ const (
 )
 
 func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	configID := d.Get("resolver_query_log_config_id").(string)
@@ -91,14 +93,14 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Route53 resolver Query Logging Configurations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 resolver Query Logging Configurations: %s", err)
 	}
 
 	if n := len(configs); n == 0 {
-		return create.DiagError(names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned no results, "+
+		return create.AppendDiagError(diags, names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned no results, "+
 			"please change your search criteria and try again"))
 	} else if n > 1 {
-		return create.DiagError(names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned more than one result, "+
+		return create.AppendDiagError(diags, names.Route53Resolver, create.ErrActionReading, DSNameQueryLogConfig, configID, errors.New("your query returned more than one result, "+
 			"please try more specific search criteria"))
 	}
 
@@ -119,7 +121,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 		tags, err := listTags(ctx, conn, arn)
 
 		if err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameQueryLogConfig, configID, err)
 		}
 
 		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -127,9 +129,9 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 		//lintignore:AWSR002
 		if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
 		}
 	}
 
-	return nil
+	return diags
 }

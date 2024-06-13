@@ -107,7 +107,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
-						"client_ip_preservation_enabled": "false",
+						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
@@ -134,7 +134,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
-						"client_ip_preservation_enabled": "true",
+						"client_ip_preservation_enabled": acctest.CtTrue,
 						names.AttrWeight:                 acctest.Ct0,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
@@ -182,7 +182,7 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
-						"client_ip_preservation_enabled": "true",
+						"client_ip_preservation_enabled": acctest.CtTrue,
 						names.AttrWeight:                 "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", instanceResourceName, names.AttrID),
@@ -233,7 +233,7 @@ func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
-						"client_ip_preservation_enabled": "false",
+						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, names.AttrID),
@@ -344,7 +344,7 @@ func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) 
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
-						"client_ip_preservation_enabled": "false",
+						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 acctest.Ct10,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, names.AttrID),
@@ -405,7 +405,7 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
-						"client_ip_preservation_enabled": "false",
+						"client_ip_preservation_enabled": acctest.CtFalse,
 						names.AttrWeight:                 "20",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, names.AttrID),

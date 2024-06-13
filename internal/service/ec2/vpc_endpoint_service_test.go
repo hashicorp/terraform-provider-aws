@@ -36,13 +36,13 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "acceptance_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.Ct0),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
+					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", acctest.Ct0),
@@ -332,7 +332,7 @@ func testAccCheckVPCEndpointServiceDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tfec2.FindVPCEndpointServiceConfigurationByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -362,7 +362,7 @@ func testAccCheckVPCEndpointServiceExists(ctx context.Context, n string, v *awst
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindVPCEndpointServiceConfigurationByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

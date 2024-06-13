@@ -14,14 +14,36 @@
 {{ end }}
 
 {{ define "TestCaseSetup" -}}
-{{ template "TestCaseSetupNoProviders" . }}
+{{ template "TestCaseSetupNoProviders" . -}}
+{{ if not .AlternateRegionProvider }}
 	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+{{- end -}}
 {{- end }}
 
 {{ define "TestCaseSetupNoProviders" -}}
 	PreCheck:     func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
-	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-	CheckDestroy: testAccCheck{{ .Name }}Destroy(ctx),
+	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
+	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
+{{- end }}
+
+{{ define "TagsKnownValueForNull" -}}
+{{ if eq .Implementation "framework" -}}
+knownvalue.Null()
+{{- else -}}
+	{{ if .TagsUpdateForceNew -}}
+	knownvalue.Null()
+	{{- else -}}
+	knownvalue.MapExact(map[string]knownvalue.Check{})
+	{{- end }}
+{{- end }}
+{{- end }}
+
+{{ define "TagsAllPlanCheckForNull" -}}
+{{ if .TagsUpdateForceNew -}}
+plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+{{- else -}}
+plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+{{- end }}
 {{- end }}
 
 {{ define "ImportBody" }}
@@ -29,6 +51,9 @@
 	ImportState:  true,
 {{ if gt (len .ImportStateID) 0 -}}
 	ImportStateId: {{ .ImportStateID }},
+{{ end -}}
+{{ if gt (len .ImportStateIDFunc) 0 -}}
+	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ end -}}
 	ImportStateVerify: true,
 {{ if gt (len .ImportIgnore) 0 -}}
@@ -39,11 +64,20 @@
 {{ end }}
 
 {{ define "testname" -}}
-{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ProviderNameUpper }}{{ .Name }}
+{{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ResourceProviderNameUpper }}{{ .Name }}
 {{- end }}
 
 {{ define "ExistsCheck" }}
-	testAccCheck{{ .Name }}Exists(ctx, resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
+	testAccCheck{{ .Name }}Exists(ctx, {{ if .ExistsTakesT }}t,{{ end }} resourceName{{ if .ExistsTypeName}}, &v{{ end }}),
+{{ end }}
+
+{{ define "AdditionalTfVars" -}}
+	{{ range $name, $value := .AdditionalTfVars -}}
+	{{ $name }}: config.StringVariable({{ $value }}),
+	{{ end -}}
+	{{ if .AlternateRegionProvider -}}
+	"alt_region": config.StringVariable(acctest.AlternateRegion()),
+	{{ end }}
 {{ end }}
 
 package {{ .ProviderPackage }}_test
@@ -68,23 +102,27 @@ import (
 func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	t.Helper()
 
-	t.Run(acctest.CtBasic, {{ template "testname" . }}_tags)
-	t.Run("null", {{ template "testname" . }}_tags_null)
-	t.Run("AddOnUpdate", {{ template "testname" . }}_tags_AddOnUpdate)
-	t.Run("EmptyTag_OnCreate", {{ template "testname" . }}_tags_EmptyTag_OnCreate)
-	t.Run("EmptyTag_OnUpdate_Add", {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add)
-	t.Run("EmptyTag_OnUpdate_Replace", {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace)
-	t.Run("DefaultTags_providerOnly", {{ template "testname" . }}_tags_DefaultTags_providerOnly)
-	t.Run("DefaultTags_nonOverlapping", {{ template "testname" . }}_tags_DefaultTags_nonOverlapping)
-	t.Run("DefaultTags_overlapping", {{ template "testname" . }}_tags_DefaultTags_overlapping)
-	t.Run("DefaultTags_updateToProviderOnly", {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly)
-	t.Run("DefaultTags_updateToResourceOnly", {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly)
-	t.Run("DefaultTags_emptyResourceTag", {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag)
-	t.Run("DefaultTags_nullOverlappingResourceTag", {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag)
-	t.Run("DefaultTags_nullNonOverlappingResourceTag", {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag)
-	t.Run("ComputedTag_OnCreate", {{ template "testname" . }}_tags_ComputedTag_OnCreate)
-	t.Run("ComputedTag_OnUpdate_Add", {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add)
-	t.Run("ComputedTag_OnUpdate_Replace", {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace)
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:                             {{ template "testname" . }}_tags,
+		"null":                                      {{ template "testname" . }}_tags_null,
+		"AddOnUpdate":                               {{ template "testname" . }}_tags_AddOnUpdate,
+		"EmptyTag_OnCreate":                         {{ template "testname" . }}_tags_EmptyTag_OnCreate,
+		"EmptyTag_OnUpdate_Add":                     {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add,
+		"EmptyTag_OnUpdate_Replace":                 {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace,
+		"DefaultTags_providerOnly":                  {{ template "testname" . }}_tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                {{ template "testname" . }}_tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   {{ template "testname" . }}_tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      {{ template "testname" . }}_tags_ComputedTag_OnCreate,
+		"ComputedTag_OnUpdate_Add":                  {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add,
+		"ComputedTag_OnUpdate_Replace":              {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, {{ if .SerializeDelay }}serializeDelay{{ else }}0{{ end }})
 }
 {{ end }}
 
@@ -95,15 +133,16 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -113,31 +152,46 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -148,31 +202,48 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -182,59 +253,84 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}{{ if .TagsUpdateForceNew }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}{{ end }}),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
+					},
 				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -249,15 +345,16 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -265,28 +362,44 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -302,13 +415,14 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -316,17 +430,30 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -336,20 +463,34 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -364,15 +505,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -382,47 +524,77 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}{{ if .TagsUpdateForceNew }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}{{ end }}),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
+					},
 				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -437,15 +609,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -455,18 +628,30 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -477,31 +662,53 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey2: knownvalue.StringExact(""),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+							acctest.CtKey2: knownvalue.StringExact(""),
+						})),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+							acctest.CtKey2: knownvalue.StringExact(""),
+						})),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -511,20 +718,34 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -539,15 +760,16 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -557,17 +779,29 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -577,20 +811,39 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ end -}}
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -602,17 +855,19 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -623,24 +878,41 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -648,24 +920,37 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
@@ -673,93 +958,120 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+					},
+				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
+					},
+				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -771,135 +1083,186 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
-						"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
+						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"providerkey1": knownvalue.StringExact("providervalue1updated"),
-						"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
+						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						{{ template "TagsAllPlanCheckForNull" . }}
+					},
+				},
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 				{{ if .NoRemoveTags -}}
-				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				SkipFunc: testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
 				{{ end }}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -911,143 +1274,196 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
+						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1059,16 +1475,18 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1081,45 +1499,71 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ if eq .Implementation "framework" }}knownvalue.Null(){{ else }}knownvalue.MapExact(map[string]knownvalue.Check{}){{ end }}),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), {{ template "TagsKnownValueForNull" . }}),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1131,17 +1575,19 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1152,18 +1598,29 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1176,21 +1633,36 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1205,19 +1677,21 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1230,24 +1704,115 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 						acctest.CtKey1: knownvalue.StringExact(""),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
+		},
+	})
+}
+
+func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
+	{{- template "Init" . }}
+
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
+					}),
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags),  knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
+			},
+			{{ if not .NoImport -}}
+			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
+					}),
+					acctest.CtResourceTags: nil,
+					{{ template "AdditionalTfVars" . }}
+				},
+				{{- template "ImportBody" . -}}
+			},
+			{{- end }}
 		},
 	})
 }
@@ -1262,19 +1827,21 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1285,24 +1852,37 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1317,19 +1897,21 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1337,27 +1919,40 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
+					},
+				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: nil,
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1369,14 +1964,16 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1389,6 +1986,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags){{ if eq .Implementation "framework" }}.AtMapKey("computedkey1"){{ end}}),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1398,18 +1996,22 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 					},
 				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1421,16 +2023,18 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1440,18 +2044,31 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1465,8 +2082,9 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags){{ if eq .Implementation "framework" }}.AtMapKey("computedkey1"){{ end}}),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1476,20 +2094,24 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					},
 				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
@@ -1501,16 +2123,18 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName: config.StringVariable(rName),{{ end }}
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1520,16 +2144,29 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
 					})),
 				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+					},
+				},
 			},
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1540,8 +2177,9 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, {{ if .TagsUpdateForceNew }}plancheck.ResourceActionReplace{{ else }}plancheck.ResourceActionUpdate{{ end }}),
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags){{ if eq .Implementation "framework" }}.AtMapKey(acctest.CtKey1){{ end}}),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1551,23 +2189,27 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 					},
 				},
 			},
+			{{ if not .NoImport -}}
 			{
+				{{ if .AlternateRegionProvider -}}
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+				{{ else -}}
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				{{ end -}}
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{ {{ if .Generator }}
 					acctest.CtRName:         config.StringVariable(rName),{{ end }}
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
-					{{ end }}
+					{{ template "AdditionalTfVars" . }}
 				},
 				{{- template "ImportBody" . -}}
 			},
+			{{- end }}
 		},
 	})
 }
 {{ if .NoRemoveTags }}
-func testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t *testing.T) func() (bool, error) {
+func testAcc{{ .ResourceProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t *testing.T) func() (bool, error) {
 	return func() (bool, error) {
 		t.Log("Skipping step: Resource {{ .Name }} does not support removing tags")
 		return true, nil

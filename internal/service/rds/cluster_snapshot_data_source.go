@@ -26,7 +26,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -161,12 +161,12 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
-	d.Set("engine", snapshot.Engine)
+	d.Set(names.AttrEngine, snapshot.Engine)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
@@ -177,7 +177,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
 	d.Set(names.AttrStatus, snapshot.Status)
-	d.Set("storage_encrypted", snapshot.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
 	setTagsOut(ctx, snapshot.TagList)

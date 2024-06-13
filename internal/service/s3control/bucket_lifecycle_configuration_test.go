@@ -225,7 +225,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDe
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": acctest.Ct1,
-						"expiration.0.expired_object_delete_marker": "true",
+						"expiration.0.expired_object_delete_marker": acctest.CtTrue,
 					}),
 				),
 			},
@@ -241,7 +241,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDe
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": acctest.Ct1,
-						"expiration.0.expired_object_delete_marker": "false",
+						"expiration.0.expired_object_delete_marker": acctest.CtFalse,
 					}),
 				),
 			},

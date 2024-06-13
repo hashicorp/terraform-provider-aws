@@ -41,7 +41,7 @@ For more information please read the AWS RDS documentation about [DB Instance Cl
 By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions.
 Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
 
-Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
+Low-downtime updates are only available for DB Instances using MySQL, MariaDB and PostgreSQL,
 as other engines are not supported by RDS Blue/Green deployments.
 They cannot be used with DB Instances with replicas.
 
@@ -706,4 +706,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3cc09d8138c80aec20a1609f61064943c765d24c949d975ce7e0ed3c5858a0e -->
+<!-- cache-key: cdktf-0.20.1 input-19a084f1d95a764a60e49c2d9dda089e1b79e0ddbf988b584006fa874b9921cc -->

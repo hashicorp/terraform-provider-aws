@@ -13,7 +13,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -94,7 +95,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -143,7 +144,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -253,7 +254,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -314,7 +315,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	lcName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
@@ -428,7 +429,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
@@ -562,7 +563,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		apiObject.Ebs.SnapshotId = aws.String(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
@@ -588,7 +589,7 @@ func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{
 		apiObject.NoDevice = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
@@ -612,7 +613,7 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
@@ -681,7 +682,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 			}
 
 			if v := v.Throughput; v != nil {
-				tfMap["throughput"] = aws.ToInt32(v)
+				tfMap[names.AttrThroughput] = aws.ToInt32(v)
 			}
 
 			if v := v.VolumeSize; v != nil {
@@ -704,7 +705,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 		}
 
 		if v := apiObject.VirtualName; v != nil {
-			tfMap["virtual_name"] = aws.ToString(v)
+			tfMap[names.AttrVirtualName] = aws.ToString(v)
 
 			tfListEphemeralBlockDevice = append(tfListEphemeralBlockDevice, tfMap)
 
@@ -831,7 +832,7 @@ func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client
 	return output, nil
 }
 
-func findImageRootDeviceName(ctx context.Context, conn *ec2.EC2, imageID string) (string, error) {
+func findImageRootDeviceName(ctx context.Context, conn *ec2.Client, imageID string) (string, error) {
 	image, err := tfec2.FindImageByID(ctx, conn, imageID)
 
 	if err != nil {
@@ -839,7 +840,7 @@ func findImageRootDeviceName(ctx context.Context, conn *ec2.EC2, imageID string)
 	}
 
 	// Instance store backed AMIs do not provide a root device name.
-	if aws.ToString(image.RootDeviceType) == ec2.DeviceTypeInstanceStore {
+	if image.RootDeviceType == ec2awstypes.DeviceTypeInstanceStore {
 		return "", nil
 	}
 

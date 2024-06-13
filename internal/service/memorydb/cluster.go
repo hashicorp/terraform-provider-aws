@@ -137,7 +137,7 @@ func ResourceCluster() *schema.Resource {
 				Default:      1,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -308,7 +308,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaintenanceWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameter_group_name"); ok {
+	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.ParameterGroupName = aws.String(v.(string))
 	}
 
@@ -408,8 +408,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("parameter_group_name") {
-			input.ParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		if d.HasChange(names.AttrParameterGroupName) {
+			input.ParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			waitParameterGroupInSync = true
 		}
 
@@ -526,7 +526,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
 	d.Set("num_shards", cluster.NumberOfShards)
-	d.Set("parameter_group_name", cluster.ParameterGroupName)
+	d.Set(names.AttrParameterGroupName, cluster.ParameterGroupName)
 
 	var securityGroupIds []*string
 	for _, v := range cluster.SecurityGroups {

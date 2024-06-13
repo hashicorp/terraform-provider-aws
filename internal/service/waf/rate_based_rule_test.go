@@ -26,7 +26,7 @@ func TestAccWAFRateBasedRule_serial(t *testing.T) {
 		"resource": {
 			acctest.CtBasic:      testAccWAFRateBasedRule_basic,
 			"changeNameForceNew": testAccWAFRateBasedRule_changeNameForceNew,
-			"disappears":         testAccWAFRateBasedRule_disappears,
+			acctest.CtDisappears: testAccWAFRateBasedRule_disappears,
 			"changePredicates":   testAccWAFRateBasedRule_changePredicates,
 			"changeRateLimit":    testAccWAFRateBasedRule_changeRateLimit,
 			"noPredicates":       testAccWAFRateBasedRule_noPredicates,
@@ -158,7 +158,7 @@ func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated":      "false",
+						"negated":      acctest.CtFalse,
 						names.AttrType: "IPMatch",
 					}),
 				),
@@ -171,7 +171,7 @@ func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated":      "true",
+						"negated":      acctest.CtTrue,
 						names.AttrType: "ByteMatch",
 					}),
 				),
@@ -208,7 +208,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "4000"),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated":      "false",
+						"negated":      acctest.CtFalse,
 						names.AttrType: "IPMatch",
 					}),
 				),
@@ -222,7 +222,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "3000"),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated":      "false",
+						"negated":      acctest.CtFalse,
 						names.AttrType: "IPMatch",
 					}),
 				),

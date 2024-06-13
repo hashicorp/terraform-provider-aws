@@ -32,7 +32,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -241,7 +241,7 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 
 	storageConfig := resp.StorageConfig
 
-	d.Set("association_id", storageConfig.AssociationId)
+	d.Set(names.AttrAssociationID, storageConfig.AssociationId)
 	d.Set(names.AttrInstanceID, instanceId)
 	d.Set(names.AttrResourceType, resourceType)
 

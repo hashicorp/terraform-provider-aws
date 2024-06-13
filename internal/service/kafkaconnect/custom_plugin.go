@@ -57,7 +57,7 @@ func ResourceCustomPlugin() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -114,7 +114,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get(names.AttrName).(string)
 	input := &kafkaconnect.CreateCustomPluginInput{
 		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
-		Location:    expandCustomPluginLocation(d.Get("location").([]interface{})[0].(map[string]interface{})),
+		Location:    expandCustomPluginLocation(d.Get(names.AttrLocation).([]interface{})[0].(map[string]interface{})),
 		Name:        aws.String(name),
 	}
 
@@ -166,16 +166,16 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set(names.AttrContentType, plugin.LatestRevision.ContentType)
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
 		if plugin.LatestRevision.Location != nil {
-			if err := d.Set("location", []interface{}{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
+			if err := d.Set(names.AttrLocation, []interface{}{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 			}
 		} else {
-			d.Set("location", nil)
+			d.Set(names.AttrLocation, nil)
 		}
 	} else {
 		d.Set(names.AttrContentType, nil)
 		d.Set("latest_revision", nil)
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 
 	return diags
