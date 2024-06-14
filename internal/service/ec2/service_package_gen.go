@@ -224,8 +224,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_network_insights_analysis",
 		},
 		{
-			Factory:  DataSourceNetworkInsightsPath,
+			Factory:  dataSourceNetworkInsightsPath,
 			TypeName: "aws_ec2_network_insights_path",
+			Name:     "Network Insights Path",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourcePublicIPv4Pool,
