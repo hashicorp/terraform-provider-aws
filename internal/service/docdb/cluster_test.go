@@ -489,9 +489,9 @@ func TestAccDocDBCluster_pointInTimeRestore(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
+					names.AttrAllowMajorVersionUpgrade,
 					names.AttrApplyImmediately,
-					"final_snapshot_identifier",
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"restore_to_point_in_time",
 					"skip_final_snapshot",

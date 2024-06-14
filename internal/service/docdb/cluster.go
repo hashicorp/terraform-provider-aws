@@ -405,7 +405,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &docdb.RestoreDBClusterToPointInTimeInput{
 			DBClusterIdentifier:       aws.String(identifier),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
-			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:        aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Tags:                      getTagsIn(ctx),
 		}
 
