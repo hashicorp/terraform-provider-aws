@@ -135,7 +135,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 ### storage_descriptor
 
-* `additional_locations` - (Optional) list of locations that point to the path where a Delta table is located.
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `bucket_columns` - (Optional) List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - (Optional) Whether the data in the table is compressed.
