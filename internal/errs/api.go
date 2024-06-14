@@ -8,9 +8,9 @@ import (
 )
 
 // APIError returns a new error suitable for checking via aws-sdk-go-base/tfawserr.
-func APIError(code, message string) smithy.APIError {
+func APIError[T ~string](code T, message string) smithy.APIError {
 	return &smithy.GenericAPIError{
-		Code:    code,
+		Code:    string(code),
 		Message: message,
 	}
 }

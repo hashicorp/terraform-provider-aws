@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ebs_encryption_by_default")
-func DataSourceEBSEncryptionByDefault() *schema.Resource {
+// @SDKDataSource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
+func dataSourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSEncryptionByDefaultRead,
 

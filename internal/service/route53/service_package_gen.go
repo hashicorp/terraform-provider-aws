@@ -103,7 +103,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "zone_id",
 				ResourceType:        "hostedzone",
 			},
 		},

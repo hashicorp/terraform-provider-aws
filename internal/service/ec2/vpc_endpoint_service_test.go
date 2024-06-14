@@ -332,7 +332,7 @@ func testAccCheckVPCEndpointServiceDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tfec2.FindVPCEndpointServiceConfigurationByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -362,7 +362,7 @@ func testAccCheckVPCEndpointServiceExists(ctx context.Context, n string, v *awst
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindVPCEndpointServiceConfigurationByIDV2(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

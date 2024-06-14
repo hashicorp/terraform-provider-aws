@@ -101,7 +101,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
-		v, err := strconv.ParseInt(v.(string), 10, 64)
+		v, err := strconv.ParseInt(v.(string), 10, 32)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

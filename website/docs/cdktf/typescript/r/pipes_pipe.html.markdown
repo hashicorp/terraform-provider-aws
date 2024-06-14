@@ -242,6 +242,7 @@ The following arguments are optional:
 * `desiredState` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichmentParameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
+* `logConfiguration` - (Optional) Logging configuration settings for the pipe. Detailed below.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `namePrefix`.
 * `namePrefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `sourceParameters` - (Optional) Parameters to configure a source for the pipe. Detailed below.
@@ -260,6 +261,30 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 * `headerParameters` - (Optional) Key-value mapping of the headers that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination.
 * `pathParameterValues` - (Optional) The path parameter values to be used to populate API Gateway REST API or EventBridge ApiDestination path wildcards ("*").
 * `queryStringParameters` - (Optional) Key-value mapping of the query strings that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination.
+
+### log_configuration Configuration Block
+
+You can find out more about EventBridge Pipes Enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-logs.html).
+
+* `level` - (Required) The level of logging detail to include. Valid values `OFF`, `ERROR`, `INFO` and `TRACE`.
+* `cloudwatchLogsLogDestination` - (Optional) Amazon CloudWatch Logs logging configuration settings for the pipe. Detailed below.
+* `firehoseLogDestination` - (Optional) Amazon Kinesis Data Firehose logging configuration settings for the pipe. Detailed below.
+* `s3LogDestination` - (Optional) Amazon S3 logging configuration settings for the pipe. Detailed below.
+
+#### log_configuration.cloudwatch_logs_log_destination Configuration Block
+
+* `logGroupArn` - (Required) Amazon Web Services Resource Name (ARN) for the CloudWatch log group to which EventBridge sends the log records.
+
+#### log_configuration.firehose_log_destination Configuration Block
+
+* `deliveryStreamArn` - (Required) Amazon Resource Name (ARN) of the Kinesis Data Firehose delivery stream to which EventBridge delivers the pipe log records.
+
+#### log_configuration.s3_log_destination Configuration Block
+
+* `bucketName` - (Required) Name of the Amazon S3 bucket to which EventBridge delivers the log records for the pipe.
+* `bucketOwner` - (Required) Amazon Web Services account that owns the Amazon S3 bucket to which EventBridge delivers the log records for the pipe.
+* `outputFormat` - (Optional) EventBridge format for the log records. Valid values `json`, `plain` and `w3c`.
+* `prefix` - (Optional) Prefix text with which to begin Amazon S3 log object names.
 
 ### source_parameters Configuration Block
 
@@ -623,4 +648,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-06d66bd1915ac7e142176a131a526b0233b40f17674092819950a74548628706 -->
+<!-- cache-key: cdktf-0.20.1 input-603743f285aacf5851f7664d72d1ba1e64a2f555a3d1ded3b7482cc6db4031e1 -->

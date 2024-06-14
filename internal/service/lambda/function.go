@@ -1164,7 +1164,7 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("replacement_security_group_ids"); ok {
 		replacementSGIDs = flex.ExpandStringValueSet(v.(*schema.Set))
 	} else {
-		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCIDV2(ctx, ec2Conn, "default", vpcID)
+		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2Conn, "default", vpcID)
 		if err != nil || defaultSG == nil {
 			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
 		}
