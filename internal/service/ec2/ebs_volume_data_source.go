@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_ebs_volume", name="EBS Volume")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSVolumeRead,

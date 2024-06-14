@@ -37,6 +37,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceWorkspace,
 			TypeName: "aws_prometheus_workspace",
 			Name:     "Workspace",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceWorkspaces,

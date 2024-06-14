@@ -20,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_peering_attachment", name="Transit Gateway Peering Attachment")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayPeeringAttachmentRead,
