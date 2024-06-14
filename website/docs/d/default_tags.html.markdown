@@ -55,4 +55,4 @@ This data source has no arguments.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `tags` - Map of provider default tags.
+* `tags` - Key-value mapping of provider default tags.
