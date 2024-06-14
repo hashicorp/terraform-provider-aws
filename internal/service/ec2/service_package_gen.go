@@ -722,7 +722,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNetworkInsightsPath,
+			Factory:  resourceNetworkInsightsPath,
 			TypeName: "aws_ec2_network_insights_path",
 			Name:     "Network Insights Path",
 			Tags: &types.ServicePackageResourceTags{

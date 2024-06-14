@@ -8,14 +8,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +27,7 @@ import (
 // @SDKResource("aws_ec2_network_insights_path", name="Network Insights Path")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceNetworkInsightsPath() *schema.Resource {
+func resourceNetworkInsightsPath() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInsightsPathCreate,
 		ReadWithoutTimeout:   resourceNetworkInsightsPathRead,
@@ -63,10 +64,10 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				ForceNew: true,
 			},
 			names.AttrProtocol: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
 			},
 			names.AttrSource: {
 				Type:             schema.TypeString,
@@ -93,15 +94,14 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 
 func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateNetworkInsightsPathInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		Destination:       aws.String(d.Get(names.AttrDestination).(string)),
-		Protocol:          aws.String(d.Get(names.AttrProtocol).(string)),
+		Protocol:          awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 		Source:            aws.String(d.Get(names.AttrSource).(string)),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInsightsPath),
+		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeNetworkInsightsPath),
 	}
 
 	if v, ok := d.GetOk("destination_ip"); ok {
@@ -109,30 +109,29 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("destination_port"); ok {
-		input.DestinationPort = aws.Int64(int64(v.(int)))
+		input.DestinationPort = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("source_ip"); ok {
 		input.SourceIp = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateNetworkInsightsPathWithContext(ctx, input)
+	output, err := conn.CreateNetworkInsightsPath(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network Insights Path: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.NetworkInsightsPath.NetworkInsightsPathId))
+	d.SetId(aws.ToString(output.NetworkInsightsPath.NetworkInsightsPathId))
 
 	return append(diags, resourceNetworkInsightsPathRead(ctx, d, meta)...)
 }
 
 func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-
-	nip, err := FindNetworkInsightsPathByID(ctx, conn, d.Id())
+	nip, err := findNetworkInsightsPathByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Insights Path %s not found, removing from state", d.Id())
@@ -154,7 +153,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	setTagsOut(ctx, nip.Tags)
+	setTagsOutV2(ctx, nip.Tags)
 
 	return diags
 }
@@ -166,12 +165,11 @@ func resourceNetworkInsightsPathUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceNetworkInsightsPathDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Path: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteNetworkInsightsPathWithContext(ctx, &ec2.DeleteNetworkInsightsPathInput{
+		return conn.DeleteNetworkInsightsPath(ctx, &ec2.DeleteNetworkInsightsPathInput{
 			NetworkInsightsPathId: aws.String(d.Id()),
 		})
 	}, errCodeAnalysisExistsForNetworkInsightsPath)

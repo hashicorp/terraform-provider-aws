@@ -5265,3 +5265,58 @@ func findTrafficMirrorTargetByID(ctx context.Context, conn *ec2.Client, id strin
 
 	return output, nil
 }
+
+func findNetworkInsightsPath(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) (*awstypes.NetworkInsightsPath, error) {
+	output, err := findNetworkInsightsPaths(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNetworkInsightsPaths(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) ([]awstypes.NetworkInsightsPath, error) {
+	var output []awstypes.NetworkInsightsPath
+
+	pages := ec2.NewDescribeNetworkInsightsPathsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsPathIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NetworkInsightsPaths...)
+	}
+
+	return output, nil
+}
+
+func findNetworkInsightsPathByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInsightsPath, error) {
+	input := &ec2.DescribeNetworkInsightsPathsInput{
+		NetworkInsightsPathIds: []string{id},
+	}
+
+	output, err := findNetworkInsightsPath(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkInsightsPathId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

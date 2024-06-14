@@ -476,68 +476,6 @@ func FindNetworkInsightsAnalysisByID(ctx context.Context, conn *ec2.EC2, id stri
 	return output, nil
 }
 
-func FindNetworkInsightsPath(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) (*ec2.NetworkInsightsPath, error) {
-	output, err := FindNetworkInsightsPaths(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindNetworkInsightsPaths(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
-	var output []*ec2.NetworkInsightsPath
-
-	err := conn.DescribeNetworkInsightsPathsPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.NetworkInsightsPaths {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsPathIdNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindNetworkInsightsPathByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInsightsPath, error) {
-	input := &ec2.DescribeNetworkInsightsPathsInput{
-		NetworkInsightsPathIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := FindNetworkInsightsPath(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.NetworkInsightsPathId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindSecurityGroupByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		GroupIds: aws.StringSlice([]string{id}),
