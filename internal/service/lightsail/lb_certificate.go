@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -223,6 +224,10 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 		CertificateName:  aws.String(certName),
 		LoadBalancerName: aws.String(lbName),
 	})
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)

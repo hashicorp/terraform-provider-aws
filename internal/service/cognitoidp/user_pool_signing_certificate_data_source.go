@@ -25,7 +25,7 @@ func dataSourceUserPoolSigningCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -37,7 +37,7 @@ func dataSourceUserPoolSigningCertificateRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	userPoolID := d.Get("user_pool_id").(string)
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
 	input := &cognitoidentityprovider.GetSigningCertificateInput{
 		UserPoolId: aws.String(userPoolID),
 	}

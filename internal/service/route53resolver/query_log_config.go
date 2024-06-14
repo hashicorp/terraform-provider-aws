@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -69,6 +70,7 @@ func ResourceQueryLogConfig() *schema.Resource {
 }
 
 func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -82,19 +84,20 @@ func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.CreateResolverQueryLogConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Query Log Config (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Query Log Config (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverQueryLogConfig.Id))
 
 	if _, err := waitQueryLogConfigCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Query Log Config (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Query Log Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceQueryLogConfigRead(ctx, d, meta)
+	return append(diags, resourceQueryLogConfigRead(ctx, d, meta)...)
 }
 
 func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	queryLogConfig, err := FindResolverQueryLogConfigByID(ctx, conn, d.Id())
@@ -102,11 +105,11 @@ func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Query Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Query Log Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Query Log Config (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(queryLogConfig.Arn)
@@ -116,7 +119,7 @@ func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrOwnerID, queryLogConfig.OwnerId)
 	d.Set("share_status", queryLogConfig.ShareStatus)
 
-	return nil
+	return diags
 }
 
 func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -125,6 +128,7 @@ func resourceQueryLogConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceQueryLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config: %s", d.Id())
@@ -133,18 +137,18 @@ func resourceQueryLogConfigDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Query Log Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Query Log Config (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitQueryLogConfigDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Query Log Config (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Query Log Config (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindResolverQueryLogConfigByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverQueryLogConfig, error) {

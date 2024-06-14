@@ -46,6 +46,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "BucketObject",
+			},
 		},
 		{
 			Factory:  dataSourceBucketObjects,
@@ -61,6 +65,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceObject,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "Object",
+			},
 		},
 		{
 			Factory:  dataSourceObjects,

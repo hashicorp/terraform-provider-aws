@@ -151,7 +151,7 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -715,7 +715,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
+	var finalSnapshotID = d.Get(names.AttrFinalSnapshotIdentifier).(string)
 	err := DeleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {

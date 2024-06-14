@@ -17,6 +17,7 @@ import (
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	applicationinsights_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
@@ -69,7 +70,9 @@ import (
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
+	docdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdb"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
+	drs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/drs"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
@@ -90,6 +93,7 @@ import (
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
+	guardduty_sdkv2 "github.com/aws/aws-sdk-go-v2/service/guardduty"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
 	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -145,10 +149,12 @@ import (
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
+	schemas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/schemas"
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
+	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
@@ -164,6 +170,7 @@ import (
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	synthetics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/synthetics"
+	timestreaminfluxdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	transfer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -176,7 +183,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
@@ -191,7 +197,6 @@ import (
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
@@ -239,15 +244,12 @@ import (
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
 	s3outposts_sdkv1 "github.com/aws/aws-sdk-go/service/s3outposts"
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
-	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
-	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
-	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -321,8 +323,8 @@ func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
 	return errs.Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync, make(map[string]any)))
 }
 
-func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationinsights_sdkv1.ApplicationInsights {
-	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights, make(map[string]any)))
+func (c *AWSClient) ApplicationInsightsClient(ctx context.Context) *applicationinsights_sdkv2.Client {
+	return errs.Must(client[*applicationinsights_sdkv2.Client](ctx, c, names.ApplicationInsights, make(map[string]any)))
 }
 
 func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
@@ -521,6 +523,10 @@ func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1
 	return errs.Must(conn[*databasemigrationservice_sdkv1.DatabaseMigrationService](ctx, c, names.DMS, make(map[string]any)))
 }
 
+func (c *AWSClient) DRSClient(ctx context.Context) *drs_sdkv2.Client {
+	return errs.Must(client[*drs_sdkv2.Client](ctx, c, names.DRS, make(map[string]any)))
+}
+
 func (c *AWSClient) DSConn(ctx context.Context) *directoryservice_sdkv1.DirectoryService {
 	return errs.Must(conn[*directoryservice_sdkv1.DirectoryService](ctx, c, names.DS, make(map[string]any)))
 }
@@ -565,8 +571,8 @@ func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.
 	return errs.Must(conn[*directconnect_sdkv1.DirectConnect](ctx, c, names.DirectConnect, make(map[string]any)))
 }
 
-func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
-	return errs.Must(conn[*docdb_sdkv1.DocDB](ctx, c, names.DocDB, make(map[string]any)))
+func (c *AWSClient) DocDBClient(ctx context.Context) *docdb_sdkv2.Client {
+	return errs.Must(client[*docdb_sdkv2.Client](ctx, c, names.DocDB, make(map[string]any)))
 }
 
 func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
@@ -715,6 +721,10 @@ func (c *AWSClient) GroundStationClient(ctx context.Context) *groundstation_sdkv
 
 func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDuty {
 	return errs.Must(conn[*guardduty_sdkv1.GuardDuty](ctx, c, names.GuardDuty, make(map[string]any)))
+}
+
+func (c *AWSClient) GuardDutyClient(ctx context.Context) *guardduty_sdkv2.Client {
+	return errs.Must(client[*guardduty_sdkv2.Client](ctx, c, names.GuardDuty, make(map[string]any)))
 }
 
 func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake_sdkv2.Client {
@@ -1121,8 +1131,8 @@ func (c *AWSClient) SchedulerClient(ctx context.Context) *scheduler_sdkv2.Client
 	return errs.Must(client[*scheduler_sdkv2.Client](ctx, c, names.Scheduler, make(map[string]any)))
 }
 
-func (c *AWSClient) SchemasConn(ctx context.Context) *schemas_sdkv1.Schemas {
-	return errs.Must(conn[*schemas_sdkv1.Schemas](ctx, c, names.Schemas, make(map[string]any)))
+func (c *AWSClient) SchemasClient(ctx context.Context) *schemas_sdkv2.Client {
+	return errs.Must(client[*schemas_sdkv2.Client](ctx, c, names.Schemas, make(map[string]any)))
 }
 
 func (c *AWSClient) SecretsManagerClient(ctx context.Context) *secretsmanager_sdkv2.Client {
@@ -1149,8 +1159,8 @@ func (c *AWSClient) ServiceCatalogAppRegistryClient(ctx context.Context) *servic
 	return errs.Must(client[*servicecatalogappregistry_sdkv2.Client](ctx, c, names.ServiceCatalogAppRegistry, make(map[string]any)))
 }
 
-func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_sdkv1.ServiceDiscovery {
-	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery, make(map[string]any)))
+func (c *AWSClient) ServiceDiscoveryClient(ctx context.Context) *servicediscovery_sdkv2.Client {
+	return errs.Must(client[*servicediscovery_sdkv2.Client](ctx, c, names.ServiceDiscovery, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {
@@ -1177,16 +1187,16 @@ func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics_sdkv2.Clie
 	return errs.Must(client[*synthetics_sdkv2.Client](ctx, c, names.Synthetics, make(map[string]any)))
 }
 
+func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb_sdkv2.Client {
+	return errs.Must(client[*timestreaminfluxdb_sdkv2.Client](ctx, c, names.TimestreamInfluxDB, make(map[string]any)))
+}
+
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {
 	return errs.Must(client[*timestreamwrite_sdkv2.Client](ctx, c, names.TimestreamWrite, make(map[string]any)))
 }
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
 	return errs.Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe, make(map[string]any)))
-}
-
-func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
-	return errs.Must(conn[*transfer_sdkv1.Transfer](ctx, c, names.Transfer, make(map[string]any)))
 }
 
 func (c *AWSClient) TransferClient(ctx context.Context) *transfer_sdkv2.Client {

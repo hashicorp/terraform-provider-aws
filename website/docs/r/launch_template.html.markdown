@@ -130,7 +130,7 @@ This resource supports the following arguments:
 * `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `image_id` - (Optional) The AMI from which to launch the instance.
+* `image_id` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instance_market_options` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -232,7 +232,7 @@ Attach an elastic GPU the instance.
 
 The `elastic_gpu_specifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 

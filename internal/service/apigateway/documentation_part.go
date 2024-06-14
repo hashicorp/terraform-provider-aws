@@ -39,7 +39,7 @@ func resourceDocumentationPart() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -93,7 +93,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 
 	apiID := d.Get("rest_api_id").(string)
 	input := &apigateway.CreateDocumentationPartInput{
-		Location:   expandDocumentationPartLocation(d.Get("location").([]interface{})),
+		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]interface{})),
 		Properties: aws.String(d.Get(names.AttrProperties).(string)),
 		RestApiId:  aws.String(apiID),
 	}
@@ -131,7 +131,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("documentation_part_id", docPart.Id)
-	d.Set("location", flattenDocumentationPartLocation(docPart.Location))
+	d.Set(names.AttrLocation, flattenDocumentationPartLocation(docPart.Location))
 	d.Set(names.AttrProperties, docPart.Properties)
 	d.Set("rest_api_id", apiID)
 

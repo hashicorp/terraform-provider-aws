@@ -168,7 +168,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 					},
 				},
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -190,13 +190,13 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	clientId := d.Get(names.AttrClientID).(string)
 	d.SetId(clientId)
 
-	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
+	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get(names.AttrUserPoolID).(string), d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientId, err)
 	}
 
-	d.Set("user_pool_id", userPoolClient.UserPoolId)
+	d.Set(names.AttrUserPoolID, userPoolClient.UserPoolId)
 	d.Set(names.AttrName, userPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
 	d.Set("read_attributes", flex.FlattenStringSet(userPoolClient.ReadAttributes))

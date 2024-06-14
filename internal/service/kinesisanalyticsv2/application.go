@@ -848,6 +848,14 @@ func ResourceApplication() *schema.Resource {
 				Computed: true,
 			},
 
+			"application_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(kinesisanalyticsv2.ApplicationMode_Values(), false),
+			},
+
 			"cloudwatch_logging_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -949,6 +957,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:                     getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("application_mode"); ok {
+		input.ApplicationMode = aws.String(v.(string))
+	}
+
 	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
 		return conn.CreateApplicationWithContext(ctx, input)
 	})
@@ -992,6 +1004,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, arn)
 	d.Set("create_timestamp", aws.TimeValue(application.CreateTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrDescription, application.ApplicationDescription)
+	d.Set("application_mode", application.ApplicationMode)
 	d.Set("last_update_timestamp", aws.TimeValue(application.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, application.ApplicationName)
 	d.Set("runtime_environment", application.RuntimeEnvironment)

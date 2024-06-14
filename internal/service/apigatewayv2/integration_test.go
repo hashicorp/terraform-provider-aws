@@ -36,7 +36,7 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -83,7 +83,7 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_httpProxy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -155,7 +155,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_dataMappingHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -192,7 +192,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_dataMappingHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -247,7 +247,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -273,7 +273,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_typeHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConnectionID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -419,7 +419,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -468,7 +468,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -499,7 +499,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 				Config: testAccIntegrationConfig_vpcLinkHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrConnectionID, vpcLinkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
