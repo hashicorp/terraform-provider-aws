@@ -309,7 +309,7 @@ func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(statementID)
-	d.Set("function_name", output.Configuration.FunctionArn)
+	d.Set("function_name", output.Configuration.FunctionName)
 	if qualifier != "" {
 		d.Set("qualifier", qualifier)
 	}
