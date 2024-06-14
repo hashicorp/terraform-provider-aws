@@ -49,7 +49,7 @@ func resourceNetworkInsightsPath() *schema.Resource {
 			},
 			names.AttrDestination: {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
 				ForceNew:         true,
 				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
@@ -98,10 +98,13 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 
 	input := &ec2.CreateNetworkInsightsPathInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		Destination:       aws.String(d.Get(names.AttrDestination).(string)),
 		Protocol:          awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 		Source:            aws.String(d.Get(names.AttrSource).(string)),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeNetworkInsightsPath),
+	}
+
+	if v, ok := d.GetOk(names.AttrDestination); ok {
+		input.Destination = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("destination_ip"); ok {
