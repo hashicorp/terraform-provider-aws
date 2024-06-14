@@ -46,6 +46,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceBucketObject,
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "BucketObject",
+			},
 		},
 		{
 			Factory:  dataSourceBucketObjects,
@@ -61,6 +65,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceObject,
 			TypeName: "aws_s3_object",
 			Name:     "Object",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+				ResourceType:        "Object",
+			},
 		},
 		{
 			Factory:  dataSourceObjects,
@@ -77,7 +85,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_bucket",
 			Name:     "Bucket",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "bucket",
+				IdentifierAttribute: names.AttrBucket,
 				ResourceType:        "Bucket",
 			},
 		},
@@ -136,7 +144,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "BucketObject",
 			},
 		},
@@ -190,7 +198,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_object",
 			Name:     "Object",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "Object",
 			},
 		},
@@ -199,7 +207,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_object_copy",
 			Name:     "Object Copy",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 				ResourceType:        "ObjectCopy",
 			},
 		},

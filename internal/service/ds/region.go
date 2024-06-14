@@ -70,13 +70,13 @@ func ResourceRegion() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -200,8 +200,8 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 
 		if err := updateTags(ctx, conn, directoryID, o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) tags: %s", directoryID, err)

@@ -7,5 +7,5 @@ resource/aws_default_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` a
 ```
 
 ```release-note:enhancement
-data/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute
+data-source/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute
 ```

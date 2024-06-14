@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func pivotTableVisualSchema() *schema.Schema {
@@ -21,8 +22,8 @@ func pivotTableVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id": idSchema(),
-				"actions":   visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"visual_id":       idSchema(),
+				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -93,9 +94,9 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"columns": dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"rows":    dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":  measureFieldSchema(measureFieldsMaxItems40),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"columns":        dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"rows":           dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(measureFieldsMaxItems40),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -150,7 +151,7 @@ func pivotTableVisualSchema() *schema.Schema {
 																		},
 																	},
 																},
-																"field": fieldSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+																names.AttrField: fieldSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
 															},
 														},
 													},
@@ -219,14 +220,14 @@ func pivotTableVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
-													"scope": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
+													names.AttrScope: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 1,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"role": stringSchema(false, validation.StringInSlice(quicksight.PivotTableConditionalFormattingScopeRole_Values(), false)),
+																names.AttrRole: stringSchema(false, validation.StringInSlice(quicksight.PivotTableConditionalFormattingScopeRole_Values(), false)),
 															},
 														},
 													},
@@ -381,7 +382,7 @@ func rowAlternateColorOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")},
 				},
-				"status": stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+				names.AttrStatus: stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 			},
 		},
 	}
@@ -418,7 +419,7 @@ func expandPivotTableVisual(tfList []interface{}) *quicksight.PivotTableVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -508,7 +509,7 @@ func expandPivotTableAggregatedFieldWells(tfList []interface{}) *quicksight.Pivo
 	if v, ok := tfMap["rows"].([]interface{}); ok && len(v) > 0 {
 		config.Rows = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -592,7 +593,7 @@ func expandPivotTableSortBy(tfList []interface{}) *quicksight.PivotTableSortBy {
 	if v, ok := tfMap["data_path"].([]interface{}); ok && len(v) > 0 {
 		config.DataPath = expandDataPathSort(v)
 	}
-	if v, ok := tfMap["field"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrField].([]interface{}); ok && len(v) > 0 {
 		config.Field = expandFieldSort(v)
 	}
 
@@ -1065,7 +1066,7 @@ func expandRowAlternateColorOptions(tfList []interface{}) *quicksight.RowAlterna
 
 	options := &quicksight.RowAlternateColorOptions{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		options.Status = aws.String(v)
 	}
 	if v, ok := tfMap["row_alternate_colors"].([]interface{}); ok && len(v) > 0 {
@@ -1146,7 +1147,7 @@ func expandPivotTableCellConditionalFormatting(tfList []interface{}) *quicksight
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["scope"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrScope].([]interface{}); ok && len(v) > 0 {
 		options.Scope = expandPivotTableConditionalFormattingScope(v)
 	}
 	if v, ok := tfMap["text_format"].([]interface{}); ok && len(v) > 0 {
@@ -1168,7 +1169,7 @@ func expandPivotTableConditionalFormattingScope(tfList []interface{}) *quicksigh
 
 	options := &quicksight.PivotTableConditionalFormattingScope{}
 
-	if v, ok := tfMap["role"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRole].(string); ok && v != "" {
 		options.Role = aws.String(v)
 	}
 
@@ -1184,7 +1185,7 @@ func flattenPivotTableVisual(apiObject *quicksight.PivotTableVisual) []interface
 		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenPivotTableConfiguration(apiObject.ChartConfiguration)
@@ -1297,7 +1298,7 @@ func flattenPivotTableAggregatedFieldWells(apiObject *quicksight.PivotTableAggre
 		tfMap["rows"] = flattenDimensionFields(apiObject.Rows)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -1370,7 +1371,7 @@ func flattenPivotTableSortBy(apiObject *quicksight.PivotTableSortBy) []interface
 		tfMap["data_path"] = flattenDataPathSort(apiObject.DataPath)
 	}
 	if apiObject.Field != nil {
-		tfMap["field"] = flattenFieldSort(apiObject.Field)
+		tfMap[names.AttrField] = flattenFieldSort(apiObject.Field)
 	}
 
 	return []interface{}{tfMap}
@@ -1539,7 +1540,7 @@ func flattenRowAlternateColorOptions(apiObject *quicksight.RowAlternateColorOpti
 		tfMap["row_alternate_colors"] = flex.FlattenStringList(apiObject.RowAlternateColors)
 	}
 	if apiObject.Status != nil {
-		tfMap["status"] = aws.StringValue(apiObject.Status)
+		tfMap[names.AttrStatus] = aws.StringValue(apiObject.Status)
 	}
 
 	return []interface{}{tfMap}
@@ -1723,7 +1724,7 @@ func flattenPivotTableCellConditionalFormatting(apiObject *quicksight.PivotTable
 		"field_id": aws.StringValue(apiObject.FieldId),
 	}
 	if apiObject.Scope != nil {
-		tfMap["scope"] = flattenPivotTableConditionalFormattingScope(apiObject.Scope)
+		tfMap[names.AttrScope] = flattenPivotTableConditionalFormattingScope(apiObject.Scope)
 	}
 	if apiObject.TextFormat != nil {
 		tfMap["text_format"] = flattenTextConditionalFormat(apiObject.TextFormat)
@@ -1739,7 +1740,7 @@ func flattenPivotTableConditionalFormattingScope(apiObject *quicksight.PivotTabl
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Role != nil {
-		tfMap["role"] = aws.StringValue(apiObject.Role)
+		tfMap[names.AttrRole] = aws.StringValue(apiObject.Role)
 	}
 
 	return []interface{}{tfMap}

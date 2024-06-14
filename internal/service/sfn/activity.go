@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -36,11 +37,11 @@ func ResourceActivity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -55,9 +56,10 @@ func ResourceActivity() *schema.Resource {
 }
 
 func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &sfn.CreateActivityInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -66,15 +68,16 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateActivityWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Step Functions Activity (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Step Functions Activity (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ActivityArn))
 
-	return resourceActivityRead(ctx, d, meta)
+	return append(diags, resourceActivityRead(ctx, d, meta)...)
 }
 
 func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	output, err := FindActivityByARN(ctx, conn, d.Id())
@@ -82,17 +85,17 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Step Functions Activity (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Step Functions Activity (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Step Functions Activity (%s): %s", d.Id(), err)
 	}
 
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("name", output.Name)
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrName, output.Name)
 
-	return nil
+	return diags
 }
 
 func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -101,6 +104,7 @@ func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
@@ -109,10 +113,10 @@ func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting Step Functions Activity (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Step Functions Activity (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindActivityByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.DescribeActivityOutput, error) {

@@ -27,7 +27,10 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_service", name="Virtual Service")
 // @Tags(identifierAttribute="arn")
-func ResourceVirtualService() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/appmesh;appmesh.VirtualServiceData")
+// @Testing(serialize=true)
+// @Testing(importStateIdFunc=testAccVirtualServiceImportStateIdFunc)
+func resourceVirtualService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualServiceCreate,
 		ReadWithoutTimeout:   resourceVirtualServiceRead,
@@ -38,45 +41,47 @@ func ResourceVirtualService() *schema.Resource {
 			StateContext: resourceVirtualServiceImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"mesh_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":            resourceVirtualServiceSpecSchema(),
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"mesh_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				names.AttrResourceOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":            resourceVirtualServiceSpecSchema(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -142,7 +147,7 @@ func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
@@ -170,7 +175,7 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
+		return findVirtualServiceByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -186,13 +191,13 @@ func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, met
 	vs := outputRaw.(*appmesh.VirtualServiceData)
 
 	arn := aws.StringValue(vs.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", vs.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, vs.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vs.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vs.MeshName)
 	d.Set("mesh_owner", vs.Metadata.MeshOwner)
-	d.Set("name", vs.VirtualServiceName)
-	d.Set("resource_owner", vs.Metadata.ResourceOwner)
+	d.Set(names.AttrName, vs.VirtualServiceName)
+	d.Set(names.AttrResourceOwner, vs.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualServiceSpec(vs.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -208,7 +213,7 @@ func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, m
 		input := &appmesh.UpdateVirtualServiceInput{
 			MeshName:           aws.String(d.Get("mesh_name").(string)),
 			Spec:               expandVirtualServiceSpec(d.Get("spec").([]interface{})),
-			VirtualServiceName: aws.String(d.Get("name").(string)),
+			VirtualServiceName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("mesh_owner"); ok {
@@ -232,7 +237,7 @@ func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Service: %s", d.Id())
 	input := &appmesh.DeleteVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		VirtualServiceName: aws.String(d.Get("name").(string)),
+		VirtualServiceName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -262,7 +267,7 @@ func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, m
 	meshName := parts[0]
 	name := parts[1]
 
-	vs, err := FindVirtualServiceByThreePartKey(ctx, conn, meshName, "", name)
+	vs, err := findVirtualServiceByThreePartKey(ctx, conn, meshName, "", name)
 
 	if err != nil {
 		return nil, err
@@ -270,12 +275,12 @@ func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(vs.Metadata.Uid))
 	d.Set("mesh_name", vs.MeshName)
-	d.Set("name", vs.VirtualServiceName)
+	d.Set(names.AttrName, vs.VirtualServiceName)
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindVirtualServiceByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualServiceData, error) {
+func findVirtualServiceByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualServiceData, error) {
 	input := &appmesh.DescribeVirtualServiceInput{
 		MeshName:           aws.String(meshName),
 		VirtualServiceName: aws.String(name),

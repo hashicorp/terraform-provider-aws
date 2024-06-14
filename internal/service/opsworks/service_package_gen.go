@@ -6,8 +6,10 @@ import (
 	"context"
 
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,7 +40,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_custom_layer",
 			Name:     "Custom Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -46,7 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_ecs_cluster_layer",
 			Name:     "ECS Cluster Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -54,7 +56,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_ganglia_layer",
 			Name:     "Ganglia Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -62,7 +64,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_haproxy_layer",
 			Name:     "HAProxy Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -74,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_java_app_layer",
 			Name:     "Java App Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -82,7 +84,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_memcached_layer",
 			Name:     "Memcached Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -90,7 +92,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_mysql_layer",
 			Name:     "MySQL Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -98,7 +100,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_nodejs_app_layer",
 			Name:     "NodeJS App Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -110,7 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_php_app_layer",
 			Name:     "PHP App Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -118,7 +120,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_rails_app_layer",
 			Name:     "Rails App Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -136,7 +138,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_opsworks_static_web_layer",
 			Name:     "Static Web Layer",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -152,9 +154,23 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*opsworks_sdkv1.OpsWorks, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return opsworks_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	cfg := aws_sdkv1.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws_sdkv1.String(endpoint)
+
+		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
+			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+		}
+	}
+
+	return opsworks_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

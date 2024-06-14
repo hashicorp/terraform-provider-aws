@@ -68,6 +68,7 @@ This resource supports the following arguments:
 * `eventBusName` - (Optional) The name or ARN of the event bus to associate with this rule.
   If you omit this, the `default` event bus is used.
 * `eventPattern` - (Optional) The event pattern described a JSON object. At least one of `scheduleExpression` or `eventPattern` is required. See full documentation of [Events and Event Patterns in EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/eventbridge-and-event-patterns.html) for details. **Note**: The event pattern size is 2048 by default but it is adjustable up to 4096 characters by submitting a service quota increase request. See [Amazon EventBridge quotas](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-quota.html) for details.
+* `forceDestroy` - (Optional) Used to delete managed rules created by AWS. Defaults to `false`.
 * `description` - (Optional) The description of the rule.
 * `roleArn` - (Optional) The Amazon Resource Name (ARN) associated with the role that is used for target invocation.
 * `isEnabled` - (Optional, **Deprecated** Use `state` instead) Whether the rule should be enabled.
@@ -123,4 +124,4 @@ Using `terraform import`, import EventBridge Rules using the `event_bus_name/rul
 % terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-592d547f9107c1e0a929217003e01e7f912cfdd84c2707b59fb72713df1770cb -->
+<!-- cache-key: cdktf-0.20.1 input-1edad67baf5a07ed69fb4e4fec186b1cdb993c657170cf34c502b05f9a833823 -->
