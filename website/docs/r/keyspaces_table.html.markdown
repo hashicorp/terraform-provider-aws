@@ -41,6 +41,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `auto_scaling_specification` - (Optional) Specifies the autoscaling settings for a table in provisioned capacity mode.
 * `capacity_specification` - (Optional) Specifies the read/write throughput capacity mode for the table.
 * `client_side_timestamps` - (Optional) Enables client-side timestamps for the table. By default, the setting is disabled.
 * `comment` - (Optional) A description of the table.
@@ -50,6 +51,29 @@ The following arguments are optional:
 * `schema_definition` - (Optional) Describes the schema of the table.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) Enables Time to Live custom settings for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/TTL.html).
+
+The `auto_scaling_specification` object takes the following arguments:
+
+* `read_capacity_auto_scaling` - (Optional) The autoscaling settings for the table's read capacity.
+* `write_capacity_auto_scaling` - (Optional) The autoscaling settings for the table's write capacity.
+
+The `read_capacity_auto_scaling` and `write_capacity_auto_scaling` object takes the following arguments:
+
+* `auto_scaling_disabled` - (Optional) Enables autoscaling for the table if set to false.
+* `maximum_units` - (Optional) Maximum amount of throughput to provision. The value must be between 1 and the max throughput per second quota for your account. Default is `40000`
+* `minimum_units` - (Optional) Minimum amount of throughput to provision. The value must be between 1 and the max throughput per second quota for your account. Default is `40000`
+* `scaling_policy` - (Required) The auto scaling target is the provisioned capacity of the table.
+
+The `scaling_policy` object takes the following arguments:
+
+* `target_tracking_scaling_policy_configuration` - (Optional) Target tracking policy.
+
+The `target_tracking_scaling_policy_configuration` object takes the following arguments:
+
+* `target_value` - (Required) Target value for the target tracking autoscaling policy. Must be between 20 and 90.
+* `disable_scale_in` - (Optional) Specifies if scale-in is enabled.
+* `scale_in_cooldown` - (Optional) Cooldown period in seconds between scaling activities. Default is 0
+* `scale_out_cooldown` - (Optional) Cooldown period in seconds between scaling activities. Default is 0
 
 The `capacity_specification` object takes the following arguments:
 

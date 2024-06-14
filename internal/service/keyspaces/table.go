@@ -125,11 +125,13 @@ func resourceTable() *schema.Resource {
 															"scale_in_cooldown": {
 																Type:         schema.TypeInt,
 																Optional:     true,
+																Default:      0,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
 															"scale_out_cooldown": {
 																Type:         schema.TypeInt,
 																Optional:     true,
+																Default:      0,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
 														},
@@ -525,7 +527,6 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, table.ResourceArn)
-	d.Set("auto_scaling_specification", d.Get("auto_scaling_specification"))
 	if table.CapacitySpecification != nil {
 		if err := d.Set("capacity_specification", []interface{}{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting capacity_specification: %s", err)
@@ -1300,89 +1301,6 @@ func expandStaticColumns(tfList []interface{}) []types.StaticColumn {
 	return apiObjects
 }
 
-/*
-	func flattenAutoScalingSpecification(apiObject *types.AutoScalingSpecification) map[string]interface{} {
-		if apiObject == nil {
-			return nil
-		}
-
-		tfMap := map[string]interface{}{}
-
-		if v := apiObject.ReadCapacityAutoScaling; v != nil {
-			tfMap["read_capacity_auto_scaling"] = flattenAutoScalingSettings(v)
-		}
-
-		if v := apiObject.WriteCapacityAutoScaling; v != nil {
-			tfMap["write_capacity_auto_scaling"] = flattenAutoScalingSettings(v)
-		}
-
-		return tfMap
-	}
-
-	func flattenAutoScalingSettings(apiObject *types.AutoScalingSettings) map[string]interface{} {
-		if apiObject == nil {
-			return nil
-		}
-
-		tfMap := map[string]interface{}{}
-
-		if v := apiObject.AutoScalingDisabled; v != nil {
-			tfMap["auto_scaling_disabled"] = aws.BoolValue(v)
-		}
-
-		if v := apiObject.MaximumUnits; v != nil {
-			tfMap["maximum_units"] = aws.ToInt64(v)
-		}
-
-		if v := apiObject.MinimumUnits; v != nil {
-			tfMap["minimum_units"] = aws.ToInt64(v)
-		}
-
-		if v := apiObject.ScalingPolicy; v != nil {
-			tfMap["scaling_policy"] = flattenAutoScalingPolicy(v)
-		}
-
-		return tfMap
-	}
-
-	func flattenAutoScalingPolicy(apiObject *types.AutoScalingPolicy) map[string]interface{} {
-		if apiObject == nil {
-			return nil
-		}
-
-		tfMap := map[string]interface{}{}
-
-		if v := apiObject.TargetTrackingScalingPolicyConfiguration; v != nil {
-			tfMap["target_tracking_scaling_policy_configuration"] = flattenTargetTrackingScalingPolicyConfiguration(v)
-		}
-
-		return tfMap
-	}
-
-	func flattenTargetTrackingScalingPolicyConfiguration(apiObject *types.TargetTrackingScalingPolicyConfiguration) map[string]interface{} {
-		if apiObject == nil {
-			return nil
-		}
-
-		tfMap := map[string]interface{}{
-			"target_value": apiObject.TargetValue,
-		}
-
-		if v := apiObject.DisableScaleIn; v != nil {
-			tfMap["disable_scale_in"] = aws.BoolValue(v)
-		}
-
-		if v := apiObject.ScaleInCooldown; v != nil {
-			tfMap["scale_in_cooldown"] = aws.ToInt32(v)
-		}
-
-		if v := apiObject.ScaleOutCooldown; v != nil {
-			tfMap["scale_out_cooldown"] = aws.ToInt32(v)
-		}
-
-		return tfMap
-	}
-*/
 func flattenCapacitySpecificationSummary(apiObject *types.CapacitySpecificationSummary) map[string]interface{} {
 	if apiObject == nil {
 		return nil
