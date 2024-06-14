@@ -28,6 +28,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceQueue,
 			TypeName: "aws_sqs_queue",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrURL,
+			},
 		},
 		{
 			Factory:  dataSourceQueues,

@@ -36,18 +36,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceConfigurationProfile,
 			TypeName: "aws_appconfig_configuration_profile",
+			Name:     "Configuration Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  DataSourceConfigurationProfiles,
 			TypeName: "aws_appconfig_configuration_profiles",
+			Name:     "Configuration Profiles",
 		},
 		{
 			Factory:  DataSourceEnvironment,
 			TypeName: "aws_appconfig_environment",
+			Name:     "Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  DataSourceEnvironments,
 			TypeName: "aws_appconfig_environments",
+			Name:     "Environments",
 		},
 	}
 }

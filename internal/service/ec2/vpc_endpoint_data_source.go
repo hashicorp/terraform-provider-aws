@@ -177,7 +177,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Filters = nil
 	}
 
-	vpce, err := findVPCEndpointV2(ctx, conn, input)
+	vpce, err := findVPCEndpoint(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC Endpoint", err))
@@ -223,7 +223,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set(names.AttrVPCID, vpce.VpcId)
 
-	if pl, err := findPrefixListByNameV2(ctx, conn, serviceName); err != nil {
+	if pl, err := findPrefixListByName(ctx, conn, serviceName); err != nil {
 		if tfresource.NotFound(err) {
 			d.Set("cidr_blocks", nil)
 		} else {

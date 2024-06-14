@@ -188,7 +188,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := FindVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Trust Provider (%s) not found, removing from state", d.Id())

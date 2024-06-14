@@ -52,6 +52,20 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
+			// Test import using an ID with "/hosrtezone/" prefix.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/37817.
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(v *route53.GetHostedZoneOutput) resource.ImportStateIdFunc {
+					return func(s *terraform.State) (string, error) {
+						return aws.ToString(v.HostedZone.Id), nil
+					}
+				}(&zone),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "zone_id",
+				ImportStateVerifyIgnore:              []string{names.AttrForceDestroy, names.AttrID},
+			},
 		},
 	})
 }
