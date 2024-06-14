@@ -873,14 +873,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDBInstanceConfig_dbStorageTypeT2(rName string) string {
 	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-  allocated_storage      = 20
   password               = "testpassword"
   vpc_subnet_ids         = [aws_subnet.test_subnet.id]
   vpc_security_group_ids = [aws_security_group.test_security_group.id]
   db_instance_type       = "db.influx.medium"
   name                   = %[1]q
 
-  db_storage_type = "InfluxIOIncludedT2"
+  allocated_storage = 400
+  db_storage_type   = "InfluxIOIncludedT2"
 }
 `, rName))
 }
@@ -888,14 +888,14 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 func testAccDBInstanceConfig_dbStorageTypeT3(rName string) string {
 	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
-  allocated_storage      = 20
   password               = "testpassword"
   vpc_subnet_ids         = [aws_subnet.test_subnet.id]
   vpc_security_group_ids = [aws_security_group.test_security_group.id]
   db_instance_type       = "db.influx.medium"
   name                   = %[1]q
 
-  db_storage_type = "InfluxIOIncludedT3"
+  allocated_storage = 400
+  db_storage_type   = "InfluxIOIncludedT3"
 }
 `, rName))
 }
