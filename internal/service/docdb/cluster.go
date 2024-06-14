@@ -410,8 +410,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
-			v, _ := time.Parse(time.RFC3339, v)
-			input.RestoreToTime = aws.Time(v)
+			t, _ := time.Parse(time.RFC3339, v)
+			input.RestoreToTime = aws.Time(t)
 		}
 
 		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
@@ -427,7 +427,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
-			input.EnableCloudwatchLogsExports = flex.ExpandStringList(v.([]interface{}))
+			input.EnableCloudwatchLogsExports = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
 		if v, ok := tfMap["restore_type"].(string); ok {
@@ -439,7 +439,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
-			input.Port = aws.Int64(int64(v.(int)))
+			input.Port = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk(names.AttrStorageType); ok {
@@ -447,11 +447,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-			return conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
+			return conn.RestoreDBClusterToPointInTime(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore to point-in-time) (%s): %s", identifier, err)
