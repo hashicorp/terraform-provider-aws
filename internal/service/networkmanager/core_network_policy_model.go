@@ -6,74 +6,93 @@ package networkmanager
 import (
 	"encoding/json"
 	"sort"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-type CoreNetworkPolicyDoc struct {
+type coreNetworkPolicyDocument struct {
 	Version                  string                                     `json:"version,omitempty"`
-	CoreNetworkConfiguration *CoreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
-	Segments                 []*CoreNetworkPolicySegment                `json:"segments"`
-	AttachmentPolicies       []*CoreNetworkAttachmentPolicy             `json:"attachment-policies,omitempty"`
-	SegmentActions           []*CoreNetworkPolicySegmentAction          `json:"segment-actions,omitempty"`
+	CoreNetworkConfiguration *coreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
+	Segments                 []*coreNetworkPolicySegment                `json:"segments"`
+	// TODO NetworkFunctionGroups
+	SegmentActions     []*coreNetworkPolicySegmentAction `json:"segment-actions,omitempty"`
+	AttachmentPolicies []*coreNetworkAttachmentPolicy    `json:"attachment-policies,omitempty"`
 }
 
-type CoreNetworkPolicySegmentAction struct {
-	Action                string      `json:"action"`
-	Destinations          interface{} `json:"destinations,omitempty"`
-	DestinationCidrBlocks interface{} `json:"destination-cidr-blocks,omitempty"`
-	Mode                  string      `json:"mode,omitempty"`
-	Segment               string      `json:"segment,omitempty"`
-	ShareWith             interface{} `json:"share-with,omitempty"`
-	ShareWithExcept       interface{} `json:",omitempty"`
+type coreNetworkPolicyCoreNetworkConfiguration struct {
+	AsnRanges        interface{}                                 `json:"asn-ranges"`
+	InsideCidrBlocks interface{}                                 `json:"inside-cidr-blocks,omitempty"`
+	VpnEcmpSupport   bool                                        `json:"vpn-ecmp-support"`
+	EdgeLocations    []*coreNetworkPolicyCoreNetworkEdgeLocation `json:"edge-locations,omitempty"`
 }
 
-type CoreNetworkAttachmentPolicy struct {
+type coreNetworkPolicyCoreNetworkEdgeLocation struct {
+	Location         string      `json:"location"`
+	Asn              int64       `json:"asn,omitempty"`
+	InsideCidrBlocks interface{} `json:"inside-cidr-blocks,omitempty"`
+}
+
+type coreNetworkPolicySegment struct {
+	Name                        string      `json:"name"`
+	Description                 string      `json:"description,omitempty"`
+	EdgeLocations               interface{} `json:"edge-locations,omitempty"`
+	IsolateAttachments          bool        `json:"isolate-attachments"`
+	RequireAttachmentAcceptance bool        `json:"require-attachment-acceptance"`
+	DenyFilter                  interface{} `json:"deny-filter,omitempty"`
+	AllowFilter                 interface{} `json:"allow-filter,omitempty"`
+}
+
+type coreNetworkPolicySegmentAction struct {
+	Action                string                                    `json:"action"`
+	Segment               string                                    `json:"segment,omitempty"`
+	Mode                  string                                    `json:"mode,omitempty"`
+	ShareWith             interface{}                               `json:"share-with,omitempty"`
+	ShareWithExcept       interface{}                               `json:"except,omitempty"`
+	DestinationCidrBlocks interface{}                               `json:"destination-cidr-blocks,omitempty"`
+	Destinations          interface{}                               `json:"destinations,omitempty"`
+	Description           string                                    `json:"description,omitempty"`
+	WhenSentTo            *coreNetworkPolicySegmentActionWhenSentTo `json:"when-sent-to,omitempty"`
+	Via                   *coreNetworkPolicySegmentActionVia        `json:"via,omitempty"`
+}
+
+type coreNetworkPolicySegmentActionWhenSentTo struct {
+	Segments interface{} `json:"segments,omitempty"`
+}
+
+type coreNetworkPolicySegmentActionVia struct {
+	NetworkFunctionGroups interface{}                                      `json:"network-function-groups,omitempty"`
+	WithEdgeOverrides     []*coreNetworkPolicySegmentActionViaEdgeOverride `json:"with-edge-overrides,omitempty"`
+}
+type coreNetworkPolicySegmentActionViaEdgeOverride struct {
+	EdgeSets interface{} `json:"edge-sets,omitempty"`
+	UseEdge  string      `json:"use-edge,omitempty"`
+}
+
+type coreNetworkAttachmentPolicy struct {
 	RuleNumber     int                                     `json:"rule-number,omitempty"`
-	Action         *CoreNetworkAttachmentPolicyAction      `json:"action"`
-	Conditions     []*CoreNetworkAttachmentPolicyCondition `json:"conditions"`
 	Description    string                                  `json:"description,omitempty"`
 	ConditionLogic string                                  `json:"condition-logic,omitempty"`
+	Conditions     []*coreNetworkAttachmentPolicyCondition `json:"conditions"`
+	Action         *coreNetworkAttachmentPolicyAction      `json:"action"`
 }
 
-type CoreNetworkAttachmentPolicyAction struct {
-	AssociationMethod string `json:"association-method,omitempty"`
-	Segment           string `json:"segment,omitempty"`
-	TagValueOfKey     string `json:"tag-value-of-key,omitempty"`
-	RequireAcceptance bool   `json:"require-acceptance,omitempty"`
-}
-
-type CoreNetworkAttachmentPolicyCondition struct {
+type coreNetworkAttachmentPolicyCondition struct {
 	Type     string `json:"type,omitempty"`
 	Operator string `json:"operator,omitempty"`
 	Key      string `json:"key,omitempty"`
 	Value    string `json:"value,omitempty"`
 }
 
-type CoreNetworkPolicySegment struct {
-	Name                        string      `json:"name"`
-	Description                 string      `json:"description,omitempty"`
-	AllowFilter                 interface{} `json:"allow-filter,omitempty"`
-	DenyFilter                  interface{} `json:"deny-filter,omitempty"`
-	EdgeLocations               interface{} `json:"edge-locations,omitempty"`
-	IsolateAttachments          bool        `json:"isolate-attachments"`
-	RequireAttachmentAcceptance bool        `json:"require-attachment-acceptance"`
+type coreNetworkAttachmentPolicyAction struct {
+	AssociationMethod         string `json:"association-method,omitempty"`
+	Segment                   string `json:"segment,omitempty"`
+	TagValueOfKey             string `json:"tag-value-of-key,omitempty"`
+	RequireAcceptance         bool   `json:"require-acceptance,omitempty"`
+	AddToNetworkFunctionGroup string `json:"add-to-network-function-group,omitempty"`
 }
 
-type CoreNetworkPolicyCoreNetworkConfiguration struct {
-	AsnRanges        interface{}                `json:"asn-ranges"`
-	VpnEcmpSupport   bool                       `json:"vpn-ecmp-support"`
-	EdgeLocations    []*CoreNetworkEdgeLocation `json:"edge-locations,omitempty"`
-	InsideCidrBlocks interface{}                `json:"inside-cidr-blocks,omitempty"`
-}
-
-type CoreNetworkEdgeLocation struct {
-	Location         string      `json:"location"`
-	Asn              int64       `json:"asn,omitempty"`
-	InsideCidrBlocks interface{} `json:"inside-cidr-blocks,omitempty"`
-}
-
-func (c CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
-	type Alias CoreNetworkPolicySegmentAction
-
+func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
+	type Alias coreNetworkPolicySegmentAction
 	var share interface{}
 
 	if c.ShareWith != nil {
@@ -100,11 +119,9 @@ func (c CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func CoreNetworkPolicyDecodeConfigStringList(lI []interface{}) interface{} {
-	ret := make([]string, len(lI))
-	for i, vI := range lI {
-		ret[i] = vI.(string)
-	}
-	sort.Sort(sort.Reverse(sort.StringSlice(ret)))
-	return ret
+func coreNetworkPolicyExpandStringList(configured []interface{}) interface{} {
+	vs := flex.ExpandStringValueList(configured)
+	sort.Sort(sort.Reverse(sort.StringSlice(vs)))
+
+	return vs
 }

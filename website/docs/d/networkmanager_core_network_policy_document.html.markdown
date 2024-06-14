@@ -180,6 +180,7 @@ The following arguments are available:
 * `conditions` (Required) - A block argument. Detailed Below.
 * `description` (Optional) - A user-defined description that further helps identify the rule.
 * `rule_number` (Required) - An integer from `1` to `65535` indicating the rule's order number. Rules are processed in order from the lowest numbered rule to the highest. Rules stop processing when a rule is matched. It's important to make sure that you number your rules in the exact order that you want them processed.
+* `add_to_network_function_group` (Optional) - The name of the network function group to attach to the attachment policy.
 
 ### `action`
 
@@ -232,20 +233,27 @@ The following arguments are available:
 
 ### `segment_actions`
 
-`segment_actions` have differnet outcomes based on their `action` argument value. There are 2 valid values for `action`: `create-route` & `share`. Behaviors of the below arguments changed depending on the `action` you specify. For more details on their use see the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html#cloudwan-segment-actions-json).
+`segment_actions` have differnt outcomes based on their `action` argument value. Behaviors of the below arguments changed depending on the `action` you specify. For more details on their use see the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html#cloudwan-segment-actions-json).
 
 ~> **NOTE:** `share_with` and `share_with_except` break from the AWS API specification. The API has 1 argument `share-with` and it can accept 3 input types as valid (`"*"`, `["<segment-name>"]`, or `{ except: ["<segment-name>"]}`). To emulate this behavior, `share_with` is always a list that can accept the argument `["*"]` as valid for `"*"` and `share_with_except` is a that can accept `["<segment-name>"]` as valid for `{ except: ["<segment-name>"]}`. You may only specify one of: `share_with` or `share_with_except`.
 
 The following arguments are available:
 
-* `action` (Required) - Action to take for the chosen segment. Valid values `create-route` or `share`.
+* `action` (Required) - Action to take for the chosen segment. Valid values: `create-route`, `share`, `send-via` and `send-to`.
 * `description` (Optional) - A user-defined string describing the segment action.
 * `destination_cidr_blocks` (Optional) - List of strings containing CIDRs. You can define the IPv4 and IPv6 CIDR notation for each AWS Region. For example, `10.1.0.0/16` or `2001:db8::/56`. This is an array of CIDR notation strings.
 * `destinations` (Optional) - A list of strings. Valid values include `["blackhole"]` or a list of attachment ids.
-* `mode` (Optional) - String. This mode places the attachment and return routes in each of the `share_with` segments. Valid values include: `attachment-route`.
+* `mode` (Optional) - String. When `action` is `share`, a `mode` value of `attachment-route` places the attachment and return routes in each of the `share_with` segments. When `action` is `send-via`, indicates the mode used for packets. Valid values: `attachment-route`, `single-hop`, `dual-hop`.
 * `segment` (Optional) - Name of the segment.
 * `share_with` (Optional) - A list of strings to share with. Must be a substring is all segments. Valid values include: `["*"]` or `["<segment-names>"]`.
 * `share_with_except` (Optional) - A set subtraction of segments to not share with.
+* `when_sent_to` (Optional) - The destination segments for the `send-via` or `send-to` `action`.
+    * `segments` (Optional) - A list of strings. The list of segments that the `send-via` `action` uses.
+* `via` (Optional) - The network function groups and any edge overrides associated with the action.
+    * `network_function_groups` (Optional) - A list of strings. The network function group to use for the service insertion action.
+    * `with_edge_override` (Optional) - Any edge overrides and the preferred edge to use.
+        * `edge_sets` (Optional) - A list of strings. The list of edges associated with the network function group.
+        * `use_edge` (Optional) - The preferred edge to use.
 
 ## Attribute Reference
 

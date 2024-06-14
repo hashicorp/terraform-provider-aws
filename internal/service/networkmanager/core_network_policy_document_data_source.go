@@ -31,12 +31,237 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCoreNetworkPolicyDocumentRead,
+
+		// Order attributes to match model structures and documentation:
+		// https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policies-json.html.
 		Schema: map[string]*schema.Schema{
+			names.AttrVersion: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "2021.12",
+				ValidateFunc: validation.StringInSlice([]string{
+					"2021.12",
+				}, false),
+			},
+			"core_network_configuration": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"asn_ranges": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"inside_cidr_blocks": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"vpn_ecmp_support": {
+							Type:     schema.TypeBool,
+							Default:  true,
+							Optional: true,
+						},
+						"edge_locations": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrLocation: {
+										Type:     schema.TypeString,
+										Required: true,
+										// Not all regions are valid but we will not maintain a hardcoded list
+										ValidateFunc: verify.ValidRegionName,
+									},
+									"asn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.Valid4ByteASN,
+									},
+									"inside_cidr_blocks": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"segments": {
+				Type:     schema.TypeList,
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+								"must begin with a letter and contain only alphanumeric characters"),
+						},
+						names.AttrDescription: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"edge_locations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidRegionName,
+							},
+						},
+						"isolate_attachments": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+						},
+						"require_attachment_acceptance": {
+							Type:     schema.TypeBool,
+							Default:  true,
+							Optional: true,
+						},
+						"deny_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+									"must begin with a letter and contain only alphanumeric characters"),
+							},
+						},
+						"allow_filter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+									"must begin with a letter and contain only alphanumeric characters"),
+							},
+						},
+					},
+				},
+			},
+			// TODO network_function_groups
+			"segment_actions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrAction: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"share",
+								"create-route",
+								"send-via",
+								"send-to",
+							}, false),
+						},
+						"segment": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
+								"must begin with a letter and contain only alphanumeric characters"),
+						},
+						names.AttrMode: {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"attachment-route",
+								"single-hop",
+								"dual-hop",
+							}, false),
+						},
+						"share_with":        setOfString,
+						"share_with_except": setOfString,
+						"destination_cidr_blocks": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.Any(
+									verify.ValidIPv4CIDRNetworkAddress,
+									verify.ValidIPv6CIDRNetworkAddress,
+								),
+							},
+						},
+						"destinations": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.Any(
+									validation.StringInSlice([]string{
+										"blackhole",
+									}, false),
+									validation.StringMatch(regexache.MustCompile(`^attachment-[0-9a-f]{17}$`),
+										"must be a list of valid attachment ids or a list with only the word \"blackhole\"."),
+								),
+							},
+						},
+						names.AttrDescription: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"when_sent_to": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"segments": setOfString,
+								},
+							},
+						},
+						"via": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"network_function_groups": setOfString,
+									"with_edge_override": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"edge_sets": setOfString,
+												"use_edge": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"attachment_policies": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"rule_number": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 65535),
+						},
+						names.AttrDescription: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"condition_logic": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -45,16 +270,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"or",
 							}, false),
 						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"rule_number": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-
 						"conditions": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -124,57 +339,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"core_network_configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"asn_ranges": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"vpn_ecmp_support": {
-							Type:     schema.TypeBool,
-							Default:  true,
-							Optional: true,
-						},
-						"inside_cidr_blocks": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"edge_locations": {
-							Type:     schema.TypeList,
-							Required: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrLocation: {
+									"add_to_network_function_group": {
 										Type:     schema.TypeString,
-										Required: true,
-										// Not all regions are valid but we will not maintain a hardcoded list
-										ValidateFunc: verify.ValidRegionName,
-									},
-									"asn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.Valid4ByteASN,
-									},
-									"inside_cidr_blocks": {
-										Type:     schema.TypeList,
 										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
 							},
@@ -186,137 +353,13 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"segments": {
-				Type:     schema.TypeList,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-									"must begin with a letter and contain only alphanumeric characters"),
-							},
-						},
-						"deny_filter": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-									"must begin with a letter and contain only alphanumeric characters"),
-							},
-						},
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-								"must begin with a letter and contain only alphanumeric characters"),
-						},
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"edge_locations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidRegionName,
-							},
-						},
-						"isolate_attachments": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
-						},
-						"require_attachment_acceptance": {
-							Type:     schema.TypeBool,
-							Default:  true,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"segment_actions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrAction: {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"share",
-								"create-route",
-							}, false),
-						},
-
-						"destinations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.Any(
-									validation.StringInSlice([]string{
-										"blackhole",
-									}, false),
-									validation.StringMatch(regexache.MustCompile(`^attachment-[0-9a-f]{17}$`),
-										"must be a list of valid attachment ids or a list with only the word \"blackhole\"."),
-								),
-							},
-						},
-						"destination_cidr_blocks": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-								ValidateFunc: validation.Any(
-									verify.ValidIPv4CIDRNetworkAddress,
-									verify.ValidIPv6CIDRNetworkAddress,
-								),
-							},
-						},
-						names.AttrMode: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"attachment-route",
-							}, false),
-						},
-						"segment": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-								"must begin with a letter and contain only alphanumeric characters"),
-						},
-						"share_with":        setOfString,
-						"share_with_except": setOfString,
-					},
-				},
-			},
-			names.AttrVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2021.12",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2021.12",
-				}, false),
-			},
 		},
 	}
 }
 
 func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	mergedDoc := &CoreNetworkPolicyDoc{
+	mergedDoc := &coreNetworkPolicyDocument{
 		Version: d.Get(names.AttrVersion).(string),
 	}
 
@@ -361,69 +404,126 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface{}) ([]*CoreNetworkPolicySegmentAction, error) {
-	sgmtActions := make([]*CoreNetworkPolicySegmentAction, len(cfgSegmentActionsIntf))
-	for i, sgmtActionI := range cfgSegmentActionsIntf {
-		cfgSA := sgmtActionI.(map[string]interface{})
-		sgmtAction := &CoreNetworkPolicySegmentAction{}
-		action := cfgSA[names.AttrAction].(string)
-		sgmtAction.Action = action
-		var shareWith, shareWithExcept interface{}
+func expandDataCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetworkPolicySegmentAction, error) {
+	apiObjects := make([]*coreNetworkPolicySegmentAction, len(tfList))
 
-		if action == "share" {
-			if mode, ok := cfgSA[names.AttrMode]; ok {
-				sgmtAction.Mode = mode.(string)
+	for i, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObject := &coreNetworkPolicySegmentAction{}
+
+		action := tfMap[names.AttrAction].(string)
+		apiObject.Action = action
+		switch action {
+		case "share":
+			if v, ok := tfMap["segment"]; ok {
+				apiObject.Segment = v.(string)
 			}
 
-			if sgmt, ok := cfgSA["segment"]; ok {
-				sgmtAction.Segment = sgmt.(string)
+			if v, ok := tfMap[names.AttrMode]; ok {
+				apiObject.Mode = v.(string)
 			}
 
-			if sW := cfgSA["share_with"].(*schema.Set).List(); len(sW) > 0 {
-				shareWith = CoreNetworkPolicyDecodeConfigStringList(sW)
-				sgmtAction.ShareWith = shareWith
+			var shareWith, shareWithExcept interface{}
+
+			if v := tfMap["share_with"].(*schema.Set).List(); len(v) > 0 {
+				shareWith = coreNetworkPolicyExpandStringList(v)
+				apiObject.ShareWith = shareWith
 			}
 
-			if sWE := cfgSA["share_with_except"].(*schema.Set).List(); len(sWE) > 0 {
-				shareWithExcept = CoreNetworkPolicyDecodeConfigStringList(sWE)
-				sgmtAction.ShareWithExcept = shareWithExcept
+			if v := tfMap["share_with_except"].(*schema.Set).List(); len(v) > 0 {
+				shareWithExcept = coreNetworkPolicyExpandStringList(v)
+				apiObject.ShareWithExcept = shareWithExcept
 			}
 
 			if (shareWith != nil && shareWithExcept != nil) || (shareWith == nil && shareWithExcept == nil) {
-				return nil, fmt.Errorf("You must specify only 1 of \"share_with\" or \"share_with_except\". See segment_actions[%s].", strconv.Itoa(i))
+				return nil, fmt.Errorf(`you must specify only 1 of "share_with" or "share_with_except". See segment_actions[%d]`, i)
+			}
+
+		case "create-route":
+			if v, ok := tfMap["segment"]; ok {
+				apiObject.Segment = v.(string)
+			}
+
+			if v := tfMap[names.AttrMode]; v != "" {
+				return nil, fmt.Errorf(`you cannot specify "mode" if action = "create-route". See segment_actions[%d]`, i)
+			}
+
+			if v := tfMap["destination_cidr_blocks"].(*schema.Set).List(); len(v) > 0 {
+				apiObject.DestinationCidrBlocks = coreNetworkPolicyExpandStringList(v)
+			}
+
+			if v := tfMap["destinations"].(*schema.Set).List(); len(v) > 0 {
+				apiObject.Destinations = coreNetworkPolicyExpandStringList(v)
+			}
+
+			if v, ok := tfMap[names.AttrDescription]; ok {
+				apiObject.Description = v.(string)
+			}
+
+		case "send-via", "send-to":
+			if v, ok := tfMap["segment"]; ok {
+				apiObject.Segment = v.(string)
+			}
+
+			if v, ok := tfMap[names.AttrMode]; ok {
+				apiObject.Mode = v.(string)
+			}
+
+			if v, ok := tfMap["when_sent_to"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				apiObject.WhenSentTo = &coreNetworkPolicySegmentActionWhenSentTo{}
+
+				tfMap := v[0].(map[string]interface{})
+
+				if v := tfMap["segments"].(*schema.Set).List(); len(v) > 0 {
+					apiObject.WhenSentTo.Segments = coreNetworkPolicyExpandStringList(v)
+				}
+			}
+
+			if v, ok := tfMap["via"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				apiObject.Via = &coreNetworkPolicySegmentActionVia{}
+
+				tfMap := v[0].(map[string]interface{})
+
+				if v := tfMap["network_function_groups"].(*schema.Set).List(); len(v) > 0 {
+					apiObject.Via.NetworkFunctionGroups = coreNetworkPolicyExpandStringList(v)
+				}
+
+				if v, ok := tfMap["with_edge_override"].([]interface{}); ok && len(v) > 0 {
+					apiObjects := []*coreNetworkPolicySegmentActionViaEdgeOverride{}
+
+					for _, tfMapRaw := range v {
+						tfMap := tfMapRaw.(map[string]interface{})
+						apiObject := &coreNetworkPolicySegmentActionViaEdgeOverride{}
+
+						if v := tfMap["edge_sets"].(*schema.Set).List(); len(v) > 0 {
+							apiObject.EdgeSets = coreNetworkPolicyExpandStringList(v)
+						}
+
+						if v, ok := tfMap["use_edge"]; ok {
+							apiObject.UseEdge = v.(string)
+						}
+
+						apiObjects = append(apiObjects, apiObject)
+					}
+
+					apiObject.Via.WithEdgeOverrides = apiObjects
+				}
 			}
 		}
 
-		if action == "create-route" {
-			if mode := cfgSA[names.AttrMode]; mode != "" {
-				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\". See segment_actions[%s].", strconv.Itoa(i))
-			}
-
-			if dest := cfgSA["destinations"].(*schema.Set).List(); len(dest) > 0 {
-				sgmtAction.Destinations = CoreNetworkPolicyDecodeConfigStringList(dest)
-			}
-
-			if destCidrB := cfgSA["destination_cidr_blocks"].(*schema.Set).List(); len(destCidrB) > 0 {
-				sgmtAction.DestinationCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(destCidrB)
-			}
-		}
-
-		if sgmt, ok := cfgSA["segment"]; ok {
-			sgmtAction.Segment = sgmt.(string)
-		}
-
-		sgmtActions[i] = sgmtAction
+		apiObjects[i] = apiObject
 	}
-	return sgmtActions, nil
+
+	return apiObjects, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []interface{}) ([]*CoreNetworkAttachmentPolicy, error) {
-	aPolicies := make([]*CoreNetworkAttachmentPolicy, len(cfgAttachmentPolicyIntf))
+func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []interface{}) ([]*coreNetworkAttachmentPolicy, error) {
+	aPolicies := make([]*coreNetworkAttachmentPolicy, len(cfgAttachmentPolicyIntf))
 	ruleMap := make(map[string]struct{})
 
 	for i, polI := range cfgAttachmentPolicyIntf {
 		cfgPol := polI.(map[string]interface{})
-		policy := &CoreNetworkAttachmentPolicy{}
+		policy := &coreNetworkAttachmentPolicy{}
 
 		rule := cfgPol["rule_number"].(int)
 		ruleStr := strconv.Itoa(rule)
@@ -459,12 +559,12 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 	return aPolicies, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*CoreNetworkAttachmentPolicyCondition, error) {
-	conditions := make([]*CoreNetworkAttachmentPolicyCondition, len(tfList))
+func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*coreNetworkAttachmentPolicyCondition, error) {
+	conditions := make([]*coreNetworkAttachmentPolicyCondition, len(tfList))
 
 	for i, condI := range tfList {
 		cfgCond := condI.(map[string]interface{})
-		condition := &CoreNetworkAttachmentPolicyCondition{}
+		condition := &coreNetworkAttachmentPolicyCondition{}
 		k := map[string]bool{
 			"operator":      false,
 			names.AttrKey:   false,
@@ -519,38 +619,46 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 	return conditions, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (*CoreNetworkAttachmentPolicyAction, error) {
-	cfgAP := tfList[0].(map[string]interface{})
-	assocMethod := cfgAP["association_method"].(string)
-	aP := &CoreNetworkAttachmentPolicyAction{
-		AssociationMethod: assocMethod,
+func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (*coreNetworkAttachmentPolicyAction, error) {
+	tfMap := tfList[0].(map[string]interface{})
+
+	associationMethod := tfMap["association_method"].(string)
+	apiObject := &coreNetworkAttachmentPolicyAction{
+		AssociationMethod: associationMethod,
 	}
 
-	if segment := cfgAP["segment"]; segment != "" {
-		if assocMethod == "tag" {
-			return nil, fmt.Errorf("Cannot set \"segment\" argument if association_method = \"tag\".")
+	if v := tfMap["segment"]; v != "" {
+		if associationMethod == "tag" {
+			return nil, fmt.Errorf(`cannot set "segment" argument if association_method = "tag"`)
 		}
-		aP.Segment = segment.(string)
+		apiObject.Segment = v.(string)
 	}
-	if tag := cfgAP["tag_value_of_key"]; tag != "" {
-		if assocMethod == "constant" {
-			return nil, fmt.Errorf("Cannot set \"tag_value_of_key\" argument if association_method = \"constant\".")
+
+	if v := tfMap["tag_value_of_key"]; v != "" {
+		if associationMethod == "constant" {
+			return nil, fmt.Errorf(`cannot set "tag_value_of_key" argument if association_method = "constant"`)
 		}
-		aP.TagValueOfKey = tag.(string)
+		apiObject.TagValueOfKey = v.(string)
 	}
-	if acceptance, ok := cfgAP["require_acceptance"]; ok {
-		aP.RequireAcceptance = acceptance.(bool)
+
+	if v, ok := tfMap["require_acceptance"]; ok {
+		apiObject.RequireAcceptance = v.(bool)
 	}
-	return aP, nil
+
+	if v := tfMap["add_to_network_function_group"]; v != "" {
+		apiObject.AddToNetworkFunctionGroup = v.(string)
+	}
+
+	return apiObject, nil
 }
 
-func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetworkPolicySegment, error) {
-	Sgmts := make([]*CoreNetworkPolicySegment, len(cfgSgmtIntf))
+func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*coreNetworkPolicySegment, error) {
+	Sgmts := make([]*coreNetworkPolicySegment, len(cfgSgmtIntf))
 	nameMap := make(map[string]struct{})
 
 	for i, sgmtI := range cfgSgmtIntf {
 		cfgSgmt := sgmtI.(map[string]interface{})
-		sgmt := &CoreNetworkPolicySegment{}
+		sgmt := &coreNetworkPolicySegment{}
 
 		if name, ok := cfgSgmt[names.AttrName]; ok {
 			if _, ok := nameMap[name.(string)]; ok {
@@ -565,13 +673,13 @@ func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetw
 			sgmt.Description = description.(string)
 		}
 		if actions := cfgSgmt["allow_filter"].(*schema.Set).List(); len(actions) > 0 {
-			sgmt.AllowFilter = CoreNetworkPolicyDecodeConfigStringList(actions)
+			sgmt.AllowFilter = coreNetworkPolicyExpandStringList(actions)
 		}
 		if actions := cfgSgmt["deny_filter"].(*schema.Set).List(); len(actions) > 0 {
-			sgmt.DenyFilter = CoreNetworkPolicyDecodeConfigStringList(actions)
+			sgmt.DenyFilter = coreNetworkPolicyExpandStringList(actions)
 		}
 		if edgeLocations := cfgSgmt["edge_locations"].(*schema.Set).List(); len(edgeLocations) > 0 {
-			sgmt.EdgeLocations = CoreNetworkPolicyDecodeConfigStringList(edgeLocations)
+			sgmt.EdgeLocations = coreNetworkPolicyExpandStringList(edgeLocations)
 		}
 		if b, ok := cfgSgmt["require_attachment_acceptance"]; ok {
 			sgmt.RequireAttachmentAcceptance = b.(bool)
@@ -585,15 +693,15 @@ func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetw
 	return Sgmts, nil
 }
 
-func expandDataCoreNetworkPolicyNetworkConfiguration(networkCfgIntf []interface{}) (*CoreNetworkPolicyCoreNetworkConfiguration, error) {
+func expandDataCoreNetworkPolicyNetworkConfiguration(networkCfgIntf []interface{}) (*coreNetworkPolicyCoreNetworkConfiguration, error) {
 	m := networkCfgIntf[0].(map[string]interface{})
 
-	nc := &CoreNetworkPolicyCoreNetworkConfiguration{}
+	nc := &coreNetworkPolicyCoreNetworkConfiguration{}
 
-	nc.AsnRanges = CoreNetworkPolicyDecodeConfigStringList(m["asn_ranges"].(*schema.Set).List())
+	nc.AsnRanges = coreNetworkPolicyExpandStringList(m["asn_ranges"].(*schema.Set).List())
 
 	if cidrs := m["inside_cidr_blocks"].(*schema.Set).List(); len(cidrs) > 0 {
-		nc.InsideCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(cidrs)
+		nc.InsideCidrBlocks = coreNetworkPolicyExpandStringList(cidrs)
 	}
 
 	nc.VpnEcmpSupport = m["vpn_ecmp_support"].(bool)
@@ -608,13 +716,13 @@ func expandDataCoreNetworkPolicyNetworkConfiguration(networkCfgIntf []interface{
 	return nc, nil
 }
 
-func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []interface{}) ([]*CoreNetworkEdgeLocation, error) {
-	edgeLocations := make([]*CoreNetworkEdgeLocation, len(tfList))
+func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []interface{}) ([]*coreNetworkPolicyCoreNetworkEdgeLocation, error) {
+	edgeLocations := make([]*coreNetworkPolicyCoreNetworkEdgeLocation, len(tfList))
 	locMap := make(map[string]struct{})
 
 	for i, edgeLocationsRaw := range tfList {
 		cfgEdgeLocation, ok := edgeLocationsRaw.(map[string]interface{})
-		edgeLocation := &CoreNetworkEdgeLocation{}
+		edgeLocation := &coreNetworkPolicyCoreNetworkEdgeLocation{}
 
 		if !ok {
 			continue
@@ -641,7 +749,7 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 		}
 
 		if cidrs := cfgEdgeLocation["inside_cidr_blocks"].([]interface{}); len(cidrs) > 0 {
-			edgeLocation.InsideCidrBlocks = CoreNetworkPolicyDecodeConfigStringList(cidrs)
+			edgeLocation.InsideCidrBlocks = coreNetworkPolicyExpandStringList(cidrs)
 		}
 
 		edgeLocations[i] = edgeLocation
