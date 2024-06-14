@@ -29,6 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceEventIntegration,
 			TypeName: "aws_appintegrations_event_integration",
 			Name:     "Event Integration",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }

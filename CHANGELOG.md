@@ -1,4 +1,5 @@
-## 5.54.0 (Unreleased)
+## 5.55.0 (Unreleased)
+## 5.54.0 (June 14, 2024)
 
 NOTES:
 
@@ -16,10 +17,15 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_opensearch_domain: Add `ip_address_type` argument ([#37237](https://github.com/hashicorp/terraform-provider-aws/issues/37237))
+* resource/aws_ec2_traffic_mirror_session: Mark `packet_length` as Computed ([#36962](https://github.com/hashicorp/terraform-provider-aws/issues/36962))
 * resource/aws_opensearch_domain: Add `ip_address_type` argument ([#37237](https://github.com/hashicorp/terraform-provider-aws/issues/37237))
+* resource/aws_vpc_endpoint: Add `subnet_configuration` argument to support user defined IP addresses ([#37226](https://github.com/hashicorp/terraform-provider-aws/issues/37226))
 
 BUG FIXES:
 
+* data-source/aws_ami: Fix query returning no results ([#37958](https://github.com/hashicorp/terraform-provider-aws/issues/37958))
+* provider: Fixes an error where some data sources were not returning `tags` ([#37966](https://github.com/hashicorp/terraform-provider-aws/issues/37966))
+* resource/aws_applicationinsights_application: Change `resource_group_name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36962](https://github.com/hashicorp/terraform-provider-aws/issues/36962))
 * resource/aws_dynamodb_table: Fix `UnknownOperationException: Tagging is not currently supported in DynamoDB Local` errors on resource Read ([#37924](https://github.com/hashicorp/terraform-provider-aws/issues/37924))
 * resource/aws_ec2_capacity_reservation: Fix `InvalidCapacityReservationId.NotFound` errors during Read and Delete when resource is manually deleted ([#37127](https://github.com/hashicorp/terraform-provider-aws/issues/37127))
 * resource/aws_route53_zone: Fix `InvalidInput: 1 validation error detected: Value '...' at 'resourceId' failed to satisfy constraint: Member must have length less than or equal to 32` errors for resources imported with a `/hostedzone/` prefix ([#37893](https://github.com/hashicorp/terraform-provider-aws/issues/37893))

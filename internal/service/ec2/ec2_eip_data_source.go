@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_eip", name="EIP)
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEIP() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPRead,
