@@ -1,4 +1,11 @@
 ## 5.55.0 (Unreleased)
+## 5.54.1 (June 14, 2024)
+
+BUG FIXES:
+
+* data-source/aws_ami: Fix `interface conversion: interface {} is types.ProductCodeValues, not string` panic ([######](https://github.com/hashicorp/terraform-provider-aws/issues/#####))
+* resource/aws_codebuild_project: Increase maximum values of `build_batch_config.timeout_in_mins` and `build_timeout` from `480` (8 hours) to `2160` (36 hours) ([#37970](https://github.com/hashicorp/terraform-provider-aws/issues/37970))
+
 ## 5.54.0 (June 14, 2024)
 
 NOTES:
