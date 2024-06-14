@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -60,7 +61,7 @@ const (
 	// If not provided, CreateDbInstance will use the below default values
 	// for bucket and organization. These values need to be set in Terraform
 	// because GetDbInstance won't return them.
-	DefaultBucketValue       = "bucket"
+	DefaultBucketValue       = names.AttrBucket
 	DefaultOrganizationValue = "organization"
 	DefaultUsernameValue     = "admin"
 	ResNameDBInstance        = "DB Instance"
@@ -78,7 +79,7 @@ func (r *resourceDBInstance) Metadata(_ context.Context, req resource.MetadataRe
 func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"allocated_storage": schema.Int64Attribute{
+			names.AttrAllocatedStorage: schema.Int64Attribute{
 				Required: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.RequiresReplace(),
@@ -89,12 +90,12 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Description: `The amount of storage to allocate for your DB storage type in GiB (gibibytes).`,
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
-			"availability_zone": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Computed:    true,
 				Description: `The Availability Zone in which the DB instance resides.`,
 			},
-			"bucket": schema.StringAttribute{
+			names.AttrBucket: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(DefaultBucketValue),
@@ -191,11 +192,11 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `Specifies whether the DB instance will be deployed as a standalone instance or 
 					with a Multi-AZ standby for high availability.`,
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Computed:    true,
 				Description: `The endpoint used to connect to InfluxDB. The default InfluxDB port is 8086.`,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"influx_auth_parameters_secret_arn": schema.StringAttribute{
 				Computed: true,
 				Description: `The Amazon Resource Name (ARN) of the AWS Secrets Manager secret containing the 
@@ -203,7 +204,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					key-value pair holding InfluxDB authorization values: organization, bucket, 
 					username, and password.`,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -239,7 +240,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `The name of the initial organization for the initial admin user in InfluxDB. An 
 					InfluxDB organization is a workspace for a group of users.`,
 			},
-			"password": schema.StringAttribute{
+			names.AttrPassword: schema.StringAttribute{
 				Required:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
@@ -255,7 +256,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					also use the InfluxDB CLI to create an operator token. These attributes will be 
 					stored in a Secret created in AWS SecretManager in your account.`,
 			},
-			"publicly_accessible": schema.BoolAttribute{
+			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
@@ -269,11 +270,11 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed:    true,
 				Description: `The status of the DB instance.`,
 			},
-			"username": schema.StringAttribute{
+			names.AttrUsername: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(DefaultUsernameValue),
@@ -295,7 +296,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					attributes will be stored in a Secret created in Amazon Secrets 
 					Manager in your account`,
 			},
-			"vpc_security_group_ids": schema.SetAttribute{
+			names.AttrVPCSecurityGroupIDs: schema.SetAttribute{
 				Required:    true,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.Set{
@@ -339,7 +340,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					Blocks: map[string]schema.Block{
 						"s3_configuration": schema.SingleNestedBlock{
 							Attributes: map[string]schema.Attribute{
-								"bucket_name": schema.StringAttribute{
+								names.AttrBucketName: schema.StringAttribute{
 									Required: true,
 									Validators: []validator.String{
 										stringvalidator.LengthAtLeast(3),
@@ -348,7 +349,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 									},
 									Description: `The name of the S3 bucket to deliver logs to.`,
 								},
-								"enabled": schema.BoolAttribute{
+								names.AttrEnabled: schema.BoolAttribute{
 									Required:    true,
 									Description: `Indicates whether log delivery to the S3 bucket is enabled.`,
 								},
@@ -358,7 +359,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -550,7 +551,7 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	if username, ok := secrets["username"]; ok {
+	if username, ok := secrets[names.AttrUsername]; ok {
 		state.Username = flex.StringValueToFramework[string](ctx, username)
 	} else {
 		resp.Diagnostics.AddError(
@@ -559,7 +560,7 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	if password, ok := secrets["password"]; ok {
+	if password, ok := secrets[names.AttrPassword]; ok {
 		state.Password = flex.StringValueToFramework[string](ctx, password)
 	} else {
 		resp.Diagnostics.AddError(
@@ -577,7 +578,7 @@ func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	if bucket, ok := secrets["bucket"]; ok {
+	if bucket, ok := secrets[names.AttrBucket]; ok {
 		state.Bucket = flex.StringValueToFramework[string](ctx, bucket)
 	} else {
 		resp.Diagnostics.AddError(
@@ -616,7 +617,6 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 	// db_parameter_group_identifier.
 	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
 		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
-
 		in := &timestreaminfluxdb.UpdateDbInstanceInput{
 			Identifier: aws.String(plan.ID.ValueString()),
 		}
@@ -725,7 +725,7 @@ func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceDBInstance) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
@@ -733,9 +733,9 @@ func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.Mo
 
 func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.CreateDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.StatusCreating), string(awstypes.StatusUpdating), string(awstypes.StatusModifying)},
-		Target:                    []string{string(awstypes.StatusAvailable)},
-		Refresh:                   statusDbInstance(ctx, conn, id),
+		Pending:                   enum.Slice(string(awstypes.StatusCreating), string(awstypes.StatusUpdating), string(awstypes.StatusModifying)),
+		Target:                    enum.Slice(awstypes.StatusAvailable),
+		Refresh:                   statusDBInstance(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -751,9 +751,9 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.UpdateDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.StatusModifying), string(awstypes.StatusUpdating)},
-		Target:                    []string{string(awstypes.StatusAvailable)},
-		Refresh:                   statusDbInstance(ctx, conn, id),
+		Pending:                   enum.Slice(string(awstypes.StatusModifying), string(awstypes.StatusUpdating)),
+		Target:                    enum.Slice(string(awstypes.StatusAvailable)),
+		Refresh:                   statusDBInstance(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -769,9 +769,9 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      []string{string(awstypes.StatusDeleting), string(awstypes.StatusModifying), string(awstypes.StatusUpdating), string(awstypes.StatusAvailable)},
-		Target:       []string{},
-		Refresh:      statusDbInstance(ctx, conn, id),
+		Pending:      enum.Slice(string(awstypes.StatusDeleting), string(awstypes.StatusModifying), string(awstypes.StatusUpdating), string(awstypes.StatusAvailable)),
+		Target:       enum.Slice[string](),
+		Refresh:      statusDBInstance(ctx, conn, id),
 		Timeout:      timeout,
 		Delay:        30 * time.Second,
 		PollInterval: 30 * time.Second,
@@ -785,7 +785,7 @@ func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 	return nil, err
 }
 
-func statusDbInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
+func statusDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findDBInstanceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -831,6 +831,7 @@ func flattenLogDeliveryConfiguration(ctx context.Context, apiObject *awstypes.Lo
 		return types.ListNull(elemType), diags
 	}
 	s3Configuration, d := flattenS3Configuration(ctx, apiObject.S3Configuration)
+	diags.Append(d...)
 	obj := map[string]attr.Value{
 		"s3_configuration": s3Configuration,
 	}
@@ -852,8 +853,8 @@ func flattenS3Configuration(ctx context.Context, apiObject *awstypes.S3Configura
 	}
 
 	obj := map[string]attr.Value{
-		"bucket_name": flex.StringValueToFramework(ctx, *apiObject.BucketName),
-		"enabled":     flex.BoolToFramework(ctx, *&apiObject.Enabled),
+		names.AttrBucketName: flex.StringValueToFramework(ctx, *apiObject.BucketName),
+		names.AttrEnabled:    flex.BoolToFramework(ctx, apiObject.Enabled),
 	}
 	objVal, d := types.ObjectValue(s3ConfigurationAttrTypes, obj)
 	diags.Append(d...)
@@ -922,6 +923,6 @@ var logDeliveryConfigrationAttrTypes = map[string]attr.Type{
 }
 
 var s3ConfigurationAttrTypes = map[string]attr.Type{
-	"bucket_name": types.StringType,
-	"enabled":     types.BoolType,
+	names.AttrBucketName: types.StringType,
+	names.AttrEnabled:    types.BoolType,
 }
