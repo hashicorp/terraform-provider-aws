@@ -79,8 +79,8 @@ service "" {
 }
 
 ```
-The explanation of the attributes of `data/names_data.hcl` are as follows:
 
+The explanation of the attributes of `data/names_data.hcl` are as follows:
 
 | Name | Use | Description |
 | --- | --- | --- |
