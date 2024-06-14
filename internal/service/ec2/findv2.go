@@ -5276,6 +5276,61 @@ func findNetworkInsightsPath(ctx context.Context, conn *ec2.Client, input *ec2.D
 	return tfresource.AssertSingleValueResult(output)
 }
 
+func findNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsAnalysesInput) (*awstypes.NetworkInsightsAnalysis, error) {
+	output, err := findNetworkInsightsAnalyses(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNetworkInsightsAnalyses(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsAnalysesInput) ([]awstypes.NetworkInsightsAnalysis, error) {
+	var output []awstypes.NetworkInsightsAnalysis
+
+	pages := ec2.NewDescribeNetworkInsightsAnalysesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NetworkInsightsAnalyses...)
+	}
+
+	return output, nil
+}
+
+func findNetworkInsightsAnalysisByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInsightsAnalysis, error) {
+	input := &ec2.DescribeNetworkInsightsAnalysesInput{
+		NetworkInsightsAnalysisIds: []string{id},
+	}
+
+	output, err := findNetworkInsightsAnalysis(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkInsightsAnalysisId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findNetworkInsightsPaths(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) ([]awstypes.NetworkInsightsPath, error) {
 	var output []awstypes.NetworkInsightsPath
 

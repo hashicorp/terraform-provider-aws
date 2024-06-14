@@ -716,7 +716,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ec2_managed_prefix_list_entry",
 		},
 		{
-			Factory:  ResourceNetworkInsightsAnalysis,
+			Factory:  resourceNetworkInsightsAnalysis,
 			TypeName: "aws_ec2_network_insights_analysis",
 			Name:     "Network Insights Analysis",
 			Tags: &types.ServicePackageResourceTags{

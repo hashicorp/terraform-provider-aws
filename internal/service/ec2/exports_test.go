@@ -49,6 +49,7 @@ var (
 	ResourceMainRouteTableAssociation                = resourceMainRouteTableAssociation
 	ResourceNetworkACL                               = resourceNetworkACL
 	ResourceNetworkACLRule                           = resourceNetworkACLRule
+	ResourceNetworkInsightsAnalysis                  = resourceNetworkInsightsAnalysis
 	ResourceNetworkInsightsPath                      = resourceNetworkInsightsPath
 	ResourceNetworkInterface                         = resourceNetworkInterface
 	ResourcePlacementGroup                           = resourcePlacementGroup
@@ -124,6 +125,7 @@ var (
 	FindLaunchTemplateByID                                     = findLaunchTemplateByID
 	FindMainRouteTableAssociationByID                          = findMainRouteTableAssociationByID
 	FindNetworkACLByIDV2                                       = findNetworkACLByID
+	FindNetworkInsightsAnalysisByID                            = findNetworkInsightsAnalysisByID
 	FindNetworkInsightsPathByID                                = findNetworkInsightsPathByID
 	FindNetworkInterfaceByIDV2                                 = findNetworkInterfaceByID
 	FindNetworkPerformanceMetricSubscriptionByFourPartKey      = findNetworkPerformanceMetricSubscriptionByFourPartKey
