@@ -220,8 +220,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_managed_prefix_lists",
 		},
 		{
-			Factory:  DataSourceNetworkInsightsAnalysis,
+			Factory:  dataSourceNetworkInsightsAnalysis,
 			TypeName: "aws_ec2_network_insights_analysis",
+			Name:     "Network Insights Analysis",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceNetworkInsightsPath,
