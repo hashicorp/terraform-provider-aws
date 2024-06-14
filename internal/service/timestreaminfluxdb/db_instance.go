@@ -46,8 +46,8 @@ import (
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_timestreaminfluxdb_db_instance", name="Db Instance")
 // @Tags(identifierAttribute="arn")
-func newResourceDbInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDbInstance{}
+func newResourceDBInstance(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceDBInstance{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -63,19 +63,19 @@ const (
 	DefaultBucketValue       = "bucket"
 	DefaultOrganizationValue = "organization"
 	DefaultUsernameValue     = "admin"
-	ResNameDbInstance        = "Db Instance"
+	ResNameDBInstance        = "DB Instance"
 )
 
-type resourceDbInstance struct {
+type resourceDBInstance struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 }
 
-func (r *resourceDbInstance) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceDBInstance) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_timestreaminfluxdb_db_instance"
 }
 
-func (r *resourceDbInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"allocated_storage": schema.Int64Attribute{
@@ -371,7 +371,7 @@ func statementReplaceIf(ctx context.Context, req planmodifier.StringRequest, res
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var plan, state resourceDbInstanceData
+	var plan, state resourceDBInstanceData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -383,10 +383,10 @@ func statementReplaceIf(ctx context.Context, req planmodifier.StringRequest, res
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }
 
-func (r *resourceDbInstance) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceDBInstance) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan resourceDbInstanceData
+	var plan resourceDBInstanceData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -434,14 +434,14 @@ func (r *resourceDbInstance) Create(ctx context.Context, req resource.CreateRequ
 	out, err := conn.CreateDbInstance(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDbInstance, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.Id == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDbInstance, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -453,23 +453,23 @@ func (r *resourceDbInstance) Create(ctx context.Context, req resource.CreateRequ
 	plan.AvailabilityZone = flex.StringToFramework(ctx, out.AvailabilityZone)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitDbInstanceCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitDBInstanceCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForCreation, ResNameDbInstance, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForCreation, ResNameDBInstance, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	readOut, err := findDbInstanceByID(ctx, conn, plan.ID.ValueString())
+	readOut, err := findDBInstanceByID(ctx, conn, plan.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -484,23 +484,23 @@ func (r *resourceDbInstance) Create(ctx context.Context, req resource.CreateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceDBInstance) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDbInstanceData
+	var state resourceDBInstanceData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findDbInstanceByID(ctx, conn, state.ID.ValueString())
+	out, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -536,7 +536,7 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -545,7 +545,7 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 	secrets := make(map[string]string)
 	if err := json.Unmarshal([]byte(aws.ToString(secretsOut.SecretString)), &secrets); err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -554,7 +554,7 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 		state.Username = flex.StringValueToFramework[string](ctx, username)
 	} else {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -563,7 +563,7 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 		state.Password = flex.StringValueToFramework[string](ctx, password)
 	} else {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -572,7 +572,7 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 		state.Organization = flex.StringValueToFramework[string](ctx, organization)
 	} else {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -581,7 +581,7 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 		state.Bucket = flex.StringValueToFramework[string](ctx, bucket)
 	} else {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -590,7 +590,7 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 	tags, err := listTags(ctx, conn, state.ARN.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -600,10 +600,10 @@ func (r *resourceDbInstance) Read(ctx context.Context, req resource.ReadRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceDbInstance) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var plan, state resourceDbInstanceData
+	var plan, state resourceDBInstanceData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -637,14 +637,14 @@ func (r *resourceDbInstance) Update(ctx context.Context, req resource.UpdateRequ
 		out, err := conn.UpdateDbInstance(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDbInstance, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.Id == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDbInstance, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -652,24 +652,24 @@ func (r *resourceDbInstance) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitDbInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDbInstance, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	// Update status to current status
-	readOut, err := findDbInstanceByID(ctx, conn, plan.ID.ValueString())
+	readOut, err := findDBInstanceByID(ctx, conn, plan.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDbInstance, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -688,10 +688,10 @@ func (r *resourceDbInstance) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceDbInstance) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceDBInstance) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	var state resourceDbInstanceData
+	var state resourceDBInstanceData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -707,31 +707,31 @@ func (r *resourceDbInstance) Delete(ctx context.Context, req resource.DeleteRequ
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionDeleting, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionDeleting, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDbInstanceDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitDBInstanceDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForDeletion, ResNameDbInstance, state.ID.String(), err),
+			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForDeletion, ResNameDBInstance, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceDbInstance) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceDBInstance) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-func (r *resourceDbInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *resourceDBInstance) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-func waitDbInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.CreateDbInstanceOutput, error) {
+func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.CreateDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{string(awstypes.StatusCreating), string(awstypes.StatusUpdating), string(awstypes.StatusModifying)},
 		Target:                    []string{string(awstypes.StatusAvailable)},
@@ -749,7 +749,7 @@ func waitDbInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 	return nil, err
 }
 
-func waitDbInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.UpdateDbInstanceOutput, error) {
+func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.UpdateDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{string(awstypes.StatusModifying), string(awstypes.StatusUpdating)},
 		Target:                    []string{string(awstypes.StatusAvailable)},
@@ -767,7 +767,7 @@ func waitDbInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 	return nil, err
 }
 
-func waitDbInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
+func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.DeleteDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:      []string{string(awstypes.StatusDeleting), string(awstypes.StatusModifying), string(awstypes.StatusUpdating), string(awstypes.StatusAvailable)},
 		Target:       []string{},
@@ -787,7 +787,7 @@ func waitDbInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func statusDbInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findDbInstanceByID(ctx, conn, id)
+		out, err := findDBInstanceByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -799,7 +799,7 @@ func statusDbInstance(ctx context.Context, conn *timestreaminfluxdb.Client, id s
 	}
 }
 
-func findDbInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id string) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
+func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id string) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	in := &timestreaminfluxdb.GetDbInstanceInput{
 		Identifier: aws.String(id),
 	}
@@ -881,7 +881,7 @@ func expandS3Configuration(tfObj s3ConfigurationData) *awstypes.S3Configuration 
 	return apiObject
 }
 
-type resourceDbInstanceData struct {
+type resourceDBInstanceData struct {
 	AllocatedStorage              types.Int64    `tfsdk:"allocated_storage"`
 	ARN                           types.String   `tfsdk:"arn"`
 	AvailabilityZone              types.String   `tfsdk:"availability_zone"`

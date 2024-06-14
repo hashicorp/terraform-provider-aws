@@ -13,6 +13,7 @@ TIP: A few guiding principles for writing documentation:
 4. Document your feature as it exists now; do not mention the future or past if you can help it.
 5. Use accessible and inclusive language.
 --->`
+
 # Resource: aws_timestreaminfluxdb_db_instance
 
 Terraform resource for managing an Amazon Timestream for InfluxDB Db Instance.
@@ -23,14 +24,14 @@ Terraform resource for managing an Amazon Timestream for InfluxDB Db Instance.
 
 ```terraform
 resource "aws_timestreaminfluxdb_db_instance" "example" {
-	allocated_storage = 20
-	bucket = "example-bucket-name"
-	db_instance_type = "db.influx.medium"
-	username = "admin"
-	password = "example-password"
-	vpc_subnet_ids = [aws_subnet.test_subnet.id]
-	vpc_security_group_ids = [aws_security_group.example_security_group.id]
-	name = "example-db-instance"
+  allocated_storage      = 20
+  bucket                 = "example-bucket-name"
+  db_instance_type       = "db.influx.medium"
+  username               = "admin"
+  password               = "example-password"
+  vpc_subnet_ids         = [aws_subnet.test_subnet.id]
+  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  name                   = "example-db-instance"
 }
 ```
 
@@ -40,28 +41,28 @@ All Timestream for InfluxDB instances require a VPC, subnet, and security group.
 
 ```terraform
 resource "aws_vpc" "example_vpc" {
-	cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "example_subnet" {
-	vpc_id = aws_vpc.example_vpc.id
-	cidr_block = "10.0.1.0/24"
+  vpc_id     = aws_vpc.example_vpc.id
+  cidr_block = "10.0.1.0/24"
 }
 
 resource "aws_security_group" "example_security_group" {
-	name = "example_security_group"
-	vpc_id = aws_vpc.example_vpc.id
+  name   = "example_security_group"
+  vpc_id = aws_vpc.example_vpc.id
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "example" {
-	allocated_storage = 20
-	bucket = "example-bucket-name"
-	db_instance_type = "db.influx.medium"
-	username = "admin"
-	password = "example-password"
-	vpc_subnet_ids = [aws_subnet.example_subnet.id]
-	vpc_security_group_ids = [aws_security_group.example_security_group.id]
-	name = "example-db-instance"
+  allocated_storage      = 20
+  bucket                 = "example-bucket-name"
+  db_instance_type       = "db.influx.medium"
+  username               = "admin"
+  password               = "example-password"
+  vpc_subnet_ids         = [aws_subnet.example_subnet.id]
+  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  name                   = "example-db-instance"
 }
 ```
 
@@ -71,62 +72,62 @@ The following configuration shows how to define the necessary resources and argu
 
 ```terraform
 resource "aws_vpc" "example_vpc" {
-	cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_subnet" "example_subnet" {
-	vpc_id = aws_vpc.example_vpc.id
-	cidr_block = "10.0.1.0/24"
+  vpc_id     = aws_vpc.example_vpc.id
+  cidr_block = "10.0.1.0/24"
 }
 
 resource "aws_security_group" "example_security_group" {
-	name = "example_security_group"
-	vpc_id = aws_vpc.example_vpc.id
+  name   = "example_security_group"
+  vpc_id = aws_vpc.example_vpc.id
 }
 
 resource "aws_internet_gateway" "test_internet_gateway" {
-	vpc_id = aws_vpc.test_vpc.id
+  vpc_id = aws_vpc.test_vpc.id
 
-	tags = {
-		Name = "test_internet_gateway"
-	}
+  tags = {
+    Name = "test_internet_gateway"
+  }
 }
 
 resource "aws_route" "test_route" {
-	route_table_id = aws_vpc.test_vpc.main_route_table_id
-	destination_cidr_block = "0.0.0.0/0"
-	gateway_id = aws_internet_gateway.test_internet_gateway.id
+  route_table_id         = aws_vpc.test_vpc.main_route_table_id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test_internet_gateway.id
 }
 
 resource "aws_route_table_association" "test_route_table_association" {
-	subnet_id = aws_subnet.test_subnet.id
-	route_table_id = aws_vpc.test_vpc.main_route_table_id
+  subnet_id      = aws_subnet.test_subnet.id
+  route_table_id = aws_vpc.test_vpc.main_route_table_id
 }
 
 resource "aws_vpc_security_group_ingress_rule" "test_vpc_security_group_ingress_rule_vpc" {
-	security_group_id = aws_security_group.test_security_group.id
-	referenced_security_group_id = aws_security_group.test_security_group.id
-	ip_protocol = -1
+  security_group_id            = aws_security_group.test_security_group.id
+  referenced_security_group_id = aws_security_group.test_security_group.id
+  ip_protocol                  = -1
 }
 
 resource "aws_vpc_security_group_ingress_rule" "test_vpc_security_group_ingress_rule_influxdb" {
-	security_group_id = aws_security_group.test_security_group.id
-	cidr_ipv4 = "0.0.0.0/0"
-	ip_protocol = "tcp"
-	from_port = 8086
-	to_port = 8086
+  security_group_id = aws_security_group.test_security_group.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 8086
+  to_port           = 8086
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "example" {
-	allocated_storage = 20
-	bucket = "example-bucket-name"
-	db_instance_type = "db.influx.medium"
-	username = "admin"
-	password = "example-password"
-	vpc_subnet_ids = [aws_subnet.example_subnet.id]
-	vpc_security_group_ids = [aws_security_group.example_security_group.id]
-	name = "example-db-instance"
-	publicly_accessible = true # False by default
+  allocated_storage      = 20
+  bucket                 = "example-bucket-name"
+  db_instance_type       = "db.influx.medium"
+  username               = "admin"
+  password               = "example-password"
+  vpc_subnet_ids         = [aws_subnet.example_subnet.id]
+  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  name                   = "example-db-instance"
+  publicly_accessible    = true # False by default
 }
 ```
 
@@ -136,43 +137,43 @@ You can use an S3 bucket to store logs generated by your Timestream for InfluxDB
 
 ```terraform
 resource "aws_s3_bucket" "example_s3_bucket" {
-	bucket = "example-s3-bucket"
+  bucket = "example-s3-bucket"
 }
 
 data "aws_iam_policy_document" "allow_timestreaminfluxdb_policy_document" {
-	statement {
-		actions = ["s3:PutObject"]
-		principals {
-			type = "Service"
-			identifiers = ["timestream-influxdb.amazonaws.com"]
-		}
-		resources = [
-			"${aws_s3_bucket.example_s3_bucket.arn}/*"
-		]
-	}
+  statement {
+    actions = ["s3:PutObject"]
+    principals {
+      type        = "Service"
+      identifiers = ["timestream-influxdb.amazonaws.com"]
+    }
+    resources = [
+      "${aws_s3_bucket.example_s3_bucket.arn}/*"
+    ]
+  }
 }
 
 resource "aws_s3_bucket_policy" "allow_timestreaminfluxdb_policy" {
-	bucket = aws_s3_bucket.example_s3_bucket.id
-	policy = data.aws_iam_policy_document.allow_timestreaminfluxdb_policy_document.json
+  bucket = aws_s3_bucket.example_s3_bucket.id
+  policy = data.aws_iam_policy_document.allow_timestreaminfluxdb_policy_document.json
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "example" {
-	allocated_storage = 20
-	bucket = "example-bucket-name"
-	db_instance_type = "db.influx.medium"
-	username = "admin"
-	password = "example-password"
-	vpc_subnet_ids = [aws_subnet.example_subnet.id]
-	vpc_security_group_ids = [aws_security_group.example_security_group.id]
-	name = "example-db-instance"
+  allocated_storage      = 20
+  bucket                 = "example-bucket-name"
+  db_instance_type       = "db.influx.medium"
+  username               = "admin"
+  password               = "example-password"
+  vpc_subnet_ids         = [aws_subnet.example_subnet.id]
+  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  name                   = "example-db-instance"
 
-	log_delivery_configuration {
-		s3_configuration {
-			bucket_name = aws_s3_bucket.example_s3_bucket.name
-			enabled = true
-		}
-	}
+  log_delivery_configuration {
+    s3_configuration {
+      bucket_name = aws_s3_bucket.example_s3_bucket.name
+      enabled     = true
+    }
+  }
 }
 ```
 
@@ -182,27 +183,27 @@ To use multi-region availability, at least two subnets must be created in differ
 
 ```terraform
 resource "aws_subnet" "example_subnet_1" {
-	vpc_id = aws_vpc.example_vpc.id
-	cidr_block = "10.0.1.0/24"
-	availability_zone = "us-west-2a"
+  vpc_id            = aws_vpc.example_vpc.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "us-west-2a"
 }
 
 resource "aws_subnet" "example_subnet_2" {
-	vpc_id = aws_vpc.example_vpc.id
-	cidr_block = "10.0.2.0/24"
-	availability_zone = "us-west-2b"
+  vpc_id            = aws_vpc.example_vpc.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "us-west-2b"
 }
 
 resource "aws_timestreaminfluxdb_db_instance" "example" {
-	allocated_storage = 20
-	bucket = "example-bucket-name"
-	db_instance_type = "db.influx.medium"
-	deployment_type = "WITH_MULTIAZ_STANDBY"
-	username = "admin"
-	password = "example-password"
-	vpc_subnet_ids = [aws_subnet.example_subnet_1.id, aws_subnet.example_subnet_2.id]
-	vpc_security_group_ids = [aws_security_group.example_security_group.id]
-	name = "example-db-instance"
+  allocated_storage      = 20
+  bucket                 = "example-bucket-name"
+  db_instance_type       = "db.influx.medium"
+  deployment_type        = "WITH_MULTIAZ_STANDBY"
+  username               = "admin"
+  password               = "example-password"
+  vpc_subnet_ids         = [aws_subnet.example_subnet_1.id, aws_subnet.example_subnet_2.id]
+  vpc_security_group_ids = [aws_security_group.example_security_group.id]
+  name                   = "example-db-instance"
 }
 ```
 
@@ -269,8 +270,8 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-	to = aws_timestreaminfluxdb_db_instance.example
-	id = "12345abcde"
+  to = aws_timestreaminfluxdb_db_instance.example
+  id = "12345abcde"
 }
 ```
 

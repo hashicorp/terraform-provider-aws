@@ -19,11 +19,11 @@ import (
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_timestreaminfluxdb_db_instance", &resource.Sweeper{
 		Name: "aws_timestreaminfluxdb_db_instance",
-		F:    sweepDbInstances,
+		F:    sweepDBInstances,
 	})
 }
 
-func sweepDbInstances(region string) error {
+func sweepDBInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -50,7 +50,7 @@ func sweepDbInstances(region string) error {
 			id := aws.ToString(v.Id)
 			log.Printf("[INFO] Deleting TimestreamInfluxDB DB instance: %s", id)
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDbInstance, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDBInstance, client,
 				framework.NewAttribute(names.AttrID, id),
 			))
 		}

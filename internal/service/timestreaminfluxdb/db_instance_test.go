@@ -21,12 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTimestreamInfluxDBDbInstance_basic(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -46,9 +45,9 @@ func TestAccTimestreamInfluxDBDbInstance_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_basic(rName),
+				Config: testAccDBInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					// Verification of read-only attributes and default values.
 					// DB instance will not be publicly accessible and will not have an endpoint.
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "timestream-influxdb", regexache.MustCompile(`db-instance/+.`)),
@@ -73,7 +72,7 @@ func TestAccTimestreamInfluxDBDbInstance_basic(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDbInstance_disappears(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -90,13 +89,13 @@ func TestAccTimestreamInfluxDBDbInstance_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_basic(rName),
+				Config: testAccDBInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreaminfluxdb.ResourceDbInstance, resourceName),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftimestreaminfluxdb.ResourceDBInstance, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,7 +103,7 @@ func TestAccTimestreamInfluxDBDbInstance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDbInstance_logDeliveryConfiguration(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_logDeliveryConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -125,16 +124,16 @@ func TestAccTimestreamInfluxDBDbInstance_logDeliveryConfiguration(t *testing.T) 
 		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_logDeliveryConfigurationEnabled(rName),
+				Config: testAccDBInstanceConfig_logDeliveryConfigurationEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.enabled", "true"),
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_logDeliveryConfigurationNotEnabled(rName),
+				Config: testAccDBInstanceConfig_logDeliveryConfigurationNotEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "log_delivery_configuration.0.s3_configuration.%", "2"),
@@ -172,7 +171,7 @@ func TestAccTimestreamInfluxDBDbInstance_publiclyAccessible(t *testing.T) {
 		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_publiclyAccessible(rName),
+				Config: testAccDBInstanceConfig_publiclyAccessible(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
@@ -206,10 +205,10 @@ func TestAccTimestreamInfluxDBDbInstance_deploymentTypeMultiAzStandby(t *testing
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_deploymentTypeMultiAzStandby(rName, acctest.Region()),
+				Config: testAccDBInstanceConfig_deploymentTypeMultiAzStandby(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
 					// DB instance will not be publicly accessible and will not have an endpoint.
@@ -228,7 +227,7 @@ func TestAccTimestreamInfluxDBDbInstance_deploymentTypeMultiAzStandby(t *testing
 	})
 }
 
-func TestAccTimestreamInfluxDBDbInstance_username(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_username(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -246,12 +245,12 @@ func TestAccTimestreamInfluxDBDbInstance_username(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_username(rName, testUsername),
+				Config: testAccDBInstanceConfig_username(rName, testUsername),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "username", testUsername),
 				),
 			},
@@ -265,7 +264,7 @@ func TestAccTimestreamInfluxDBDbInstance_username(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDbInstance_bucket(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_bucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -283,12 +282,12 @@ func TestAccTimestreamInfluxDBDbInstance_bucket(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_bucket(rName, testBucketName),
+				Config: testAccDBInstanceConfig_bucket(rName, testBucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "bucket", testBucketName),
 				),
 			},
@@ -302,7 +301,7 @@ func TestAccTimestreamInfluxDBDbInstance_bucket(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDbInstance_organization(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_organization(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -320,12 +319,12 @@ func TestAccTimestreamInfluxDBDbInstance_organization(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_organization(rName, testOrganizationName),
+				Config: testAccDBInstanceConfig_organization(rName, testOrganizationName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "organization", testOrganizationName),
 				),
 			},
@@ -339,7 +338,7 @@ func TestAccTimestreamInfluxDBDbInstance_organization(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDbInstance_tags(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -356,12 +355,12 @@ func TestAccTimestreamInfluxDBDbInstance_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDBInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
@@ -369,9 +368,9 @@ func TestAccTimestreamInfluxDBDbInstance_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDBInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -381,9 +380,9 @@ func TestAccTimestreamInfluxDBDbInstance_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDBInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
@@ -400,7 +399,7 @@ func TestAccTimestreamInfluxDBDbInstance_tags(t *testing.T) {
 	})
 }
 
-func TestAccTimestreamInfluxDBDbInstance_dbInstanceType(t *testing.T) {
+func TestAccTimestreamInfluxDBDBInstance_dbInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -417,54 +416,54 @@ func TestAccTimestreamInfluxDBDbInstance_dbInstanceType(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDbInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDbInstanceConfig_dbInstanceTypeLarge(rName),
+				Config: testAccDBInstanceConfig_dbInstanceTypeLarge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.large"),
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_dbInstanceTypeXLarge(rName),
+				Config: testAccDBInstanceConfig_dbInstanceTypeXLarge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.xlarge"),
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_dbInstanceType2XLarge(rName),
+				Config: testAccDBInstanceConfig_dbInstanceType2XLarge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.2xlarge"),
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_dbInstanceType4XLarge(rName),
+				Config: testAccDBInstanceConfig_dbInstanceType4XLarge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.4xlarge"),
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_dbInstanceType8XLarge(rName),
+				Config: testAccDBInstanceConfig_dbInstanceType8XLarge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.8xlarge"),
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_dbInstanceType12XLarge(rName),
+				Config: testAccDBInstanceConfig_dbInstanceType12XLarge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.12xlarge"),
 				),
 			},
 			{
-				Config: testAccDbInstanceConfig_dbInstanceType16XLarge(rName),
+				Config: testAccDBInstanceConfig_dbInstanceType16XLarge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbInstanceExists(ctx, resourceName, &dbinstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbinstance),
 					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.16xlarge"),
 				),
 			},
@@ -478,7 +477,7 @@ func TestAccTimestreamInfluxDBDbInstance_dbInstanceType(t *testing.T) {
 	})
 }
 
-func testAccCheckDbInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamInfluxDBClient(ctx)
 
@@ -495,25 +494,25 @@ func testAccCheckDbInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDbInstance, rs.Primary.ID, err)
+				return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBInstance, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDbInstance, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingDestroyed, tftimestreaminfluxdb.ResNameDBInstance, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDbInstanceExists(ctx context.Context, name string, dbinstance *timestreaminfluxdb.GetDbInstanceOutput) resource.TestCheckFunc {
+func testAccCheckDBInstanceExists(ctx context.Context, name string, dbinstance *timestreaminfluxdb.GetDbInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDbInstance, name, errors.New("not found"))
+			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBInstance, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDbInstance, name, errors.New("not set"))
+			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBInstance, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamInfluxDBClient(ctx)
@@ -522,7 +521,7 @@ func testAccCheckDbInstanceExists(ctx context.Context, name string, dbinstance *
 		})
 
 		if err != nil {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDbInstance, rs.Primary.ID, err)
+			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingExistence, tftimestreaminfluxdb.ResNameDBInstance, rs.Primary.ID, err)
 		}
 
 		*dbinstance = *resp
@@ -545,17 +544,17 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckDbInstanceNotRecreated(before, after *timestreaminfluxdb.GetDbInstanceOutput) resource.TestCheckFunc {
+func testAccCheckDBInstanceNotRecreated(before, after *timestreaminfluxdb.GetDbInstanceOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.Id), aws.ToString(after.Id); before != after {
-			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingNotRecreated, tftimestreaminfluxdb.ResNameDbInstance, before, errors.New("recreated"))
+			return create.Error(names.TimestreamInfluxDB, create.ErrActionCheckingNotRecreated, tftimestreaminfluxdb.ResNameDBInstance, before, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccDbInstanceConfig_base() string {
+func testAccDBInstanceConfig_base() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_vpc" {
   cidr_block = "10.0.0.0/16"
@@ -573,8 +572,8 @@ resource "aws_security_group" "test_security_group" {
 }
 
 // Minimal configuration.
-func testAccDbInstanceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -587,8 +586,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 }
 
 // Configuration with log_delivery_configuration set and enabled.
-func testAccDbInstanceConfig_logDeliveryConfigurationEnabled(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_logDeliveryConfigurationEnabled(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test_s3_bucket" {
   bucket        = %[1]q
   force_destroy = true
@@ -632,8 +631,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 }
 
 // Configuration with log_delivery_configuration set but not enabled.
-func testAccDbInstanceConfig_logDeliveryConfigurationNotEnabled(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_logDeliveryConfigurationNotEnabled(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_s3_bucket" "test_s3_bucket" {
   bucket        = %[1]q
   force_destroy = true
@@ -678,8 +677,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 
 // Configuration that is publicly accessible. An endpoint will be created
 // for the DB instance but no inbound rules will be defined, preventing access.
-func testAccDbInstanceConfig_publiclyAccessible(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_publiclyAccessible(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_internet_gateway" "test_internet_gateway" {
   vpc_id = aws_vpc.test_vpc.id
 }
@@ -715,7 +714,7 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_deploymentTypeMultiAzStandby(rName string, regionName string) string {
+func testAccDBInstanceConfig_deploymentTypeMultiAzStandby(rName string, regionName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test_vpc" {
   cidr_block = "10.0.0.0/16"
@@ -751,8 +750,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName, regionName)
 }
 
-func testAccDbInstanceConfig_username(rName, username string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_username(rName, username string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -767,8 +766,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName, username))
 }
 
-func testAccDbInstanceConfig_bucket(rName, bucketName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_bucket(rName, bucketName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -783,8 +782,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName, bucketName))
 }
 
-func testAccDbInstanceConfig_organization(rName, organizationName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_organization(rName, organizationName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -799,8 +798,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName, organizationName))
 }
 
-func testAccDbInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -817,8 +816,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccDbInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -836,8 +835,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccDbInstanceConfig_dbStorageTypeT2(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbStorageTypeT2(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -851,8 +850,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbStorageTypeT3(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbStorageTypeT3(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   password               = "testpassword"
@@ -866,8 +865,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbInstanceTypeLarge(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbInstanceTypeLarge(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   db_storage_type        = "InfluxIOIncludedT1"
@@ -881,8 +880,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbInstanceTypeXLarge(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbInstanceTypeXLarge(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   db_storage_type        = "InfluxIOIncludedT1"
@@ -896,8 +895,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbInstanceType2XLarge(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbInstanceType2XLarge(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   db_storage_type        = "InfluxIOIncludedT1"
   password               = "testpassword"
@@ -911,8 +910,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbInstanceType4XLarge(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbInstanceType4XLarge(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   db_storage_type        = "InfluxIOIncludedT1"
@@ -926,8 +925,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbInstanceType8XLarge(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbInstanceType8XLarge(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   db_storage_type        = "InfluxIOIncludedT1"
@@ -941,8 +940,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbInstanceType12XLarge(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbInstanceType12XLarge(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   db_storage_type        = "InfluxIOIncludedT1"
@@ -956,8 +955,8 @@ resource "aws_timestreaminfluxdb_db_instance" "test" {
 `, rName))
 }
 
-func testAccDbInstanceConfig_dbInstanceType16XLarge(rName string) string {
-	return acctest.ConfigCompose(testAccDbInstanceConfig_base(), fmt.Sprintf(`
+func testAccDBInstanceConfig_dbInstanceType16XLarge(rName string) string {
+	return acctest.ConfigCompose(testAccDBInstanceConfig_base(), fmt.Sprintf(`
 resource "aws_timestreaminfluxdb_db_instance" "test" {
   allocated_storage      = 20
   db_storage_type        = "InfluxIOIncludedT1"
