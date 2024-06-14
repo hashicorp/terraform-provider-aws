@@ -2656,7 +2656,7 @@ service "applicationinsights" {
 
   sdk {
     id             = "Application Insights"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
