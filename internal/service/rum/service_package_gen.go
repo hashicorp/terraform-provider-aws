@@ -30,7 +30,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAppMonitor,
+			Factory:  resourceAppMonitor,
 			TypeName: "aws_rum_app_monitor",
 			Name:     "App Monitor",
 			Tags: &types.ServicePackageResourceTags{
@@ -38,8 +38,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMetricsDestination,
+			Factory:  resourceMetricsDestination,
 			TypeName: "aws_rum_metrics_destination",
+			Name:     "Metrics Destination",
 		},
 	}
 }

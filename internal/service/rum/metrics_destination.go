@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_rum_metrics_destination", name="Metrics Destination")
-func ResourceMetricsDestination() *schema.Resource {
+func resourceMetricsDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricsDestinationPut,
 		ReadWithoutTimeout:   resourceMetricsDestinationRead,
@@ -93,7 +93,7 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
-	dest, err := FindMetricsDestinationByName(ctx, conn, d.Id())
+	dest, err := findMetricsDestinationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch RUM Metrics Destination %s not found, removing from state", d.Id())
@@ -174,7 +174,7 @@ func findMetricsDestinations(ctx context.Context, conn *rum.Client, input *rum.L
 	return output, nil
 }
 
-func FindMetricsDestinationByName(ctx context.Context, conn *rum.Client, name string) (*awstypes.MetricDestinationSummary, error) {
+func findMetricsDestinationByName(ctx context.Context, conn *rum.Client, name string) (*awstypes.MetricDestinationSummary, error) {
 	input := &rum.ListRumMetricsDestinationsInput{
 		AppMonitorName: aws.String(name),
 	}

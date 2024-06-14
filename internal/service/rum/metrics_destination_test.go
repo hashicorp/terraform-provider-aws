@@ -130,9 +130,6 @@ func testAccCheckMetricsDestinationExists(ctx context.Context, n string, v *awst
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch RUM Metrics Destination ID is set")
-		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMClient(ctx)
 

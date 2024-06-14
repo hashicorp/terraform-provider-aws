@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_rum_app_monitor", name="App Monitor")
 // @Tags(identifierAttribute="arn")
-func ResourceAppMonitor() *schema.Resource {
+func resourceAppMonitor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppMonitorCreate,
 		ReadWithoutTimeout:   resourceAppMonitorRead,
@@ -186,7 +186,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
-	appMon, err := FindAppMonitorByName(ctx, conn, d.Id())
+	appMon, err := findAppMonitorByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch RUM App Monitor %s not found, removing from state", d.Id())
@@ -281,7 +281,7 @@ func resourceAppMonitorDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*awstypes.AppMonitor, error) {
+func findAppMonitorByName(ctx context.Context, conn *rum.Client, name string) (*awstypes.AppMonitor, error) {
 	input := &rum.GetAppMonitorInput{
 		Name: aws.String(name),
 	}
