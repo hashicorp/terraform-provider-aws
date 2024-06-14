@@ -120,7 +120,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cloudformation` - (Optional) A collection of AWS CloudFormation stacks. See [`cloudformation`](#cloudformation-argument-reference) below for additional details.
-* `tags` - (Optional) AWS tags used to filter the resources in the resource collection See [`tags`](#tags-argument-reference) below for additional details.
+* `tags` - (Optional) AWS tags used to filter the resources in the resource collection. See [`tags`](#tags-argument-reference) below for additional details.
 
 ### `cloudformation` Argument Reference
 
@@ -162,4 +162,4 @@ Using `terraform import`, import DevOps Guru Resource Collection using the `id`.
 % terraform import aws_devopsguru_resource_collection.example AWS_CLOUD_FORMATION
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4074f146172c1c51a10de21f1028fd3d6d7077876cc6a372427ad3bfa3a713a -->
+<!-- cache-key: cdktf-0.20.1 input-7b71ab1fba71e5418420de9b6ab49a43391e2bbc6e144abc7dec133dc5e88796 -->

@@ -91,7 +91,7 @@ func sweepAccessGrants(region string) error {
 
 		for _, v := range page.AccessGrantsList {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantResource, client,
-				framework.NewAttribute("id", fmt.Sprintf("%s%s%s", accountID, flex.ResourceIdSeparator, aws.ToString(v.AccessGrantId))),
+				framework.NewAttribute(names.AttrID, fmt.Sprintf("%s%s%s", accountID, flex.ResourceIdSeparator, aws.ToString(v.AccessGrantId))),
 			))
 		}
 	}
@@ -133,7 +133,7 @@ func sweepAccessGrantsInstances(region string) error {
 
 		for range page.AccessGrantsInstancesList {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantsInstanceResource, client,
-				framework.NewAttribute("id", accountID),
+				framework.NewAttribute(names.AttrID, accountID),
 			))
 		}
 	}
@@ -175,7 +175,7 @@ func sweepAccessGrantsLocations(region string) error {
 
 		for _, v := range page.AccessGrantsLocationsList {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newAccessGrantsLocationResource, client,
-				framework.NewAttribute("id", fmt.Sprintf("%s%s%s", accountID, flex.ResourceIdSeparator, aws.ToString(v.AccessGrantsLocationId))),
+				framework.NewAttribute(names.AttrID, fmt.Sprintf("%s%s%s", accountID, flex.ResourceIdSeparator, aws.ToString(v.AccessGrantsLocationId))),
 			))
 		}
 	}

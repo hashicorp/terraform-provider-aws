@@ -31,10 +31,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/chatbot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkmediapipelines"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chimesdkvoice"
@@ -82,6 +84,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/drs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -158,6 +161,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/neptunegraph"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/oam"
@@ -189,6 +193,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
@@ -225,6 +230,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -236,6 +242,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
@@ -265,10 +272,12 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		autoscalingplans.ServicePackage(ctx),
 		backup.ServicePackage(ctx),
 		batch.ServicePackage(ctx),
+		bcmdataexports.ServicePackage(ctx),
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
+		chatbot.ServicePackage(ctx),
 		chime.ServicePackage(ctx),
 		chimesdkmediapipelines.ServicePackage(ctx),
 		chimesdkvoice.ServicePackage(ctx),
@@ -316,6 +325,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		dms.ServicePackage(ctx),
 		docdb.ServicePackage(ctx),
 		docdbelastic.ServicePackage(ctx),
+		drs.ServicePackage(ctx),
 		ds.ServicePackage(ctx),
 		dynamodb.ServicePackage(ctx),
 		ec2.ServicePackage(ctx),
@@ -392,6 +402,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		mq.ServicePackage(ctx),
 		mwaa.ServicePackage(ctx),
 		neptune.ServicePackage(ctx),
+		neptunegraph.ServicePackage(ctx),
 		networkfirewall.ServicePackage(ctx),
 		networkmanager.ServicePackage(ctx),
 		oam.ServicePackage(ctx),
@@ -423,6 +434,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		rolesanywhere.ServicePackage(ctx),
 		route53.ServicePackage(ctx),
 		route53domains.ServicePackage(ctx),
+		route53profiles.ServicePackage(ctx),
 		route53recoverycontrolconfig.ServicePackage(ctx),
 		route53recoveryreadiness.ServicePackage(ctx),
 		route53resolver.ServicePackage(ctx),
@@ -459,6 +471,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		sts.ServicePackage(ctx),
 		swf.ServicePackage(ctx),
 		synthetics.ServicePackage(ctx),
+		timestreaminfluxdb.ServicePackage(ctx),
 		timestreamwrite.ServicePackage(ctx),
 		transcribe.ServicePackage(ctx),
 		transfer.ServicePackage(ctx),
@@ -470,6 +483,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		wellarchitected.ServicePackage(ctx),
 		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
+		workspacesweb.ServicePackage(ctx),
 		xray.ServicePackage(ctx),
 	}
 

@@ -49,7 +49,7 @@ func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
-					resource.TestMatchResourceAttr(resourceName, "url", regexache.MustCompile(`^https://`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
-					resource.TestMatchResourceAttr(resourceName, "url", regexache.MustCompile(`^https://`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
-					resource.TestCheckResourceAttr(resourceName, "url", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
-					resource.TestCheckResourceAttr(resourceName, "url", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
 			},
 			{
