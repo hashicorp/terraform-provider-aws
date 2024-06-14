@@ -466,7 +466,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 
 func TestAccDocDBCluster_pointInTimeRestore(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sourceResourceName := "aws_docdb_cluster.test"
 	resourceName := "aws_docdb_cluster.restore"
