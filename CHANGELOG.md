@@ -1,4 +1,11 @@
 ## 5.55.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_glue_catalog_table: Add `additional_locations` argument in `storage_descriptor` ([#37891](https://github.com/hashicorp/terraform-provider-aws/issues/37891))
+* resource/aws_docdb_cluster: Add `restore_to_point_in_time` argument ([#37716](https://github.com/hashicorp/terraform-provider-aws/issues/37716))
+* resource/aws_glue_catalog_table: Add `additional_locations` argument in `storage_descriptor` ([#37891](https://github.com/hashicorp/terraform-provider-aws/issues/37891))
+
 ## 5.54.1 (June 14, 2024)
 
 BUG FIXES:
