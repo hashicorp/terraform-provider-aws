@@ -282,6 +282,11 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Default:      appsync.GraphQLApiVisibilityGlobal,
 				ValidateFunc: validation.StringInSlice(appsync.GraphQLApiVisibility_Values(), false),
 			},
+			"api_type": {
+				Type:         schema.TypeString,
+				Required:     false,
+				ValidateFunc: validation.StringInSlice(appsync.GraphQLApiType_Values(), false),
+			},
 			"xray_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -343,6 +348,10 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Visibility = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("api_type"); ok {
+		input.ApiType = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateGraphqlApiWithContext(ctx, input)
 
 	if err != nil {
@@ -399,6 +408,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting user_pool_config: %s", err)
 	}
 	d.Set("visibility", api.Visibility)
+	d.Set("api_type", api.ApiType)
 	if err := d.Set("xray_enabled", api.XrayEnabled); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting xray_enabled: %s", err)
 	}

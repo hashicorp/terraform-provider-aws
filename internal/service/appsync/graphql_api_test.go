@@ -170,6 +170,41 @@ func testAccGraphQLAPI_authenticationType(t *testing.T) {
 	})
 }
 
+func testAccGraphQLAPI_apiType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var api1, api2 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGraphQLAPIConfig_apiType(rName, "MERGED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "api_type", "MERGED"),
+				),
+			},
+			{
+				Config: testAccGraphQLAPIConfig_apiType(rName, "GRAPHQL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
+					resource.TestCheckResourceAttr(resourceName, "api_type", "GRAPHQL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccGraphQLAPI_AuthenticationType_apiKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
@@ -1367,6 +1402,16 @@ resource "aws_appsync_graphql_api" "test" {
   name                = %[2]q
 }
 `, authenticationType, rName)
+}
+
+func testAccGraphQLAPIConfig_apiType(rName, apiType string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  api_type            = %[1]q
+  name                = %[2]q
+}
+`, apiType, rName)
 }
 
 func testAccGraphQLAPIConfig_visibility(rName, visibility string) string {
