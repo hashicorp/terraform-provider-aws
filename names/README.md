@@ -76,7 +76,7 @@ service "" {
   note                = ""
 }
 
-The explanation of the attributes of `data/names_data.csv` are as follows:
+The explanation of the attributes of `data/names_data.hcl` are as follows:
 
 ```
 
