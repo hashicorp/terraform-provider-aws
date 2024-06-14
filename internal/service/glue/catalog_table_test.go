@@ -1473,7 +1473,7 @@ resource "aws_glue_catalog_table" "test" {
   }
 
   storage_descriptor {
-    location = "s3://%[1]s/files/"
+    location = "s3://${aws_s3_bucket.bucket.bucket}/files/"
 
     columns {
       name    = "my_column_1"
