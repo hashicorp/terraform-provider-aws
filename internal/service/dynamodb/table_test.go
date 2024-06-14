@@ -1374,6 +1374,11 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config:             testAccTableConfig_timeToLive_unset(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
 		},
 	})
 }
@@ -1406,12 +1411,76 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config:             testAccTableConfig_timeToLive_unset(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+// TTL tests must be split since it can only be updated once per hour
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+func TestAccDynamoDBTable_TTL_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_timeToLive(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.attribute_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccTableConfig_timeToLive(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.attribute_name", "TestTTL"),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtTrue),
 				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_TTL_validate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableConfig_timeToLive_AttributeName(rName, "TestTTL", false),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot be specified when "ttl[0].enabled" is "false"`)),
+			},
+			{
+				Config:      testAccTableConfig_timeToLive_AttributeName(rName, "", true),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot have an empty value`)),
+			},
+			{
+				Config:      testAccTableConfig_TTL_missingAttributeName(rName, true),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot have an empty value`)),
 			},
 		},
 	})
@@ -3512,6 +3581,64 @@ resource "aws_dynamodb_table" "test" {
   ttl {
     attribute_name = %[2]t ? "TestTTL" : ""
     enabled        = %[2]t
+  }
+}
+`, rName, ttlEnabled)
+}
+
+func testAccTableConfig_timeToLive_unset(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName)
+}
+
+func testAccTableConfig_timeToLive_AttributeName(rName, ttlAttribute string, ttlEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = %[2]q
+    enabled        = %[3]t
+  }
+}
+`, rName, ttlAttribute, ttlEnabled)
+}
+
+func testAccTableConfig_TTL_missingAttributeName(rName string, ttlEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  hash_key       = "TestTableHashKey"
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  ttl {
+    attribute_name = ""
+    enabled = %[2]t
   }
 }
 `, rName, ttlEnabled)
