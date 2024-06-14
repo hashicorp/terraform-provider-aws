@@ -13,37 +13,19 @@ service "accessanalyzer" {
     human_friendly      = "IAM Access Analyzer"
   }
 
-  client {
-    go_v1_client_typename = "AccessAnalyzer"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAnalyzers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_accessanalyzer_"
   }
+
   provider_package_correct = "accessanalyzer"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["accessanalyzer_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "account" {
 
   sdk {
@@ -57,37 +39,19 @@ service "account" {
     human_friendly      = "Account Management"
   }
 
-  client {
-    go_v1_client_typename = "Account"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListRegions"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_account_"
   }
+
   provider_package_correct = "account"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["account_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "acm" {
 
   sdk {
@@ -101,37 +65,19 @@ service "acm" {
     human_friendly      = "ACM (Certificate Manager)"
   }
 
-  client {
-    go_v1_client_typename = "ACM"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCertificates"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_acm_"
   }
+
   provider_package_correct = "acm"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["acm_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "acmpca" {
 
   cli_v2_command {
@@ -150,37 +96,19 @@ service "acmpca" {
     human_friendly      = "ACM PCA (Certificate Manager Private Certificate Authority)"
   }
 
-  client {
-    go_v1_client_typename = "ACMPCA"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCertificateAuthorities"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_acmpca_"
   }
+
   provider_package_correct = "acmpca"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["acmpca_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "alexaforbusiness" {
 
   sdk {
@@ -196,35 +124,18 @@ service "alexaforbusiness" {
 
   client {
     go_v1_client_typename = "AlexaForBusiness"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_alexaforbusiness_"
   }
+
   provider_package_correct = "alexaforbusiness"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["alexaforbusiness_"]
   brand                    = ""
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "amp" {
 
   go_packages {
@@ -243,37 +154,20 @@ service "amp" {
     human_friendly      = "AMP (Managed Prometheus)"
   }
 
-  client {
-    go_v1_client_typename = "PrometheusService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListScrapers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_prometheus_"
     correct = "aws_amp_"
   }
+
   provider_package_correct = "amp"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["prometheus_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "amplify" {
 
   sdk {
@@ -287,37 +181,19 @@ service "amplify" {
     human_friendly      = "Amplify"
   }
 
-  client {
-    go_v1_client_typename = "Amplify"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApps"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_amplify_"
   }
+
   provider_package_correct = "amplify"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["amplify_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "amplifybackend" {
 
   sdk {
@@ -333,35 +209,18 @@ service "amplifybackend" {
 
   client {
     go_v1_client_typename = "AmplifyBackend"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_amplifybackend_"
   }
+
   provider_package_correct = "amplifybackend"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["amplifybackend_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "amplifyuibuilder" {
 
   sdk {
@@ -377,35 +236,18 @@ service "amplifyuibuilder" {
 
   client {
     go_v1_client_typename = "AmplifyUIBuilder"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_amplifyuibuilder_"
   }
+
   provider_package_correct = "amplifyuibuilder"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["amplifyuibuilder_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "apigateway" {
 
   sdk {
@@ -420,36 +262,23 @@ service "apigateway" {
   }
 
   client {
-    go_v1_client_typename = "APIGateway"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "GetAccount"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_api_gateway_"
     correct = "aws_apigateway_"
   }
+
   provider_package_correct = "apigateway"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["api_gateway_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "apigatewaymanagementapi" {
 
   sdk {
@@ -465,35 +294,18 @@ service "apigatewaymanagementapi" {
 
   client {
     go_v1_client_typename = "ApiGatewayManagementApi"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_apigatewaymanagementapi_"
   }
+
   provider_package_correct = "apigatewaymanagementapi"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["apigatewaymanagementapi_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "apigatewayv2" {
 
   sdk {
@@ -508,36 +320,22 @@ service "apigatewayv2" {
   }
 
   client {
-    go_v1_client_typename = "ApiGatewayV2"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "GetApis"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_apigatewayv2_"
   }
+
   provider_package_correct = "apigatewayv2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["apigatewayv2_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "appfabric" {
 
   sdk {
@@ -551,37 +349,19 @@ service "appfabric" {
     human_friendly      = "AppFabric"
   }
 
-  client {
-    go_v1_client_typename = "AppFabric"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAppBundles"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appfabric_"
   }
+
   provider_package_correct = "appfabric"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appfabric_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "appmesh" {
 
   sdk {
@@ -597,35 +377,21 @@ service "appmesh" {
 
   client {
     go_v1_client_typename = "AppMesh"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListMeshes"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appmesh_"
   }
+
   provider_package_correct = "appmesh"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appmesh_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "apprunner" {
 
   sdk {
@@ -639,37 +405,19 @@ service "apprunner" {
     human_friendly      = "App Runner"
   }
 
-  client {
-    go_v1_client_typename = "AppRunner"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListConnections"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_apprunner_"
   }
+
   provider_package_correct = "apprunner"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["apprunner_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "appconfig" {
 
   sdk {
@@ -685,35 +433,21 @@ service "appconfig" {
 
   client {
     go_v1_client_typename = "AppConfig"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appconfig_"
   }
+
   provider_package_correct = "appconfig"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appconfig_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "appconfigdata" {
 
   sdk {
@@ -729,35 +463,18 @@ service "appconfigdata" {
 
   client {
     go_v1_client_typename = "AppConfigData"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appconfigdata_"
   }
+
   provider_package_correct = "appconfigdata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appconfigdata_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "appflow" {
 
   sdk {
@@ -771,37 +488,19 @@ service "appflow" {
     human_friendly      = "AppFlow"
   }
 
-  client {
-    go_v1_client_typename = "Appflow"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListFlows"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appflow_"
   }
+
   provider_package_correct = "appflow"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appflow_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "appintegrations" {
 
   go_packages {
@@ -820,37 +519,19 @@ service "appintegrations" {
     human_friendly      = "AppIntegrations"
   }
 
-  client {
-    go_v1_client_typename = "AppIntegrationsService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appintegrations_"
   }
+
   provider_package_correct = "appintegrations"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appintegrations_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "appautoscaling" {
 
   cli_v2_command {
@@ -874,36 +555,19 @@ service "appautoscaling" {
     human_friendly      = "Application Auto Scaling"
   }
 
-  client {
-    go_v1_client_typename = "ApplicationAutoScaling"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeScalableTargets"
     endpoint_api_params      = "ServiceNamespace: awstypes.ServiceNamespaceEcs"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_appautoscaling_"
     correct = "aws_applicationautoscaling_"
   }
+
   provider_package_correct = "applicationautoscaling"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appautoscaling_"]
   brand                    = ""
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
 service "applicationcostprofiler" {
 
@@ -920,35 +584,18 @@ service "applicationcostprofiler" {
 
   client {
     go_v1_client_typename = "ApplicationCostProfiler"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_applicationcostprofiler_"
   }
+
   provider_package_correct = "applicationcostprofiler"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["applicationcostprofiler_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "discovery" {
 
   go_packages {
@@ -969,35 +616,18 @@ service "discovery" {
 
   client {
     go_v1_client_typename = "ApplicationDiscoveryService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_discovery_"
   }
+
   provider_package_correct = "discovery"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["discovery_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mgn" {
 
   sdk {
@@ -1013,35 +643,18 @@ service "mgn" {
 
   client {
     go_v1_client_typename = "Mgn"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mgn_"
   }
+
   provider_package_correct = "mgn"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mgn_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "appstream" {
 
   sdk {
@@ -1055,37 +668,20 @@ service "appstream" {
     human_friendly      = "AppStream 2.0"
   }
 
-  client {
-    go_v1_client_typename = "AppStream"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAssociatedFleets"
     endpoint_api_params      = "StackName: aws_sdkv2.String(\"test\")"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appstream_"
   }
+
   provider_package_correct = "appstream"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appstream_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "appsync" {
 
   sdk {
@@ -1101,35 +697,21 @@ service "appsync" {
 
   client {
     go_v1_client_typename = "AppSync"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDomainNames"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_appsync_"
   }
+
   provider_package_correct = "appsync"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["appsync_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "athena" {
 
   sdk {
@@ -1143,37 +725,19 @@ service "athena" {
     human_friendly      = "Athena"
   }
 
-  client {
-    go_v1_client_typename = "Athena"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDataCatalogs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_athena_"
   }
+
   provider_package_correct = "athena"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["athena_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "auditmanager" {
 
   sdk {
@@ -1187,37 +751,19 @@ service "auditmanager" {
     human_friendly      = "Audit Manager"
   }
 
-  client {
-    go_v1_client_typename = "AuditManager"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "GetAccountStatus"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_auditmanager_"
   }
+
   provider_package_correct = "auditmanager"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["auditmanager_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "autoscaling" {
 
   sdk {
@@ -1231,36 +777,18 @@ service "autoscaling" {
     human_friendly      = "Auto Scaling"
   }
 
-  client {
-    go_v1_client_typename = "AutoScaling"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeAutoScalingGroups"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_(autoscaling_|launch_configuration)"
     correct = "aws_autoscaling_"
   }
+
   provider_package_correct = "autoscaling"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["autoscaling_", "launch_configuration"]
   brand                    = ""
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
 service "autoscalingplans" {
 
@@ -1280,36 +808,17 @@ service "autoscalingplans" {
     human_friendly      = "Auto Scaling Plans"
   }
 
-  client {
-    go_v1_client_typename = "AutoScalingPlans"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeScalingPlans"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_autoscalingplans_"
   }
+
   provider_package_correct = "autoscalingplans"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["autoscalingplans_"]
   brand                    = ""
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
 service "backup" {
 
@@ -1326,35 +835,21 @@ service "backup" {
 
   client {
     go_v1_client_typename = "Backup"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListBackupPlans"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_backup_"
   }
+
   provider_package_correct = "backup"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["backup_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "backupgateway" {
 
   cli_v2_command {
@@ -1375,35 +870,18 @@ service "backupgateway" {
 
   client {
     go_v1_client_typename = "BackupGateway"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_backupgateway_"
   }
+
   provider_package_correct = "backupgateway"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["backupgateway_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "batch" {
 
   sdk {
@@ -1419,35 +897,21 @@ service "batch" {
 
   client {
     go_v1_client_typename = "Batch"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListJobs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_batch_"
   }
+
   provider_package_correct = "batch"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["batch_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "bedrock" {
 
   sdk {
@@ -1461,37 +925,19 @@ service "bedrock" {
     human_friendly      = "Amazon Bedrock"
   }
 
-  client {
-    go_v1_client_typename = "Bedrock"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListFoundationModels"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_bedrock_"
   }
+
   provider_package_correct = "bedrock"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["bedrock_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "bedrockagent" {
 
   cli_v2_command {
@@ -1510,37 +956,19 @@ service "bedrockagent" {
     human_friendly      = "Agents for Amazon Bedrock"
   }
 
-  client {
-    go_v1_client_typename = "BedrockAgent"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAgents"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_bedrockagent_"
   }
+
   provider_package_correct = "bedrockagent"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["bedrockagent_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "bcmdataexports" {
 
   sdk {
@@ -1554,37 +982,19 @@ service "bcmdataexports" {
     human_friendly      = "BCM Data Exports"
   }
 
-  client {
-    go_v1_client_typename = "BCMDataExports"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListExports"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_bcmdataexports_"
   }
+
   provider_package_correct = "bcmdataexports"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["bcmdataexports_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "billingconductor" {
 
   go_packages {
@@ -1605,35 +1015,18 @@ service "billingconductor" {
 
   client {
     go_v1_client_typename = "BillingConductor"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_billingconductor_"
   }
+
   provider_package_correct = "billingconductor"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["billingconductor_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "braket" {
 
   sdk {
@@ -1649,35 +1042,18 @@ service "braket" {
 
   client {
     go_v1_client_typename = "Braket"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_braket_"
   }
+
   provider_package_correct = "braket"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["braket_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ce" {
 
   go_packages {
@@ -1696,37 +1072,19 @@ service "ce" {
     human_friendly      = "CE (Cost Explorer)"
   }
 
-  client {
-    go_v1_client_typename = "CostExplorer"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCostCategoryDefinitions"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ce_"
   }
+
   provider_package_correct = "ce"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ce_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "chatbot" {
 
   sdk {
@@ -1741,36 +1099,22 @@ service "chatbot" {
   }
 
   client {
-    go_v1_client_typename = ""
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "GetAccountPreferences"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_chatbot_"
   }
+
   provider_package_correct = "chatbot"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["chatbot_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "chime" {
 
   sdk {
@@ -1786,35 +1130,21 @@ service "chime" {
 
   client {
     go_v1_client_typename = "Chime"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListAccounts"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_chime_"
   }
+
   provider_package_correct = "chime"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["chime_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "chimesdkidentity" {
 
   cli_v2_command {
@@ -1835,35 +1165,18 @@ service "chimesdkidentity" {
 
   client {
     go_v1_client_typename = "ChimeSDKIdentity"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_chimesdkidentity_"
   }
+
   provider_package_correct = "chimesdkidentity"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["chimesdkidentity_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "chimesdkmediapipelines" {
 
   cli_v2_command {
@@ -1882,37 +1195,19 @@ service "chimesdkmediapipelines" {
     human_friendly      = "Chime SDK Media Pipelines"
   }
 
-  client {
-    go_v1_client_typename = "ChimeSDKMediaPipelines"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListMediaPipelines"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_chimesdkmediapipelines_"
   }
+
   provider_package_correct = "chimesdkmediapipelines"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["chimesdkmediapipelines_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "chimesdkmeetings" {
 
   cli_v2_command {
@@ -1933,35 +1228,18 @@ service "chimesdkmeetings" {
 
   client {
     go_v1_client_typename = "ChimeSDKMeetings"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_chimesdkmeetings_"
   }
+
   provider_package_correct = "chimesdkmeetings"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["chimesdkmeetings_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "chimesdkmessaging" {
 
   cli_v2_command {
@@ -1982,35 +1260,18 @@ service "chimesdkmessaging" {
 
   client {
     go_v1_client_typename = "ChimeSDKMessaging"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_chimesdkmessaging_"
   }
+
   provider_package_correct = "chimesdkmessaging"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["chimesdkmessaging_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "chimesdkvoice" {
 
   cli_v2_command {
@@ -2029,37 +1290,19 @@ service "chimesdkvoice" {
     human_friendly      = "Chime SDK Voice"
   }
 
-  client {
-    go_v1_client_typename = "ChimeSDKVoice"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListPhoneNumbers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_chimesdkvoice_"
   }
+
   provider_package_correct = "chimesdkvoice"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["chimesdkvoice_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "cleanrooms" {
 
   sdk {
@@ -2073,37 +1316,19 @@ service "cleanrooms" {
     human_friendly      = "Clean Rooms"
   }
 
-  client {
-    go_v1_client_typename = "CleanRooms"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCollaborations"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cleanrooms_"
   }
+
   provider_package_correct = "cleanrooms"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cleanrooms_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cloudcontrol" {
 
   go_packages {
@@ -2122,37 +1347,20 @@ service "cloudcontrol" {
     human_friendly      = "Cloud Control API"
   }
 
-  client {
-    go_v1_client_typename = "CloudControlApi"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListResourceRequests"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cloudcontrolapi_"
     correct = "aws_cloudcontrol_"
   }
+
   provider_package_correct = "cloudcontrol"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudcontrolapi_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "clouddirectory" {
 
   sdk {
@@ -2168,35 +1376,18 @@ service "clouddirectory" {
 
   client {
     go_v1_client_typename = "CloudDirectory"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_clouddirectory_"
   }
+
   provider_package_correct = "clouddirectory"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["clouddirectory_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "servicediscovery" {
 
   sdk {
@@ -2210,37 +1401,20 @@ service "servicediscovery" {
     human_friendly      = "Cloud Map"
   }
 
-  client {
-    go_v1_client_typename = "ServiceDiscovery"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListNamespaces"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_service_discovery_"
     correct = "aws_servicediscovery_"
   }
+
   provider_package_correct = "servicediscovery"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["service_discovery_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cloud9" {
 
   sdk {
@@ -2254,37 +1428,19 @@ service "cloud9" {
     human_friendly      = "Cloud9"
   }
 
-  client {
-    go_v1_client_typename = "Cloud9"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListEnvironments"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cloud9_"
   }
+
   provider_package_correct = "cloud9"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloud9_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cloudformation" {
 
   sdk {
@@ -2299,36 +1455,23 @@ service "cloudformation" {
   }
 
   client {
-    go_v1_client_typename = "CloudFormation"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListStackInstances"
     endpoint_api_params      = "StackSetName: aws_sdkv2.String(\"test\")"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cloudformation_"
   }
+
   provider_package_correct = "cloudformation"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudformation_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cloudfront" {
 
   sdk {
@@ -2342,37 +1485,19 @@ service "cloudfront" {
     human_friendly      = "CloudFront"
   }
 
-  client {
-    go_v1_client_typename = "CloudFront"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDistributions"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cloudfront_"
   }
+
   provider_package_correct = "cloudfront"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudfront_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "cloudfrontkeyvaluestore" {
 
   cli_v2_command {
@@ -2396,37 +1521,20 @@ service "cloudfrontkeyvaluestore" {
     human_friendly      = "CloudFront KeyValueStore"
   }
 
-  client {
-    go_v1_client_typename = "CloudFrontKeyValueStore"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListKeys"
     endpoint_api_params      = "KvsARN: aws_sdkv2.String(\"arn:aws:cloudfront::111122223333:key-value-store/MaxAge\")"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cloudfrontkeyvaluestore_"
   }
+
   provider_package_correct = "cloudfrontkeyvaluestore"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudfrontkeyvaluestore_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "cloudhsmv2" {
 
   sdk {
@@ -2441,36 +1549,23 @@ service "cloudhsmv2" {
   }
 
   client {
-    go_v1_client_typename = "CloudHSMV2"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cloudhsm_v2_"
     correct = "aws_cloudhsmv2_"
   }
+
   provider_package_correct = "cloudhsmv2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudhsm"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cloudsearch" {
 
   sdk {
@@ -2484,37 +1579,19 @@ service "cloudsearch" {
     human_friendly      = "CloudSearch"
   }
 
-  client {
-    go_v1_client_typename = "CloudSearch"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDomainNames"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cloudsearch_"
   }
+
   provider_package_correct = "cloudsearch"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudsearch_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "cloudsearchdomain" {
 
   sdk {
@@ -2530,35 +1607,18 @@ service "cloudsearchdomain" {
 
   client {
     go_v1_client_typename = "CloudSearchDomain"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cloudsearchdomain_"
   }
+
   provider_package_correct = "cloudsearchdomain"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudsearchdomain_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cloudtrail" {
 
   sdk {
@@ -2572,37 +1632,20 @@ service "cloudtrail" {
     human_friendly      = "CloudTrail"
   }
 
-  client {
-    go_v1_client_typename = "CloudTrail"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListChannels"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cloudtrail"
     correct = "aws_cloudtrail_"
   }
+
   provider_package_correct = "cloudtrail"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudtrail"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cloudwatch" {
 
   sdk {
@@ -2616,37 +1659,20 @@ service "cloudwatch" {
     human_friendly      = "CloudWatch"
   }
 
-  client {
-    go_v1_client_typename = "CloudWatch"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDashboards"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cloudwatch_(?!(event_|log_|query_))"
     correct = "aws_cloudwatch_"
   }
+
   provider_package_correct = "cloudwatch"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudwatch_dashboard", "cloudwatch_metric_", "cloudwatch_composite_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "applicationinsights" {
 
   cli_v2_command {
@@ -2665,37 +1691,19 @@ service "applicationinsights" {
     human_friendly      = "CloudWatch Application Insights"
   }
 
-  client {
-    go_v1_client_typename = "ApplicationInsights"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "CreateApplication"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_applicationinsights_"
   }
+
   provider_package_correct = "applicationinsights"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["applicationinsights_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "evidently" {
 
   go_packages {
@@ -2714,37 +1722,19 @@ service "evidently" {
     human_friendly      = "CloudWatch Evidently"
   }
 
-  client {
-    go_v1_client_typename = "CloudWatchEvidently"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListProjects"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_evidently_"
   }
+
   provider_package_correct = "evidently"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["evidently_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "internetmonitor" {
 
   sdk {
@@ -2758,37 +1748,19 @@ service "internetmonitor" {
     human_friendly      = "CloudWatch Internet Monitor"
   }
 
-  client {
-    go_v1_client_typename = "InternetMonitor"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListMonitors"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_internetmonitor_"
   }
+
   provider_package_correct = "internetmonitor"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["internetmonitor_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "logs" {
 
   go_packages {
@@ -2809,35 +1781,22 @@ service "logs" {
 
   client {
     go_v1_client_typename = "CloudWatchLogs"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListAnomalies"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cloudwatch_(log_|query_)"
     correct = "aws_logs_"
   }
+
   provider_package_correct = "logs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudwatch_log_", "cloudwatch_query_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "rum" {
 
   go_packages {
@@ -2858,35 +1817,21 @@ service "rum" {
 
   client {
     go_v1_client_typename = "CloudWatchRUM"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListAppMonitors"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_rum_"
   }
+
   provider_package_correct = "rum"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["rum_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "synthetics" {
 
   sdk {
@@ -2900,37 +1845,19 @@ service "synthetics" {
     human_friendly      = "CloudWatch Synthetics"
   }
 
-  client {
-    go_v1_client_typename = "Synthetics"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListGroups"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_synthetics_"
   }
+
   provider_package_correct = "synthetics"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["synthetics_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "codeartifact" {
 
   sdk {
@@ -2944,37 +1871,19 @@ service "codeartifact" {
     human_friendly      = "CodeArtifact"
   }
 
-  client {
-    go_v1_client_typename = "CodeArtifact"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDomains"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codeartifact_"
   }
+
   provider_package_correct = "codeartifact"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codeartifact_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "codebuild" {
 
   sdk {
@@ -2988,37 +1897,19 @@ service "codebuild" {
     human_friendly      = "CodeBuild"
   }
 
-  client {
-    go_v1_client_typename = "CodeBuild"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListBuildBatches"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codebuild_"
   }
+
   provider_package_correct = "codebuild"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codebuild_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "codecommit" {
 
   sdk {
@@ -3032,37 +1923,19 @@ service "codecommit" {
     human_friendly      = "CodeCommit"
   }
 
-  client {
-    go_v1_client_typename = "CodeCommit"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListRepositories"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codecommit_"
   }
+
   provider_package_correct = "codecommit"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codecommit_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "deploy" {
 
   go_packages {
@@ -3081,37 +1954,20 @@ service "deploy" {
     human_friendly      = "CodeDeploy"
   }
 
-  client {
-    go_v1_client_typename = "CodeDeploy"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_codedeploy_"
     correct = "aws_deploy_"
   }
+
   provider_package_correct = "deploy"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codedeploy_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "codeguruprofiler" {
 
   sdk {
@@ -3125,37 +1981,19 @@ service "codeguruprofiler" {
     human_friendly      = "CodeGuru Profiler"
   }
 
-  client {
-    go_v1_client_typename = "CodeGuruProfiler"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListProfilingGroups"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codeguruprofiler_"
   }
+
   provider_package_correct = "codeguruprofiler"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codeguruprofiler_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "codegurureviewer" {
 
   cli_v2_command {
@@ -3174,37 +2012,20 @@ service "codegurureviewer" {
     human_friendly      = "CodeGuru Reviewer"
   }
 
-  client {
-    go_v1_client_typename = "CodeGuruReviewer"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCodeReviews"
     endpoint_api_params      = "Type: awstypes.TypePullRequest"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codegurureviewer_"
   }
+
   provider_package_correct = "codegurureviewer"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codegurureviewer_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "codepipeline" {
 
   sdk {
@@ -3218,37 +2039,20 @@ service "codepipeline" {
     human_friendly      = "CodePipeline"
   }
 
-  client {
-    go_v1_client_typename = "CodePipeline"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListPipelines"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_codepipeline"
     correct = "aws_codepipeline_"
   }
+
   provider_package_correct = "codepipeline"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codepipeline"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "codestar" {
 
   sdk {
@@ -3264,35 +2068,18 @@ service "codestar" {
 
   client {
     go_v1_client_typename = "CodeStar"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codestar_"
   }
+
   provider_package_correct = "codestar"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codestar_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "codestarconnections" {
 
   cli_v2_command {
@@ -3311,37 +2098,19 @@ service "codestarconnections" {
     human_friendly      = "CodeStar Connections"
   }
 
-  client {
-    go_v1_client_typename = "CodeStarConnections"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListConnections"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codestarconnections_"
   }
+
   provider_package_correct = "codestarconnections"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codestarconnections_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "codestarnotifications" {
 
   cli_v2_command {
@@ -3360,37 +2129,19 @@ service "codestarnotifications" {
     human_friendly      = "CodeStar Notifications"
   }
 
-  client {
-    go_v1_client_typename = "CodeStarNotifications"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListTargets"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codestarnotifications_"
   }
+
   provider_package_correct = "codestarnotifications"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codestarnotifications_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cognitoidentity" {
 
   cli_v2_command {
@@ -3409,37 +2160,21 @@ service "cognitoidentity" {
     human_friendly      = "Cognito Identity"
   }
 
-  client {
-    go_v1_client_typename = "CognitoIdentity"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListIdentityPools"
     endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cognito_identity_(?!provider)"
     correct = "aws_cognitoidentity_"
   }
+
   provider_package_correct = "cognitoidentity"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cognito_identity_pool"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "cognitoidp" {
 
   cli_v2_command {
@@ -3465,35 +2200,22 @@ service "cognitoidp" {
 
   client {
     go_v1_client_typename = "CognitoIdentityProvider"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListUserPools"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cognito_(identity_provider|resource|user|risk)"
     correct = "aws_cognitoidp_"
   }
+
   provider_package_correct = "cognitoidp"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cognito_identity_provider", "cognito_managed_user", "cognito_resource_", "cognito_user", "cognito_risk"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "cognitosync" {
 
   cli_v2_command {
@@ -3514,35 +2236,18 @@ service "cognitosync" {
 
   client {
     go_v1_client_typename = "CognitoSync"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cognitosync_"
   }
+
   provider_package_correct = "cognitosync"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cognitosync_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "comprehend" {
 
   sdk {
@@ -3556,37 +2261,19 @@ service "comprehend" {
     human_friendly      = "Comprehend"
   }
 
-  client {
-    go_v1_client_typename = "Comprehend"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDocumentClassifiers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_comprehend_"
   }
+
   provider_package_correct = "comprehend"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["comprehend_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "comprehendmedical" {
 
   sdk {
@@ -3602,35 +2289,18 @@ service "comprehendmedical" {
 
   client {
     go_v1_client_typename = "ComprehendMedical"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_comprehendmedical_"
   }
+
   provider_package_correct = "comprehendmedical"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["comprehendmedical_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "computeoptimizer" {
 
   cli_v2_command {
@@ -3649,37 +2319,19 @@ service "computeoptimizer" {
     human_friendly      = "Compute Optimizer"
   }
 
-  client {
-    go_v1_client_typename = "ComputeOptimizer"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "GetEnrollmentStatus"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_computeoptimizer_"
   }
+
   provider_package_correct = "computeoptimizer"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["computeoptimizer_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "configservice" {
 
   sdk {
@@ -3693,37 +2345,20 @@ service "configservice" {
     human_friendly      = "Config"
   }
 
-  client {
-    go_v1_client_typename = "ConfigService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListStoredQueries"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_config_"
     correct = "aws_configservice_"
   }
+
   provider_package_correct = "configservice"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["config_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "connect" {
 
   sdk {
@@ -3739,35 +2374,21 @@ service "connect" {
 
   client {
     go_v1_client_typename = "Connect"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListInstances"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_connect_"
   }
+
   provider_package_correct = "connect"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["connect_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "connectcases" {
 
   sdk {
@@ -3783,35 +2404,21 @@ service "connectcases" {
 
   client {
     go_v1_client_typename = "ConnectCases"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDomains"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_connectcases_"
   }
+
   provider_package_correct = "connectcases"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["connectcases_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "connectcontactlens" {
 
   cli_v2_command {
@@ -3832,35 +2439,18 @@ service "connectcontactlens" {
 
   client {
     go_v1_client_typename = "ConnectContactLens"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_connectcontactlens_"
   }
+
   provider_package_correct = "connectcontactlens"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["connectcontactlens_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "customerprofiles" {
 
   cli_v2_command {
@@ -3879,37 +2469,19 @@ service "customerprofiles" {
     human_friendly      = "Connect Customer Profiles"
   }
 
-  client {
-    go_v1_client_typename = "CustomerProfiles"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDomains"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_customerprofiles_"
   }
+
   provider_package_correct = "customerprofiles"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["customerprofiles_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "connectparticipant" {
 
   sdk {
@@ -3925,35 +2497,18 @@ service "connectparticipant" {
 
   client {
     go_v1_client_typename = "ConnectParticipant"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_connectparticipant_"
   }
+
   provider_package_correct = "connectparticipant"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["connectparticipant_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "voiceid" {
 
   cli_v2_command {
@@ -3974,35 +2529,18 @@ service "voiceid" {
 
   client {
     go_v1_client_typename = "VoiceID"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_voiceid_"
   }
+
   provider_package_correct = "voiceid"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["voiceid_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "wisdom" {
 
   go_packages {
@@ -4023,35 +2561,18 @@ service "wisdom" {
 
   client {
     go_v1_client_typename = "ConnectWisdomService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_wisdom_"
   }
+
   provider_package_correct = "wisdom"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["wisdom_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "controltower" {
 
   sdk {
@@ -4065,37 +2586,19 @@ service "controltower" {
     human_friendly      = "Control Tower"
   }
 
-  client {
-    go_v1_client_typename = "ControlTower"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListLandingZones"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_controltower_"
   }
+
   provider_package_correct = "controltower"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["controltower_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "costoptimizationhub" {
 
   cli_v2_command {
@@ -4115,36 +2618,23 @@ service "costoptimizationhub" {
   }
 
   client {
-    go_v1_client_typename = "CostOptimizationHub"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "GetPreferences"
-    endpoint_api_params      = ""
     endpoint_region_override = "us-east-1"
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_costoptimizationhub_"
   }
+
   provider_package_correct = "costoptimizationhub"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["costoptimizationhub_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "cur" {
 
   go_packages {
@@ -4164,36 +2654,23 @@ service "cur" {
   }
 
   client {
-    go_v1_client_typename = "CostandUsageReportService"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeReportDefinitions"
-    endpoint_api_params      = ""
     endpoint_region_override = "us-east-1"
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_cur_"
   }
+
   provider_package_correct = "cur"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cur_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "dataexchange" {
 
   sdk {
@@ -4209,35 +2686,21 @@ service "dataexchange" {
 
   client {
     go_v1_client_typename = "DataExchange"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDataSets"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_dataexchange_"
   }
+
   provider_package_correct = "dataexchange"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["dataexchange_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "datapipeline" {
 
   sdk {
@@ -4253,35 +2716,21 @@ service "datapipeline" {
 
   client {
     go_v1_client_typename = "DataPipeline"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListPipelines"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_datapipeline_"
   }
+
   provider_package_correct = "datapipeline"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["datapipeline_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "datasync" {
 
   sdk {
@@ -4295,37 +2744,19 @@ service "datasync" {
     human_friendly      = "DataSync"
   }
 
-  client {
-    go_v1_client_typename = "DataSync"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAgents"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_datasync_"
   }
+
   provider_package_correct = "datasync"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["datasync_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "datazone" {
 
   sdk {
@@ -4339,37 +2770,19 @@ service "datazone" {
     human_friendly      = "DataZone"
   }
 
-  client {
-    go_v1_client_typename = "DataZone"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDomains"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_datazone_"
   }
+
   provider_package_correct = "datazone"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["datazone_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "detective" {
 
   sdk {
@@ -4385,35 +2798,21 @@ service "detective" {
 
   client {
     go_v1_client_typename = "Detective"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListGraphs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_detective_"
   }
+
   provider_package_correct = "detective"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["detective_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "devicefarm" {
 
   sdk {
@@ -4427,37 +2826,19 @@ service "devicefarm" {
     human_friendly      = "Device Farm"
   }
 
-  client {
-    go_v1_client_typename = "DeviceFarm"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDeviceInstances"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_devicefarm_"
   }
+
   provider_package_correct = "devicefarm"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["devicefarm_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "devopsguru" {
 
   cli_v2_command {
@@ -4476,37 +2857,19 @@ service "devopsguru" {
     human_friendly      = "DevOps Guru"
   }
 
-  client {
-    go_v1_client_typename = "DevOpsGuru"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeAccountHealth"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_devopsguru_"
   }
+
   provider_package_correct = "devopsguru"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["devopsguru_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "directconnect" {
 
   sdk {
@@ -4522,35 +2885,22 @@ service "directconnect" {
 
   client {
     go_v1_client_typename = "DirectConnect"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeConnections"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_dx_"
     correct = "aws_directconnect_"
   }
+
   provider_package_correct = "directconnect"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["dx_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "dlm" {
 
   sdk {
@@ -4564,37 +2914,19 @@ service "dlm" {
     human_friendly      = "DLM (Data Lifecycle Manager)"
   }
 
-  client {
-    go_v1_client_typename = "DLM"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "GetLifecyclePolicies"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_dlm_"
   }
+
   provider_package_correct = "dlm"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["dlm_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "dms" {
 
   go_packages {
@@ -4615,35 +2947,21 @@ service "dms" {
 
   client {
     go_v1_client_typename = "DatabaseMigrationService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeCertificates"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_dms_"
   }
+
   provider_package_correct = "dms"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["dms_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "docdb" {
 
   sdk {
@@ -4657,37 +2975,19 @@ service "docdb" {
     human_friendly      = "DocumentDB"
   }
 
-  client {
-    go_v1_client_typename = "DocDB"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeDBClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_docdb_"
   }
+
   provider_package_correct = "docdb"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["docdb_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "docdbelastic" {
 
   cli_v2_command {
@@ -4706,37 +3006,19 @@ service "docdbelastic" {
     human_friendly      = "DocumentDB Elastic"
   }
 
-  client {
-    go_v1_client_typename = "DocDBElastic"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_docdbelastic_"
   }
+
   provider_package_correct = "docdbelastic"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["docdbelastic_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "drs" {
 
   sdk {
@@ -4750,37 +3032,19 @@ service "drs" {
     human_friendly      = "DRS (Elastic Disaster Recovery)"
   }
 
-  client {
-    go_v1_client_typename = "Drs"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeJobs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_drs_"
   }
+
   provider_package_correct = "drs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["drs_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ds" {
 
   go_packages {
@@ -4801,35 +3065,22 @@ service "ds" {
 
   client {
     go_v1_client_typename = "DirectoryService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeDirectories"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_directory_service_"
     correct = "aws_ds_"
   }
+
   provider_package_correct = "ds"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["directory_service_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "dax" {
 
   sdk {
@@ -4843,37 +3094,19 @@ service "dax" {
     human_friendly      = "DynamoDB Accelerator (DAX)"
   }
 
-  client {
-    go_v1_client_typename = "DAX"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_dax_"
   }
+
   provider_package_correct = "dax"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["dax_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "dynamodbstreams" {
 
   sdk {
@@ -4889,35 +3122,18 @@ service "dynamodbstreams" {
 
   client {
     go_v1_client_typename = "DynamoDBStreams"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_dynamodbstreams_"
   }
+
   provider_package_correct = "dynamodbstreams"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["dynamodbstreams_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ebs" {
 
   sdk {
@@ -4933,35 +3149,18 @@ service "ebs" {
 
   client {
     go_v1_client_typename = "EBS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ebs_"
   }
+
   provider_package_correct = "ebs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["changewhenimplemented"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "imagebuilder" {
 
   sdk {
@@ -4977,35 +3176,21 @@ service "imagebuilder" {
 
   client {
     go_v1_client_typename = "Imagebuilder"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListImages"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_imagebuilder_"
   }
+
   provider_package_correct = "imagebuilder"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["imagebuilder_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "ec2instanceconnect" {
 
   cli_v2_command {
@@ -5026,35 +3211,18 @@ service "ec2instanceconnect" {
 
   client {
     go_v1_client_typename = "EC2InstanceConnect"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ec2instanceconnect_"
   }
+
   provider_package_correct = "ec2instanceconnect"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ec2instanceconnect_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ecr" {
 
   sdk {
@@ -5068,37 +3236,19 @@ service "ecr" {
     human_friendly      = "ECR (Elastic Container Registry)"
   }
 
-  client {
-    go_v1_client_typename = "ECR"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeRepositories"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ecr_"
   }
+
   provider_package_correct = "ecr"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ecr_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "ecrpublic" {
 
   cli_v2_command {
@@ -5117,37 +3267,19 @@ service "ecrpublic" {
     human_friendly      = "ECR Public"
   }
 
-  client {
-    go_v1_client_typename = "ECRPublic"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeRepositories"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ecrpublic_"
   }
+
   provider_package_correct = "ecrpublic"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ecrpublic_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "ecs" {
 
   sdk {
@@ -5163,35 +3295,21 @@ service "ecs" {
 
   client {
     go_v1_client_typename = "ECS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ecs_"
   }
+
   provider_package_correct = "ecs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ecs_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "efs" {
 
   sdk {
@@ -5207,35 +3325,21 @@ service "efs" {
 
   client {
     go_v1_client_typename = "EFS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeFileSystems"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_efs_"
   }
+
   provider_package_correct = "efs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["efs_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "eks" {
 
   sdk {
@@ -5249,37 +3353,19 @@ service "eks" {
     human_friendly      = "EKS (Elastic Kubernetes)"
   }
 
-  client {
-    go_v1_client_typename = "EKS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_eks_"
   }
+
   provider_package_correct = "eks"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["eks_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "elasticbeanstalk" {
 
   sdk {
@@ -5293,37 +3379,20 @@ service "elasticbeanstalk" {
     human_friendly      = "Elastic Beanstalk"
   }
 
-  client {
-    go_v1_client_typename = "ElasticBeanstalk"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAvailableSolutionStacks"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_elastic_beanstalk_"
     correct = "aws_elasticbeanstalk_"
   }
+
   provider_package_correct = "elasticbeanstalk"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["elastic_beanstalk_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "elasticinference" {
 
   cli_v2_command {
@@ -5344,35 +3413,18 @@ service "elasticinference" {
 
   client {
     go_v1_client_typename = "ElasticInference"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_elasticinference_"
   }
+
   provider_package_correct = "elasticinference"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["elasticinference_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "elastictranscoder" {
 
   sdk {
@@ -5388,35 +3440,21 @@ service "elastictranscoder" {
 
   client {
     go_v1_client_typename = "ElasticTranscoder"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListPipelines"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_elastictranscoder_"
   }
+
   provider_package_correct = "elastictranscoder"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["elastictranscoder_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "elasticache" {
 
   sdk {
@@ -5432,35 +3470,21 @@ service "elasticache" {
 
   client {
     go_v1_client_typename = "ElastiCache"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeCacheClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_elasticache_"
   }
+
   provider_package_correct = "elasticache"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["elasticache_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "elasticsearch" {
 
   cli_v2_command {
@@ -5486,35 +3510,22 @@ service "elasticsearch" {
 
   client {
     go_v1_client_typename = "ElasticsearchService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDomainNames"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_elasticsearch_"
     correct = "aws_es_"
   }
+
   provider_package_correct = "es"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["elasticsearch_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "elbv2" {
 
   go_packages {
@@ -5535,34 +3546,20 @@ service "elbv2" {
 
   client {
     go_v1_client_typename = "ELBV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeLoadBalancers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_a?lb(\\b|_listener|_target_group|s|_trust_store)"
     correct = "aws_elbv2_"
   }
+
   provider_package_correct = "elbv2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lbs?\\.", "lb_listener", "lb_target_group", "lb_hosted", "lb_trust_store"]
   brand                    = ""
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
 service "elb" {
 
@@ -5584,34 +3581,20 @@ service "elb" {
 
   client {
     go_v1_client_typename = "ELB"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeLoadBalancers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)"
     correct = "aws_elb_"
   }
+
   provider_package_correct = "elb"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["app_cookie_stickiness_policy", "elb", "lb_cookie_stickiness_policy", "lb_ssl_negotiation_policy", "load_balancer", "proxy_protocol_policy"]
   brand                    = ""
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
 service "mediaconnect" {
 
@@ -5626,37 +3609,19 @@ service "mediaconnect" {
     human_friendly      = "Elemental MediaConnect"
   }
 
-  client {
-    go_v1_client_typename = "MediaConnect"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListBridges"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mediaconnect_"
   }
+
   provider_package_correct = "mediaconnect"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mediaconnect_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mediaconvert" {
 
   sdk {
@@ -5669,38 +3634,20 @@ service "mediaconvert" {
     provider_name_upper = "MediaConvert"
     human_friendly      = "Elemental MediaConvert"
   }
-
-  client {
-    go_v1_client_typename = "MediaConvert"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListJobs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_media_convert_"
     correct = "aws_mediaconvert_"
   }
+
   provider_package_correct = "mediaconvert"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["media_convert_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "medialive" {
 
   sdk {
@@ -5714,37 +3661,19 @@ service "medialive" {
     human_friendly      = "Elemental MediaLive"
   }
 
-  client {
-    go_v1_client_typename = "MediaLive"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListOfferings"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_medialive_"
   }
+
   provider_package_correct = "medialive"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["medialive_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mediapackage" {
 
   sdk {
@@ -5758,37 +3687,20 @@ service "mediapackage" {
     human_friendly      = "Elemental MediaPackage"
   }
 
-  client {
-    go_v1_client_typename = "MediaPackage"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListChannels"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_media_package_"
     correct = "aws_mediapackage_"
   }
+
   provider_package_correct = "mediapackage"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["media_package_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mediapackagevod" {
 
   cli_v2_command {
@@ -5809,35 +3721,18 @@ service "mediapackagevod" {
 
   client {
     go_v1_client_typename = "MediaPackageVod"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mediapackagevod_"
   }
+
   provider_package_correct = "mediapackagevod"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mediapackagevod_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mediastore" {
 
   sdk {
@@ -5851,37 +3746,20 @@ service "mediastore" {
     human_friendly      = "Elemental MediaStore"
   }
 
-  client {
-    go_v1_client_typename = "MediaStore"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListContainers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_media_store_"
     correct = "aws_mediastore_"
   }
+
   provider_package_correct = "mediastore"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["media_store_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mediastoredata" {
 
   cli_v2_command {
@@ -5902,35 +3780,18 @@ service "mediastoredata" {
 
   client {
     go_v1_client_typename = "MediaStoreData"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mediastoredata_"
   }
+
   provider_package_correct = "mediastoredata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mediastoredata_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mediatailor" {
 
   sdk {
@@ -5946,35 +3807,18 @@ service "mediatailor" {
 
   client {
     go_v1_client_typename = "MediaTailor"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mediatailor_"
   }
+
   provider_package_correct = "mediatailor"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["media_tailor_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "emr" {
 
   sdk {
@@ -5990,35 +3834,21 @@ service "emr" {
 
   client {
     go_v1_client_typename = "EMR"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_emr_"
   }
+
   provider_package_correct = "emr"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["emr_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "emrcontainers" {
 
   cli_v2_command {
@@ -6039,35 +3869,21 @@ service "emrcontainers" {
 
   client {
     go_v1_client_typename = "EMRContainers"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListVirtualClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_emrcontainers_"
   }
+
   provider_package_correct = "emrcontainers"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["emrcontainers_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "emrserverless" {
 
   cli_v2_command {
@@ -6086,37 +3902,19 @@ service "emrserverless" {
     human_friendly      = "EMR Serverless"
   }
 
-  client {
-    go_v1_client_typename = "EMRServerless"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_emrserverless_"
   }
+
   provider_package_correct = "emrserverless"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["emrserverless_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "events" {
 
   go_packages {
@@ -6135,37 +3933,20 @@ service "events" {
     human_friendly      = "EventBridge"
   }
 
-  client {
-    go_v1_client_typename = "EventBridge"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListEventBuses"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_cloudwatch_event_"
     correct = "aws_events_"
   }
+
   provider_package_correct = "events"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["cloudwatch_event_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "schemas" {
 
   sdk {
@@ -6180,36 +3961,22 @@ service "schemas" {
   }
 
   client {
-    go_v1_client_typename = "Schemas"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListRegistries"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_schemas_"
   }
+
   provider_package_correct = "schemas"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["schemas_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "fis" {
 
   sdk {
@@ -6223,37 +3990,19 @@ service "fis" {
     human_friendly      = "FIS (Fault Injection Simulator)"
   }
 
-  client {
-    go_v1_client_typename = "FIS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListExperiments"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_fis_"
   }
+
   provider_package_correct = "fis"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["fis_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "finspace" {
 
   sdk {
@@ -6267,37 +4016,19 @@ service "finspace" {
     human_friendly      = "FinSpace"
   }
 
-  client {
-    go_v1_client_typename = "Finspace"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListEnvironments"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_finspace_"
   }
+
   provider_package_correct = "finspace"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["finspace_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "finspacedata" {
 
   cli_v2_command {
@@ -6318,35 +4049,18 @@ service "finspacedata" {
 
   client {
     go_v1_client_typename = "FinSpaceData"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_finspacedata_"
   }
+
   provider_package_correct = "finspacedata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["finspacedata_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "fms" {
 
   sdk {
@@ -6361,36 +4075,23 @@ service "fms" {
   }
 
   client {
-    go_v1_client_typename = "FMS"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListAppsLists"
     endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_fms_"
   }
+
   provider_package_correct = "fms"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["fms_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "forecast" {
 
   go_packages {
@@ -6411,35 +4112,18 @@ service "forecast" {
 
   client {
     go_v1_client_typename = "ForecastService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_forecast_"
   }
+
   provider_package_correct = "forecast"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["forecast_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "forecastquery" {
 
   go_packages {
@@ -6460,35 +4144,18 @@ service "forecastquery" {
 
   client {
     go_v1_client_typename = "ForecastQueryService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_forecastquery_"
   }
+
   provider_package_correct = "forecastquery"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["forecastquery_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "frauddetector" {
 
   sdk {
@@ -6504,35 +4171,18 @@ service "frauddetector" {
 
   client {
     go_v1_client_typename = "FraudDetector"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_frauddetector_"
   }
+
   provider_package_correct = "frauddetector"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["frauddetector_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "fsx" {
 
   sdk {
@@ -6548,35 +4198,21 @@ service "fsx" {
 
   client {
     go_v1_client_typename = "FSx"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeFileSystems"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_fsx_"
   }
+
   provider_package_correct = "fsx"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["fsx_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "gamelift" {
 
   sdk {
@@ -6592,35 +4228,21 @@ service "gamelift" {
 
   client {
     go_v1_client_typename = "GameLift"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListGameServerGroups"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_gamelift_"
   }
+
   provider_package_correct = "gamelift"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["gamelift_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "globalaccelerator" {
 
   sdk {
@@ -6635,36 +4257,23 @@ service "globalaccelerator" {
   }
 
   client {
-    go_v1_client_typename = "GlobalAccelerator"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListAccelerators"
-    endpoint_api_params      = ""
     endpoint_region_override = "us-west-2"
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_globalaccelerator_"
   }
+
   provider_package_correct = "globalaccelerator"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["globalaccelerator_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "glue" {
 
   sdk {
@@ -6680,35 +4289,21 @@ service "glue" {
 
   client {
     go_v1_client_typename = "Glue"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListRegistries"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_glue_"
   }
+
   provider_package_correct = "glue"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["glue_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "databrew" {
 
   go_packages {
@@ -6729,35 +4324,18 @@ service "databrew" {
 
   client {
     go_v1_client_typename = "GlueDataBrew"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_databrew_"
   }
+
   provider_package_correct = "databrew"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["databrew_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "groundstation" {
 
   sdk {
@@ -6771,37 +4349,19 @@ service "groundstation" {
     human_friendly      = "Ground Station"
   }
 
-  client {
-    go_v1_client_typename = "GroundStation"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListConfigs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_groundstation_"
   }
+
   provider_package_correct = "groundstation"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["groundstation_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "guardduty" {
 
   sdk {
@@ -6817,35 +4377,21 @@ service "guardduty" {
 
   client {
     go_v1_client_typename = "GuardDuty"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDetectors"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_guardduty_"
   }
+
   provider_package_correct = "guardduty"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["guardduty_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "health" {
 
   sdk {
@@ -6861,35 +4407,18 @@ service "health" {
 
   client {
     go_v1_client_typename = "Health"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_health_"
   }
+
   provider_package_correct = "health"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["health_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "healthlake" {
 
   sdk {
@@ -6903,37 +4432,19 @@ service "healthlake" {
     human_friendly      = "HealthLake"
   }
 
-  client {
-    go_v1_client_typename = "HealthLake"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListFHIRDatastores"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_healthlake_"
   }
+
   provider_package_correct = "healthlake"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["healthlake_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "honeycode" {
 
   sdk {
@@ -6949,35 +4460,18 @@ service "honeycode" {
 
   client {
     go_v1_client_typename = "Honeycode"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_honeycode_"
   }
+
   provider_package_correct = "honeycode"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["honeycode_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iam" {
 
   sdk {
@@ -6993,35 +4487,25 @@ service "iam" {
 
   client {
     go_v1_client_typename = "IAM"
-    skip_client_generate  = false
   }
 
   env_var {
     deprecated_env_var = "AWS_IAM_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_IAM_ENDPOINT"
   }
-
   endpoint_info {
     endpoint_api_call        = "ListRoles"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iam_"
   }
+
   provider_package_correct = "iam"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iam_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "inspector" {
 
   sdk {
@@ -7037,35 +4521,21 @@ service "inspector" {
 
   client {
     go_v1_client_typename = "Inspector"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListRulesPackages"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_inspector_"
   }
+
   provider_package_correct = "inspector"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["inspector_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "inspector2" {
 
   sdk {
@@ -7078,38 +4548,19 @@ service "inspector2" {
     provider_name_upper = "Inspector2"
     human_friendly      = "Inspector"
   }
-
-  client {
-    go_v1_client_typename = "Inspector2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAccountPermissions"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_inspector2_"
   }
+
   provider_package_correct = "inspector2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["inspector2_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "iot1clickdevices" {
 
   cli_v2_command {
@@ -7135,35 +4586,18 @@ service "iot1clickdevices" {
 
   client {
     go_v1_client_typename = "IoT1ClickDevicesService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iot1clickdevices_"
   }
+
   provider_package_correct = "iot1clickdevices"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iot1clickdevices_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iot1clickprojects" {
 
   cli_v2_command {
@@ -7184,35 +4618,18 @@ service "iot1clickprojects" {
 
   client {
     go_v1_client_typename = "IoT1ClickProjects"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iot1clickprojects_"
   }
+
   provider_package_correct = "iot1clickprojects"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iot1clickprojects_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotanalytics" {
 
   sdk {
@@ -7228,35 +4645,21 @@ service "iotanalytics" {
 
   client {
     go_v1_client_typename = "IoTAnalytics"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListChannels"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotanalytics_"
   }
+
   provider_package_correct = "iotanalytics"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotanalytics_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotdata" {
 
   cli_v2_command {
@@ -7282,35 +4685,18 @@ service "iotdata" {
 
   client {
     go_v1_client_typename = "IoTDataPlane"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotdata_"
   }
+
   provider_package_correct = "iotdata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotdata_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotdeviceadvisor" {
 
   sdk {
@@ -7326,35 +4712,18 @@ service "iotdeviceadvisor" {
 
   client {
     go_v1_client_typename = "IoTDeviceAdvisor"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotdeviceadvisor_"
   }
+
   provider_package_correct = "iotdeviceadvisor"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotdeviceadvisor_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotevents" {
 
   sdk {
@@ -7370,35 +4739,21 @@ service "iotevents" {
 
   client {
     go_v1_client_typename = "IoTEvents"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListAlarmModels"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotevents_"
   }
+
   provider_package_correct = "iotevents"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotevents_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ioteventsdata" {
 
   cli_v2_command {
@@ -7419,35 +4774,18 @@ service "ioteventsdata" {
 
   client {
     go_v1_client_typename = "IoTEventsData"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ioteventsdata_"
   }
+
   provider_package_correct = "ioteventsdata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ioteventsdata_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotfleethub" {
 
   sdk {
@@ -7463,35 +4801,18 @@ service "iotfleethub" {
 
   client {
     go_v1_client_typename = "IoTFleetHub"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotfleethub_"
   }
+
   provider_package_correct = "iotfleethub"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotfleethub_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "greengrass" {
 
   sdk {
@@ -7507,35 +4828,21 @@ service "greengrass" {
 
   client {
     go_v1_client_typename = "Greengrass"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListGroups"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_greengrass_"
   }
+
   provider_package_correct = "greengrass"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["greengrass_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "greengrassv2" {
 
   sdk {
@@ -7551,35 +4858,18 @@ service "greengrassv2" {
 
   client {
     go_v1_client_typename = "GreengrassV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_greengrassv2_"
   }
+
   provider_package_correct = "greengrassv2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["greengrassv2_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotjobsdata" {
 
   cli_v2_command {
@@ -7605,35 +4895,18 @@ service "iotjobsdata" {
 
   client {
     go_v1_client_typename = "IoTJobsDataPlane"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotjobsdata_"
   }
+
   provider_package_correct = "iotjobsdata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotjobsdata_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotsecuretunneling" {
 
   sdk {
@@ -7649,35 +4922,18 @@ service "iotsecuretunneling" {
 
   client {
     go_v1_client_typename = "IoTSecureTunneling"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotsecuretunneling_"
   }
+
   provider_package_correct = "iotsecuretunneling"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotsecuretunneling_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotsitewise" {
 
   sdk {
@@ -7693,35 +4949,18 @@ service "iotsitewise" {
 
   client {
     go_v1_client_typename = "IoTSiteWise"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotsitewise_"
   }
+
   provider_package_correct = "iotsitewise"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotsitewise_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotthingsgraph" {
 
   sdk {
@@ -7737,35 +4976,18 @@ service "iotthingsgraph" {
 
   client {
     go_v1_client_typename = "IoTThingsGraph"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotthingsgraph_"
   }
+
   provider_package_correct = "iotthingsgraph"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotthingsgraph_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iottwinmaker" {
 
   sdk {
@@ -7781,35 +5003,18 @@ service "iottwinmaker" {
 
   client {
     go_v1_client_typename = "IoTTwinMaker"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iottwinmaker_"
   }
+
   provider_package_correct = "iottwinmaker"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iottwinmaker_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iotwireless" {
 
   sdk {
@@ -7825,35 +5030,18 @@ service "iotwireless" {
 
   client {
     go_v1_client_typename = "IoTWireless"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iotwireless_"
   }
+
   provider_package_correct = "iotwireless"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iotwireless_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ivs" {
 
   sdk {
@@ -7869,35 +5057,21 @@ service "ivs" {
 
   client {
     go_v1_client_typename = "IVS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListChannels"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ivs_"
   }
+
   provider_package_correct = "ivs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ivs_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "ivschat" {
 
   sdk {
@@ -7911,37 +5085,19 @@ service "ivschat" {
     human_friendly      = "IVS (Interactive Video) Chat"
   }
 
-  client {
-    go_v1_client_typename = "Ivschat"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListRooms"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ivschat_"
   }
+
   provider_package_correct = "ivschat"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ivschat_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kendra" {
 
   sdk {
@@ -7957,35 +5113,21 @@ service "kendra" {
 
   client {
     go_v1_client_typename = "Kendra"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListIndices"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_kendra_"
   }
+
   provider_package_correct = "kendra"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kendra_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "keyspaces" {
 
   sdk {
@@ -7999,37 +5141,19 @@ service "keyspaces" {
     human_friendly      = "Keyspaces (for Apache Cassandra)"
   }
 
-  client {
-    go_v1_client_typename = "Keyspaces"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListKeyspaces"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_keyspaces_"
   }
+
   provider_package_correct = "keyspaces"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["keyspaces_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kinesis" {
 
   sdk {
@@ -8044,36 +5168,23 @@ service "kinesis" {
   }
 
   client {
-    go_v1_client_typename = "Kinesis"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListStreams"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_kinesis_stream"
     correct = "aws_kinesis_"
   }
+
   provider_package_correct = "kinesis"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesis_stream", "kinesis_resource_policy"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kinesisanalytics" {
 
   sdk {
@@ -8089,35 +5200,22 @@ service "kinesisanalytics" {
 
   client {
     go_v1_client_typename = "KinesisAnalytics"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_kinesis_analytics_"
     correct = "aws_kinesisanalytics_"
   }
+
   provider_package_correct = "kinesisanalytics"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesis_analytics_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kinesisanalyticsv2" {
 
   sdk {
@@ -8133,35 +5231,21 @@ service "kinesisanalyticsv2" {
 
   client {
     go_v1_client_typename = "KinesisAnalyticsV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_kinesisanalyticsv2_"
   }
+
   provider_package_correct = "kinesisanalyticsv2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesisanalyticsv2_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "firehose" {
 
   sdk {
@@ -8175,37 +5259,20 @@ service "firehose" {
     human_friendly      = "Kinesis Firehose"
   }
 
-  client {
-    go_v1_client_typename = "Firehose"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDeliveryStreams"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_kinesis_firehose_"
     correct = "aws_firehose_"
   }
+
   provider_package_correct = "firehose"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesis_firehose_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kinesisvideo" {
 
   sdk {
@@ -8221,35 +5288,21 @@ service "kinesisvideo" {
 
   client {
     go_v1_client_typename = "KinesisVideo"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListStreams"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_kinesisvideo_"
   }
+
   provider_package_correct = "kinesisvideo"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesis_video_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kinesisvideoarchivedmedia" {
 
   cli_v2_command {
@@ -8270,35 +5323,18 @@ service "kinesisvideoarchivedmedia" {
 
   client {
     go_v1_client_typename = "KinesisVideoArchivedMedia"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_kinesisvideoarchivedmedia_"
   }
+
   provider_package_correct = "kinesisvideoarchivedmedia"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesisvideoarchivedmedia_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "kinesisvideomedia" {
 
   cli_v2_command {
@@ -8319,35 +5355,18 @@ service "kinesisvideomedia" {
 
   client {
     go_v1_client_typename = "KinesisVideoMedia"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_kinesisvideomedia_"
   }
+
   provider_package_correct = "kinesisvideomedia"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesisvideomedia_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "kinesisvideosignaling" {
 
   cli_v2_command {
@@ -8373,35 +5392,18 @@ service "kinesisvideosignaling" {
 
   client {
     go_v1_client_typename = "KinesisVideoSignalingChannels"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_kinesisvideosignaling_"
   }
+
   provider_package_correct = "kinesisvideosignaling"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kinesisvideosignaling_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "kms" {
 
   sdk {
@@ -8415,37 +5417,19 @@ service "kms" {
     human_friendly      = "KMS (Key Management)"
   }
 
-  client {
-    go_v1_client_typename = "KMS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListKeys"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_kms_"
   }
+
   provider_package_correct = "kms"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["kms_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "lakeformation" {
 
   sdk {
@@ -8459,37 +5443,19 @@ service "lakeformation" {
     human_friendly      = "Lake Formation"
   }
 
-  client {
-    go_v1_client_typename = "LakeFormation"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListResources"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lakeformation_"
   }
+
   provider_package_correct = "lakeformation"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lakeformation_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "lambda" {
 
   sdk {
@@ -8503,37 +5469,19 @@ service "lambda" {
     human_friendly      = "Lambda"
   }
 
-  client {
-    go_v1_client_typename = "Lambda"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListFunctions"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lambda_"
   }
+
   provider_package_correct = "lambda"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lambda_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "launchwizard" {
 
   cli_v2_command {
@@ -8552,37 +5500,19 @@ service "launchwizard" {
     human_friendly      = "Launch Wizard"
   }
 
-  client {
-    go_v1_client_typename = "LaunchWizard"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListWorkloads"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_launchwizard_"
   }
+
   provider_package_correct = "launchwizard"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["launchwizard_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "lexmodels" {
 
   cli_v2_command {
@@ -8608,35 +5538,22 @@ service "lexmodels" {
 
   client {
     go_v1_client_typename = "LexModelBuildingService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "GetBots"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_lex_"
     correct = "aws_lexmodels_"
   }
+
   provider_package_correct = "lexmodels"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lex_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "lexv2models" {
 
   cli_v2_command {
@@ -8660,37 +5577,19 @@ service "lexv2models" {
     human_friendly      = "Lex V2 Models"
   }
 
-  client {
-    go_v1_client_typename = "LexModelsV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListBots"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lexv2models_"
   }
+
   provider_package_correct = "lexv2models"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lexv2models_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "lexruntime" {
 
   cli_v2_command {
@@ -8716,35 +5615,18 @@ service "lexruntime" {
 
   client {
     go_v1_client_typename = "LexRuntimeService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lexruntime_"
   }
+
   provider_package_correct = "lexruntime"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lexruntime_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "lexruntimev2" {
 
   cli_v2_command {
@@ -8765,35 +5647,18 @@ service "lexruntimev2" {
 
   client {
     go_v1_client_typename = "LexRuntimeV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lexruntimev2_"
   }
+
   provider_package_correct = "lexruntimev2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lexruntimev2_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "licensemanager" {
 
   cli_v2_command {
@@ -8814,35 +5679,21 @@ service "licensemanager" {
 
   client {
     go_v1_client_typename = "LicenseManager"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListLicenseConfigurations"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_licensemanager_"
   }
+
   provider_package_correct = "licensemanager"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["licensemanager_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "lightsail" {
 
   sdk {
@@ -8857,36 +5708,22 @@ service "lightsail" {
   }
 
   client {
-    go_v1_client_typename = "Lightsail"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "GetInstances"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lightsail_"
   }
+
   provider_package_correct = "lightsail"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lightsail_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "location" {
 
   go_packages {
@@ -8907,35 +5744,21 @@ service "location" {
 
   client {
     go_v1_client_typename = "LocationService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListGeofenceCollections"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_location_"
   }
+
   provider_package_correct = "location"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["location_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "lookoutequipment" {
 
   sdk {
@@ -8951,35 +5774,18 @@ service "lookoutequipment" {
 
   client {
     go_v1_client_typename = "LookoutEquipment"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lookoutequipment_"
   }
+
   provider_package_correct = "lookoutequipment"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lookoutequipment_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "lookoutmetrics" {
 
   sdk {
@@ -8993,37 +5799,19 @@ service "lookoutmetrics" {
     human_friendly      = "Lookout for Metrics"
   }
 
-  client {
-    go_v1_client_typename = "LookoutMetrics"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListMetricSets"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lookoutmetrics_"
   }
+
   provider_package_correct = "lookoutmetrics"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lookoutmetrics_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "lookoutvision" {
 
   go_packages {
@@ -9044,35 +5832,18 @@ service "lookoutvision" {
 
   client {
     go_v1_client_typename = "LookoutForVision"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_lookoutvision_"
   }
+
   provider_package_correct = "lookoutvision"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["lookoutvision_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "machinelearning" {
 
   sdk {
@@ -9088,35 +5859,18 @@ service "machinelearning" {
 
   client {
     go_v1_client_typename = "MachineLearning"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_machinelearning_"
   }
+
   provider_package_correct = "machinelearning"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["machinelearning_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "macie2" {
 
   sdk {
@@ -9132,35 +5886,21 @@ service "macie2" {
 
   client {
     go_v1_client_typename = "Macie2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListFindings"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_macie2_"
   }
+
   provider_package_correct = "macie2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["macie2_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "macie" {
 
   sdk {
@@ -9176,35 +5916,18 @@ service "macie" {
 
   client {
     go_v1_client_typename = "Macie"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_macie_"
   }
+
   provider_package_correct = "macie"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["macie_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "m2" {
 
   sdk {
@@ -9218,37 +5941,19 @@ service "m2" {
     human_friendly      = "Mainframe Modernization"
   }
 
-  client {
-    go_v1_client_typename = "M2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_m2_"
   }
+
   provider_package_correct = "m2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["m2_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "managedblockchain" {
 
   sdk {
@@ -9264,35 +5969,18 @@ service "managedblockchain" {
 
   client {
     go_v1_client_typename = "ManagedBlockchain"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_managedblockchain_"
   }
+
   provider_package_correct = "managedblockchain"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["managedblockchain_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "grafana" {
 
   go_packages {
@@ -9313,35 +6001,21 @@ service "grafana" {
 
   client {
     go_v1_client_typename = "ManagedGrafana"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListWorkspaces"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_grafana_"
   }
+
   provider_package_correct = "grafana"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["grafana_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kafka" {
 
   sdk {
@@ -9356,36 +6030,23 @@ service "kafka" {
   }
 
   client {
-    go_v1_client_typename = "Kafka"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_msk_"
     correct = "aws_kafka_"
   }
+
   provider_package_correct = "kafka"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["msk_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "kafkaconnect" {
 
   sdk {
@@ -9401,35 +6062,22 @@ service "kafkaconnect" {
 
   client {
     go_v1_client_typename = "KafkaConnect"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListConnectors"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_mskconnect_"
     correct = "aws_kafkaconnect_"
   }
+
   provider_package_correct = "kafkaconnect"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mskconnect_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "marketplacecatalog" {
 
   cli_v2_command {
@@ -9450,35 +6098,18 @@ service "marketplacecatalog" {
 
   client {
     go_v1_client_typename = "MarketplaceCatalog"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_marketplacecatalog_"
   }
+
   provider_package_correct = "marketplacecatalog"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["marketplace_catalog_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "marketplacecommerceanalytics" {
 
   sdk {
@@ -9494,35 +6125,18 @@ service "marketplacecommerceanalytics" {
 
   client {
     go_v1_client_typename = "MarketplaceCommerceAnalytics"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_marketplacecommerceanalytics_"
   }
+
   provider_package_correct = "marketplacecommerceanalytics"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["marketplacecommerceanalytics_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "marketplaceentitlement" {
 
   cli_v2_command {
@@ -9548,35 +6162,18 @@ service "marketplaceentitlement" {
 
   client {
     go_v1_client_typename = "MarketplaceEntitlementService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_marketplaceentitlement_"
   }
+
   provider_package_correct = "marketplaceentitlement"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["marketplaceentitlement_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "marketplacemetering" {
 
   cli_v2_command {
@@ -9597,35 +6194,18 @@ service "marketplacemetering" {
 
   client {
     go_v1_client_typename = "MarketplaceMetering"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_marketplacemetering_"
   }
+
   provider_package_correct = "marketplacemetering"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["marketplacemetering_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "memorydb" {
 
   sdk {
@@ -9641,41 +6221,22 @@ service "memorydb" {
 
   client {
     go_v1_client_typename = "MemoryDB"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_memorydb_"
   }
-  provider_package_correct = "memorydb"
-  split_package            = ""
-  file_prefix              = ""
-  doc_prefix               = ["memorydb_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
-}
-service "meta" {
 
-  cli_v2_command {
-    aws_cli_v2_command           = ""
-    aws_cli_v2_command_no_dashes = ""
-  }
+  provider_package_correct = "memorydb"
+  doc_prefix               = ["memorydb_"]
+  brand                    = "AWS"
+}
+
+service "meta" {
 
   go_packages {
     v1_package = ""
@@ -9695,32 +6256,17 @@ service "meta" {
 
   client {
     go_v1_client_typename = ""
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_(arn|billing_service_account|default_tags|ip_ranges|partition|regions?|service)$"
     correct = "aws_meta_"
   }
+
   provider_package_correct = "meta"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["arn", "ip_ranges", "billing_service_account", "default_tags", "partition", "region", "service\\."]
   brand                    = ""
   exclude                  = true
-  not_implemented          = false
   allowed_subcategory      = true
   note                     = "Not an AWS service (metadata)"
 }
@@ -9744,35 +6290,18 @@ service "mgh" {
 
   client {
     go_v1_client_typename = "MigrationHub"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mgh_"
   }
+
   provider_package_correct = "mgh"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mgh_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "migrationhubconfig" {
 
   cli_v2_command {
@@ -9793,35 +6322,18 @@ service "migrationhubconfig" {
 
   client {
     go_v1_client_typename = "MigrationHubConfig"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_migrationhubconfig_"
   }
+
   provider_package_correct = "migrationhubconfig"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["migrationhubconfig_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "migrationhubrefactorspaces" {
 
   cli_v2_command {
@@ -9842,35 +6354,18 @@ service "migrationhubrefactorspaces" {
 
   client {
     go_v1_client_typename = "MigrationHubRefactorSpaces"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_migrationhubrefactorspaces_"
   }
+
   provider_package_correct = "migrationhubrefactorspaces"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["migrationhubrefactorspaces_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "migrationhubstrategy" {
 
   go_packages {
@@ -9891,35 +6386,18 @@ service "migrationhubstrategy" {
 
   client {
     go_v1_client_typename = "MigrationHubStrategyRecommendations"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_migrationhubstrategy_"
   }
+
   provider_package_correct = "migrationhubstrategy"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["migrationhubstrategy_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mobile" {
 
   sdk {
@@ -9935,35 +6413,18 @@ service "mobile" {
 
   client {
     go_v1_client_typename = "Mobile"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mobile_"
   }
+
   provider_package_correct = "mobile"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mobile_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mq" {
 
   sdk {
@@ -9977,37 +6438,19 @@ service "mq" {
     human_friendly      = "MQ"
   }
 
-  client {
-    go_v1_client_typename = "MQ"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListBrokers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mq_"
   }
+
   provider_package_correct = "mq"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mq_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "mturk" {
 
   sdk {
@@ -10023,35 +6466,18 @@ service "mturk" {
 
   client {
     go_v1_client_typename = "MTurk"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mturk_"
   }
+
   provider_package_correct = "mturk"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mturk_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "mwaa" {
 
   sdk {
@@ -10065,37 +6491,19 @@ service "mwaa" {
     human_friendly      = "MWAA (Managed Workflows for Apache Airflow)"
   }
 
-  client {
-    go_v1_client_typename = "MWAA"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListEnvironments"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_mwaa_"
   }
+
   provider_package_correct = "mwaa"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["mwaa_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "neptune" {
 
   sdk {
@@ -10111,35 +6519,21 @@ service "neptune" {
 
   client {
     go_v1_client_typename = "Neptune"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeDBClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_neptune_"
   }
+
   provider_package_correct = "neptune"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["neptune_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "neptunegraph" {
 
   cli_v2_command {
@@ -10163,37 +6557,19 @@ service "neptunegraph" {
     human_friendly      = "Neptune Analytics"
   }
 
-  client {
-    go_v1_client_typename = ""
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListGraphs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_neptunegraph_"
   }
+
   provider_package_correct = "neptunegraph"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["neptunegraph_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "networkfirewall" {
 
   cli_v2_command {
@@ -10214,35 +6590,21 @@ service "networkfirewall" {
 
   client {
     go_v1_client_typename = "NetworkFirewall"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListFirewalls"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_networkfirewall_"
   }
+
   provider_package_correct = "networkfirewall"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["networkfirewall_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "networkmanager" {
 
   sdk {
@@ -10258,35 +6620,21 @@ service "networkmanager" {
 
   client {
     go_v1_client_typename = "NetworkManager"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListCoreNetworks"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_networkmanager_"
   }
+
   provider_package_correct = "networkmanager"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["networkmanager_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "nimble" {
 
   go_packages {
@@ -10307,35 +6655,18 @@ service "nimble" {
 
   client {
     go_v1_client_typename = "NimbleStudio"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_nimble_"
   }
+
   provider_package_correct = "nimble"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["nimble_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "oam" {
 
   sdk {
@@ -10349,37 +6680,19 @@ service "oam" {
     human_friendly      = "CloudWatch Observability Access Manager"
   }
 
-  client {
-    go_v1_client_typename = "OAM"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListLinks"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_oam_"
   }
+
   provider_package_correct = "oam"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["oam_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "opensearch" {
 
   go_packages {
@@ -10400,35 +6713,21 @@ service "opensearch" {
 
   client {
     go_v1_client_typename = "OpenSearchService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDomainNames"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_opensearch_"
   }
+
   provider_package_correct = "opensearch"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["opensearch_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "opensearchserverless" {
 
   sdk {
@@ -10442,37 +6741,19 @@ service "opensearchserverless" {
     human_friendly      = "OpenSearch Serverless"
   }
 
-  client {
-    go_v1_client_typename = "OpenSearchServerless"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCollections"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_opensearchserverless_"
   }
+
   provider_package_correct = "opensearchserverless"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["opensearchserverless_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "osis" {
 
   sdk {
@@ -10486,37 +6767,19 @@ service "osis" {
     human_friendly      = "OpenSearch Ingestion"
   }
 
-  client {
-    go_v1_client_typename = "OSIS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListPipelines"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_osis_"
   }
+
   provider_package_correct = "osis"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["osis_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "opsworks" {
 
   sdk {
@@ -10532,35 +6795,21 @@ service "opsworks" {
 
   client {
     go_v1_client_typename = "OpsWorks"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeApps"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_opsworks_"
   }
+
   provider_package_correct = "opsworks"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["opsworks_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "opsworkscm" {
 
   cli_v2_command {
@@ -10581,35 +6830,18 @@ service "opsworkscm" {
 
   client {
     go_v1_client_typename = "OpsWorksCM"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_opsworkscm_"
   }
+
   provider_package_correct = "opsworkscm"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["opsworkscm_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "organizations" {
 
   sdk {
@@ -10624,36 +6856,22 @@ service "organizations" {
   }
 
   client {
-    go_v1_client_typename = "Organizations"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListAccounts"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_organizations_"
   }
+
   provider_package_correct = "organizations"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["organizations_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "outposts" {
 
   sdk {
@@ -10669,35 +6887,21 @@ service "outposts" {
 
   client {
     go_v1_client_typename = "Outposts"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListSites"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_outposts_"
   }
+
   provider_package_correct = "outposts"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["outposts_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "panorama" {
 
   sdk {
@@ -10713,35 +6917,18 @@ service "panorama" {
 
   client {
     go_v1_client_typename = "Panorama"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_panorama_"
   }
+
   provider_package_correct = "panorama"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["panorama_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "paymentcryptography" {
 
   cli_v2_command {
@@ -10760,37 +6947,19 @@ service "paymentcryptography" {
     human_friendly      = "Payment Cryptography Control Plane"
   }
 
-  client {
-    go_v1_client_typename = "PaymentCryptography"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListKeys"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_paymentcryptography_"
   }
+
   provider_package_correct = "paymentcryptography"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["paymentcryptography_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "pcaconnectorad" {
 
   cli_v2_command {
@@ -10809,37 +6978,19 @@ service "pcaconnectorad" {
     human_friendly      = "Private CA Connector for Active Directory"
   }
 
-  client {
-    go_v1_client_typename = "PcaConnectorAd"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListConnectors"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_pcaconnectorad_"
   }
+
   provider_package_correct = "pcaconnectorad"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["pcaconnectorad_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "personalize" {
 
   sdk {
@@ -10855,35 +7006,18 @@ service "personalize" {
 
   client {
     go_v1_client_typename = "Personalize"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_personalize_"
   }
+
   provider_package_correct = "personalize"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["personalize_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "personalizeevents" {
 
   cli_v2_command {
@@ -10904,35 +7038,18 @@ service "personalizeevents" {
 
   client {
     go_v1_client_typename = "PersonalizeEvents"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_personalizeevents_"
   }
+
   provider_package_correct = "personalizeevents"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["personalizeevents_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "personalizeruntime" {
 
   cli_v2_command {
@@ -10953,35 +7070,18 @@ service "personalizeruntime" {
 
   client {
     go_v1_client_typename = "PersonalizeRuntime"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_personalizeruntime_"
   }
+
   provider_package_correct = "personalizeruntime"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["personalizeruntime_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "pinpoint" {
 
   sdk {
@@ -10997,35 +7097,21 @@ service "pinpoint" {
 
   client {
     go_v1_client_typename = "Pinpoint"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "GetApps"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_pinpoint_"
   }
+
   provider_package_correct = "pinpoint"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["pinpoint_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "pinpointemail" {
 
   cli_v2_command {
@@ -11046,35 +7132,18 @@ service "pinpointemail" {
 
   client {
     go_v1_client_typename = "PinpointEmail"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_pinpointemail_"
   }
+
   provider_package_correct = "pinpointemail"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["pinpointemail_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "pinpointsmsvoice" {
 
   cli_v2_command {
@@ -11095,35 +7164,18 @@ service "pinpointsmsvoice" {
 
   client {
     go_v1_client_typename = "PinpointSMSVoice"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_pinpointsmsvoice_"
   }
+
   provider_package_correct = "pinpointsmsvoice"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["pinpointsmsvoice_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "pipes" {
 
   sdk {
@@ -11137,37 +7189,19 @@ service "pipes" {
     human_friendly      = "EventBridge Pipes"
   }
 
-  client {
-    go_v1_client_typename = "Pipes"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListPipes"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_pipes_"
   }
+
   provider_package_correct = "pipes"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["pipes_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "polly" {
 
   sdk {
@@ -11181,37 +7215,19 @@ service "polly" {
     human_friendly      = "Polly"
   }
 
-  client {
-    go_v1_client_typename = "Polly"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListLexicons"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_polly_"
   }
+
   provider_package_correct = "polly"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["polly_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "pricing" {
 
   sdk {
@@ -11225,37 +7241,19 @@ service "pricing" {
     human_friendly      = "Pricing Calculator"
   }
 
-  client {
-    go_v1_client_typename = "Pricing"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeServices"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_pricing_"
   }
+
   provider_package_correct = "pricing"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["pricing_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "proton" {
 
   sdk {
@@ -11271,35 +7269,18 @@ service "proton" {
 
   client {
     go_v1_client_typename = "Proton"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_proton_"
   }
+
   provider_package_correct = "proton"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["proton_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "qbusiness" {
 
   sdk {
@@ -11313,37 +7294,19 @@ service "qbusiness" {
     human_friendly      = "Amazon Q Business"
   }
 
-  client {
-    go_v1_client_typename = "QBusiness"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_qbusiness_"
   }
+
   provider_package_correct = "qbusiness"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["qbusiness_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "qldb" {
 
   sdk {
@@ -11357,37 +7320,19 @@ service "qldb" {
     human_friendly      = "QLDB (Quantum Ledger Database)"
   }
 
-  client {
-    go_v1_client_typename = "QLDB"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListLedgers"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_qldb_"
   }
+
   provider_package_correct = "qldb"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["qldb_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "qldbsession" {
 
   cli_v2_command {
@@ -11408,35 +7353,18 @@ service "qldbsession" {
 
   client {
     go_v1_client_typename = "QLDBSession"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_qldbsession_"
   }
+
   provider_package_correct = "qldbsession"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["qldbsession_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "quicksight" {
 
   sdk {
@@ -11452,35 +7380,22 @@ service "quicksight" {
 
   client {
     go_v1_client_typename = "QuickSight"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDashboards"
     endpoint_api_params      = "AwsAccountId: aws_sdkv1.String(\"123456789012\")"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_quicksight_"
   }
+
   provider_package_correct = "quicksight"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["quicksight_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "ram" {
 
   sdk {
@@ -11494,37 +7409,19 @@ service "ram" {
     human_friendly      = "RAM (Resource Access Manager)"
   }
 
-  client {
-    go_v1_client_typename = "RAM"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListPermissions"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ram_"
   }
+
   provider_package_correct = "ram"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ram_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "rds" {
 
   sdk {
@@ -11540,35 +7437,22 @@ service "rds" {
 
   client {
     go_v1_client_typename = "RDS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeDBInstances"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_(db_|rds_)"
     correct = "aws_rds_"
   }
+
   provider_package_correct = "rds"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["rds_", "db_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "rdsdata" {
 
   cli_v2_command {
@@ -11594,35 +7478,18 @@ service "rdsdata" {
 
   client {
     go_v1_client_typename = "RDSDataService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_rdsdata_"
   }
+
   provider_package_correct = "rdsdata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["rdsdata_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "pi" {
 
   sdk {
@@ -11638,35 +7505,18 @@ service "pi" {
 
   client {
     go_v1_client_typename = "PI"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_pi_"
   }
+
   provider_package_correct = "pi"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["pi_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "rbin" {
 
   go_packages {
@@ -11685,37 +7535,20 @@ service "rbin" {
     human_friendly      = "Recycle Bin (RBin)"
   }
 
-  client {
-    go_v1_client_typename = "RecycleBin"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListRules"
     endpoint_api_params      = "ResourceType: awstypes.ResourceTypeEc2Image"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_rbin_"
   }
+
   provider_package_correct = "rbin"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["rbin_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "redshift" {
 
   sdk {
@@ -11731,35 +7564,21 @@ service "redshift" {
 
   client {
     go_v1_client_typename = "Redshift"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_redshift_"
   }
+
   provider_package_correct = "redshift"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["redshift_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "redshiftdata" {
 
   cli_v2_command {
@@ -11783,37 +7602,20 @@ service "redshiftdata" {
     human_friendly      = "Redshift Data"
   }
 
-  client {
-    go_v1_client_typename = "RedshiftDataAPIService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDatabases"
     endpoint_api_params      = "Database: aws_sdkv2.String(\"test\")"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_redshiftdata_"
   }
+
   provider_package_correct = "redshiftdata"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["redshiftdata_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "redshiftserverless" {
 
   cli_v2_command {
@@ -11834,35 +7636,21 @@ service "redshiftserverless" {
 
   client {
     go_v1_client_typename = "RedshiftServerless"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListNamespaces"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_redshiftserverless_"
   }
+
   provider_package_correct = "redshiftserverless"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["redshiftserverless_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "rekognition" {
 
   sdk {
@@ -11876,37 +7664,19 @@ service "rekognition" {
     human_friendly      = "Rekognition"
   }
 
-  client {
-    go_v1_client_typename = "Rekognition"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCollections"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_rekognition_"
   }
+
   provider_package_correct = "rekognition"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["rekognition_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "resiliencehub" {
 
   sdk {
@@ -11922,35 +7692,18 @@ service "resiliencehub" {
 
   client {
     go_v1_client_typename = "ResilienceHub"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_resiliencehub_"
   }
+
   provider_package_correct = "resiliencehub"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["resiliencehub_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "resourceexplorer2" {
 
   cli_v2_command {
@@ -11969,37 +7722,20 @@ service "resourceexplorer2" {
     human_friendly      = "Resource Explorer"
   }
 
-  client {
-    go_v1_client_typename = "ResourceExplorer2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
 
   endpoint_info {
     endpoint_api_call        = "ListIndexes"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_resourceexplorer2_"
   }
+
   provider_package_correct = "resourceexplorer2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["resourceexplorer2_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "resourcegroups" {
 
   cli_v2_command {
@@ -12018,37 +7754,19 @@ service "resourcegroups" {
     human_friendly      = "Resource Groups"
   }
 
-  client {
-    go_v1_client_typename = "ResourceGroups"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListGroups"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_resourcegroups_"
   }
+
   provider_package_correct = "resourcegroups"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["resourcegroups_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "resourcegroupstaggingapi" {
 
   sdk {
@@ -12062,37 +7780,19 @@ service "resourcegroupstaggingapi" {
     human_friendly      = "Resource Groups Tagging"
   }
 
-  client {
-    go_v1_client_typename = "ResourceGroupsTaggingAPI"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "GetResources"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_resourcegroupstaggingapi_"
   }
+
   provider_package_correct = "resourcegroupstaggingapi"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["resourcegroupstaggingapi_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "robomaker" {
 
   sdk {
@@ -12108,35 +7808,18 @@ service "robomaker" {
 
   client {
     go_v1_client_typename = "RoboMaker"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_robomaker_"
   }
+
   provider_package_correct = "robomaker"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["robomaker_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "rolesanywhere" {
 
   sdk {
@@ -12150,37 +7833,19 @@ service "rolesanywhere" {
     human_friendly      = "Roles Anywhere"
   }
 
-  client {
-    go_v1_client_typename = "RolesAnywhere"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListProfiles"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_rolesanywhere_"
   }
+
   provider_package_correct = "rolesanywhere"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["rolesanywhere_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "route53" {
 
   sdk {
@@ -12195,36 +7860,24 @@ service "route53" {
   }
 
   client {
-    go_v1_client_typename = "Route53"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListHostedZones"
-    endpoint_api_params      = ""
     endpoint_region_override = "us-east-1"
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_route53_(?!resolver_)"
     correct = "aws_route53_"
   }
+
   provider_package_correct = "route53"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["route53_cidr_", "route53_delegation_", "route53_health_", "route53_hosted_", "route53_key_", "route53_query_", "route53_record", "route53_traffic_", "route53_vpc_", "route53_zone"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "route53domains" {
 
   sdk {
@@ -12239,36 +7892,23 @@ service "route53domains" {
   }
 
   client {
-    go_v1_client_typename = "Route53Domains"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDomains"
-    endpoint_api_params      = ""
     endpoint_region_override = "us-east-1"
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_route53domains_"
   }
+
   provider_package_correct = "route53domains"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["route53domains_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "route53profiles" {
 
   sdk {
@@ -12282,37 +7922,19 @@ service "route53profiles" {
     human_friendly      = "Route 53 Profiles"
   }
 
-  client {
-    go_v1_client_typename = "Route53Profiles"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListProfiles"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_route53profiles_"
   }
+
   provider_package_correct = "route53profiles"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["route53profiles_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "route53recoverycluster" {
 
   cli_v2_command {
@@ -12333,35 +7955,18 @@ service "route53recoverycluster" {
 
   client {
     go_v1_client_typename = "Route53RecoveryCluster"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_route53recoverycluster_"
   }
+
   provider_package_correct = "route53recoverycluster"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["route53recoverycluster_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "route53recoverycontrolconfig" {
 
   cli_v2_command {
@@ -12385,32 +7990,19 @@ service "route53recoverycontrolconfig" {
     skip_client_generate  = true
   }
 
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_route53recoverycontrolconfig_"
   }
+
   provider_package_correct = "route53recoverycontrolconfig"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["route53recoverycontrolconfig_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "route53recoveryreadiness" {
 
   cli_v2_command {
@@ -12434,32 +8026,19 @@ service "route53recoveryreadiness" {
     skip_client_generate  = true
   }
 
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListCells"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_route53recoveryreadiness_"
   }
+
   provider_package_correct = "route53recoveryreadiness"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["route53recoveryreadiness_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "route53resolver" {
 
   sdk {
@@ -12475,35 +8054,22 @@ service "route53resolver" {
 
   client {
     go_v1_client_typename = "Route53Resolver"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListFirewallDomainLists"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_route53_resolver_"
     correct = "aws_route53resolver_"
   }
+
   provider_package_correct = "route53resolver"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["route53_resolver_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "s3" {
 
   cli_v2_command {
@@ -12523,7 +8089,6 @@ service "s3" {
   }
 
   client {
-    go_v1_client_typename = "S3"
     skip_client_generate  = true
   }
 
@@ -12531,28 +8096,20 @@ service "s3" {
     deprecated_env_var = "AWS_S3_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_S3_ENDPOINT"
   }
-
   endpoint_info {
     endpoint_api_call        = "ListBuckets"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)"
     correct = "aws_s3_"
   }
+
   provider_package_correct = "s3"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["s3_bucket", "s3_directory_bucket", "s3_object", "canonical_user_id"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "s3control" {
 
   sdk {
@@ -12566,37 +8123,20 @@ service "s3control" {
     human_friendly      = "S3 Control"
   }
 
-  client {
-    go_v1_client_typename = "S3Control"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListJobs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_(s3_account_|s3control_|s3_access_)"
     correct = "aws_s3control_"
   }
+
   provider_package_correct = "s3control"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["s3control", "s3_account_", "s3_access_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "glacier" {
 
   sdk {
@@ -12610,37 +8150,19 @@ service "glacier" {
     human_friendly      = "S3 Glacier"
   }
 
-  client {
-    go_v1_client_typename = "Glacier"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListVaults"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_glacier_"
   }
+
   provider_package_correct = "glacier"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["glacier_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "s3outposts" {
 
   sdk {
@@ -12656,35 +8178,21 @@ service "s3outposts" {
 
   client {
     go_v1_client_typename = "S3Outposts"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListEndpoints"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_s3outposts_"
   }
+
   provider_package_correct = "s3outposts"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["s3outposts_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "sagemaker" {
 
   sdk {
@@ -12700,35 +8208,21 @@ service "sagemaker" {
 
   client {
     go_v1_client_typename = "SageMaker"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListClusters"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sagemaker_"
   }
+
   provider_package_correct = "sagemaker"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sagemaker_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "sagemakera2iruntime" {
 
   cli_v2_command {
@@ -12754,35 +8248,18 @@ service "sagemakera2iruntime" {
 
   client {
     go_v1_client_typename = "AugmentedAIRuntime"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sagemakera2iruntime_"
   }
+
   provider_package_correct = "sagemakera2iruntime"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sagemakera2iruntime_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "sagemakeredge" {
 
   cli_v2_command {
@@ -12808,35 +8285,18 @@ service "sagemakeredge" {
 
   client {
     go_v1_client_typename = "SagemakerEdgeManager"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sagemakeredge_"
   }
+
   provider_package_correct = "sagemakeredge"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sagemakeredge_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "sagemakerfeaturestoreruntime" {
 
   cli_v2_command {
@@ -12857,35 +8317,18 @@ service "sagemakerfeaturestoreruntime" {
 
   client {
     go_v1_client_typename = "SageMakerFeatureStoreRuntime"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sagemakerfeaturestoreruntime_"
   }
+
   provider_package_correct = "sagemakerfeaturestoreruntime"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sagemakerfeaturestoreruntime_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "sagemakerruntime" {
 
   cli_v2_command {
@@ -12906,35 +8349,18 @@ service "sagemakerruntime" {
 
   client {
     go_v1_client_typename = "SageMakerRuntime"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sagemakerruntime_"
   }
+
   provider_package_correct = "sagemakerruntime"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sagemakerruntime_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "savingsplans" {
 
   sdk {
@@ -12950,35 +8376,18 @@ service "savingsplans" {
 
   client {
     go_v1_client_typename = "SavingsPlans"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_savingsplans_"
   }
+
   provider_package_correct = "savingsplans"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["savingsplans_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "simpledb" {
 
   cli_v2_command {
@@ -13004,35 +8413,22 @@ service "simpledb" {
 
   client {
     go_v1_client_typename = "SimpleDB"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListDomains"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_simpledb_"
     correct = "aws_sdb_"
   }
+
   provider_package_correct = "sdb"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["simpledb_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "scheduler" {
 
   sdk {
@@ -13046,37 +8442,19 @@ service "scheduler" {
     human_friendly      = "EventBridge Scheduler"
   }
 
-  client {
-    go_v1_client_typename = "Scheduler"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListSchedules"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_scheduler_"
   }
+
   provider_package_correct = "scheduler"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["scheduler_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "secretsmanager" {
 
   sdk {
@@ -13090,37 +8468,19 @@ service "secretsmanager" {
     human_friendly      = "Secrets Manager"
   }
 
-  client {
-    go_v1_client_typename = "SecretsManager"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListSecrets"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_secretsmanager_"
   }
+
   provider_package_correct = "secretsmanager"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["secretsmanager_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "securityhub" {
 
   sdk {
@@ -13134,37 +8494,19 @@ service "securityhub" {
     human_friendly      = "Security Hub"
   }
 
-  client {
-    go_v1_client_typename = "SecurityHub"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAutomationRules"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_securityhub_"
   }
+
   provider_package_correct = "securityhub"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["securityhub_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "securitylake" {
 
   sdk {
@@ -13178,37 +8520,19 @@ service "securitylake" {
     human_friendly      = "Security Lake"
   }
 
-  client {
-    go_v1_client_typename = "SecurityLake"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDataLakes"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_securitylake_"
   }
+
   provider_package_correct = "securitylake"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["securitylake_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "serverlessrepo" {
 
   go_packages {
@@ -13229,35 +8553,22 @@ service "serverlessrepo" {
 
   client {
     go_v1_client_typename = "ServerlessApplicationRepository"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_serverlessapplicationrepository_"
     correct = "aws_serverlessrepo_"
   }
+
   provider_package_correct = "serverlessrepo"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["serverlessapplicationrepository_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "servicecatalog" {
 
   sdk {
@@ -13273,35 +8584,21 @@ service "servicecatalog" {
 
   client {
     go_v1_client_typename = "ServiceCatalog"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListPortfolios"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_servicecatalog_"
   }
+
   provider_package_correct = "servicecatalog"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["servicecatalog_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "servicecatalogappregistry" {
 
   cli_v2_command {
@@ -13325,37 +8622,19 @@ service "servicecatalogappregistry" {
     human_friendly      = "Service Catalog AppRegistry"
   }
 
-  client {
-    go_v1_client_typename = "AppRegistry"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_servicecatalogappregistry_"
   }
+
   provider_package_correct = "servicecatalogappregistry"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["servicecatalogappregistry_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "servicequotas" {
 
   cli_v2_command {
@@ -13374,36 +8653,17 @@ service "servicequotas" {
     human_friendly      = "Service Quotas"
   }
 
-  client {
-    go_v1_client_typename = "ServiceQuotas"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListServices"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_servicequotas_"
   }
+
   provider_package_correct = "servicequotas"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["servicequotas_"]
   brand                    = ""
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
 service "ses" {
 
@@ -13420,35 +8680,21 @@ service "ses" {
 
   client {
     go_v1_client_typename = "SES"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListIdentities"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ses_"
   }
+
   provider_package_correct = "ses"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ses_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "sesv2" {
 
   sdk {
@@ -13462,37 +8708,19 @@ service "sesv2" {
     human_friendly      = "SESv2 (Simple Email V2)"
   }
 
-  client {
-    go_v1_client_typename = "SESV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListContactLists"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sesv2_"
   }
+
   provider_package_correct = "sesv2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sesv2_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "sfn" {
 
   cli_v2_command {
@@ -13513,35 +8741,21 @@ service "sfn" {
 
   client {
     go_v1_client_typename = "SFN"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListActivities"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sfn_"
   }
+
   provider_package_correct = "sfn"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sfn_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "shield" {
 
   sdk {
@@ -13556,36 +8770,23 @@ service "shield" {
   }
 
   client {
-    go_v1_client_typename = "Shield"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListProtectionGroups"
-    endpoint_api_params      = ""
     endpoint_region_override = "us-east-1"
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_shield_"
   }
+
   provider_package_correct = "shield"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["shield_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "signer" {
 
   sdk {
@@ -13599,37 +8800,19 @@ service "signer" {
     human_friendly      = "Signer"
   }
 
-  client {
-    go_v1_client_typename = "Signer"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListSigningJobs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_signer_"
   }
+
   provider_package_correct = "signer"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["signer_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "sms" {
 
   sdk {
@@ -13645,35 +8828,18 @@ service "sms" {
 
   client {
     go_v1_client_typename = "SMS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sms_"
   }
+
   provider_package_correct = "sms"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sms_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "snowdevicemanagement" {
 
   cli_v2_command {
@@ -13694,35 +8860,18 @@ service "snowdevicemanagement" {
 
   client {
     go_v1_client_typename = "SnowDeviceManagement"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_snowdevicemanagement_"
   }
+
   provider_package_correct = "snowdevicemanagement"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["snowdevicemanagement_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "snowball" {
 
   sdk {
@@ -13738,35 +8887,18 @@ service "snowball" {
 
   client {
     go_v1_client_typename = "Snowball"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_snowball_"
   }
+
   provider_package_correct = "snowball"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["snowball_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "sns" {
 
   sdk {
@@ -13780,37 +8912,19 @@ service "sns" {
     human_friendly      = "SNS (Simple Notification)"
   }
 
-  client {
-    go_v1_client_typename = "SNS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListSubscriptions"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sns_"
   }
+
   provider_package_correct = "sns"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sns_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "sqs" {
 
   sdk {
@@ -13824,37 +8938,19 @@ service "sqs" {
     human_friendly      = "SQS (Simple Queue)"
   }
 
-  client {
-    go_v1_client_typename = "SQS"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListQueues"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sqs_"
   }
+
   provider_package_correct = "sqs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sqs_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "ssm" {
 
   sdk {
@@ -13868,37 +8964,19 @@ service "ssm" {
     human_friendly      = "SSM (Systems Manager)"
   }
 
-  client {
-    go_v1_client_typename = "SSM"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDocuments"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ssm_"
   }
+
   provider_package_correct = "ssm"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ssm_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ssmcontacts" {
 
   cli_v2_command {
@@ -13917,37 +8995,19 @@ service "ssmcontacts" {
     human_friendly      = "SSM Contacts"
   }
 
-  client {
-    go_v1_client_typename = "SSMContacts"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListContacts"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ssmcontacts_"
   }
+
   provider_package_correct = "ssmcontacts"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ssmcontacts_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ssmincidents" {
 
   cli_v2_command {
@@ -13966,37 +9026,19 @@ service "ssmincidents" {
     human_friendly      = "SSM Incident Manager Incidents"
   }
 
-  client {
-    go_v1_client_typename = "SSMIncidents"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListResponsePlans"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ssmincidents_"
   }
+
   provider_package_correct = "ssmincidents"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ssmincidents_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ssmsap" {
 
   cli_v2_command {
@@ -14015,37 +9057,19 @@ service "ssmsap" {
     human_friendly      = "Systems Manager for SAP"
   }
 
-  client {
-    go_v1_client_typename = "SsmSap"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListApplications"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ssmsap_"
   }
+
   provider_package_correct = "ssmsap"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ssmsap_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "sso" {
 
   sdk {
@@ -14059,37 +9083,22 @@ service "sso" {
     human_friendly      = "SSO (Single Sign-On)"
   }
 
-  client {
-    go_v1_client_typename = "SSO"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAccounts"
     endpoint_api_params      = "AccessToken: aws_sdkv2.String(\"mock-access-token\")"
-    endpoint_region_override = ""
     endpoint_only            = true
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_sso_"
   }
+
   provider_package_correct = "sso"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["sso_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ssoadmin" {
 
   cli_v2_command {
@@ -14109,36 +9118,22 @@ service "ssoadmin" {
   }
 
   client {
-    go_v1_client_typename = "SSOAdmin"
     skip_client_generate  = true
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListInstances"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ssoadmin_"
   }
+
   provider_package_correct = "ssoadmin"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ssoadmin_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "identitystore" {
 
   sdk {
@@ -14152,37 +9147,20 @@ service "identitystore" {
     human_friendly      = "SSO Identity Store"
   }
 
-  client {
-    go_v1_client_typename = "IdentityStore"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListUsers"
     endpoint_api_params      = "IdentityStoreId: aws_sdkv2.String(\"d-1234567890\")"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_identitystore_"
   }
+
   provider_package_correct = "identitystore"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["identitystore_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "ssooidc" {
 
   cli_v2_command {
@@ -14203,35 +9181,18 @@ service "ssooidc" {
 
   client {
     go_v1_client_typename = "SSOOIDC"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_ssooidc_"
   }
+
   provider_package_correct = "ssooidc"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["ssooidc_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "storagegateway" {
 
   sdk {
@@ -14247,35 +9208,21 @@ service "storagegateway" {
 
   client {
     go_v1_client_typename = "StorageGateway"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListGateways"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_storagegateway_"
   }
+
   provider_package_correct = "storagegateway"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["storagegateway_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "sts" {
 
   sdk {
@@ -14290,8 +9237,7 @@ service "sts" {
   }
 
   client {
-    go_v1_client_typename = "STS"
-    skip_client_generate  = true
+    skip_client_generate = true
   }
 
   env_var {
@@ -14301,25 +9247,18 @@ service "sts" {
 
   endpoint_info {
     endpoint_api_call        = "GetCallerIdentity"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_caller_identity"
     correct = "aws_sts_"
   }
+
   provider_package_correct = "sts"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["caller_identity"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "support" {
 
   sdk {
@@ -14335,35 +9274,18 @@ service "support" {
 
   client {
     go_v1_client_typename = "Support"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_support_"
   }
+
   provider_package_correct = "support"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["support_"]
   brand                    = "AWS"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "swf" {
 
   sdk {
@@ -14377,37 +9299,20 @@ service "swf" {
     human_friendly      = "SWF (Simple Workflow)"
   }
 
-  client {
-    go_v1_client_typename = "SWF"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDomains"
     endpoint_api_params      = "RegistrationStatus: \"REGISTERED\""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_swf_"
   }
+
   provider_package_correct = "swf"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["swf_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "textract" {
 
   sdk {
@@ -14423,35 +9328,18 @@ service "textract" {
 
   client {
     go_v1_client_typename = "Textract"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_textract_"
   }
+
   provider_package_correct = "textract"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["textract_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "timestreaminfluxdb" {
 
   cli_v2_command {
@@ -14470,37 +9358,19 @@ service "timestreaminfluxdb" {
     human_friendly      = "Timestream for InfluxDB"
   }
 
-  client {
-    go_v1_client_typename = "TimestreamInfluxDB"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDbInstances"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_timestreaminfluxdb_"
   }
+
   provider_package_correct = "timestreaminfluxdb"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["timestreaminfluxdb_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "timestreamquery" {
 
   cli_v2_command {
@@ -14521,35 +9391,18 @@ service "timestreamquery" {
 
   client {
     go_v1_client_typename = "TimestreamQuery"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_timestreamquery_"
   }
+
   provider_package_correct = "timestreamquery"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["timestreamquery_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "timestreamwrite" {
 
   cli_v2_command {
@@ -14568,37 +9421,19 @@ service "timestreamwrite" {
     human_friendly      = "Timestream Write"
   }
 
-  client {
-    go_v1_client_typename = "TimestreamWrite"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListDatabases"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_timestreamwrite_"
   }
+
   provider_package_correct = "timestreamwrite"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["timestreamwrite_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "transcribe" {
 
   go_packages {
@@ -14617,43 +9452,20 @@ service "transcribe" {
     human_friendly      = "Transcribe"
   }
 
-  client {
-    go_v1_client_typename = "TranscribeService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListLanguageModels"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_transcribe_"
   }
-  provider_package_correct = "transcribe"
-  split_package            = ""
-  file_prefix              = ""
-  doc_prefix               = ["transcribe_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
-}
-service "transcribestreaming" {
 
-  cli_v2_command {
-    aws_cli_v2_command           = ""
-    aws_cli_v2_command_no_dashes = ""
-  }
+  provider_package_correct = "transcribe"
+  doc_prefix               = ["transcribe_"]
+  brand                    = "AWS"
+}
+
+service "transcribestreaming" {
 
   go_packages {
     v1_package = "transcribestreamingservice"
@@ -14673,35 +9485,18 @@ service "transcribestreaming" {
 
   client {
     go_v1_client_typename = "TranscribeStreamingService"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_transcribestreaming_"
   }
+
   provider_package_correct = "transcribestreaming"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["transcribestreaming_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "transfer" {
 
   sdk {
@@ -14715,37 +9510,20 @@ service "transfer" {
     human_friendly      = "Transfer Family"
   }
 
-  client {
-    go_v1_client_typename = "Transfer"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
 
   endpoint_info {
     endpoint_api_call        = "ListConnectors"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_transfer_"
   }
+
   provider_package_correct = "transfer"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["transfer_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "translate" {
 
   sdk {
@@ -14761,35 +9539,18 @@ service "translate" {
 
   client {
     go_v1_client_typename = "Translate"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_translate_"
   }
+
   provider_package_correct = "translate"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["translate_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "vpclattice" {
 
   cli_v2_command {
@@ -14808,37 +9569,19 @@ service "vpclattice" {
     human_friendly      = "VPC Lattice"
   }
 
-  client {
-    go_v1_client_typename = "VPCLattice"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListServices"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_vpclattice_"
   }
+
   provider_package_correct = "vpclattice"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["vpclattice_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "wafv2" {
 
   sdk {
@@ -14852,37 +9595,20 @@ service "wafv2" {
     human_friendly      = "WAF"
   }
 
-  client {
-    go_v1_client_typename = "WAFV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListRuleGroups"
     endpoint_api_params      = "Scope: awstypes.ScopeRegional"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_wafv2_"
   }
+
   provider_package_correct = "wafv2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["wafv2_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "waf" {
 
   sdk {
@@ -14896,37 +9622,19 @@ service "waf" {
     human_friendly      = "WAF Classic"
   }
 
-  client {
-    go_v1_client_typename = "WAF"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListRules"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_waf_"
   }
+
   provider_package_correct = "waf"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["waf_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "wafregional" {
 
   cli_v2_command {
@@ -14945,37 +9653,19 @@ service "wafregional" {
     human_friendly      = "WAF Classic Regional"
   }
 
-  client {
-    go_v1_client_typename = "WAFRegional"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListRules"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_wafregional_"
   }
+
   provider_package_correct = "wafregional"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["wafregional_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "budgets" {
 
   sdk {
@@ -14989,37 +9679,20 @@ service "budgets" {
     human_friendly      = "Web Services Budgets"
   }
 
-  client {
-    go_v1_client_typename = "Budgets"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeBudgets"
     endpoint_api_params      = "AccountId: aws_sdkv2.String(\"012345678901\")"
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_budgets_"
   }
+
   provider_package_correct = "budgets"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["budgets_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "wellarchitected" {
 
   sdk {
@@ -15033,37 +9706,19 @@ service "wellarchitected" {
     human_friendly      = "Well-Architected Tool"
   }
 
-  client {
-    go_v1_client_typename = "WellArchitected"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListProfiles"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_wellarchitected_"
   }
+
   provider_package_correct = "wellarchitected"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["wellarchitected_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "workdocs" {
 
   sdk {
@@ -15079,35 +9734,18 @@ service "workdocs" {
 
   client {
     go_v1_client_typename = "WorkDocs"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_workdocs_"
   }
+
   provider_package_correct = "workdocs"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["workdocs_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "worklink" {
 
   sdk {
@@ -15123,35 +9761,21 @@ service "worklink" {
 
   client {
     go_v1_client_typename = "WorkLink"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "ListFleets"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_worklink_"
   }
+
   provider_package_correct = "worklink"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["worklink_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "workmail" {
 
   sdk {
@@ -15167,35 +9791,18 @@ service "workmail" {
 
   client {
     go_v1_client_typename = "WorkMail"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_workmail_"
   }
+
   provider_package_correct = "workmail"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["workmail_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "workmailmessageflow" {
 
   sdk {
@@ -15211,35 +9818,18 @@ service "workmailmessageflow" {
 
   client {
     go_v1_client_typename = "WorkMailMessageFlow"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
-  endpoint_info {
-    endpoint_api_call        = ""
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_workmailmessageflow_"
   }
+
   provider_package_correct = "workmailmessageflow"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["workmailmessageflow_"]
   brand                    = "Amazon"
-  exclude                  = false
   not_implemented          = true
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "workspaces" {
 
   sdk {
@@ -15253,37 +9843,19 @@ service "workspaces" {
     human_friendly      = "WorkSpaces"
   }
 
-  client {
-    go_v1_client_typename = "WorkSpaces"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeWorkspaces"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_workspaces_"
   }
+
   provider_package_correct = "workspaces"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["workspaces_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "workspacesweb" {
 
   cli_v2_command {
@@ -15302,37 +9874,19 @@ service "workspacesweb" {
     human_friendly      = "WorkSpaces Web"
   }
 
-  client {
-    go_v1_client_typename = "WorkSpacesWeb"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListPortals"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_workspacesweb_"
   }
+
   provider_package_correct = "workspacesweb"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["workspacesweb_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "xray" {
 
   sdk {
@@ -15346,37 +9900,19 @@ service "xray" {
     human_friendly      = "X-Ray"
   }
 
-  client {
-    go_v1_client_typename = "XRay"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListResourcePolicies"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_xray_"
   }
+
   provider_package_correct = "xray"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["xray_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "verifiedpermissions" {
 
   sdk {
@@ -15390,37 +9926,19 @@ service "verifiedpermissions" {
     human_friendly      = "Verified Permissions"
   }
 
-  client {
-    go_v1_client_typename = "VerifiedPermissions"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListPolicyStores"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_verifiedpermissions_"
   }
+
   provider_package_correct = "verifiedpermissions"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["verifiedpermissions_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "codecatalyst" {
 
   sdk {
@@ -15434,37 +9952,19 @@ service "codecatalyst" {
     human_friendly      = "CodeCatalyst"
   }
 
-  client {
-    go_v1_client_typename = "CodeCatalyst"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListAccessTokens"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_codecatalyst_"
   }
+
   provider_package_correct = "codecatalyst"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["codecatalyst_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "mediapackagev2" {
 
   sdk {
@@ -15478,37 +9978,20 @@ service "mediapackagev2" {
     human_friendly      = "Elemental MediaPackage Version 2"
   }
 
-  client {
-    go_v1_client_typename = "MediaPackageV2"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "ListChannelGroups"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
     actual  = "aws_media_packagev2_"
     correct = "aws_mediapackagev2_"
   }
+
   provider_package_correct = "mediapackagev2"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["media_packagev2_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "iot" {
 
   sdk {
@@ -15524,35 +10007,21 @@ service "iot" {
 
   client {
     go_v1_client_typename = "IoT"
-    skip_client_generate  = false
-  }
-
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
   }
 
   endpoint_info {
     endpoint_api_call        = "DescribeDefaultAuthorizer"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_iot_"
   }
+
   provider_package_correct = "iot"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["iot_"]
   brand                    = "AWS"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }
+
 service "dynamodb" {
 
   sdk {
@@ -15567,7 +10036,6 @@ service "dynamodb" {
   }
 
   client {
-    go_v1_client_typename = "DynamoDB"
     skip_client_generate  = true
   }
 
@@ -15575,28 +10043,19 @@ service "dynamodb" {
     deprecated_env_var = "AWS_DYNAMODB_ENDPOINT"
     tf_aws_env_var     = "TF_AWS_DYNAMODB_ENDPOINT"
   }
-
   endpoint_info {
     endpoint_api_call        = "ListTables"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
-    actual  = ""
     correct = "aws_dynamodb_"
   }
+
   provider_package_correct = "dynamodb"
-  split_package            = ""
-  file_prefix              = ""
   doc_prefix               = ["dynamodb_"]
-  brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
+  brand                    = "AWS"
 }
+
 service "ec2" {
 
   sdk {
@@ -15615,16 +10074,8 @@ service "ec2" {
     skip_client_generate  = true
   }
 
-  env_var {
-    deprecated_env_var = ""
-    tf_aws_env_var     = ""
-  }
-
   endpoint_info {
     endpoint_api_call        = "DescribeVpcs"
-    endpoint_api_params      = ""
-    endpoint_region_override = ""
-    endpoint_only            = false
   }
 
   resource_prefix {
@@ -15635,13 +10086,13 @@ service "ec2" {
   sub_service "ec2ebs" {
 
     cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
+          aws_cli_v2_command                    = ""
+          aws_cli_v2_command_no_dashes          = ""
     }
 
     go_packages {
-      v1_package = ""
-      v2_package = ""
+          v1_package                   = ""
+          v2_package                   = ""
     }
 
     sdk {
@@ -15655,48 +10106,31 @@ service "ec2" {
       human_friendly      = "EBS (EC2)"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_(ebs_|volume_attach|snapshot_create)"
       correct = "aws_ec2ebs_"
     }
-    provider_package_correct = ""
+
     split_package            = "ec2"
     file_prefix              = "ebs_"
     doc_prefix               = ["ebs_", "volume_attachment", "snapshot_"]
     brand                    = "Amazon"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "ec2outposts" {
 
     cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
-    }
+          aws_cli_v2_command           = ""
+          aws_cli_v2_command_no_dashes          = ""
+      }
 
     go_packages {
-      v1_package = ""
-      v2_package = ""
-    }
+          v1_package                   = ""
+          v2_package                   = ""
+      }
 
     sdk {
       id             = ""
@@ -15709,47 +10143,30 @@ service "ec2" {
       human_friendly      = "Outposts (EC2)"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_ec2_(coip_pool|local_gateway)"
       correct = "aws_ec2outposts_"
     }
-    provider_package_correct = ""
+
     split_package            = "ec2"
     file_prefix              = "outposts_"
     doc_prefix               = ["ec2_coip_pool", "ec2_local_gateway"]
     brand                    = "AWS"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "transitgateway" {
 
-    cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
+  cli_v2_command {
+        aws_cli_v2_command           = ""
+        aws_cli_v2_command_no_dashes           = ""
     }
 
-    go_packages {
-      v1_package = ""
-      v2_package = ""
+  go_packages {
+        v1_package                   = ""
+        v2_package                   = ""
     }
 
     sdk {
@@ -15763,48 +10180,31 @@ service "ec2" {
       human_friendly      = "Transit Gateway"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_ec2_transit_gateway"
       correct = "aws_transitgateway_"
     }
-    provider_package_correct = ""
+
     split_package            = "ec2"
     file_prefix              = "transitgateway_"
     doc_prefix               = ["ec2_transit_gateway"]
     brand                    = "AWS"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "verifiedaccess" {
 
     cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
-    }
+          aws_cli_v2_command           = ""
+          aws_cli_v2_command_no_dashes           = ""
+      }
 
     go_packages {
-      v1_package = ""
-      v2_package = ""
-    }
+          v1_package                   = ""
+          v2_package                   = ""
+      }
 
     sdk {
       id             = ""
@@ -15817,48 +10217,31 @@ service "ec2" {
       human_friendly      = "Verified Access"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_verifiedaccess"
       correct = "aws_verifiedaccess_"
     }
-    provider_package_correct = ""
+    
     split_package            = "ec2"
     file_prefix              = "verifiedaccess_"
     doc_prefix               = ["verifiedaccess_"]
     brand                    = "AWS"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "vpc" {
 
     cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
-    }
+          aws_cli_v2_command           = ""
+          aws_cli_v2_command_no_dashes          = ""
+      }
 
     go_packages {
-      v1_package = ""
-      v2_package = ""
-    }
+          v1_package                   = ""
+          v2_package                   = ""
+      }
 
     sdk {
       id             = ""
@@ -15871,49 +10254,32 @@ service "ec2" {
       human_friendly      = "VPC (Virtual Private Cloud)"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_((default_)?(network_acl|route_table|security_group|subnet|vpc(?!_ipam))|ec2_(managed|network|subnet|traffic)|egress_only_internet|flow_log|internet_gateway|main_route_table_association|nat_gateway|network_interface|prefix_list|route\\b)"
       correct = "aws_vpc_"
     }
-    provider_package_correct = ""
+
     split_package            = "ec2"
     file_prefix              = "vpc_"
     doc_prefix               = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\."]
     brand                    = "Amazon"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "ipam" {
 
     cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
+          aws_cli_v2_command                    = ""
+          aws_cli_v2_command_no_dashes          = ""
     }
 
     go_packages {
-      v1_package = ""
-      v2_package = ""
+          v1_package                   = ""
+          v2_package                   = ""
     }
-
+      
     sdk {
       id             = ""
       client_version = null
@@ -15925,47 +10291,29 @@ service "ec2" {
       human_friendly      = "VPC IPAM (IP Address Manager)"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_vpc_ipam"
       correct = "aws_ipam_"
     }
-    provider_package_correct = ""
     split_package            = "ec2"
     file_prefix              = "ipam_"
     doc_prefix               = ["vpc_ipam"]
     brand                    = "Amazon"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "vpnclient" {
 
     cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
+          aws_cli_v2_command                    = ""
+          aws_cli_v2_command_no_dashes          = ""
     }
 
     go_packages {
-      v1_package = ""
-      v2_package = ""
+          v1_package                   = ""
+          v2_package                   = ""
     }
 
     sdk {
@@ -15979,47 +10327,29 @@ service "ec2" {
       human_friendly      = "VPN (Client)"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_ec2_client_vpn"
       correct = "aws_vpnclient_"
     }
-    provider_package_correct = ""
     split_package            = "ec2"
     file_prefix              = "vpnclient_"
     doc_prefix               = ["ec2_client_vpn_"]
     brand                    = "AWS"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "vpnsite" {
 
     cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
+          aws_cli_v2_command           = ""
+          aws_cli_v2_command_no_dashes          = ""
     }
 
     go_packages {
-      v1_package = ""
-      v2_package = ""
+          v1_package                   = ""
+          v2_package                   = ""
     }
 
     sdk {
@@ -16033,49 +10363,31 @@ service "ec2" {
       human_friendly      = "VPN (Site-to-Site)"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_(customer_gateway|vpn_)"
       correct = "aws_vpnsite_"
     }
-    provider_package_correct = ""
+
     split_package            = "ec2"
     file_prefix              = "vpnsite_"
     doc_prefix               = ["customer_gateway", "vpn_"]
     brand                    = "AWS"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
+
   sub_service "wavelength" {
 
-    cli_v2_command {
-      aws_cli_v2_command           = ""
-      aws_cli_v2_command_no_dashes = ""
-    }
+cli_v2_command {
+       aws_cli_v2_command                     = ""
+       aws_cli_v2_command_no_dashes           = ""
+   }
 
-    go_packages {
-      v1_package = ""
-      v2_package = ""
-    }
-
+go_packages {
+       v1_package                   = ""
+       v2_package                   = ""
+   }
     sdk {
       id             = ""
       client_version = null
@@ -16087,35 +10399,17 @@ service "ec2" {
       human_friendly      = "Wavelength"
     }
 
-    client {
-      go_v1_client_typename = ""
-      skip_client_generate  = false
-    }
-
-    env_var {
-      deprecated_env_var = ""
-      tf_aws_env_var     = ""
-    }
-
-    endpoint_info {
-      endpoint_api_call        = ""
-      endpoint_api_params      = ""
-      endpoint_region_override = ""
-      endpoint_only            = false
-    }
-
     resource_prefix {
       actual  = "aws_ec2_carrier_gateway"
       correct = "aws_wavelength_"
     }
-    provider_package_correct = ""
+
     split_package            = "ec2"
     file_prefix              = "wavelength_"
     doc_prefix               = ["ec2_carrier_"]
     brand                    = "AWS"
     exclude                  = true
-    not_implemented          = false
-    allowed_subcategory      = true
+      allowed_subcategory      = true
     note                     = "Part of EC2"
   }
 
@@ -16124,8 +10418,4 @@ service "ec2" {
   file_prefix              = "ec2_"
   doc_prefix               = ["ami", "availability_zone", "ec2_availability_", "ec2_capacity_", "ec2_fleet", "ec2_host", "ec2_image_", "ec2_instance_", "ec2_public_ipv4_pool", "ec2_serial_", "ec2_spot_", "ec2_tag", "eip", "instance", "key_pair", "launch_template", "placement_group", "spot_"]
   brand                    = "Amazon"
-  exclude                  = false
-  not_implemented          = false
-  allowed_subcategory      = false
-  note                     = ""
 }

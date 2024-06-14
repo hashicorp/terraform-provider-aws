@@ -205,46 +205,60 @@ func parseService(curr Service) ServiceRecord {
 	}
 
 	// sdk
-	record[colSDKID] = curr.ServiceSDK.ID
-	for _, i := range curr.ServiceSDK.Version {
-		if i == 1 {
-			record[colClientSDKV1] = "1"
-		}
-		if i == 2 {
-			record[colClientSDKV2] = "2"
+	if len(curr.ServiceSDK) > 0 {
+		record[colSDKID] = curr.ServiceSDK[0].ID
+		for _, i := range curr.ServiceSDK[0].Version {
+			if i == 1 {
+				record[colClientSDKV1] = "1"
+			}
+			if i == 2 {
+				record[colClientSDKV2] = "2"
+			}
 		}
 	}
 
 	// names
-	record[colAliases] = strings.Join(curr.ServiceNames.Aliases, ";")
-	record[colProviderNameUpper] = curr.ServiceNames.ProviderNameUpper
-	record[colHumanFriendly] = curr.ServiceNames.HumanFriendly
+	if len(curr.ServiceNames) > 0 {
+		record[colAliases] = strings.Join(curr.ServiceNames[0].Aliases, ";")
+		record[colProviderNameUpper] = curr.ServiceNames[0].ProviderNameUpper
+		record[colHumanFriendly] = curr.ServiceNames[0].HumanFriendly
+	}
 
 	// client
-	record[colGoV1ClientTypeName] = curr.ServiceClient.GoV1ClientTypeName
-	if curr.ServiceClient.SkipClientGenerate {
-		record[colSkipClientGenerate] = "x"
-	} else {
-		record[colSkipClientGenerate] = ""
+	if len(curr.ServiceClient) > 0 {
+		record[colGoV1ClientTypeName] = curr.ServiceClient[0].GoV1ClientTypeName
+		if curr.ServiceClient[0].SkipClientGenerate {
+			record[colSkipClientGenerate] = "x"
+		} else {
+			record[colSkipClientGenerate] = ""
+		}
 	}
 
 	// env_var
-	record[colDeprecatedEnvVar] = curr.ServiceEnvVars.DeprecatedEnvVar
-	record[colTFAWSEnvVar] = curr.ServiceEnvVars.TFAWSEnvVar
+	if len(curr.ServiceEnvVars) > 0 {
+		record[colDeprecatedEnvVar] = curr.ServiceEnvVars[0].DeprecatedEnvVar
+		record[colTFAWSEnvVar] = curr.ServiceEnvVars[0].TFAWSEnvVar
+
+	}
 
 	// endpoint_info
-	record[colEndpointAPICall] = curr.ServiceEndpoints.EndpointAPICall
-	record[colEndpointAPIParams] = curr.ServiceEndpoints.EndpointAPIParams
-	record[colEndpointOverrideRegion] = curr.ServiceEndpoints.EndpointRegionOverride
-	if curr.ServiceEndpoints.EndpointOnly {
-		record[colEndpointOnly] = "x"
-	} else {
-		record[colEndpointOnly] = ""
+	if len(curr.ServiceEndpoints) > 0 {
+		record[colEndpointAPICall] = curr.ServiceEndpoints[0].EndpointAPICall
+		record[colEndpointAPIParams] = curr.ServiceEndpoints[0].EndpointAPIParams
+		record[colEndpointOverrideRegion] = curr.ServiceEndpoints[0].EndpointRegionOverride
+		if curr.ServiceEndpoints[0].EndpointOnly {
+			record[colEndpointOnly] = "x"
+		} else {
+			record[colEndpointOnly] = ""
+		}
+
 	}
 
 	// resource_prefix
-	record[colResourcePrefixActual] = curr.ServiceResourcePrefix.ResourcePrefixActual
-	record[colResourcePrefixCorrect] = curr.ServiceResourcePrefix.ResourcePrefixCorrect
+	if len(curr.ServiceResourcePrefix) > 0 {
+		record[colResourcePrefixActual] = curr.ServiceResourcePrefix[0].ResourcePrefixActual
+		record[colResourcePrefixCorrect] = curr.ServiceResourcePrefix[0].ResourcePrefixCorrect
+	}
 
 	// rest
 	record[colSplitPackageRealPackage] = curr.ServiceSplitPackage
@@ -298,8 +312,8 @@ func ReadAllServiceData() (results []ServiceRecord, err error) {
 }
 
 type CLIV2Command struct {
-	AWSCLIV2Command         string `hcl:"aws_cli_v2_command,attr"`
-	AWSCLIV2CommandNoDashes string `hcl:"aws_cli_v2_command_no_dashes,attr"`
+	AWSCLIV2Command         string `hcl:"aws_cli_v2_command,optional"`
+	AWSCLIV2CommandNoDashes string `hcl:"aws_cli_v2_command_no_dashes,optional"`
 }
 
 type GoPackages struct {
@@ -308,12 +322,12 @@ type GoPackages struct {
 }
 
 type ResourcePrefix struct {
-	ResourcePrefixActual  string `hcl:"actual,attr"`
-	ResourcePrefixCorrect string `hcl:"correct,attr"`
+	ResourcePrefixActual  string `hcl:"actual,optional"`
+	ResourcePrefixCorrect string `hcl:"correct,optional"`
 }
 
 type SDK struct {
-	ID      string `hcl:"id,attr"`
+	ID      string `hcl:"id,optional"`
 	Version []int  `hcl:"client_version,attr"`
 }
 
@@ -324,49 +338,49 @@ type Names struct {
 }
 
 type ProviderPackage struct {
-	Actual  string `hcl:"actual,attr"`
-	Correct string `hcl:"correct,attr"`
+	Actual  string `hcl:"actual,optional"`
+	Correct string `hcl:"correct,optional"`
 }
 
 type Client struct {
-	GoV1ClientTypeName string `hcl:"go_v1_client_typename,attr"`
-	SkipClientGenerate bool   `hcl:"skip_client_generate,attr"`
+	GoV1ClientTypeName string `hcl:"go_v1_client_typename,optional"`
+	SkipClientGenerate bool   `hcl:"skip_client_generate,optional"`
 }
 
 type EnvVar struct {
-	DeprecatedEnvVar string `hcl:"deprecated_env_var,attr"`
-	TFAWSEnvVar      string `hcl:"tf_aws_env_var,attr"`
+	DeprecatedEnvVar string `hcl:"deprecated_env_var,optional"`
+	TFAWSEnvVar      string `hcl:"tf_aws_env_var,optional"`
 }
 
 type EndpointInfo struct {
-	EndpointAPICall        string `hcl:"endpoint_api_call,attr"`
-	EndpointAPIParams      string `hcl:"endpoint_api_params,attr"`
-	EndpointRegionOverride string `hcl:"endpoint_region_override,attr"`
-	EndpointOnly           bool   `hcl:"endpoint_only,attr"`
+	EndpointAPICall        string `hcl:"endpoint_api_call,optional"`
+	EndpointAPIParams      string `hcl:"endpoint_api_params,optional"`
+	EndpointRegionOverride string `hcl:"endpoint_region_override,optional"`
+	EndpointOnly           bool   `hcl:"endpoint_only,optional"`
 }
 
 type Service struct {
-	Label                 string         `hcl:"CLIV2Command,label"`
-	ServiceCli            []CLIV2Command `hcl:"cli_v2_command,block"`
-	ServiceGoPackages     []GoPackages   `hcl:"go_packages,block"`
-	ServiceSDK            SDK            `hcl:"sdk,block"`
-	ServiceNames          Names          `hcl:"names,block"`
-	ServiceClient         Client         `hcl:"client,block"`
-	ServiceEnvVars        EnvVar         `hcl:"env_var,block"`
-	ServiceEndpoints      EndpointInfo   `hcl:"endpoint_info,block"`
-	ServiceResourcePrefix ResourcePrefix `hcl:"resource_prefix,block"`
+	Label                 string           `hcl:"CLIV2Command,label"`
+	ServiceCli            []CLIV2Command   `hcl:"cli_v2_command,block"`
+	ServiceGoPackages     []GoPackages     `hcl:"go_packages,block"`
+	ServiceSDK            []SDK            `hcl:"sdk,block"`
+	ServiceNames          []Names          `hcl:"names,block"`
+	ServiceClient         []Client         `hcl:"client,block"`
+	ServiceEnvVars        []EnvVar         `hcl:"env_var,block"`
+	ServiceEndpoints      []EndpointInfo   `hcl:"endpoint_info,block"`
+	ServiceResourcePrefix []ResourcePrefix `hcl:"resource_prefix,block"`
 
 	SubService []Service `hcl:"sub_service,block"`
 
-	ServiceProviderPackageCorrect string   `hcl:"provider_package_correct,attr"`
-	ServiceSplitPackage           string   `hcl:"split_package,attr"`
-	FilePrefix                    string   `hcl:"file_prefix,attr"`
-	DocPrefix                     []string `hcl:"doc_prefix,attr"`
+	ServiceProviderPackageCorrect string   `hcl:"provider_package_correct,optional"`
+	ServiceSplitPackage           string   `hcl:"split_package,optional"`
+	FilePrefix                    string   `hcl:"file_prefix,optional"`
+	DocPrefix                     []string `hcl:"doc_prefix,optional"`
 	Brand                         string   `hcl:"brand,attr"`
-	Exclude                       bool     `hcl:"exclude,attr"`
-	NotImplemented                bool     `hcl:"not_implemented,attr"`
-	AllowedSubcategory            bool     `hcl:"allowed_subcategory,attr"`
-	Note                          string   `hcl:"note,attr"`
+	Exclude                       bool     `hcl:"exclude,optional"`
+	NotImplemented                bool     `hcl:"not_implemented,optional"`
+	AllowedSubcategory            bool     `hcl:"allowed_subcategory,optional"`
+	Note                          string   `hcl:"note,optional"`
 }
 
 type Services struct {
