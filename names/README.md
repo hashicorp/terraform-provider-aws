@@ -32,6 +32,8 @@ service "" {
     v2_package = ""
   } 
 
+  // If any blocks below here have attirbutes with empty strings or false bools, they will be ommitted
+  // Blocks with zero attributes will be ommitted 
   sdk {
     id             = "" 
     client_version = [] 
@@ -76,9 +78,9 @@ service "" {
   note                = ""
 }
 
+```
 The explanation of the attributes of `data/names_data.hcl` are as follows:
 
-```
 
 | Name | Use | Description |
 | --- | --- | --- |
