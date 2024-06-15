@@ -75,6 +75,7 @@ const (
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"
+	Macie2EndpointID                     = "macie2"
 	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
 	MQEndpointID                         = "mq"
