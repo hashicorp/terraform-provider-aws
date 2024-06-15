@@ -61,7 +61,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	listInvitationsInput := &macie2.ListInvitationsInput{}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		err := conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+		err := conn.ListInvitationsPages(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.ToString(invitation.AccountId) == adminAccountID {
 					invitationID = aws.ToString(invitation.InvitationId)
@@ -83,7 +83,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+		err = conn.ListInvitationsPages(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.ToString(invitation.AccountId) == adminAccountID {
 					invitationID = aws.ToString(invitation.InvitationId)

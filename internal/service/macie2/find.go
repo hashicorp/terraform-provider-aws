@@ -18,7 +18,7 @@ func findMemberNotAssociated(ctx context.Context, conn *awstypes.Client, account
 	}
 	var result *awstypes.Member
 
-	err := conn.ListMembersPagesWithContext(ctx, input, func(page *macie2.ListMembersOutput, lastPage bool) bool {
+	err := conn.ListMembersPages(ctx, input, func(page *macie2.ListMembersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

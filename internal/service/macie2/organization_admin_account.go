@@ -135,7 +135,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 func GetOrganizationAdminAccount(ctx context.Context, conn *awstypes.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
 	var res *awstypes.AdminAccount
 
-	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, &macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+	err := conn.ListOrganizationAdminAccountsPages(ctx, &macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
