@@ -119,9 +119,9 @@ func ResourceFindingsFilter() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			names.AttrAction: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: enum.Validate[awstypes.FindingsFilterAction](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FindingsFilterAction](),
 			},
 			"position": {
 				Type:     schema.TypeInt,

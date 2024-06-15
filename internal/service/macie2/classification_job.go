@@ -112,10 +112,10 @@ func ResourceClassificationJob() *schema.Resource {
 				ForceNew: true,
 			},
 			"job_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.JobType](),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.JobType](),
 			},
 			"s3_job_definition": {
 				Type:     schema.TypeList,
@@ -171,10 +171,10 @@ func ResourceClassificationJob() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"comparator": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
@@ -198,10 +198,10 @@ func ResourceClassificationJob() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"comparator": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
@@ -251,10 +251,10 @@ func ResourceClassificationJob() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"comparator": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
@@ -278,10 +278,10 @@ func ResourceClassificationJob() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"comparator": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
@@ -341,10 +341,10 @@ func ResourceClassificationJob() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"comparator": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
@@ -353,10 +353,10 @@ func ResourceClassificationJob() *schema.Resource {
 																			Elem:     &schema.Schema{Type: schema.TypeString},
 																		},
 																		names.AttrKey: {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.ScopeFilterKey](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.ScopeFilterKey](),
 																		},
 																	},
 																},
@@ -369,10 +369,10 @@ func ResourceClassificationJob() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"comparator": {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
@@ -400,10 +400,10 @@ func ResourceClassificationJob() *schema.Resource {
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
 																		names.AttrTarget: {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.TagTarget](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
 																},
@@ -490,10 +490,10 @@ func ResourceClassificationJob() *schema.Resource {
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
 																		names.AttrTarget: {
-																			Type:         schema.TypeString,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: enum.Validate[awstypes.TagTarget](),
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			Computed:         true,
+																			ValidateDiagFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
 																},
