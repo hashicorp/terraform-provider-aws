@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,13 +50,13 @@ func testAccMember_basic(t *testing.T) {
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", awstypes.RelationshipStatusCreated),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, awstypes.MacieStatusEnabled),
 				),
 			},
 			{
@@ -154,28 +156,28 @@ func testAccMember_invite(t *testing.T) {
 				Config: testAccMemberConfig_invite(email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", awstypes.RelationshipStatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, awstypes.MacieStatusEnabled),
 				),
 			},
 			{
 				Config: testAccMemberConfig_invite(email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", awstypes.RelationshipStatusInvited),
 					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, awstypes.MacieStatusEnabled),
 				),
 			},
 			{
@@ -209,28 +211,28 @@ func testAccMember_inviteRemoved(t *testing.T) {
 				Config: testAccMemberConfig_invite(email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", awstypes.RelationshipStatusInvited),
 					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, awstypes.MacieStatusEnabled),
 				),
 			},
 			{
 				Config: testAccMemberConfig_invite(email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusRemoved),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", awstypes.RelationshipStatusRemoved),
 					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, awstypes.MacieStatusEnabled),
 				),
 			},
 			{
@@ -261,35 +263,35 @@ func testAccMember_status(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberConfig_status(email, macie2.MacieStatusEnabled, true),
+				Config: testAccMemberConfig_status(email, awstypes.MacieStatusEnabled, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", awstypes.RelationshipStatusInvited),
 					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, awstypes.MacieStatusEnabled),
 				),
 			},
 			{
-				Config: testAccMemberConfig_status(email, macie2.MacieStatusPaused, true),
+				Config: testAccMemberConfig_status(email, awstypes.MacieStatusPaused, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, "relationship_status", awstypes.RelationshipStatusPaused),
 					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, awstypes.MacieStatusPaused),
 				),
 			},
 			{
-				Config:                  testAccMemberConfig_status(email, macie2.MacieStatusPaused, true),
+				Config:                  testAccMemberConfig_status(email, awstypes.MacieStatusPaused, true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -345,10 +347,10 @@ func testAccCheckMemberExists(ctx context.Context, resourceName string, macie2Se
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 		input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
 
-		resp, err := conn.GetMemberWithContext(ctx, input)
+		resp, err := conn.GetMember(ctx, input)
 
 		if err != nil {
 			return err
@@ -366,7 +368,7 @@ func testAccCheckMemberExists(ctx context.Context, resourceName string, macie2Se
 
 func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_member" {
@@ -374,12 +376,12 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			input := &macie2.GetMemberInput{Id: aws.String(rs.Primary.ID)}
-			resp, err := conn.GetMemberWithContext(ctx, input)
+			resp, err := conn.GetMember(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-				tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-				tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
-				tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+				tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+				tfawserr.ErrMessageContains(err, awstypes.ErrCodeConflictException, "member accounts are associated with your account") ||
+				tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "account is not associated with your account") {
 				continue
 			}
 

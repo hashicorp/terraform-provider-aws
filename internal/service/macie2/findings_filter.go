@@ -10,9 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -118,7 +121,7 @@ func ResourceFindingsFilter() *schema.Resource {
 			names.AttrAction: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(macie2.FindingsFilterAction_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.FindingsFilterAction](),
 			},
 			"position": {
 				Type:     schema.TypeInt,
@@ -138,7 +141,7 @@ func ResourceFindingsFilter() *schema.Resource {
 func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -162,9 +165,9 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 
 	var output *macie2.CreateFindingsFilterOutput
 	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		output, err = conn.CreateFindingsFilterWithContext(ctx, input)
+		output, err = conn.CreateFindingsFilter(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
+		if tfawserr.ErrCodeEquals(err, awstypes.ErrorCodeClientError) {
 			return retry.RetryableError(err)
 		}
 
@@ -176,14 +179,14 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateFindingsFilterWithContext(ctx, input)
+		output, err = conn.CreateFindingsFilter(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie FindingsFilter: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Id))
+	d.SetId(aws.ToString(output.Id))
 
 	return append(diags, resourceFindingsFilterRead(ctx, d, meta)...)
 }
@@ -191,16 +194,16 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.GetFindingsFilterInput{
 		Id: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetFindingsFilterWithContext(ctx, input)
+	resp, err := conn.GetFindingsFilter(ctx, input)
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie FindingsFilter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -214,7 +217,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie FindingsFilter (%s): %s", "finding_criteria", d.Id(), err)
 	}
 	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(resp.Name)))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set(names.AttrAction, resp.Action)
 	d.Set("position", resp.Position)
@@ -229,7 +232,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.UpdateFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -258,7 +261,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 		input.Position = aws.Int64(int64(d.Get("position").(int)))
 	}
 
-	_, err = conn.UpdateFindingsFilterWithContext(ctx, input)
+	_, err = conn.UpdateFindingsFilter(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Macie FindingsFilter (%s): %s", d.Id(), err)
 	}
@@ -269,16 +272,16 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.DeleteFindingsFilterInput{
 		Id: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteFindingsFilterWithContext(ctx, input)
+	_, err := conn.DeleteFindingsFilter(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie FindingsFilter (%s): %s", d.Id(), err)
@@ -286,19 +289,19 @@ func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.FindingCriteria, error) {
+func expandFindingCriteriaFilter(findingCriterias []interface{}) (*awstypes.FindingCriteria, error) {
 	if len(findingCriterias) == 0 {
 		return nil, nil
 	}
 
-	criteria := map[string]*macie2.CriterionAdditionalProperties{}
+	criteria := map[string]*awstypes.CriterionAdditionalProperties{}
 	findingCriteria := findingCriterias[0].(map[string]interface{})
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 
 	for _, criterion := range inputFindingCriteria {
 		crit := criterion.(map[string]interface{})
 		field := crit[names.AttrField].(string)
-		conditional := macie2.CriterionAdditionalProperties{}
+		conditional := awstypes.CriterionAdditionalProperties{}
 
 		if v, ok := crit["eq"].(*schema.Set); ok && v.Len() != 0 {
 			foo := make([]*string, v.Len())
@@ -355,10 +358,10 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.Findin
 		criteria[field] = &conditional
 	}
 
-	return &macie2.FindingCriteria{Criterion: criteria}, nil
+	return &awstypes.FindingCriteria{Criterion: criteria}, nil
 }
 
-func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteria) []interface{} {
+func flattenFindingCriteriaFindingsFilter(findingCriteria *awstypes.FindingCriteria) []interface{} {
 	if findingCriteria == nil {
 		return nil
 	}
@@ -370,24 +373,24 @@ func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteri
 			names.AttrField: field,
 		}
 		if len(conditions.Eq) != 0 {
-			criterion["eq"] = aws.StringValueSlice(conditions.Eq)
+			criterion["eq"] = conditions.Eq
 		}
 		if len(conditions.Neq) != 0 {
-			criterion["neq"] = aws.StringValueSlice(conditions.Neq)
+			criterion["neq"] = conditions.Neq
 		}
 		if len(conditions.EqExactMatch) != 0 {
-			criterion["eq_exact_match"] = aws.StringValueSlice(conditions.EqExactMatch)
+			criterion["eq_exact_match"] = conditions.EqExactMatch
 		}
-		if v := aws.Int64Value(conditions.Lt); v != 0 {
+		if v := aws.ToInt64(conditions.Lt); v != 0 {
 			criterion["lt"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.Lte); v != 0 {
+		if v := aws.ToInt64(conditions.Lte); v != 0 {
 			criterion["lte"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.Gt); v != 0 {
+		if v := aws.ToInt64(conditions.Gt); v != 0 {
 			criterion["gt"] = flattenConditionIntField(field, v)
 		}
-		if v := aws.Int64Value(conditions.Gte); v != 0 {
+		if v := aws.ToInt64(conditions.Gte); v != 0 {
 			criterion["gte"] = flattenConditionIntField(field, v)
 		}
 		flatCriteria = append(flatCriteria, criterion)

@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -20,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -112,7 +115,7 @@ func ResourceClassificationJob() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(macie2.JobType_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.JobType](),
 			},
 			"s3_job_definition": {
 				Type:     schema.TypeList,
@@ -171,7 +174,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
@@ -198,7 +201,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
@@ -251,7 +254,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
@@ -278,7 +281,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
@@ -341,7 +344,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		names.AttrValues: {
 																			Type:     schema.TypeList,
@@ -353,7 +356,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.ScopeFilterKey_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.ScopeFilterKey](),
 																		},
 																	},
 																},
@@ -369,7 +372,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.JobComparator_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.JobComparator](),
 																		},
 																		"tag_values": {
 																			Type:     schema.TypeList,
@@ -400,7 +403,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.TagTarget_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
 																},
@@ -490,7 +493,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
-																			ValidateFunc: validation.StringInSlice(macie2.TagTarget_Values(), false),
+																			ValidateFunc: enum.Validate[awstypes.TagTarget](),
 																		},
 																	},
 																},
@@ -521,7 +524,7 @@ func ResourceClassificationJob() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{macie2.JobStatusCancelled, macie2.JobStatusRunning, macie2.JobStatusUserPaused}, false),
+				ValidateFunc: validation.StringInSlice([]string{awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused}, false),
 			},
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
@@ -551,6 +554,7 @@ func ResourceClassificationJob() *schema.Resource {
 		CustomizeDiff: resourceClassificationJobCustomizeDiff,
 	}
 }
+
 func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	//TagScopeTerm() enforces the `target` key even though documentation marks it as optional.
 	//ClassificationJobs criteria and scoping cannot be updated.
@@ -580,7 +584,7 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
@@ -609,9 +613,9 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	var err error
 	var output *macie2.CreateClassificationJobOutput
 	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
-		output, err = conn.CreateClassificationJobWithContext(ctx, input)
+		output, err = conn.CreateClassificationJob(ctx, input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
+			if tfawserr.ErrCodeEquals(err, awstypes.ErrorCodeClientError) {
 				return retry.RetryableError(err)
 			}
 
@@ -622,14 +626,14 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateClassificationJobWithContext(ctx, input)
+		output, err = conn.CreateClassificationJob(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Macie ClassificationJob: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.JobId))
+	d.SetId(aws.ToString(output.JobId))
 
 	return append(diags, resourceClassificationJobRead(ctx, d, meta)...)
 }
@@ -637,17 +641,17 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.DescribeClassificationJobInput{
 		JobId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.DescribeClassificationJobWithContext(ctx, input)
+	resp, err := conn.DescribeClassificationJob(ctx, input)
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job")) {
+	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+		tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "cannot update cancelled job for job")) {
 		log.Printf("[WARN] Macie ClassificationJob (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -665,7 +669,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("sampling_percentage", resp.SamplingPercentage)
 	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(resp.Name)))
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set("initial_run", resp.InitialRun)
 	d.Set("job_type", resp.JobType)
@@ -677,9 +681,9 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("job_id", resp.JobId)
 	d.Set("job_arn", resp.JobArn)
-	status := aws.StringValue(resp.JobStatus)
-	if status == macie2.JobStatusComplete || status == macie2.JobStatusIdle || status == macie2.JobStatusPaused {
-		status = macie2.JobStatusRunning
+	status := string(resp.JobStatus)
+	if status == awstypes.JobStatusComplete || status == awstypes.JobStatusIdle || status == awstypes.JobStatusPaused {
+		status = awstypes.JobStatusRunning
 	}
 	d.Set("job_status", status)
 	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
@@ -693,7 +697,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId: aws.String(d.Id()),
@@ -702,14 +706,14 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("job_status") {
 		status := d.Get("job_status").(string)
 
-		if status == macie2.JobStatusCancelled {
-			return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", macie2.JobStatusCancelled))
+		if status == awstypes.JobStatusCancelled {
+			return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", awstypes.JobStatusCancelled))
 		}
 
-		input.JobStatus = aws.String(status)
+		input.JobStatus = awstypes.JobStatus(status)
 	}
 
-	_, err := conn.UpdateClassificationJobWithContext(ctx, input)
+	_, err := conn.UpdateClassificationJob(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), err)
 	}
@@ -720,18 +724,18 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	conn := meta.(*conns.AWSClient).Macie2Client(ctx)
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId:     aws.String(d.Id()),
-		JobStatus: aws.String(macie2.JobStatusCancelled),
+		JobStatus: aws.String(awstypes.JobStatusCancelled),
 	}
 
-	_, err := conn.UpdateClassificationJobWithContext(ctx, input)
+	_, err := conn.UpdateClassificationJob(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "cannot update cancelled job for job") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+			tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "cannot update cancelled job for job") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie ClassificationJob (%s): %s", d.Id(), err)
@@ -740,12 +744,12 @@ func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *macie2.S3JobDefinition {
+func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *awstypes.S3JobDefinition {
 	if len(s3JobDefinitionObj) == 0 {
 		return nil
 	}
 
-	var s3JobDefinition macie2.S3JobDefinition
+	var s3JobDefinition awstypes.S3JobDefinition
 
 	s3JobMap := s3JobDefinitionObj[0].(map[string]interface{})
 
@@ -762,12 +766,12 @@ func expandS3JobDefinition(s3JobDefinitionObj []interface{}) *macie2.S3JobDefini
 	return &s3JobDefinition
 }
 
-func expandS3BucketCriteriaForJob(criteria []interface{}) *macie2.S3BucketCriteriaForJob {
+func expandS3BucketCriteriaForJob(criteria []interface{}) *awstypes.S3BucketCriteriaForJob {
 	if len(criteria) == 0 {
 		return nil
 	}
 
-	var criteriaObj macie2.S3BucketCriteriaForJob
+	var criteriaObj awstypes.S3BucketCriteriaForJob
 
 	criteriaMap := criteria[0].(map[string]interface{})
 
@@ -775,7 +779,7 @@ func expandS3BucketCriteriaForJob(criteria []interface{}) *macie2.S3BucketCriter
 		v1 := v.([]interface{})
 		andMap := v1[0].(map[string]interface{})
 		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
-			criteriaObj.Excludes = &macie2.CriteriaBlockForJob{
+			criteriaObj.Excludes = &awstypes.CriteriaBlockForJob{
 				And: expandCriteriaBlockForJob(v2.([]interface{})),
 			}
 		}
@@ -784,7 +788,7 @@ func expandS3BucketCriteriaForJob(criteria []interface{}) *macie2.S3BucketCriter
 		v1 := v.([]interface{})
 		andMap := v1[0].(map[string]interface{})
 		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
-			criteriaObj.Includes = &macie2.CriteriaBlockForJob{
+			criteriaObj.Includes = &awstypes.CriteriaBlockForJob{
 				And: expandCriteriaBlockForJob(v2.([]interface{})),
 			}
 		}
@@ -793,16 +797,16 @@ func expandS3BucketCriteriaForJob(criteria []interface{}) *macie2.S3BucketCriter
 	return &criteriaObj
 }
 
-func expandCriteriaBlockForJob(criteriaBlocks []interface{}) []*macie2.CriteriaForJob {
+func expandCriteriaBlockForJob(criteriaBlocks []interface{}) []*awstypes.CriteriaForJob {
 	if len(criteriaBlocks) == 0 {
 		return nil
 	}
 
-	var criteriaBlocksList []*macie2.CriteriaForJob
+	var criteriaBlocksList []*awstypes.CriteriaForJob
 
 	for _, v := range criteriaBlocks {
 		v1 := v.(map[string]interface{})
-		var criteriaBlock macie2.CriteriaForJob
+		var criteriaBlock awstypes.CriteriaForJob
 
 		if v2, ok1 := v1["simple_criterion"]; ok1 && len(v2.([]interface{})) > 0 {
 			criteriaBlock.SimpleCriterion = expandSimpleCriterionForJob(v2.([]interface{}))
@@ -817,12 +821,12 @@ func expandCriteriaBlockForJob(criteriaBlocks []interface{}) []*macie2.CriteriaF
 	return criteriaBlocksList
 }
 
-func expandSimpleCriterionForJob(criterion []interface{}) *macie2.SimpleCriterionForJob {
+func expandSimpleCriterionForJob(criterion []interface{}) *awstypes.SimpleCriterionForJob {
 	if len(criterion) == 0 {
 		return nil
 	}
 
-	var simpleCriterion macie2.SimpleCriterionForJob
+	var simpleCriterion awstypes.SimpleCriterionForJob
 
 	simpleCriterionMap := criterion[0].(map[string]interface{})
 
@@ -839,12 +843,12 @@ func expandSimpleCriterionForJob(criterion []interface{}) *macie2.SimpleCriterio
 	return &simpleCriterion
 }
 
-func expandTagCriterionForJob(criterion []interface{}) *macie2.TagCriterionForJob {
+func expandTagCriterionForJob(criterion []interface{}) *awstypes.TagCriterionForJob {
 	if len(criterion) == 0 {
 		return nil
 	}
 
-	var tagCriterion macie2.TagCriterionForJob
+	var tagCriterion awstypes.TagCriterionForJob
 
 	tagCriterionMap := criterion[0].(map[string]interface{})
 
@@ -858,16 +862,16 @@ func expandTagCriterionForJob(criterion []interface{}) *macie2.TagCriterionForJo
 	return &tagCriterion
 }
 
-func expandTagCriterionPairForJob(tagValues []interface{}) []*macie2.TagCriterionPairForJob {
+func expandTagCriterionPairForJob(tagValues []interface{}) []*awstypes.TagCriterionPairForJob {
 	if len(tagValues) == 0 {
 		return nil
 	}
 
-	var tagValuesList []*macie2.TagCriterionPairForJob
+	var tagValuesList []*awstypes.TagCriterionPairForJob
 
 	for _, v := range tagValues {
 		v1 := v.(map[string]interface{})
-		var tagValue macie2.TagCriterionPairForJob
+		var tagValue awstypes.TagCriterionPairForJob
 
 		if v2, ok := v1[names.AttrValue]; ok && v2.(string) != "" {
 			tagValue.Value = aws.String(v2.(string))
@@ -881,17 +885,17 @@ func expandTagCriterionPairForJob(tagValues []interface{}) []*macie2.TagCriterio
 	return tagValuesList
 }
 
-func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefinitionForJob {
+func expandBucketDefinitions(definitions []interface{}) []*awstypes.S3BucketDefinitionForJob {
 	if len(definitions) == 0 {
 		return nil
 	}
 
-	var bucketDefinitions []*macie2.S3BucketDefinitionForJob
+	var bucketDefinitions []*awstypes.S3BucketDefinitionForJob
 
 	for _, v := range definitions {
 		v1 := v.(map[string]interface{})
 
-		bucketDefinition := &macie2.S3BucketDefinitionForJob{
+		bucketDefinition := &awstypes.S3BucketDefinitionForJob{
 			Buckets:   flex.ExpandStringList(v1["buckets"].([]interface{})),
 			AccountId: aws.String(v1[names.AttrAccountID].(string)),
 		}
@@ -902,12 +906,12 @@ func expandBucketDefinitions(definitions []interface{}) []*macie2.S3BucketDefini
 	return bucketDefinitions
 }
 
-func expandScoping(scoping []interface{}) *macie2.Scoping {
+func expandScoping(scoping []interface{}) *awstypes.Scoping {
 	if len(scoping) == 0 {
 		return nil
 	}
 
-	var scopingObj macie2.Scoping
+	var scopingObj awstypes.Scoping
 
 	scopingMap := scoping[0].(map[string]interface{})
 
@@ -915,7 +919,7 @@ func expandScoping(scoping []interface{}) *macie2.Scoping {
 		v1 := v.([]interface{})
 		andMap := v1[0].(map[string]interface{})
 		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
-			scopingObj.Excludes = &macie2.JobScopingBlock{
+			scopingObj.Excludes = &awstypes.JobScopingBlock{
 				And: expandJobScopeTerm(v2.([]interface{})),
 			}
 		}
@@ -924,7 +928,7 @@ func expandScoping(scoping []interface{}) *macie2.Scoping {
 		v1 := v.([]interface{})
 		andMap := v1[0].(map[string]interface{})
 		if v2, ok1 := andMap["and"]; ok1 && len(v2.([]interface{})) > 0 {
-			scopingObj.Includes = &macie2.JobScopingBlock{
+			scopingObj.Includes = &awstypes.JobScopingBlock{
 				And: expandJobScopeTerm(v2.([]interface{})),
 			}
 		}
@@ -933,16 +937,16 @@ func expandScoping(scoping []interface{}) *macie2.Scoping {
 	return &scopingObj
 }
 
-func expandJobScopeTerm(scopeTerms []interface{}) []*macie2.JobScopeTerm {
+func expandJobScopeTerm(scopeTerms []interface{}) []*awstypes.JobScopeTerm {
 	if len(scopeTerms) == 0 {
 		return nil
 	}
 
-	var scopeTermsList []*macie2.JobScopeTerm
+	var scopeTermsList []*awstypes.JobScopeTerm
 
 	for _, v := range scopeTerms {
 		v1 := v.(map[string]interface{})
-		var scopeTerm macie2.JobScopeTerm
+		var scopeTerm awstypes.JobScopeTerm
 
 		if v2, ok1 := v1["simple_scope_term"]; ok1 && len(v2.([]interface{})) > 0 {
 			scopeTerm.SimpleScopeTerm = expandSimpleScopeTerm(v2.([]interface{}))
@@ -956,12 +960,12 @@ func expandJobScopeTerm(scopeTerms []interface{}) []*macie2.JobScopeTerm {
 	return scopeTermsList
 }
 
-func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *macie2.SimpleScopeTerm {
+func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *awstypes.SimpleScopeTerm {
 	if len(simpleScopeTerm) == 0 {
 		return nil
 	}
 
-	var simpleTerm macie2.SimpleScopeTerm
+	var simpleTerm awstypes.SimpleScopeTerm
 
 	simpleScopeTermMap := simpleScopeTerm[0].(map[string]interface{})
 
@@ -978,12 +982,12 @@ func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *macie2.SimpleScopeTer
 	return &simpleTerm
 }
 
-func expandTagScopeTerm(tagScopeTerm []interface{}) *macie2.TagScopeTerm {
+func expandTagScopeTerm(tagScopeTerm []interface{}) *awstypes.TagScopeTerm {
 	if len(tagScopeTerm) == 0 {
 		return nil
 	}
 
-	var tagTerm macie2.TagScopeTerm
+	var tagTerm awstypes.TagScopeTerm
 
 	tagScopeTermMap := tagScopeTerm[0].(map[string]interface{})
 
@@ -1003,16 +1007,16 @@ func expandTagScopeTerm(tagScopeTerm []interface{}) *macie2.TagScopeTerm {
 	return &tagTerm
 }
 
-func expandTagValues(tagValues []interface{}) []*macie2.TagValuePair {
+func expandTagValues(tagValues []interface{}) []*awstypes.TagValuePair {
 	if len(tagValues) == 0 {
 		return nil
 	}
 
-	var tagValuesList []*macie2.TagValuePair
+	var tagValuesList []*awstypes.TagValuePair
 
 	for _, v := range tagValues {
 		v1 := v.(map[string]interface{})
-		var tagValue macie2.TagValuePair
+		var tagValue awstypes.TagValuePair
 
 		if v2, ok := v1[names.AttrValue]; ok && v2.(string) != "" {
 			tagValue.Value = aws.String(v2.(string))
@@ -1026,25 +1030,25 @@ func expandTagValues(tagValues []interface{}) []*macie2.TagValuePair {
 	return tagValuesList
 }
 
-func expandScheduleFrequency(schedules []interface{}) *macie2.JobScheduleFrequency {
+func expandScheduleFrequency(schedules []interface{}) *awstypes.JobScheduleFrequency {
 	if len(schedules) == 0 {
 		return nil
 	}
 
-	var jobScheduleFrequency macie2.JobScheduleFrequency
+	var jobScheduleFrequency awstypes.JobScheduleFrequency
 
 	scheduleMap := schedules[0].(map[string]interface{})
 
 	if v1, ok1 := scheduleMap["daily_schedule"]; ok1 && v1.(bool) {
-		jobScheduleFrequency.DailySchedule = &macie2.DailySchedule{}
+		jobScheduleFrequency.DailySchedule = &awstypes.DailySchedule{}
 	}
 	if v1, ok1 := scheduleMap["weekly_schedule"]; ok1 && v1.(string) != "" {
-		jobScheduleFrequency.WeeklySchedule = &macie2.WeeklySchedule{
+		jobScheduleFrequency.WeeklySchedule = &awstypes.WeeklySchedule{
 			DayOfWeek: aws.String(v1.(string)),
 		}
 	}
 	if v1, ok1 := scheduleMap["monthly_schedule"]; ok1 && v1.(int) > 0 {
-		jobScheduleFrequency.MonthlySchedule = &macie2.MonthlySchedule{
+		jobScheduleFrequency.MonthlySchedule = &awstypes.MonthlySchedule{
 			DayOfMonth: aws.Int64(int64(v1.(int))),
 		}
 	}
@@ -1052,7 +1056,7 @@ func expandScheduleFrequency(schedules []interface{}) *macie2.JobScheduleFrequen
 	return &jobScheduleFrequency
 }
 
-func flattenScheduleFrequency(schedule *macie2.JobScheduleFrequency) []map[string]interface{} {
+func flattenScheduleFrequency(schedule *awstypes.JobScheduleFrequency) []map[string]interface{} {
 	if schedule == nil {
 		return nil
 	}
@@ -1073,7 +1077,7 @@ func flattenScheduleFrequency(schedule *macie2.JobScheduleFrequency) []map[strin
 	return schedulesList
 }
 
-func flattenS3JobDefinition(s3JobDefinition *macie2.S3JobDefinition) []map[string]interface{} {
+func flattenS3JobDefinition(s3JobDefinition *awstypes.S3JobDefinition) []map[string]interface{} {
 	if s3JobDefinition == nil {
 		return nil
 	}
@@ -1089,7 +1093,7 @@ func flattenS3JobDefinition(s3JobDefinition *macie2.S3JobDefinition) []map[strin
 	return jobDefinitions
 }
 
-func flattenS3BucketCriteriaForJob(criteria *macie2.S3BucketCriteriaForJob) []map[string]interface{} {
+func flattenS3BucketCriteriaForJob(criteria *awstypes.S3BucketCriteriaForJob) []map[string]interface{} {
 	if criteria == nil {
 		return nil
 	}
@@ -1104,7 +1108,7 @@ func flattenS3BucketCriteriaForJob(criteria *macie2.S3BucketCriteriaForJob) []ma
 	return criteriaList
 }
 
-func flattenCriteriaBlockForJob(criteriaBlock *macie2.CriteriaBlockForJob) []map[string]interface{} {
+func flattenCriteriaBlockForJob(criteriaBlock *awstypes.CriteriaBlockForJob) []map[string]interface{} {
 	if criteriaBlock == nil {
 		return nil
 	}
@@ -1118,7 +1122,7 @@ func flattenCriteriaBlockForJob(criteriaBlock *macie2.CriteriaBlockForJob) []map
 	return criteriaBlockList
 }
 
-func flattenCriteriaForJob(criteria []*macie2.CriteriaForJob) []map[string]interface{} {
+func flattenCriteriaForJob(criteria []*awstypes.CriteriaForJob) []map[string]interface{} {
 	if criteria == nil {
 		return nil
 	}
@@ -1135,7 +1139,7 @@ func flattenCriteriaForJob(criteria []*macie2.CriteriaForJob) []map[string]inter
 	return criteriaList
 }
 
-func flattenSimpleCriterionForJob(criterion *macie2.SimpleCriterionForJob) []map[string]interface{} {
+func flattenSimpleCriterionForJob(criterion *awstypes.SimpleCriterionForJob) []map[string]interface{} {
 	if criterion == nil {
 		return nil
 	}
@@ -1143,15 +1147,15 @@ func flattenSimpleCriterionForJob(criterion *macie2.SimpleCriterionForJob) []map
 	var simpleCriterionList []map[string]interface{}
 
 	simpleCriterionList = append(simpleCriterionList, map[string]interface{}{
-		"comparator":     aws.StringValue(criterion.Comparator),
-		names.AttrKey:    aws.StringValue(criterion.Key),
+		"comparator":     aws.ToString(criterion.Comparator),
+		names.AttrKey:    aws.ToString(criterion.Key),
 		names.AttrValues: flex.FlattenStringList(criterion.Values),
 	})
 
 	return simpleCriterionList
 }
 
-func flattenTagCriterionForJob(criterion *macie2.TagCriterionForJob) []map[string]interface{} {
+func flattenTagCriterionForJob(criterion *awstypes.TagCriterionForJob) []map[string]interface{} {
 	if criterion == nil {
 		return nil
 	}
@@ -1159,14 +1163,14 @@ func flattenTagCriterionForJob(criterion *macie2.TagCriterionForJob) []map[strin
 	var tagCriterionList []map[string]interface{}
 
 	tagCriterionList = append(tagCriterionList, map[string]interface{}{
-		"comparator": aws.StringValue(criterion.Comparator),
+		"comparator": aws.ToString(criterion.Comparator),
 		"tag_values": flattenTagCriterionPairForJob(criterion.TagValues),
 	})
 
 	return tagCriterionList
 }
 
-func flattenTagCriterionPairForJob(tagValues []*macie2.TagCriterionPairForJob) []map[string]interface{} {
+func flattenTagCriterionPairForJob(tagValues []*awstypes.TagCriterionPairForJob) []map[string]interface{} {
 	if len(tagValues) == 0 {
 		return nil
 	}
@@ -1175,15 +1179,15 @@ func flattenTagCriterionPairForJob(tagValues []*macie2.TagCriterionPairForJob) [
 
 	for _, tagValue := range tagValues {
 		tagValuesList = append(tagValuesList, map[string]interface{}{
-			names.AttrValue: aws.StringValue(tagValue.Value),
-			names.AttrKey:   aws.StringValue(tagValue.Key),
+			names.AttrValue: aws.ToString(tagValue.Value),
+			names.AttrKey:   aws.ToString(tagValue.Key),
 		})
 	}
 
 	return tagValuesList
 }
 
-func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJob) []map[string]interface{} {
+func flattenBucketDefinition(bucketDefinitions []*awstypes.S3BucketDefinitionForJob) []map[string]interface{} {
 	if len(bucketDefinitions) == 0 {
 		return nil
 	}
@@ -1195,7 +1199,7 @@ func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJo
 			continue
 		}
 		bucketDefinitionList = append(bucketDefinitionList, map[string]interface{}{
-			names.AttrAccountID: aws.StringValue(bucket.AccountId),
+			names.AttrAccountID: aws.ToString(bucket.AccountId),
 			"buckets":           flex.FlattenStringList(bucket.Buckets),
 		})
 	}
@@ -1203,7 +1207,7 @@ func flattenBucketDefinition(bucketDefinitions []*macie2.S3BucketDefinitionForJo
 	return bucketDefinitionList
 }
 
-func flattenScoping(scoping *macie2.Scoping) []map[string]interface{} {
+func flattenScoping(scoping *awstypes.Scoping) []map[string]interface{} {
 	if scoping == nil {
 		return nil
 	}
@@ -1218,7 +1222,7 @@ func flattenScoping(scoping *macie2.Scoping) []map[string]interface{} {
 	return scopingList
 }
 
-func flattenJobScopingBlock(scopeTerm *macie2.JobScopingBlock) []map[string]interface{} {
+func flattenJobScopingBlock(scopeTerm *awstypes.JobScopingBlock) []map[string]interface{} {
 	if scopeTerm == nil {
 		return nil
 	}
@@ -1232,7 +1236,7 @@ func flattenJobScopingBlock(scopeTerm *macie2.JobScopingBlock) []map[string]inte
 	return scopeTermList
 }
 
-func flattenJobScopeTerm(scopeTerms []*macie2.JobScopeTerm) []map[string]interface{} {
+func flattenJobScopeTerm(scopeTerms []*awstypes.JobScopeTerm) []map[string]interface{} {
 	if scopeTerms == nil {
 		return nil
 	}
@@ -1249,7 +1253,7 @@ func flattenJobScopeTerm(scopeTerms []*macie2.JobScopeTerm) []map[string]interfa
 	return scopeTermList
 }
 
-func flattenSimpleScopeTerm(simpleScopeTerm *macie2.SimpleScopeTerm) []map[string]interface{} {
+func flattenSimpleScopeTerm(simpleScopeTerm *awstypes.SimpleScopeTerm) []map[string]interface{} {
 	if simpleScopeTerm == nil {
 		return nil
 	}
@@ -1257,15 +1261,15 @@ func flattenSimpleScopeTerm(simpleScopeTerm *macie2.SimpleScopeTerm) []map[strin
 	var simpleScopeTermList []map[string]interface{}
 
 	simpleScopeTermList = append(simpleScopeTermList, map[string]interface{}{
-		names.AttrKey:    aws.StringValue(simpleScopeTerm.Key),
-		"comparator":     aws.StringValue(simpleScopeTerm.Comparator),
+		names.AttrKey:    aws.ToString(simpleScopeTerm.Key),
+		"comparator":     aws.ToString(simpleScopeTerm.Comparator),
 		names.AttrValues: flex.FlattenStringList(simpleScopeTerm.Values),
 	})
 
 	return simpleScopeTermList
 }
 
-func flattenTagScopeTerm(tagScopeTerm *macie2.TagScopeTerm) []map[string]interface{} {
+func flattenTagScopeTerm(tagScopeTerm *awstypes.TagScopeTerm) []map[string]interface{} {
 	if tagScopeTerm == nil {
 		return nil
 	}
@@ -1273,16 +1277,16 @@ func flattenTagScopeTerm(tagScopeTerm *macie2.TagScopeTerm) []map[string]interfa
 	var tagScopeTermList []map[string]interface{}
 
 	tagScopeTermList = append(tagScopeTermList, map[string]interface{}{
-		names.AttrKey:    aws.StringValue(tagScopeTerm.Key),
-		"comparator":     aws.StringValue(tagScopeTerm.Comparator),
-		names.AttrTarget: aws.StringValue(tagScopeTerm.Target),
+		names.AttrKey:    aws.ToString(tagScopeTerm.Key),
+		"comparator":     aws.ToString(tagScopeTerm.Comparator),
+		names.AttrTarget: aws.ToString(tagScopeTerm.Target),
 		"tag_values":     flattenTagValues(tagScopeTerm.TagValues),
 	})
 
 	return tagScopeTermList
 }
 
-func flattenTagValues(tagValues []*macie2.TagValuePair) []map[string]interface{} {
+func flattenTagValues(tagValues []*awstypes.TagValuePair) []map[string]interface{} {
 	if len(tagValues) == 0 {
 		return nil
 	}
@@ -1291,15 +1295,15 @@ func flattenTagValues(tagValues []*macie2.TagValuePair) []map[string]interface{}
 
 	for _, tagValue := range tagValues {
 		tagValuesList = append(tagValuesList, map[string]interface{}{
-			names.AttrValue: aws.StringValue(tagValue.Value),
-			names.AttrKey:   aws.StringValue(tagValue.Key),
+			names.AttrValue: aws.ToString(tagValue.Value),
+			names.AttrKey:   aws.ToString(tagValue.Key),
 		})
 	}
 
 	return tagValuesList
 }
 
-func flattenUserPausedDetails(userPausedDetail *macie2.UserPausedDetails) []map[string]interface{} {
+func flattenUserPausedDetails(userPausedDetail *awstypes.UserPausedDetails) []map[string]interface{} {
 	if userPausedDetail == nil {
 		return nil
 	}
@@ -1307,7 +1311,7 @@ func flattenUserPausedDetails(userPausedDetail *macie2.UserPausedDetails) []map[
 	var userDetails []map[string]interface{}
 
 	userDetails = append(userDetails, map[string]interface{}{
-		"job_imminent_expiration_health_event_arn": aws.StringValue(userPausedDetail.JobImminentExpirationHealthEventArn),
+		"job_imminent_expiration_health_event_arn": aws.ToString(userPausedDetail.JobImminentExpirationHealthEventArn),
 		"job_expires_at": userPausedDetail.JobExpiresAt.String(),
 		"job_paused_at":  userPausedDetail.JobPausedAt.String(),
 	})

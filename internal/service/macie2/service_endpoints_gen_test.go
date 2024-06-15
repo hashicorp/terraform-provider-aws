@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
+	macie2_sdkv1 "github.com/aws/aws-sdk-go-v2/service/macie2"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -277,7 +277,7 @@ func defaultFIPSEndpoint(region string) string {
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.Macie2Conn(ctx)
+	client := meta.Macie2Client(ctx)
 
 	req, _ := client.ListFindingsRequest(&macie2_sdkv1.ListFindingsInput{})
 
