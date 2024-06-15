@@ -112,6 +112,7 @@ import (
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	m2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/m2"
+	macie2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/macie2"
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	mediaconvert_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconvert"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -225,7 +226,6 @@ import (
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
-	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
@@ -863,8 +863,8 @@ func (c *AWSClient) MWAAClient(ctx context.Context) *mwaa_sdkv2.Client {
 	return errs.Must(client[*mwaa_sdkv2.Client](ctx, c, names.MWAA, make(map[string]any)))
 }
 
-func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
-	return errs.Must(conn[*macie2_sdkv1.Macie2](ctx, c, names.Macie2, make(map[string]any)))
+func (c *AWSClient) Macie2Client(ctx context.Context) *macie2_sdkv2.Client {
+	return errs.Must(client[*macie2_sdkv2.Client](ctx, c, names.Macie2, make(map[string]any)))
 }
 
 func (c *AWSClient) MediaConnectClient(ctx context.Context) *mediaconnect_sdkv2.Client {

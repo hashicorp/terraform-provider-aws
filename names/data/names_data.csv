@@ -232,7 +232,7 @@ lookoutmetrics,lookoutmetrics,lookoutmetrics,lookoutmetrics,,lookoutmetrics,,,Lo
 lookoutvision,lookoutvision,lookoutforvision,lookoutvision,,lookoutvision,,lookoutforvision,LookoutVision,LookoutForVision,,1,,,aws_lookoutvision_,,lookoutvision_,Lookout for Vision,Amazon,,x,,,,,LookoutVision,,,,
 ,,,,,,,,,,,,,,,,,Lumberyard,Amazon,x,,,,,,,,,,No SDK support
 machinelearning,machinelearning,machinelearning,machinelearning,,machinelearning,,,MachineLearning,MachineLearning,,1,,,aws_machinelearning_,,machinelearning_,Machine Learning,Amazon,,x,,,,,Machine Learning,,,,
-macie2,macie2,macie2,macie2,,macie2,,,Macie2,Macie2,,1,,,aws_macie2_,,macie2_,Macie,Amazon,,,,,,,Macie2,ListFindings,,,
+macie2,macie2,macie2,macie2,,macie2,,,Macie2,Macie2,,,2,,aws_macie2_,,macie2_,Macie,Amazon,,,,,,,Macie2,ListFindings,,,
 macie,macie,macie,macie,,macie,,,Macie,Macie,,1,,,aws_macie_,,macie_,Macie Classic,Amazon,,x,,,,,Macie,,,,
 m2,m2,m2,m2,,m2,,,M2,M2,,,2,,aws_m2_,,m2_,Mainframe Modernization,AWS,,,,,,,m2,ListApplications,,,
 managedblockchain,managedblockchain,managedblockchain,managedblockchain,,managedblockchain,,,ManagedBlockchain,ManagedBlockchain,,1,,,aws_managedblockchain_,,managedblockchain_,Managed Blockchain,Amazon,,x,,,,,ManagedBlockchain,,,,
