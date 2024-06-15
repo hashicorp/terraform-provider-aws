@@ -177,6 +177,16 @@ var x identifier
 +import "github.com/hashicorp/terraform-provider-aws/internal/enum"
 enum.x
 
+# Acceptance test attribute checks: convert enums back to string.
+@@
+var r expression
+var x expression
+var y expression
+var z identifier
+@@
+-r.TestCheckResourceAttr(x, y, awstypes.z)
++r.TestCheckResourceAttr(x, y, string(awstypes.z))
+
 {{- if .MultiClient }}
 # Replace generated Tags function with the V2 variant.
 @@
