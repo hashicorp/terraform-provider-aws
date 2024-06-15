@@ -2403,23 +2403,18 @@ func validateTTLCustomDiff(ctx context.Context, d *schema.ResourceDiff, meta any
 	ttlPath := cty.GetAttrPath("ttl")
 	ttl := configRaw.GetAttr("ttl")
 	if ttl.IsKnown() && !ttl.IsNull() {
-		listenerActionsPlantimeValidate(ttlPath, ttl, &diags)
+		if ttl.LengthInt() == 1 {
+			idx := cty.NumberIntVal(0)
+			ttl := ttl.Index(idx)
+			ttlPath := ttlPath.Index(idx)
+			ttlPlantimeValidate(ttlPath, ttl, &diags)
+		}
 	}
 
 	return sdkdiag.DiagnosticsError(diags)
 }
 
-func listenerActionsPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
-	it := ttl.ElementIterator()
-	for it.Next() {
-		i, action := it.Element()
-		ttlPath := ttlPath.Index(i)
-
-		listenerActionPlantimeValidate(ttlPath, action, diags)
-	}
-}
-
-func listenerActionPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
+func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostics) {
 	attribute := ttl.GetAttr("attribute_name")
 	if !attribute.IsKnown() {
 		return
