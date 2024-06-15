@@ -19,7 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -372,10 +375,16 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.Ct1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1365,10 +1374,15 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 				Config: testAccTableConfig_timeToLive(rName, rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.attribute_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtTrue),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(rName),
+							names.AttrEnabled: knownvalue.Bool(true),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1402,10 +1416,15 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				Config: testAccTableConfig_timeToLive(rName, "", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.attribute_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1439,10 +1458,15 @@ func TestAccDynamoDBTable_TTL_update(t *testing.T) {
 				Config: testAccTableConfig_timeToLive(rName, "", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.attribute_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -1453,10 +1477,15 @@ func TestAccDynamoDBTable_TTL_update(t *testing.T) {
 				Config: testAccTableConfig_timeToLive(rName, rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.attribute_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtTrue),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(rName),
+							names.AttrEnabled: knownvalue.Bool(true),
+						}),
+					})),
+				},
 			},
 		},
 	})
