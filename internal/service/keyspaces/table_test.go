@@ -352,7 +352,6 @@ func TestAccKeyspacesTable_autoScalingSpecification_update(t *testing.T) {
 	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
 	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_table.test"
-	kmsKeyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
