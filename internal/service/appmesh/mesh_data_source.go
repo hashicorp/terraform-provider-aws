@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_mesh", name="Service Mesh")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceMesh() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMeshRead,
@@ -59,7 +61,6 @@ func dataSourceMesh() *schema.Resource {
 func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get(names.AttrName).(string)
 	mesh, err := findMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
@@ -93,9 +94,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

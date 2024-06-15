@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Capacity Block Offering")
+// @FrameworkDataSource("aws_ec2_capacity_block_offering", name="Capacity Block Offering")
 func newDataSourceCapacityBlockOffering(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceCapacityBlockOffering{}
 

@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_attachment", name="Transit Gateway Attachment")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayAttachmentRead,
