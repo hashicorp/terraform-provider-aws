@@ -115,14 +115,7 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "redshift",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("snapshot:%s/%s", aws.StringValue(snapshot.ClusterIdentifier), d.Id()),
-	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, snapshot.SnapshotArn)
 	d.Set(names.AttrClusterIdentifier, snapshot.ClusterIdentifier)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("manual_snapshot_retention_period", snapshot.ManualSnapshotRetentionPeriod)
