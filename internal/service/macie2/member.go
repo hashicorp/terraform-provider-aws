@@ -323,7 +323,7 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange(names.AttrStatus) {
 		input := &macie2.UpdateMemberSessionInput{
 			Id:     aws.String(d.Id()),
-			Status: aws.String(d.Get(names.AttrStatus).(string)),
+			Status: awstypes.MacieStatus(d.Get(names.AttrStatus).(string)),
 		}
 
 		_, err := conn.UpdateMemberSession(ctx, input)

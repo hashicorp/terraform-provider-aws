@@ -589,7 +589,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	input := &macie2.CreateClassificationJobInput{
 		ClientToken:     aws.String(id.UniqueId()),
 		Name:            aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))),
-		JobType:         aws.String(d.Get("job_type").(string)),
+		JobType:         awstypes.JobType(d.Get("job_type").(string)),
 		S3JobDefinition: expandS3JobDefinition(d.Get("s3_job_definition").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -831,10 +831,10 @@ func expandSimpleCriterionForJob(criterion []interface{}) *awstypes.SimpleCriter
 	simpleCriterionMap := criterion[0].(map[string]interface{})
 
 	if v, ok := simpleCriterionMap["comparator"]; ok && v.(string) != "" {
-		simpleCriterion.Comparator = aws.String(v.(string))
+		simpleCriterion.Comparator = awstypes.JobComparator(v.(string))
 	}
 	if v, ok := simpleCriterionMap[names.AttrKey]; ok && v.(string) != "" {
-		simpleCriterion.Key = aws.String(v.(string))
+		simpleCriterion.Key = awstypes.SimpleCriterionKeyForJob(v.(string))
 	}
 	if v, ok := simpleCriterionMap[names.AttrValues]; ok && len(v.([]interface{})) > 0 {
 		simpleCriterion.Values = flex.ExpandStringList(v.([]interface{}))
@@ -853,7 +853,7 @@ func expandTagCriterionForJob(criterion []interface{}) *awstypes.TagCriterionFor
 	tagCriterionMap := criterion[0].(map[string]interface{})
 
 	if v, ok := tagCriterionMap["comparator"]; ok && v.(string) != "" {
-		tagCriterion.Comparator = aws.String(v.(string))
+		tagCriterion.Comparator = awstypes.JobComparator(v.(string))
 	}
 	if v, ok := tagCriterionMap["tag_values"]; ok && len(v.([]interface{})) > 0 {
 		tagCriterion.TagValues = expandTagCriterionPairForJob(v.([]interface{}))
@@ -970,13 +970,13 @@ func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *awstypes.SimpleScopeT
 	simpleScopeTermMap := simpleScopeTerm[0].(map[string]interface{})
 
 	if v, ok := simpleScopeTermMap[names.AttrKey]; ok && v.(string) != "" {
-		simpleTerm.Key = aws.String(v.(string))
+		simpleTerm.Key = awstypes.ScopeFilterKey(v.(string))
 	}
 	if v, ok := simpleScopeTermMap[names.AttrValues]; ok && len(v.([]interface{})) > 0 {
 		simpleTerm.Values = flex.ExpandStringList(v.([]interface{}))
 	}
 	if v, ok := simpleScopeTermMap["comparator"]; ok && v.(string) != "" {
-		simpleTerm.Comparator = aws.String(v.(string))
+		simpleTerm.Comparator = awstypes.JobComparator(v.(string))
 	}
 
 	return &simpleTerm
@@ -998,10 +998,10 @@ func expandTagScopeTerm(tagScopeTerm []interface{}) *awstypes.TagScopeTerm {
 		tagTerm.TagValues = expandTagValues(v.([]interface{}))
 	}
 	if v, ok := tagScopeTermMap["comparator"]; ok && v.(string) != "" {
-		tagTerm.Comparator = aws.String(v.(string))
+		tagTerm.Comparator = awstypes.JobComparator(v.(string))
 	}
 	if v, ok := tagScopeTermMap[names.AttrTarget]; ok && v.(string) != "" {
-		tagTerm.Target = aws.String(v.(string))
+		tagTerm.Target = awstypes.TagTarget(v.(string))
 	}
 
 	return &tagTerm
@@ -1044,7 +1044,7 @@ func expandScheduleFrequency(schedules []interface{}) *awstypes.JobScheduleFrequ
 	}
 	if v1, ok1 := scheduleMap["weekly_schedule"]; ok1 && v1.(string) != "" {
 		jobScheduleFrequency.WeeklySchedule = &awstypes.WeeklySchedule{
-			DayOfWeek: aws.String(v1.(string)),
+			DayOfWeek: awstypes.DayOfWeek(v1.(string)),
 		}
 	}
 	if v1, ok1 := scheduleMap["monthly_schedule"]; ok1 && v1.(int) > 0 {

@@ -78,7 +78,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.FindingPublishingFrequency = awstypes.FindingPublishingFrequency(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrStatus); ok {
-		input.Status = aws.String(v.(string))
+		input.Status = awstypes.MacieStatus(v.(string))
 	}
 
 	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
@@ -148,7 +148,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange(names.AttrStatus) {
-		input.Status = aws.String(d.Get(names.AttrStatus).(string))
+		input.Status = awstypes.MacieStatus(d.Get(names.AttrStatus).(string))
 	}
 
 	_, err := conn.UpdateMacieSession(ctx, input)
