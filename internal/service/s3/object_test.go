@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,8 +24,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	sdkplancheck "github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -161,7 +166,7 @@ func TestAccS3Object_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -274,7 +279,7 @@ func TestAccS3Object_source(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -304,7 +309,7 @@ func TestAccS3Object_content(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -337,7 +342,7 @@ func TestAccS3Object_etagEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -415,7 +420,7 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash"},
+				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash", "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -476,7 +481,7 @@ func TestAccS3Object_nonVersioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource, "refresh_content"},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -526,7 +531,7 @@ func TestAccS3Object_updates(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource, "refresh_content"},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -619,7 +624,7 @@ func TestAccS3Object_updatesWithVersioning(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource, "refresh_content"},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -667,6 +672,88 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_updatesWithContentRefresh(t *testing.T) {
+	ctx := acctest.Context(t)
+	var originalObj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	contentInitial := "managed by terraform"
+	contentUpdated := "not managed by terraform"
+
+	updateObjectBody := func(ctx context.Context, n, newBody string) resource.TestCheckFunc {
+		return func(s *terraform.State) error {
+			rs := s.RootModule().Resources[n]
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+			if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+			}
+
+			var optFns []func(*s3.Options)
+			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+			}
+
+			input := &s3.PutObjectInput{
+				Bucket: aws.String(rs.Primary.Attributes[names.AttrBucket]),
+				Key:    aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey])),
+				Body:   strings.NewReader(newBody),
+			}
+
+			_, err := conn.PutObject(ctx, input, optFns...)
+
+			return err
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_contentRefresh(rName, contentInitial),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &originalObj),
+					testAccCheckObjectBody(&originalObj, contentInitial),
+					updateObjectBody(ctx, resourceName, contentUpdated),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []sdkplancheck.PlanCheck{
+						sdkplancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []sdkplancheck.PlanCheck{
+						sdkplancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectKnownChange(
+							resourceName,
+							tfjsonpath.New(names.AttrContent),
+							knownvalue.StringExact(contentUpdated),
+							knownvalue.StringExact(contentInitial),
+						),
+					},
+				},
+			},
+			{
+				Config: testAccObjectConfig_contentRefresh(rName, contentInitial),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &originalObj),
+					testAccCheckObjectBody(&originalObj, contentInitial),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrContent, "refresh_content", "etag"},
+				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
@@ -694,7 +781,7 @@ func TestAccS3Object_kms(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -728,7 +815,7 @@ func TestAccS3Object_sse(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -780,7 +867,7 @@ func TestAccS3Object_acl(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -828,7 +915,7 @@ func TestAccS3Object_metadata(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -891,7 +978,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -960,7 +1047,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy, "refresh_content"},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -1600,7 +1687,7 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy, "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 			{
@@ -1712,7 +1799,7 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider", "refresh_content"},
 				ImportStateIdFunc:       testAccObjectImportStateIdFunc(resourceName),
 			},
 		},
@@ -1795,7 +1882,7 @@ func TestAccS3Object_prefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "refresh_content"},
 				ImportStateId:           fmt.Sprintf("s3://%s/pfx/", rName),
 			},
 		},
@@ -2262,6 +2349,21 @@ resource "aws_s3_object" "object" {
   bucket  = aws_s3_bucket.test.bucket
   key     = "test-key"
   content = %[2]q
+}
+`, rName, content)
+}
+
+func testAccObjectConfig_contentRefresh(rName string, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket          = aws_s3_bucket.test.bucket
+  key             = "test-key"
+  content         = %[2]q
+  refresh_content = true
 }
 `, rName, content)
 }
