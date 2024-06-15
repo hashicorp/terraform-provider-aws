@@ -133,11 +133,13 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 }
 
 func GetOrganizationAdminAccount(ctx context.Context, conn *awstypes.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
-	var res *awstypes.AdminAccount
+	input := &macie2.ListOrganizationAdminAccountsInput{}
 
-	err := conn.ListOrganizationAdminAccountsPages(ctx, &macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := macie2.NewListOrganizationAdminAccountsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, adminAccount := range page.AdminAccounts {
@@ -146,13 +148,10 @@ func GetOrganizationAdminAccount(ctx context.Context, conn *awstypes.Client, adm
 			}
 
 			if aws.ToString(adminAccount.AccountId) == adminAccountID {
-				res = adminAccount
-				return false
+				return &adminAccount, nil
 			}
 		}
+	}
 
-		return !lastPage
-	})
-
-	return res, err
+	return nil, tfresource.NewEmptyResultError(input)
 }

@@ -58,20 +58,14 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	adminAccountID := d.Get("administrator_account_id").(string)
 	var invitationID string
 
-	listInvitationsInput := &macie2.ListInvitationsInput{}
-
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
-		err := conn.ListInvitationsPages(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
-			for _, invitation := range page.Invitations {
-				if aws.ToString(invitation.AccountId) == adminAccountID {
-					invitationID = aws.ToString(invitation.InvitationId)
-					return false
-				}
-			}
-			return !lastPage
-		})
+		invitationID, err := findInvitationByAccount(ctx, conn, adminAccountID)
 
 		if err != nil {
+			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
+				return retry.RetryableError(err)
+			}
+
 			return retry.NonRetryableError(err)
 		}
 
@@ -83,15 +77,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListInvitationsPages(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
-			for _, invitation := range page.Invitations {
-				if aws.ToString(invitation.AccountId) == adminAccountID {
-					invitationID = aws.ToString(invitation.InvitationId)
-					return false
-				}
-			}
-			return !lastPage
-		})
+		invitationID, err = findInvitationByAccount(ctx, conn, adminAccountID)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Macie InvitationAccepter (%s): %s", d.Id(), err)
