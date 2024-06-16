@@ -5,10 +5,8 @@ package servicediscovery
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -28,16 +26,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDNSNamespace,
+			Factory:  dataSourceDNSNamespace,
 			TypeName: "aws_service_discovery_dns_namespace",
+			Name:     "DNS Namespace",
 		},
 		{
-			Factory:  DataSourceHTTPNamespace,
+			Factory:  dataSourceHTTPNamespace,
 			TypeName: "aws_service_discovery_http_namespace",
+			Name:     "HTTP Namespace",
 		},
 		{
-			Factory:  DataSourceService,
+			Factory:  dataSourceService,
 			TypeName: "aws_service_discovery_service",
+			Name:     "Service",
 		},
 	}
 }
@@ -45,7 +46,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceHTTPNamespace,
+			Factory:  resourceHTTPNamespace,
 			TypeName: "aws_service_discovery_http_namespace",
 			Name:     "HTTP Namespace",
 			Tags: &types.ServicePackageResourceTags{
@@ -53,11 +54,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstance,
+			Factory:  resourceInstance,
 			TypeName: "aws_service_discovery_instance",
+			Name:     "Instance",
 		},
 		{
-			Factory:  ResourcePrivateDNSNamespace,
+			Factory:  resourcePrivateDNSNamespace,
 			TypeName: "aws_service_discovery_private_dns_namespace",
 			Name:     "Private DNS Namespace",
 			Tags: &types.ServicePackageResourceTags{
@@ -65,7 +67,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePublicDNSNamespace,
+			Factory:  resourcePublicDNSNamespace,
 			TypeName: "aws_service_discovery_public_dns_namespace",
 			Name:     "Public DNS Namespace",
 			Tags: &types.ServicePackageResourceTags{
@@ -73,7 +75,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceService,
+			Factory:  resourceService,
 			TypeName: "aws_service_discovery_service",
 			Name:     "Service",
 			Tags: &types.ServicePackageResourceTags{
@@ -87,25 +89,23 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ServiceDiscovery
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*servicediscovery_sdkv1.ServiceDiscovery, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*servicediscovery_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
+	return servicediscovery_sdkv2.NewFromConfig(cfg, func(o *servicediscovery_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-
-		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
 		}
-	}
-
-	return servicediscovery_sdkv1.New(sess.Copy(&cfg)), nil
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

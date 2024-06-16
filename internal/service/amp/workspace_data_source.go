@@ -16,6 +16,7 @@ import (
 )
 
 // @SDKDataSource("aws_prometheus_workspace", name="Workspace")
+// @Tags
 func dataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceRead,
@@ -57,7 +58,6 @@ func dataSourceWorkspace() *schema.Resource {
 func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)
 	workspace, err := findWorkspaceByID(ctx, conn, workspaceID)
@@ -74,9 +74,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
 	d.Set(names.AttrStatus, workspace.Status.StatusCode)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, workspace.Tags)
 
 	return diags
 }

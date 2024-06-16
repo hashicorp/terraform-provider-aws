@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_customer_gateway", name="Customer Gateway")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomerGatewayRead,
