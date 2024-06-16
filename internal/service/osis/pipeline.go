@@ -198,6 +198,12 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 								setvalidator.SizeBetween(1, 12),
 							},
 						},
+						"vpc_endpoint_management": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.VpcEndpointManagement](),
+							},
+						},
 					},
 				},
 			},
@@ -527,6 +533,7 @@ type cloudWatchLogDestinationModel struct {
 }
 
 type vpcOptionsModel struct {
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
+	SecurityGroupIDs      fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
+	SubnetIDs             fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
+	VpcEndpointManagement types.String                     `tfsdk:"vpc_endpoint_management"`
 }
