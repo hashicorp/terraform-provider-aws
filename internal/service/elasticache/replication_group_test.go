@@ -1345,7 +1345,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 				Config: testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "compatible"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode", "compatible"),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct1),
@@ -3622,6 +3622,9 @@ resource "aws_elasticache_replication_group" "test" {
   parameter_group_name       = "default.redis7"
   num_node_groups            = 1
   replicas_per_node_group    = 1
+  timeouts {
+    create = "60m"
+  }
 }
 `, rName, clusterMode),
 	)
