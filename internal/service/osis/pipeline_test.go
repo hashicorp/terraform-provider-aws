@@ -726,7 +726,7 @@ resource "aws_osis_pipeline" "test" {
   vpc_options {
     security_group_ids      = [aws_security_group.test.id]
     subnet_ids              = [aws_subnet.test.id]
-    vpc_endpoint_management = "service"
+    vpc_endpoint_management = "SERVICE"
   }
 }
 `, rName)
