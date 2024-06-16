@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -150,7 +149,7 @@ func testAccFindingsFilter_complete(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_complete(description, awstypes.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_complete(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -169,7 +168,7 @@ func testAccFindingsFilter_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, awstypes.FindingsFilterActionNoop, 1),
+				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -188,7 +187,7 @@ func testAccFindingsFilter_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, awstypes.FindingsFilterActionNoop, 1),
+				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -232,7 +231,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_complete(description, awstypes.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_complete(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -250,7 +249,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_completeMultipleCriterion(descriptionUpdated, awstypes.FindingsFilterActionNoop, startDate, endDate, 1),
+				Config: testAccFindingsFilterConfig_completeMultipleCriterion(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), startDate, endDate, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -309,7 +308,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_complete(description, awstypes.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_complete(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -327,7 +326,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_completeMultipleCriterionNumber(descriptionUpdated, awstypes.FindingsFilterActionNoop, firstNumber, secondNumber, 1),
+				Config: testAccFindingsFilterConfig_completeMultipleCriterionNumber(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), firstNumber, secondNumber, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -377,7 +376,7 @@ func testAccFindingsFilter_withTags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_tags(description, awstypes.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_tags(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -445,7 +444,7 @@ func testAccCheckFindingsFilterDestroy(ctx context.Context) resource.TestCheckFu
 			resp, err := conn.GetFindingsFilter(ctx, input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				continue
 			}
 

@@ -83,7 +83,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.EnableMacie(ctx, input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrorCodeClientError) {
+			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
 				return retry.RetryableError(err)
 			}
 
@@ -116,7 +116,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	resp, err := conn.GetMacieSession(ctx, input)
 
 	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie not enabled for AWS account (%s), removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -129,8 +129,8 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrStatus, resp.Status)
 	d.Set("finding_publishing_frequency", resp.FindingPublishingFrequency)
 	d.Set(names.AttrServiceRole, resp.ServiceRole)
-	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	return diags
 }
@@ -168,13 +168,13 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	err := retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.DisableMacie(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, awstypes.ErrCodeConflictException, "Cannot disable Macie while associated with an administrator account") {
+		if errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "Cannot disable Macie while associated with an administrator account") {
 			return retry.RetryableError(err)
 		}
 
 		if err != nil {
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				return nil
 			}
 			return retry.NonRetryableError(err)
@@ -189,7 +189,7 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "disabling Macie Account (%s): %s", d.Id(), err)

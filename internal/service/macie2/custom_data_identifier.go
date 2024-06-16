@@ -123,17 +123,17 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 		input.Regex = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("keywords"); ok {
-		input.Keywords = flex.ExpandStringSet(v.(*schema.Set))
+		input.Keywords = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("ignore_words"); ok {
-		input.IgnoreWords = flex.ExpandStringSet(v.(*schema.Set))
+		input.IgnoreWords = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 	input.Name = aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string)))
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("maximum_match_distance"); ok {
-		input.MaximumMatchDistance = aws.Int64(int64(v.(int)))
+		input.MaximumMatchDistance = aws.Int32(int32(v.(int)))
 	}
 
 	var err error
@@ -141,7 +141,7 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		output, err = conn.CreateCustomDataIdentifier(ctx, input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrorCodeClientError) {
+			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
 				return retry.RetryableError(err)
 			}
 
@@ -176,7 +176,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	resp, err := conn.GetCustomDataIdentifier(ctx, input)
 
 	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -187,10 +187,10 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set("regex", resp.Regex)
-	if err = d.Set("keywords", flex.FlattenStringList(resp.Keywords)); err != nil {
+	if err = d.Set("keywords", flex.FlattenStringValueList(resp.Keywords)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
 	}
-	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
+	if err = d.Set("ignore_words", flex.FlattenStringValueList(resp.IgnoreWords)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
 	}
 	d.Set(names.AttrName, resp.Name)
@@ -205,7 +205,7 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 		d.SetId("")
 	}
 
-	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	d.Set(names.AttrARN, resp.Arn)
 
 	return diags
@@ -223,7 +223,7 @@ func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceD
 	_, err := conn.DeleteCustomDataIdentifier(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)

@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -263,7 +262,7 @@ func testAccMember_status(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberConfig_status(email, awstypes.MacieStatusEnabled, true),
+				Config: testAccMemberConfig_status(email, string(awstypes.MacieStatusEnabled), true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", string(awstypes.RelationshipStatusInvited)),
@@ -277,7 +276,7 @@ func testAccMember_status(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMemberConfig_status(email, awstypes.MacieStatusPaused, true),
+				Config: testAccMemberConfig_status(email, string(awstypes.MacieStatusPaused), true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", string(awstypes.RelationshipStatusPaused)),
@@ -291,7 +290,7 @@ func testAccMember_status(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccMemberConfig_status(email, awstypes.MacieStatusPaused, true),
+				Config:                  testAccMemberConfig_status(email, string(awstypes.MacieStatusPaused), true),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -379,9 +378,9 @@ func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 			resp, err := conn.GetMember(ctx, input)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeConflictException, "member accounts are associated with your account") ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "account is not associated with your account") {
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
+				errs.IsAErrorMessageContains[*awstypes.ConflictException](err, "member accounts are associated with your account") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "account is not associated with your account") {
 				continue
 			}
 

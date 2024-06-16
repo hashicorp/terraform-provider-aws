@@ -160,14 +160,14 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("position"); ok {
-		input.Position = aws.Int64(int64(v.(int)))
+		input.Position = aws.Int32(int32(v.(int)))
 	}
 
 	var output *macie2.CreateFindingsFilterOutput
 	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		output, err = conn.CreateFindingsFilter(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, awstypes.ErrorCodeClientError) {
+		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
 			return retry.RetryableError(err)
 		}
 
@@ -203,7 +203,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	resp, err := conn.GetFindingsFilter(ctx, input)
 
 	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie FindingsFilter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -255,7 +255,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 		input.Action = awstypes.FindingsFilterAction(d.Get(names.AttrAction).(string))
 	}
 	if d.HasChange("position") {
-		input.Position = aws.Int64(int64(d.Get("position").(int)))
+		input.Position = aws.Int32(int32(d.Get("position").(int)))
 	}
 
 	_, err = conn.UpdateFindingsFilter(ctx, input)
@@ -278,7 +278,7 @@ func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.DeleteFindingsFilter(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie FindingsFilter (%s): %s", d.Id(), err)
@@ -291,7 +291,7 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*awstypes.Find
 		return nil, nil
 	}
 
-	criteria := map[string]*awstypes.CriterionAdditionalProperties{}
+	criteria := map[string]awstypes.CriterionAdditionalProperties{}
 	findingCriteria := findingCriterias[0].(map[string]interface{})
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 
@@ -301,26 +301,26 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*awstypes.Find
 		conditional := awstypes.CriterionAdditionalProperties{}
 
 		if v, ok := crit["eq"].(*schema.Set); ok && v.Len() != 0 {
-			foo := make([]*string, v.Len())
+			foo := make([]string, v.Len())
 			for i, v1 := range v.List() {
 				s := v1.(string)
-				foo[i] = &s
+				foo[i] = s
 			}
 			conditional.Eq = foo
 		}
 		if v, ok := crit["neq"].(*schema.Set); ok && v.Len() != 0 {
-			foo := make([]*string, v.Len())
+			foo := make([]string, v.Len())
 			for i, v1 := range v.List() {
 				s := v1.(string)
-				foo[i] = &s
+				foo[i] = s
 			}
 			conditional.Neq = foo
 		}
 		if v, ok := crit["eq_exact_match"].(*schema.Set); ok && v.Len() != 0 {
-			foo := make([]*string, v.Len())
+			foo := make([]string, v.Len())
 			for i, v1 := range v.List() {
 				s := v1.(string)
-				foo[i] = &s
+				foo[i] = s
 			}
 			conditional.EqExactMatch = foo
 		}
@@ -352,7 +352,7 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*awstypes.Find
 			}
 			conditional.Gte = aws.Int64(i)
 		}
-		criteria[field] = &conditional
+		criteria[field] = conditional
 	}
 
 	return &awstypes.FindingCriteria{Criterion: criteria}, nil

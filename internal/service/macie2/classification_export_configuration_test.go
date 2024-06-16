@@ -10,11 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,7 +75,7 @@ func testAccCheckClassificationExportConfigurationDestroy(ctx context.Context) r
 			input := macie2.GetClassificationExportConfigurationInput{}
 			resp, err := conn.GetClassificationExportConfiguration(ctx, &input)
 
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeResourceNotFoundException, "Macie is not enabled") {
+			if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Macie is not enabled") {
 				continue
 			}
 
@@ -83,7 +83,7 @@ func testAccCheckClassificationExportConfigurationDestroy(ctx context.Context) r
 				return err
 			}
 
-			if (macie2.GetClassificationExportConfigurationOutput{}) != *resp || resp != nil { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+			if (macie2.GetClassificationExportConfigurationOutput{}.Configuration) != *&resp.Configuration || resp != nil { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 				return fmt.Errorf("macie classification export configuration %q still configured", rs.Primary.ID)
 			}
 		}
@@ -108,7 +108,7 @@ func testAccCheckClassificationExportConfigurationExists(ctx context.Context, re
 			return err
 		}
 
-		if (macie2.GetClassificationExportConfigurationOutput{}) == *resp || resp == nil { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if (macie2.GetClassificationExportConfigurationOutput{}.Configuration) == *&resp.Configuration || resp == nil { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			return fmt.Errorf("macie classification export configuration %q does not exist", rs.Primary.ID)
 		}
 

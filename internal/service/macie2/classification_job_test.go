@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,7 +34,7 @@ func testAccClassificationJob_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_nameGenerated(bucketName, awstypes.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_nameGenerated(bucketName, string(awstypes.JobTypeOneTime)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -65,7 +65,7 @@ func testAccClassificationJob_Name_Generated(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_nameGenerated(bucketName, awstypes.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_nameGenerated(bucketName, string(awstypes.JobTypeOneTime)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
@@ -95,7 +95,7 @@ func testAccClassificationJob_NamePrefix(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_namePrefix(bucketName, namePrefix, awstypes.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_namePrefix(bucketName, namePrefix, string(awstypes.JobTypeOneTime)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, namePrefix),
@@ -124,7 +124,7 @@ func testAccClassificationJob_disappears(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_nameGenerated(bucketName, awstypes.JobTypeOneTime),
+				Config: testAccClassificationJobConfig_nameGenerated(bucketName, string(awstypes.JobTypeOneTime)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceClassificationJob(), resourceName),
@@ -147,7 +147,7 @@ func testAccClassificationJob_Status(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_status(bucketName, awstypes.JobStatusRunning),
+				Config: testAccClassificationJobConfig_status(bucketName, string(awstypes.JobStatusRunning)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", string(awstypes.JobTypeScheduled)),
@@ -157,7 +157,7 @@ func testAccClassificationJob_Status(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassificationJobConfig_status(bucketName, awstypes.JobStatusUserPaused),
+				Config: testAccClassificationJobConfig_status(bucketName, string(awstypes.JobStatusUserPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output2),
 					testAccCheckClassificationJobNotRecreated(&macie2Output, &macie2Output2),
@@ -191,7 +191,7 @@ func testAccClassificationJob_complete(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_complete(bucketName, awstypes.JobStatusRunning, description),
+				Config: testAccClassificationJobConfig_complete(bucketName, string(awstypes.JobStatusRunning), description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", string(awstypes.JobTypeScheduled)),
@@ -222,7 +222,7 @@ func testAccClassificationJob_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassificationJobConfig_complete(bucketName, awstypes.JobStatusRunning, descriptionUpdated),
+				Config: testAccClassificationJobConfig_complete(bucketName, string(awstypes.JobStatusRunning), descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", string(awstypes.JobTypeScheduled)),
@@ -273,7 +273,7 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_completeTags(bucketName, awstypes.JobStatusRunning),
+				Config: testAccClassificationJobConfig_completeTags(bucketName, string(awstypes.JobStatusRunning)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", string(awstypes.JobTypeScheduled)),
@@ -286,7 +286,7 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassificationJobConfig_completeTags(bucketName, awstypes.JobStatusUserPaused),
+				Config: testAccClassificationJobConfig_completeTags(bucketName, string(awstypes.JobStatusUserPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", string(awstypes.JobTypeScheduled)),
@@ -322,7 +322,7 @@ func testAccClassificationJob_BucketCriteria(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClassificationJobConfig_bucketCriteria(awstypes.JobStatusRunning, description),
+				Config: testAccClassificationJobConfig_bucketCriteria(string(awstypes.JobStatusRunning), description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", string(awstypes.JobTypeScheduled)),
@@ -353,7 +353,7 @@ func testAccClassificationJob_BucketCriteria(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClassificationJobConfig_bucketCriteria(awstypes.JobStatusRunning, descriptionUpdated),
+				Config: testAccClassificationJobConfig_bucketCriteria(string(awstypes.JobStatusRunning), descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "job_type", string(awstypes.JobTypeScheduled)),
@@ -430,8 +430,8 @@ func testAccCheckClassificationJobDestroy(ctx context.Context) resource.TestChec
 
 			resp, err := conn.DescribeClassificationJob(ctx, input)
 
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "cannot update cancelled job for job") {
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
+				errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job") {
 				continue
 			}
 
@@ -439,7 +439,7 @@ func testAccCheckClassificationJobDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			if resp != nil && string(resp.JobStatus) != awstypes.JobStatusCancelled {
+			if resp != nil && resp.JobStatus != awstypes.JobStatusCancelled {
 				return fmt.Errorf("macie ClassificationJob %q still exists", rs.Primary.ID)
 			}
 		}
@@ -450,7 +450,7 @@ func testAccCheckClassificationJobDestroy(ctx context.Context) resource.TestChec
 
 func testAccCheckClassificationJobNotRecreated(i, j *macie2.DescribeClassificationJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
+		if !aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
 			return fmt.Errorf("Macie Classification Job recreated")
 		}
 

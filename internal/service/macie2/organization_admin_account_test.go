@@ -8,9 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -114,7 +112,7 @@ func testAccCheckOrganizationAdminAccountDestroy(ctx context.Context) resource.T
 			adminAccount, err := tfmacie2.GetOrganizationAdminAccount(ctx, conn, rs.Primary.ID)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-				tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				continue
 			}
 

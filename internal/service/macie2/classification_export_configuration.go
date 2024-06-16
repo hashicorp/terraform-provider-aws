@@ -82,7 +82,7 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 		input.Configuration.S3Destination = expandClassificationExportConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Macie classification export configuration: %s", input)
+	log.Printf("[DEBUG] Creating Macie classification export configuration: %+v", input)
 
 	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 
@@ -108,7 +108,7 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 		input.Configuration.S3Destination = nil
 	}
 
-	log.Printf("[DEBUG] Creating Macie classification export configuration: %s", input)
+	log.Printf("[DEBUG] Creating Macie classification export configuration: %+v", input)
 
 	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 
@@ -153,7 +153,7 @@ func resourceClassificationExportConfigurationDelete(ctx context.Context, d *sch
 		Configuration: &awstypes.ClassificationExportConfiguration{},
 	}
 
-	log.Printf("[DEBUG] deleting Macie classification export configuration: %s", input)
+	log.Printf("[DEBUG] deleting Macie classification export configuration: %+v", input)
 
 	_, err := conn.PutClassificationExportConfiguration(ctx, &input)
 

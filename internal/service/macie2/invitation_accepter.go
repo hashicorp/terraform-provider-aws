@@ -111,7 +111,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.GetAdministratorAccount(ctx, input)
 
 	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie InvitationAccepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -140,7 +140,7 @@ func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.DisassociateFromAdministratorAccount(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "disassociating Macie InvitationAccepter (%s): %s", d.Id(), err)

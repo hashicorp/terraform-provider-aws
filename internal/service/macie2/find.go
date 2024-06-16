@@ -11,7 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 )
 
-func findInvitationByAccount(ctx context.Context, conn *awstypes.Client, accountID string) (string, error) {
+func findInvitationByAccount(ctx context.Context, conn *macie2.Client, accountID string) (string, error) {
 	input := &macie2.ListInvitationsInput{}
 
 	pages := macie2.NewListInvitationsPaginator(conn, input)
@@ -32,7 +32,7 @@ func findInvitationByAccount(ctx context.Context, conn *awstypes.Client, account
 }
 
 // findMemberNotAssociated Return a list of members not associated and compare with account ID
-func findMemberNotAssociated(ctx context.Context, conn *awstypes.Client, accountID string) (*awstypes.Member, error) {
+func findMemberNotAssociated(ctx context.Context, conn *macie2.Client, accountID string) (*awstypes.Member, error) {
 	input := &macie2.ListMembersInput{
 		OnlyAssociated: aws.String("false"),
 	}
@@ -45,10 +45,6 @@ func findMemberNotAssociated(ctx context.Context, conn *awstypes.Client, account
 		}
 
 		for _, member := range page.Members {
-			if member == nil {
-				continue
-			}
-
 			if aws.ToString(member.AccountId) == accountID {
 				return &member, nil
 			}

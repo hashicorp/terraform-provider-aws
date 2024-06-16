@@ -524,7 +524,7 @@ func ResourceClassificationJob() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused}, false),
+				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.JobStatusCancelled, awstypes.JobStatusRunning, awstypes.JobStatusUserPaused), false),
 			},
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
@@ -595,13 +595,13 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if v, ok := d.GetOk("custom_data_identifier_ids"); ok {
-		input.CustomDataIdentifierIds = flex.ExpandStringList(v.([]interface{}))
+		input.CustomDataIdentifierIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("schedule_frequency"); ok {
 		input.ScheduleFrequency = expandScheduleFrequency(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("sampling_percentage"); ok {
-		input.SamplingPercentage = aws.Int64(int64(v.(int)))
+		input.SamplingPercentage = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
@@ -615,7 +615,7 @@ func resourceClassificationJobCreate(ctx context.Context, d *schema.ResourceData
 	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		output, err = conn.CreateClassificationJob(ctx, input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrorCodeClientError) {
+			if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
 				return retry.RetryableError(err)
 			}
 
@@ -650,8 +650,8 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 	resp, err := conn.DescribeClassificationJob(ctx, input)
 
 	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "cannot update cancelled job for job")) {
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
+		errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job")) {
 		log.Printf("[WARN] Macie ClassificationJob (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -661,7 +661,7 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Macie ClassificationJob (%s): %s", d.Id(), err)
 	}
 
-	if err = d.Set("custom_data_identifier_ids", flex.FlattenStringList(resp.CustomDataIdentifierIds)); err != nil {
+	if err = d.Set("custom_data_identifier_ids", flex.FlattenStringValueList(resp.CustomDataIdentifierIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "custom_data_identifier_ids", d.Id(), err)
 	}
 	if err = d.Set("schedule_frequency", flattenScheduleFrequency(resp.ScheduleFrequency)); err != nil {
@@ -681,12 +681,12 @@ func resourceClassificationJobRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("job_id", resp.JobId)
 	d.Set("job_arn", resp.JobArn)
-	status := string(resp.JobStatus)
+	status := resp.JobStatus
 	if status == awstypes.JobStatusComplete || status == awstypes.JobStatusIdle || status == awstypes.JobStatusPaused {
 		status = awstypes.JobStatusRunning
 	}
-	d.Set("job_status", status)
-	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("job_status", string(status))
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
 	if err = d.Set("user_paused_details", flattenUserPausedDetails(resp.UserPausedDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie ClassificationJob (%s): %s", "user_paused_details", d.Id(), err)
 	}
@@ -706,7 +706,7 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("job_status") {
 		status := d.Get("job_status").(string)
 
-		if status == awstypes.JobStatusCancelled {
+		if status == string(awstypes.JobStatusCancelled) {
 			return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", awstypes.JobStatusCancelled))
 		}
 
@@ -728,14 +728,14 @@ func resourceClassificationJobDelete(ctx context.Context, d *schema.ResourceData
 
 	input := &macie2.UpdateClassificationJobInput{
 		JobId:     aws.String(d.Id()),
-		JobStatus: aws.String(awstypes.JobStatusCancelled),
+		JobStatus: awstypes.JobStatusCancelled,
 	}
 
 	_, err := conn.UpdateClassificationJob(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-			tfawserr.ErrMessageContains(err, awstypes.ErrCodeValidationException, "cannot update cancelled job for job") {
+			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") ||
+			errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot update cancelled job for job") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie ClassificationJob (%s): %s", d.Id(), err)
@@ -797,12 +797,12 @@ func expandS3BucketCriteriaForJob(criteria []interface{}) *awstypes.S3BucketCrit
 	return &criteriaObj
 }
 
-func expandCriteriaBlockForJob(criteriaBlocks []interface{}) []*awstypes.CriteriaForJob {
+func expandCriteriaBlockForJob(criteriaBlocks []interface{}) []awstypes.CriteriaForJob {
 	if len(criteriaBlocks) == 0 {
 		return nil
 	}
 
-	var criteriaBlocksList []*awstypes.CriteriaForJob
+	var criteriaBlocksList []awstypes.CriteriaForJob
 
 	for _, v := range criteriaBlocks {
 		v1 := v.(map[string]interface{})
@@ -815,7 +815,7 @@ func expandCriteriaBlockForJob(criteriaBlocks []interface{}) []*awstypes.Criteri
 			criteriaBlock.TagCriterion = expandTagCriterionForJob(v2.([]interface{}))
 		}
 
-		criteriaBlocksList = append(criteriaBlocksList, &criteriaBlock)
+		criteriaBlocksList = append(criteriaBlocksList, criteriaBlock)
 	}
 
 	return criteriaBlocksList
@@ -837,7 +837,7 @@ func expandSimpleCriterionForJob(criterion []interface{}) *awstypes.SimpleCriter
 		simpleCriterion.Key = awstypes.SimpleCriterionKeyForJob(v.(string))
 	}
 	if v, ok := simpleCriterionMap[names.AttrValues]; ok && len(v.([]interface{})) > 0 {
-		simpleCriterion.Values = flex.ExpandStringList(v.([]interface{}))
+		simpleCriterion.Values = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	return &simpleCriterion
@@ -862,12 +862,12 @@ func expandTagCriterionForJob(criterion []interface{}) *awstypes.TagCriterionFor
 	return &tagCriterion
 }
 
-func expandTagCriterionPairForJob(tagValues []interface{}) []*awstypes.TagCriterionPairForJob {
+func expandTagCriterionPairForJob(tagValues []interface{}) []awstypes.TagCriterionPairForJob {
 	if len(tagValues) == 0 {
 		return nil
 	}
 
-	var tagValuesList []*awstypes.TagCriterionPairForJob
+	var tagValuesList []awstypes.TagCriterionPairForJob
 
 	for _, v := range tagValues {
 		v1 := v.(map[string]interface{})
@@ -879,28 +879,28 @@ func expandTagCriterionPairForJob(tagValues []interface{}) []*awstypes.TagCriter
 		if v2, ok := v1[names.AttrKey]; ok && v2.(string) != "" {
 			tagValue.Key = aws.String(v2.(string))
 		}
-		tagValuesList = append(tagValuesList, &tagValue)
+		tagValuesList = append(tagValuesList, tagValue)
 	}
 
 	return tagValuesList
 }
 
-func expandBucketDefinitions(definitions []interface{}) []*awstypes.S3BucketDefinitionForJob {
+func expandBucketDefinitions(definitions []interface{}) []awstypes.S3BucketDefinitionForJob {
 	if len(definitions) == 0 {
 		return nil
 	}
 
-	var bucketDefinitions []*awstypes.S3BucketDefinitionForJob
+	var bucketDefinitions []awstypes.S3BucketDefinitionForJob
 
 	for _, v := range definitions {
 		v1 := v.(map[string]interface{})
 
 		bucketDefinition := &awstypes.S3BucketDefinitionForJob{
-			Buckets:   flex.ExpandStringList(v1["buckets"].([]interface{})),
+			Buckets:   flex.ExpandStringValueList(v1["buckets"].([]interface{})),
 			AccountId: aws.String(v1[names.AttrAccountID].(string)),
 		}
 
-		bucketDefinitions = append(bucketDefinitions, bucketDefinition)
+		bucketDefinitions = append(bucketDefinitions, *bucketDefinition)
 	}
 
 	return bucketDefinitions
@@ -937,12 +937,12 @@ func expandScoping(scoping []interface{}) *awstypes.Scoping {
 	return &scopingObj
 }
 
-func expandJobScopeTerm(scopeTerms []interface{}) []*awstypes.JobScopeTerm {
+func expandJobScopeTerm(scopeTerms []interface{}) []awstypes.JobScopeTerm {
 	if len(scopeTerms) == 0 {
 		return nil
 	}
 
-	var scopeTermsList []*awstypes.JobScopeTerm
+	var scopeTermsList []awstypes.JobScopeTerm
 
 	for _, v := range scopeTerms {
 		v1 := v.(map[string]interface{})
@@ -954,7 +954,7 @@ func expandJobScopeTerm(scopeTerms []interface{}) []*awstypes.JobScopeTerm {
 		if v2, ok1 := v1["tag_scope_term"]; ok1 && len(v2.([]interface{})) > 0 {
 			scopeTerm.TagScopeTerm = expandTagScopeTerm(v2.([]interface{}))
 		}
-		scopeTermsList = append(scopeTermsList, &scopeTerm)
+		scopeTermsList = append(scopeTermsList, scopeTerm)
 	}
 
 	return scopeTermsList
@@ -973,7 +973,7 @@ func expandSimpleScopeTerm(simpleScopeTerm []interface{}) *awstypes.SimpleScopeT
 		simpleTerm.Key = awstypes.ScopeFilterKey(v.(string))
 	}
 	if v, ok := simpleScopeTermMap[names.AttrValues]; ok && len(v.([]interface{})) > 0 {
-		simpleTerm.Values = flex.ExpandStringList(v.([]interface{}))
+		simpleTerm.Values = flex.ExpandStringValueList(v.([]interface{}))
 	}
 	if v, ok := simpleScopeTermMap["comparator"]; ok && v.(string) != "" {
 		simpleTerm.Comparator = awstypes.JobComparator(v.(string))
@@ -1007,12 +1007,12 @@ func expandTagScopeTerm(tagScopeTerm []interface{}) *awstypes.TagScopeTerm {
 	return &tagTerm
 }
 
-func expandTagValues(tagValues []interface{}) []*awstypes.TagValuePair {
+func expandTagValues(tagValues []interface{}) []awstypes.TagValuePair {
 	if len(tagValues) == 0 {
 		return nil
 	}
 
-	var tagValuesList []*awstypes.TagValuePair
+	var tagValuesList []awstypes.TagValuePair
 
 	for _, v := range tagValues {
 		v1 := v.(map[string]interface{})
@@ -1024,7 +1024,7 @@ func expandTagValues(tagValues []interface{}) []*awstypes.TagValuePair {
 		if v2, ok := v1[names.AttrKey]; ok && v2.(string) != "" {
 			tagValue.Key = aws.String(v2.(string))
 		}
-		tagValuesList = append(tagValuesList, &tagValue)
+		tagValuesList = append(tagValuesList, tagValue)
 	}
 
 	return tagValuesList
@@ -1049,7 +1049,7 @@ func expandScheduleFrequency(schedules []interface{}) *awstypes.JobScheduleFrequ
 	}
 	if v1, ok1 := scheduleMap["monthly_schedule"]; ok1 && v1.(int) > 0 {
 		jobScheduleFrequency.MonthlySchedule = &awstypes.MonthlySchedule{
-			DayOfMonth: aws.Int64(int64(v1.(int))),
+			DayOfMonth: aws.Int32(int32(v1.(int))),
 		}
 	}
 
@@ -1066,7 +1066,7 @@ func flattenScheduleFrequency(schedule *awstypes.JobScheduleFrequency) []map[str
 	if schedule.DailySchedule != nil {
 		schedMap["daily_schedule"] = true
 	}
-	if schedule.WeeklySchedule != nil && schedule.WeeklySchedule.DayOfWeek != nil {
+	if schedule.WeeklySchedule != nil {
 		schedMap["weekly_schedule"] = schedule.WeeklySchedule.DayOfWeek
 	}
 	if schedule.MonthlySchedule != nil && schedule.MonthlySchedule.DayOfMonth != nil {
@@ -1122,7 +1122,7 @@ func flattenCriteriaBlockForJob(criteriaBlock *awstypes.CriteriaBlockForJob) []m
 	return criteriaBlockList
 }
 
-func flattenCriteriaForJob(criteria []*awstypes.CriteriaForJob) []map[string]interface{} {
+func flattenCriteriaForJob(criteria []awstypes.CriteriaForJob) []map[string]interface{} {
 	if criteria == nil {
 		return nil
 	}
@@ -1147,9 +1147,9 @@ func flattenSimpleCriterionForJob(criterion *awstypes.SimpleCriterionForJob) []m
 	var simpleCriterionList []map[string]interface{}
 
 	simpleCriterionList = append(simpleCriterionList, map[string]interface{}{
-		"comparator":     aws.ToString(criterion.Comparator),
-		names.AttrKey:    aws.ToString(criterion.Key),
-		names.AttrValues: flex.FlattenStringList(criterion.Values),
+		"comparator":     string(criterion.Comparator),
+		names.AttrKey:    string(criterion.Key),
+		names.AttrValues: flex.FlattenStringValueList(criterion.Values),
 	})
 
 	return simpleCriterionList
@@ -1163,14 +1163,14 @@ func flattenTagCriterionForJob(criterion *awstypes.TagCriterionForJob) []map[str
 	var tagCriterionList []map[string]interface{}
 
 	tagCriterionList = append(tagCriterionList, map[string]interface{}{
-		"comparator": aws.ToString(criterion.Comparator),
+		"comparator": string(criterion.Comparator),
 		"tag_values": flattenTagCriterionPairForJob(criterion.TagValues),
 	})
 
 	return tagCriterionList
 }
 
-func flattenTagCriterionPairForJob(tagValues []*awstypes.TagCriterionPairForJob) []map[string]interface{} {
+func flattenTagCriterionPairForJob(tagValues []awstypes.TagCriterionPairForJob) []map[string]interface{} {
 	if len(tagValues) == 0 {
 		return nil
 	}
@@ -1187,7 +1187,7 @@ func flattenTagCriterionPairForJob(tagValues []*awstypes.TagCriterionPairForJob)
 	return tagValuesList
 }
 
-func flattenBucketDefinition(bucketDefinitions []*awstypes.S3BucketDefinitionForJob) []map[string]interface{} {
+func flattenBucketDefinition(bucketDefinitions []awstypes.S3BucketDefinitionForJob) []map[string]interface{} {
 	if len(bucketDefinitions) == 0 {
 		return nil
 	}
@@ -1195,12 +1195,9 @@ func flattenBucketDefinition(bucketDefinitions []*awstypes.S3BucketDefinitionFor
 	var bucketDefinitionList []map[string]interface{}
 
 	for _, bucket := range bucketDefinitions {
-		if bucket == nil {
-			continue
-		}
 		bucketDefinitionList = append(bucketDefinitionList, map[string]interface{}{
 			names.AttrAccountID: aws.ToString(bucket.AccountId),
-			"buckets":           flex.FlattenStringList(bucket.Buckets),
+			"buckets":           flex.FlattenStringValueList(bucket.Buckets),
 		})
 	}
 
@@ -1236,7 +1233,7 @@ func flattenJobScopingBlock(scopeTerm *awstypes.JobScopingBlock) []map[string]in
 	return scopeTermList
 }
 
-func flattenJobScopeTerm(scopeTerms []*awstypes.JobScopeTerm) []map[string]interface{} {
+func flattenJobScopeTerm(scopeTerms []awstypes.JobScopeTerm) []map[string]interface{} {
 	if scopeTerms == nil {
 		return nil
 	}
@@ -1261,9 +1258,9 @@ func flattenSimpleScopeTerm(simpleScopeTerm *awstypes.SimpleScopeTerm) []map[str
 	var simpleScopeTermList []map[string]interface{}
 
 	simpleScopeTermList = append(simpleScopeTermList, map[string]interface{}{
-		names.AttrKey:    aws.ToString(simpleScopeTerm.Key),
-		"comparator":     aws.ToString(simpleScopeTerm.Comparator),
-		names.AttrValues: flex.FlattenStringList(simpleScopeTerm.Values),
+		names.AttrKey:    string(simpleScopeTerm.Key),
+		"comparator":     string(simpleScopeTerm.Comparator),
+		names.AttrValues: flex.FlattenStringValueList(simpleScopeTerm.Values),
 	})
 
 	return simpleScopeTermList
@@ -1278,15 +1275,15 @@ func flattenTagScopeTerm(tagScopeTerm *awstypes.TagScopeTerm) []map[string]inter
 
 	tagScopeTermList = append(tagScopeTermList, map[string]interface{}{
 		names.AttrKey:    aws.ToString(tagScopeTerm.Key),
-		"comparator":     aws.ToString(tagScopeTerm.Comparator),
-		names.AttrTarget: aws.ToString(tagScopeTerm.Target),
+		"comparator":     string(tagScopeTerm.Comparator),
+		names.AttrTarget: string(tagScopeTerm.Target),
 		"tag_values":     flattenTagValues(tagScopeTerm.TagValues),
 	})
 
 	return tagScopeTermList
 }
 
-func flattenTagValues(tagValues []*awstypes.TagValuePair) []map[string]interface{} {
+func flattenTagValues(tagValues []awstypes.TagValuePair) []map[string]interface{} {
 	if len(tagValues) == 0 {
 		return nil
 	}

@@ -41,6 +41,11 @@ tfawserr.x
 +aws.ToString
 
 @@
+@@
+-aws.TimeValue(...)
++aws.ToTime(...)
+
+@@
 var x expression
 @@
 -aws.StringSlice([]string{x})
@@ -80,16 +85,22 @@ var x identifier
 -{{ .ImportAlias }}.x
 +awstypes.x
 
+# ...but sometimes, it's over eager
 @@
-var x identifier
 @@
-+import awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}/types"
-awstypes.x
+-awstypes.Client
++{{ .ImportAlias }}.Client
 
 @@
 @@
 -awstypes.{{ .GoV1ClientTypeName }}
 +{{ .ImportAlias }}.Client
+
+@@
+var x identifier
+@@
++import awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}/types"
+awstypes.x
 
 @@
 @@

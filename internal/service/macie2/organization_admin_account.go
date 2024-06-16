@@ -55,7 +55,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.EnableOrganizationAdminAccount(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, awstypes.ErrorCodeClientError) {
+		if tfawserr.ErrCodeEquals(err, string(awstypes.ErrorCodeClientError)) {
 			return retry.RetryableError(err)
 		}
 
@@ -87,7 +87,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	res, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && (errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled")) {
+		errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -124,7 +124,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	_, err := conn.DisableOrganizationAdminAccount(ctx, input)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-			tfawserr.ErrMessageContains(err, awstypes.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
@@ -132,7 +132,7 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func GetOrganizationAdminAccount(ctx context.Context, conn *awstypes.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
+func GetOrganizationAdminAccount(ctx context.Context, conn *macie2.Client, adminAccountID string) (*awstypes.AdminAccount, error) {
 	input := &macie2.ListOrganizationAdminAccountsInput{}
 
 	pages := macie2.NewListOrganizationAdminAccountsPaginator(conn, input)
@@ -143,10 +143,6 @@ func GetOrganizationAdminAccount(ctx context.Context, conn *awstypes.Client, adm
 		}
 
 		for _, adminAccount := range page.AdminAccounts {
-			if adminAccount == nil {
-				continue
-			}
-
 			if aws.ToString(adminAccount.AccountId) == adminAccountID {
 				return &adminAccount, nil
 			}

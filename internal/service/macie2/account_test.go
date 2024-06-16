@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -63,7 +62,7 @@ func testAccAccount_FindingPublishingFrequency(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_finding(awstypes.FindingPublishingFrequencyFifteenMinutes),
+				Config: testAccAccountConfig_finding(string(awstypes.FindingPublishingFrequencyFifteenMinutes)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", string(awstypes.FindingPublishingFrequencyFifteenMinutes)),
@@ -74,7 +73,7 @@ func testAccAccount_FindingPublishingFrequency(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAccountConfig_finding(awstypes.FindingPublishingFrequencyOneHour),
+				Config: testAccAccountConfig_finding(string(awstypes.FindingPublishingFrequencyOneHour)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", string(awstypes.FindingPublishingFrequencyOneHour)),
@@ -105,7 +104,7 @@ func testAccAccount_WithStatus(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_status(awstypes.MacieStatusEnabled),
+				Config: testAccAccountConfig_status(string(awstypes.MacieStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", string(awstypes.FindingPublishingFrequencyFifteenMinutes)),
@@ -116,7 +115,7 @@ func testAccAccount_WithStatus(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAccountConfig_status(awstypes.MacieStatusPaused),
+				Config: testAccAccountConfig_status(string(awstypes.MacieStatusPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", string(awstypes.FindingPublishingFrequencyFifteenMinutes)),
@@ -147,7 +146,7 @@ func testAccAccount_WithFindingAndStatus(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_findingAndStatus(awstypes.FindingPublishingFrequencyFifteenMinutes, awstypes.MacieStatusEnabled),
+				Config: testAccAccountConfig_findingAndStatus(string(awstypes.FindingPublishingFrequencyFifteenMinutes), string(awstypes.MacieStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", string(awstypes.FindingPublishingFrequencyFifteenMinutes)),
@@ -158,7 +157,7 @@ func testAccAccount_WithFindingAndStatus(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAccountConfig_findingAndStatus(awstypes.FindingPublishingFrequencyOneHour, awstypes.MacieStatusPaused),
+				Config: testAccAccountConfig_findingAndStatus(string(awstypes.FindingPublishingFrequencyOneHour), string(awstypes.MacieStatusPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", string(awstypes.FindingPublishingFrequencyOneHour)),
