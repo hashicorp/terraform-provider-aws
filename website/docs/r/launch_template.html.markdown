@@ -350,7 +350,7 @@ This configuration block supports the following:
       * hdd - hard disk drive
       * ssd - solid state drive
     ```
-
+* `max_spot_price_as_percentage_of_optimal_on_demand_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
 * `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
     * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
     * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
