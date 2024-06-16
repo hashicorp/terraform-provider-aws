@@ -614,6 +614,11 @@ func resourceGroup() *schema.Resource {
 																	ValidateDiagFunc: enum.Validate[awstypes.LocalStorageType](),
 																},
 															},
+															"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntAtLeast(1),
+															},
 															"memory_gib_per_vcpu": {
 																Type:     schema.TypeList,
 																Optional: true,
@@ -2886,6 +2891,10 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *awstypes.Instance
 		apiObject.LocalStorageTypes = flex.ExpandStringyValueSet[awstypes.LocalStorageType](v)
 	}
 
+	if v, ok := tfMap["max_spot_price_as_percentage_of_optimal_on_demand_price"].(int); ok && v != 0 {
+		apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice = aws.Int32(int32(v))
+	}
+
 	if v, ok := tfMap["memory_gib_per_vcpu"].([]interface{}); ok && len(v) > 0 {
 		apiObject.MemoryGiBPerVCpu = expandMemoryGiBPerVCPURequest(v[0].(map[string]interface{}))
 	}
@@ -3672,6 +3681,10 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 
 	if v := apiObject.LocalStorageTypes; v != nil {
 		tfMap["local_storage_types"] = apiObject.LocalStorageTypes
+	}
+
+	if v := apiObject.MaxSpotPriceAsPercentageOfOptimalOnDemandPrice; v != nil {
+		tfMap["max_spot_price_as_percentage_of_optimal_on_demand_price"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.MemoryGiBPerVCpu; v != nil {
