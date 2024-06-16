@@ -1330,7 +1330,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "disabled"),
+				Config: testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "disabled"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
@@ -1342,7 +1342,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 				),
 			},
 			{
-				Config: testAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "compatible"),
+				Config: testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "compatible"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
@@ -1354,11 +1354,11 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 				),
 			},
 			{
-				Config: testAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "enabled"),
+				Config: testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, names.AttrEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "6"),
@@ -3607,7 +3607,7 @@ resource "aws_elasticache_replication_group" "test" {
 	)
 }
 
-func testAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, clusterMode string) string {
+func testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, clusterMode string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
