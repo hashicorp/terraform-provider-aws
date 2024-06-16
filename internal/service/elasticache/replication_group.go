@@ -92,6 +92,12 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"cluster_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.ClusterMode_Values(), true),
+			},
 			"configuration_endpoint_address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -420,6 +426,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOk("cluster_mode"); ok {
+		input.ClusterMode = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("data_tiering_enabled"); ok {
 		input.DataTieringEnabled = aws.Bool(v.(bool))
 	}
@@ -653,6 +663,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("replicas_per_node_group", len(rgp.NodeGroups[0].NodeGroupMembers)-1)
 
 	d.Set("cluster_enabled", rgp.ClusterEnabled)
+	d.Set("cluster_mode", rgp.ClusterMode)
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set(names.AttrARN, rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
@@ -772,6 +783,11 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange(names.AttrDescription) {
 			input.ReplicationGroupDescription = aws.String(d.Get(names.AttrDescription).(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange("cluster_mode") {
+			input.ClusterMode = aws.String(d.Get("cluster_mode").(string))
 			requestUpdate = true
 		}
 
