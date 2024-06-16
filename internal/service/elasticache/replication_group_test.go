@@ -3624,6 +3624,7 @@ resource "aws_elasticache_replication_group" "test" {
   replicas_per_node_group    = 1
   timeouts {
     create = "60m"
+    update = "60m"
   }
 }
 `, rName, clusterMode),
