@@ -238,7 +238,6 @@ func parseService(curr Service) ServiceRecord {
 	if len(curr.ServiceEnvVars) > 0 {
 		record[colDeprecatedEnvVar] = curr.ServiceEnvVars[0].DeprecatedEnvVar
 		record[colTFAWSEnvVar] = curr.ServiceEnvVars[0].TFAWSEnvVar
-
 	}
 
 	// endpoint_info
@@ -251,7 +250,6 @@ func parseService(curr Service) ServiceRecord {
 		} else {
 			record[colEndpointOnly] = ""
 		}
-
 	}
 
 	// resource_prefix

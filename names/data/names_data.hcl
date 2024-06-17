@@ -1732,7 +1732,7 @@ service "evidently" {
 
   provider_package_correct = "evidently"
   doc_prefix               = ["evidently_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "internetmonitor" {
@@ -1855,7 +1855,7 @@ service "synthetics" {
 
   provider_package_correct = "synthetics"
   doc_prefix               = ["synthetics_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "codeartifact" {
