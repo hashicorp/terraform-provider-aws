@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/aws/aws-sdk-go/service/efs/efsiface"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -20,28 +19,23 @@ import (
 // listTags lists efs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn efsiface.EFSAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *efs.Client, identifier string, optFns ...func(*efs.Options)) (tftags.KeyValueTags, error) {
 	input := &efs.DescribeTagsInput{
 		FileSystemId: aws.String(identifier),
 	}
-	var output []*awstypes.Tag
+	var output []awstypes.Tag
 
-	err := conn.DescribeTagsPagesWithContext(ctx, input, func(page *efs.DescribeTagsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := efs.NewDescribeTagsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
 		}
 
 		for _, v := range page.Tags {
-			if v != nil {
-				output = append(output, v)
-			}
+			output = append(output, v)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
 	}
 
 	return KeyValueTags(ctx, output), nil
@@ -66,11 +60,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns efs service tags.
-func Tags(tags tftags.KeyValueTags) []*awstypes.Tag {
-	result := make([]*awstypes.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &awstypes.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -82,7 +76,7 @@ func Tags(tags tftags.KeyValueTags) []*awstypes.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from efs service tags.
-func KeyValueTags(ctx context.Context, tags []*awstypes.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -94,7 +88,7 @@ func KeyValueTags(ctx context.Context, tags []*awstypes.Tag) tftags.KeyValueTags
 
 // getTagsIn returns efs service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*awstypes.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -105,7 +99,7 @@ func getTagsIn(ctx context.Context) []*awstypes.Tag {
 }
 
 // setTagsOut sets efs service tags in Context.
-func setTagsOut(ctx context.Context, tags []*awstypes.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -114,7 +108,7 @@ func setTagsOut(ctx context.Context, tags []*awstypes.Tag) {
 // updateTags updates efs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn efsiface.EFSAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *efs.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*efs.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -125,10 +119,10 @@ func updateTags(ctx context.Context, conn efsiface.EFSAPI, identifier string, ol
 	if len(removedTags) > 0 {
 		input := &efs.UntagResourceInput{
 			ResourceId: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
+			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -143,7 +137,7 @@ func updateTags(ctx context.Context, conn efsiface.EFSAPI, identifier string, ol
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
