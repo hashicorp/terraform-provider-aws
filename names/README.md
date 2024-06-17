@@ -40,7 +40,7 @@ service "" {
   }
 
   names {
-    aliases             = [""]
+    aliases             = [""] // This can also be excluded if it is empty
     provider_name_upper = ""
     human_friendly      = ""
   }
