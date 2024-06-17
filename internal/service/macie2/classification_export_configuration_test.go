@@ -75,7 +75,7 @@ func testAccCheckClassificationExportConfigurationDestroy(ctx context.Context) r
 			input := macie2.GetClassificationExportConfigurationInput{}
 			resp, err := conn.GetClassificationExportConfiguration(ctx, &input)
 
-			if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Macie is not enabled") {
+			if errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "Macie isn't enabled") {
 				continue
 			}
 
