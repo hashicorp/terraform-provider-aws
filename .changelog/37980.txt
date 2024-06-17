@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_event_source_mapping: Fix issue where configuring maximum concurrency beyond 1000 for a SQS event source causes error.
+```
