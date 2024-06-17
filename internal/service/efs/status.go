@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -26,7 +25,7 @@ func statusAccessPointLifeCycleState(ctx context.Context, conn *efs.Client, acce
 			return nil, "", err
 		}
 
-		if output == nil || len(output.AccessPoints) == 0 || output.AccessPoints[0] == nil {
+		if output == nil || len(output.AccessPoints) == 0 {
 			return nil, "", nil
 		}
 

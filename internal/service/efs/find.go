@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -21,7 +21,7 @@ func FindBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*aw
 
 	output, err := conn.DescribeBackupPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
+	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -46,7 +46,7 @@ func FindFileSystemPolicyByID(ctx context.Context, conn *efs.Client, id string) 
 
 	output, err := conn.DescribeFileSystemPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, awstypes.ErrCodePolicyNotFound) {
+	if errs.IsA[*awstypes.FileSystemNotFound](err) || errs.IsA[*awstypes.PolicyNotFound](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

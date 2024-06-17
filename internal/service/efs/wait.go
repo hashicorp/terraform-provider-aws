@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
@@ -24,8 +25,8 @@ const (
 // waitAccessPointCreated waits for an Operation to return Success
 func waitAccessPointCreated(ctx context.Context, conn *efs.Client, accessPointId string) (*awstypes.AccessPointDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.LifeCycleStateCreating},
-		Target:  []string{awstypes.LifeCycleStateAvailable},
+		Pending: enum.Slice(awstypes.LifeCycleStateCreating),
+		Target:  enum.Slice(awstypes.LifeCycleStateAvailable),
 		Refresh: statusAccessPointLifeCycleState(ctx, conn, accessPointId),
 		Timeout: accessPointCreatedTimeout,
 	}
@@ -42,7 +43,7 @@ func waitAccessPointCreated(ctx context.Context, conn *efs.Client, accessPointId
 // waitAccessPointDeleted waits for an Access Point to return Deleted
 func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, accessPointId string) (*awstypes.AccessPointDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted},
+		Pending: enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted),
 		Target:  []string{},
 		Refresh: statusAccessPointLifeCycleState(ctx, conn, accessPointId),
 		Timeout: accessPointDeletedTimeout,
@@ -59,8 +60,8 @@ func waitAccessPointDeleted(ctx context.Context, conn *efs.Client, accessPointId
 
 func waitBackupPolicyDisabled(ctx context.Context, conn *efs.Client, id string) (*awstypes.BackupPolicy, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.StatusDisabling},
-		Target:  []string{awstypes.StatusDisabled},
+		Pending: enum.Slice(awstypes.StatusDisabling),
+		Target:  enum.Slice(awstypes.StatusDisabled),
 		Refresh: statusBackupPolicy(ctx, conn, id),
 		Timeout: backupPolicyDisabledTimeout,
 	}
@@ -76,8 +77,8 @@ func waitBackupPolicyDisabled(ctx context.Context, conn *efs.Client, id string) 
 
 func waitBackupPolicyEnabled(ctx context.Context, conn *efs.Client, id string) (*awstypes.BackupPolicy, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.StatusEnabling},
-		Target:  []string{awstypes.StatusEnabled},
+		Pending: enum.Slice(awstypes.StatusEnabling),
+		Target:  enum.Slice(awstypes.StatusEnabled),
 		Refresh: statusBackupPolicy(ctx, conn, id),
 		Timeout: backupPolicyEnabledTimeout,
 	}
