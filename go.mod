@@ -154,6 +154,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.40.10
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.10
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.7
+	github.com/aws/aws-sdk-go-v2/service/rum v1.17.12
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.55.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.13
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.10
