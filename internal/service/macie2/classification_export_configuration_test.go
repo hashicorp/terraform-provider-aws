@@ -83,7 +83,7 @@ func testAccCheckClassificationExportConfigurationDestroy(ctx context.Context) r
 				return err
 			}
 
-			if (macie2.GetClassificationExportConfigurationOutput{}.Configuration) != *&resp.Configuration || resp != nil { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+			if resp != nil {
 				return fmt.Errorf("macie classification export configuration %q still configured", rs.Primary.ID)
 			}
 		}
@@ -108,7 +108,7 @@ func testAccCheckClassificationExportConfigurationExists(ctx context.Context, re
 			return err
 		}
 
-		if (macie2.GetClassificationExportConfigurationOutput{}.Configuration) == *&resp.Configuration || resp == nil { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
+		if resp == nil || (macie2.GetClassificationExportConfigurationOutput{}.Configuration) == resp.Configuration { // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-conditional
 			return fmt.Errorf("macie classification export configuration %q does not exist", rs.Primary.ID)
 		}
 
