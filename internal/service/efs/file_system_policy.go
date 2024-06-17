@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -71,14 +71,14 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 
 	fsID := d.Get(names.AttrFileSystemID).(string)
 	input := &efs.PutFileSystemPolicyInput{
-		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
+		BypassPolicyLockoutSafetyCheck: d.Get("bypass_policy_lockout_safety_check").(bool),
 		FileSystemId:                   aws.String(fsID),
 		Policy:                         aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidPolicyException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.PutFileSystemPolicy(ctx, input)
-	}, awstypes.ErrCodeInvalidPolicyException, "Policy contains invalid Principal block")
+	}, "Policy contains invalid Principal block")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting EFS File System Policy (%s): %s", fsID, err)
@@ -133,7 +133,7 @@ func resourceFileSystemPolicyDelete(ctx context.Context, d *schema.ResourceData,
 		FileSystemId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
+	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags
 	}
 
