@@ -68,6 +68,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"efs":                                                    testAccDomain_efs,
 			"posix":                                                  testAccDomain_posix,
 			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
+			"studioWebPortal":                                        testAccDomain_studioWebPortal,
 		},
 		"FlowDefinition": {
 			acctest.CtBasic:                  testAccFlowDefinition_basic,
