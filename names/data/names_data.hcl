@@ -1,4 +1,5 @@
-# Copyright (c) HashiCorp, Inc.
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 service "accessanalyzer" {
 
@@ -8,7 +9,6 @@ service "accessanalyzer" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AccessAnalyzer"
     human_friendly      = "IAM Access Analyzer"
   }
@@ -34,7 +34,6 @@ service "account" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Account"
     human_friendly      = "Account Management"
   }
@@ -60,7 +59,6 @@ service "acm" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ACM"
     human_friendly      = "ACM (Certificate Manager)"
   }
@@ -91,7 +89,6 @@ service "acmpca" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ACMPCA"
     human_friendly      = "ACM PCA (Certificate Manager Private Certificate Authority)"
   }
@@ -117,7 +114,6 @@ service "alexaforbusiness" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AlexaForBusiness"
     human_friendly      = "Alexa for Business"
   }
@@ -176,7 +172,6 @@ service "amplify" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Amplify"
     human_friendly      = "Amplify"
   }
@@ -202,7 +197,6 @@ service "amplifybackend" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AmplifyBackend"
     human_friendly      = "Amplify Backend"
   }
@@ -229,7 +223,6 @@ service "amplifyuibuilder" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AmplifyUIBuilder"
     human_friendly      = "Amplify UI Builder"
   }
@@ -256,7 +249,6 @@ service "apigateway" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "APIGateway"
     human_friendly      = "API Gateway"
   }
@@ -287,7 +279,6 @@ service "apigatewaymanagementapi" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "APIGatewayManagementAPI"
     human_friendly      = "API Gateway Management API"
   }
@@ -314,7 +305,6 @@ service "apigatewayv2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "APIGatewayV2"
     human_friendly      = "API Gateway V2"
   }
@@ -344,7 +334,6 @@ service "appfabric" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppFabric"
     human_friendly      = "AppFabric"
   }
@@ -370,7 +359,6 @@ service "appmesh" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppMesh"
     human_friendly      = "App Mesh"
   }
@@ -400,7 +388,6 @@ service "apprunner" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppRunner"
     human_friendly      = "App Runner"
   }
@@ -426,7 +413,6 @@ service "appconfig" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppConfig"
     human_friendly      = "AppConfig"
   }
@@ -456,7 +442,6 @@ service "appconfigdata" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppConfigData"
     human_friendly      = "AppConfig Data"
   }
@@ -483,7 +468,6 @@ service "appflow" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppFlow"
     human_friendly      = "AppFlow"
   }
@@ -577,7 +561,6 @@ service "applicationcostprofiler" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ApplicationCostProfiler"
     human_friendly      = "Application Cost Profiler"
   }
@@ -636,7 +619,6 @@ service "mgn" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Mgn"
     human_friendly      = "Application Migration (Mgn)"
   }
@@ -663,7 +645,6 @@ service "appstream" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppStream"
     human_friendly      = "AppStream 2.0"
   }
@@ -690,7 +671,6 @@ service "appsync" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AppSync"
     human_friendly      = "AppSync"
   }
@@ -720,7 +700,6 @@ service "athena" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Athena"
     human_friendly      = "Athena"
   }
@@ -746,7 +725,6 @@ service "auditmanager" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AuditManager"
     human_friendly      = "Audit Manager"
   }
@@ -772,7 +750,6 @@ service "autoscaling" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AutoScaling"
     human_friendly      = "Auto Scaling"
   }
@@ -803,7 +780,6 @@ service "autoscalingplans" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "AutoScalingPlans"
     human_friendly      = "Auto Scaling Plans"
   }
@@ -828,7 +804,6 @@ service "backup" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Backup"
     human_friendly      = "Backup"
   }
@@ -863,7 +838,6 @@ service "backupgateway" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "BackupGateway"
     human_friendly      = "Backup Gateway"
   }
@@ -890,7 +864,6 @@ service "batch" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Batch"
     human_friendly      = "Batch"
   }
@@ -920,7 +893,6 @@ service "bedrock" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Bedrock"
     human_friendly      = "Amazon Bedrock"
   }
@@ -951,7 +923,6 @@ service "bedrockagent" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "BedrockAgent"
     human_friendly      = "Agents for Amazon Bedrock"
   }
@@ -977,7 +948,6 @@ service "bcmdataexports" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "BCMDataExports"
     human_friendly      = "BCM Data Exports"
   }
@@ -1008,7 +978,6 @@ service "billingconductor" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "BillingConductor"
     human_friendly      = "Billing Conductor"
   }
@@ -1035,7 +1004,6 @@ service "braket" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Braket"
     human_friendly      = "Braket"
   }
@@ -1093,7 +1061,6 @@ service "chatbot" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Chatbot"
     human_friendly      = "Chatbot"
   }
@@ -1123,7 +1090,6 @@ service "chime" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Chime"
     human_friendly      = "Chime"
   }
@@ -1158,7 +1124,6 @@ service "chimesdkidentity" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ChimeSDKIdentity"
     human_friendly      = "Chime SDK Identity"
   }
@@ -1190,7 +1155,6 @@ service "chimesdkmediapipelines" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ChimeSDKMediaPipelines"
     human_friendly      = "Chime SDK Media Pipelines"
   }
@@ -1221,7 +1185,6 @@ service "chimesdkmeetings" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ChimeSDKMeetings"
     human_friendly      = "Chime SDK Meetings"
   }
@@ -1253,7 +1216,6 @@ service "chimesdkmessaging" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ChimeSDKMessaging"
     human_friendly      = "Chime SDK Messaging"
   }
@@ -1285,7 +1247,6 @@ service "chimesdkvoice" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ChimeSDKVoice"
     human_friendly      = "Chime SDK Voice"
   }
@@ -1311,7 +1272,6 @@ service "cleanrooms" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CleanRooms"
     human_friendly      = "Clean Rooms"
   }
@@ -1373,7 +1333,6 @@ service "clouddirectory" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudDirectory"
     human_friendly      = "Cloud Directory"
   }
@@ -1400,7 +1359,6 @@ service "servicediscovery" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ServiceDiscovery"
     human_friendly      = "Cloud Map"
   }
@@ -1427,7 +1385,6 @@ service "cloud9" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Cloud9"
     human_friendly      = "Cloud9"
   }
@@ -1453,7 +1410,6 @@ service "cloudformation" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudFormation"
     human_friendly      = "CloudFormation"
   }
@@ -1484,7 +1440,6 @@ service "cloudfront" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudFront"
     human_friendly      = "CloudFront"
   }
@@ -1520,7 +1475,6 @@ service "cloudfrontkeyvaluestore" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudFrontKeyValueStore"
     human_friendly      = "CloudFront KeyValueStore"
   }
@@ -1578,7 +1532,6 @@ service "cloudsearch" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudSearch"
     human_friendly      = "CloudSearch"
   }
@@ -1604,7 +1557,6 @@ service "cloudsearchdomain" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudSearchDomain"
     human_friendly      = "CloudSearch Domain"
   }
@@ -1631,7 +1583,6 @@ service "cloudtrail" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudTrail"
     human_friendly      = "CloudTrail"
   }
@@ -1658,7 +1609,6 @@ service "cloudwatch" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CloudWatch"
     human_friendly      = "CloudWatch"
   }
@@ -1690,7 +1640,6 @@ service "applicationinsights" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ApplicationInsights"
     human_friendly      = "CloudWatch Application Insights"
   }
@@ -1747,7 +1696,6 @@ service "internetmonitor" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "InternetMonitor"
     human_friendly      = "CloudWatch Internet Monitor"
   }
@@ -1844,7 +1792,6 @@ service "synthetics" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Synthetics"
     human_friendly      = "CloudWatch Synthetics"
   }
@@ -1870,7 +1817,6 @@ service "codeartifact" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeArtifact"
     human_friendly      = "CodeArtifact"
   }
@@ -1896,7 +1842,6 @@ service "codebuild" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeBuild"
     human_friendly      = "CodeBuild"
   }
@@ -1922,7 +1867,6 @@ service "codecommit" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeCommit"
     human_friendly      = "CodeCommit"
   }
@@ -1984,7 +1928,6 @@ service "codeguruprofiler" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeGuruProfiler"
     human_friendly      = "CodeGuru Profiler"
   }
@@ -2015,7 +1958,6 @@ service "codegurureviewer" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeGuruReviewer"
     human_friendly      = "CodeGuru Reviewer"
   }
@@ -2042,7 +1984,6 @@ service "codepipeline" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodePipeline"
     human_friendly      = "CodePipeline"
   }
@@ -2069,7 +2010,6 @@ service "codestar" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeStar"
     human_friendly      = "CodeStar"
   }
@@ -2101,7 +2041,6 @@ service "codestarconnections" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeStarConnections"
     human_friendly      = "CodeStar Connections"
   }
@@ -2132,7 +2071,6 @@ service "codestarnotifications" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeStarNotifications"
     human_friendly      = "CodeStar Notifications"
   }
@@ -2163,7 +2101,6 @@ service "cognitoidentity" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CognitoIdentity"
     human_friendly      = "Cognito Identity"
   }
@@ -2237,7 +2174,6 @@ service "cognitosync" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CognitoSync"
     human_friendly      = "Cognito Sync"
   }
@@ -2264,7 +2200,6 @@ service "comprehend" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Comprehend"
     human_friendly      = "Comprehend"
   }
@@ -2290,7 +2225,6 @@ service "comprehendmedical" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ComprehendMedical"
     human_friendly      = "Comprehend Medical"
   }
@@ -2322,7 +2256,6 @@ service "computeoptimizer" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ComputeOptimizer"
     human_friendly      = "Compute Optimizer"
   }
@@ -2375,7 +2308,6 @@ service "connect" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Connect"
     human_friendly      = "Connect"
   }
@@ -2405,7 +2337,6 @@ service "connectcases" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ConnectCases"
     human_friendly      = "Connect Cases"
   }
@@ -2440,7 +2371,6 @@ service "connectcontactlens" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ConnectContactLens"
     human_friendly      = "Connect Contact Lens"
   }
@@ -2472,7 +2402,6 @@ service "customerprofiles" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CustomerProfiles"
     human_friendly      = "Connect Customer Profiles"
   }
@@ -2498,7 +2427,6 @@ service "connectparticipant" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ConnectParticipant"
     human_friendly      = "Connect Participant"
   }
@@ -2530,7 +2458,6 @@ service "voiceid" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "VoiceID"
     human_friendly      = "Connect Voice ID"
   }
@@ -2589,7 +2516,6 @@ service "controltower" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ControlTower"
     human_friendly      = "Control Tower"
   }
@@ -2620,7 +2546,6 @@ service "costoptimizationhub" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CostOptimizationHub"
     human_friendly      = "Cost Optimization Hub"
   }
@@ -2687,7 +2612,6 @@ service "dataexchange" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DataExchange"
     human_friendly      = "Data Exchange"
   }
@@ -2717,7 +2641,6 @@ service "datapipeline" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DataPipeline"
     human_friendly      = "Data Pipeline"
   }
@@ -2747,7 +2670,6 @@ service "datasync" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DataSync"
     human_friendly      = "DataSync"
   }
@@ -2773,7 +2695,6 @@ service "datazone" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DataZone"
     human_friendly      = "DataZone"
   }
@@ -2799,7 +2720,6 @@ service "detective" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Detective"
     human_friendly      = "Detective"
   }
@@ -2829,7 +2749,6 @@ service "devicefarm" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DeviceFarm"
     human_friendly      = "Device Farm"
   }
@@ -2860,7 +2779,6 @@ service "devopsguru" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DevOpsGuru"
     human_friendly      = "DevOps Guru"
   }
@@ -2886,7 +2804,6 @@ service "directconnect" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DirectConnect"
     human_friendly      = "Direct Connect"
   }
@@ -2917,7 +2834,6 @@ service "dlm" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DLM"
     human_friendly      = "DLM (Data Lifecycle Manager)"
   }
@@ -2978,7 +2894,6 @@ service "docdb" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DocDB"
     human_friendly      = "DocumentDB"
   }
@@ -3009,7 +2924,6 @@ service "docdbelastic" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DocDBElastic"
     human_friendly      = "DocumentDB Elastic"
   }
@@ -3035,7 +2949,6 @@ service "drs" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DRS"
     human_friendly      = "DRS (Elastic Disaster Recovery)"
   }
@@ -3097,7 +3010,6 @@ service "dax" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DAX"
     human_friendly      = "DynamoDB Accelerator (DAX)"
   }
@@ -3123,7 +3035,6 @@ service "dynamodbstreams" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DynamoDBStreams"
     human_friendly      = "DynamoDB Streams"
   }
@@ -3150,7 +3061,6 @@ service "ebs" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EBS"
     human_friendly      = "EBS (Elastic Block Store)"
   }
@@ -3177,7 +3087,6 @@ service "imagebuilder" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ImageBuilder"
     human_friendly      = "EC2 Image Builder"
   }
@@ -3212,7 +3121,6 @@ service "ec2instanceconnect" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EC2InstanceConnect"
     human_friendly      = "EC2 Instance Connect"
   }
@@ -3239,7 +3147,6 @@ service "ecr" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ECR"
     human_friendly      = "ECR (Elastic Container Registry)"
   }
@@ -3270,7 +3177,6 @@ service "ecrpublic" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ECRPublic"
     human_friendly      = "ECR Public"
   }
@@ -3296,7 +3202,6 @@ service "ecs" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ECS"
     human_friendly      = "ECS (Elastic Container)"
   }
@@ -3326,7 +3231,6 @@ service "efs" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EFS"
     human_friendly      = "EFS (Elastic File System)"
   }
@@ -3356,7 +3260,6 @@ service "eks" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EKS"
     human_friendly      = "EKS (Elastic Kubernetes)"
   }
@@ -3414,7 +3317,6 @@ service "elasticinference" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ElasticInference"
     human_friendly      = "Elastic Inference"
   }
@@ -3441,7 +3343,6 @@ service "elastictranscoder" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ElasticTranscoder"
     human_friendly      = "Elastic Transcoder"
   }
@@ -3471,7 +3372,6 @@ service "elasticache" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ElastiCache"
     human_friendly      = "ElastiCache"
   }
@@ -3612,7 +3512,6 @@ service "mediaconnect" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaConnect"
     human_friendly      = "Elemental MediaConnect"
   }
@@ -3638,7 +3537,6 @@ service "mediaconvert" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaConvert"
     human_friendly      = "Elemental MediaConvert"
   }
@@ -3664,7 +3562,6 @@ service "medialive" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaLive"
     human_friendly      = "Elemental MediaLive"
   }
@@ -3690,7 +3587,6 @@ service "mediapackage" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaPackage"
     human_friendly      = "Elemental MediaPackage"
   }
@@ -3722,7 +3618,6 @@ service "mediapackagevod" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaPackageVOD"
     human_friendly      = "Elemental MediaPackage VOD"
   }
@@ -3749,7 +3644,6 @@ service "mediastore" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaStore"
     human_friendly      = "Elemental MediaStore"
   }
@@ -3781,7 +3675,6 @@ service "mediastoredata" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaStoreData"
     human_friendly      = "Elemental MediaStore Data"
   }
@@ -3808,7 +3701,6 @@ service "mediatailor" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaTailor"
     human_friendly      = "Elemental MediaTailor"
   }
@@ -3835,7 +3727,6 @@ service "emr" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EMR"
     human_friendly      = "EMR"
   }
@@ -3870,7 +3761,6 @@ service "emrcontainers" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EMRContainers"
     human_friendly      = "EMR Containers"
   }
@@ -3905,7 +3795,6 @@ service "emrserverless" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EMRServerless"
     human_friendly      = "EMR Serverless"
   }
@@ -3963,7 +3852,6 @@ service "schemas" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Schemas"
     human_friendly      = "EventBridge Schemas"
   }
@@ -3993,7 +3881,6 @@ service "fis" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "FIS"
     human_friendly      = "FIS (Fault Injection Simulator)"
   }
@@ -4019,7 +3906,6 @@ service "finspace" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "FinSpace"
     human_friendly      = "FinSpace"
   }
@@ -4050,7 +3936,6 @@ service "finspacedata" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "FinSpaceData"
     human_friendly      = "FinSpace Data"
   }
@@ -4077,7 +3962,6 @@ service "fms" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "FMS"
     human_friendly      = "FMS (Firewall Manager)"
   }
@@ -4172,7 +4056,6 @@ service "frauddetector" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "FraudDetector"
     human_friendly      = "Fraud Detector"
   }
@@ -4199,7 +4082,6 @@ service "fsx" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "FSx"
     human_friendly      = "FSx"
   }
@@ -4229,7 +4111,6 @@ service "gamelift" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "GameLift"
     human_friendly      = "GameLift"
   }
@@ -4259,7 +4140,6 @@ service "globalaccelerator" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "GlobalAccelerator"
     human_friendly      = "Global Accelerator"
   }
@@ -4290,7 +4170,6 @@ service "glue" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Glue"
     human_friendly      = "Glue"
   }
@@ -4352,7 +4231,6 @@ service "groundstation" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "GroundStation"
     human_friendly      = "Ground Station"
   }
@@ -4378,7 +4256,6 @@ service "guardduty" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "GuardDuty"
     human_friendly      = "GuardDuty"
   }
@@ -4408,7 +4285,6 @@ service "health" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Health"
     human_friendly      = "Health"
   }
@@ -4435,7 +4311,6 @@ service "healthlake" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "HealthLake"
     human_friendly      = "HealthLake"
   }
@@ -4461,7 +4336,6 @@ service "honeycode" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Honeycode"
     human_friendly      = "Honeycode"
   }
@@ -4488,7 +4362,6 @@ service "iam" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IAM"
     human_friendly      = "IAM (Identity & Access Management)"
   }
@@ -4522,7 +4395,6 @@ service "inspector" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Inspector"
     human_friendly      = "Inspector Classic"
   }
@@ -4619,7 +4491,6 @@ service "iot1clickprojects" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoT1ClickProjects"
     human_friendly      = "IoT 1-Click Projects"
   }
@@ -4646,7 +4517,6 @@ service "iotanalytics" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTAnalytics"
     human_friendly      = "IoT Analytics"
   }
@@ -4713,7 +4583,6 @@ service "iotdeviceadvisor" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTDeviceAdvisor"
     human_friendly      = "IoT Device Management"
   }
@@ -4740,7 +4609,6 @@ service "iotevents" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTEvents"
     human_friendly      = "IoT Events"
   }
@@ -4775,7 +4643,6 @@ service "ioteventsdata" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTEventsData"
     human_friendly      = "IoT Events Data"
   }
@@ -4802,7 +4669,6 @@ service "iotfleethub" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTFleetHub"
     human_friendly      = "IoT Fleet Hub"
   }
@@ -4829,7 +4695,6 @@ service "greengrass" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Greengrass"
     human_friendly      = "IoT Greengrass"
   }
@@ -4859,7 +4724,6 @@ service "greengrassv2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "GreengrassV2"
     human_friendly      = "IoT Greengrass V2"
   }
@@ -4923,7 +4787,6 @@ service "iotsecuretunneling" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTSecureTunneling"
     human_friendly      = "IoT Secure Tunneling"
   }
@@ -4950,7 +4813,6 @@ service "iotsitewise" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTSiteWise"
     human_friendly      = "IoT SiteWise"
   }
@@ -4977,7 +4839,6 @@ service "iotthingsgraph" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTThingsGraph"
     human_friendly      = "IoT Things Graph"
   }
@@ -5004,7 +4865,6 @@ service "iottwinmaker" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTTwinMaker"
     human_friendly      = "IoT TwinMaker"
   }
@@ -5031,7 +4891,6 @@ service "iotwireless" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoTWireless"
     human_friendly      = "IoT Wireless"
   }
@@ -5058,7 +4917,6 @@ service "ivs" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IVS"
     human_friendly      = "IVS (Interactive Video)"
   }
@@ -5088,7 +4946,6 @@ service "ivschat" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IVSChat"
     human_friendly      = "IVS (Interactive Video) Chat"
   }
@@ -5114,7 +4971,6 @@ service "kendra" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Kendra"
     human_friendly      = "Kendra"
   }
@@ -5144,7 +5000,6 @@ service "keyspaces" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Keyspaces"
     human_friendly      = "Keyspaces (for Apache Cassandra)"
   }
@@ -5170,7 +5025,6 @@ service "kinesis" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Kinesis"
     human_friendly      = "Kinesis"
   }
@@ -5201,7 +5055,6 @@ service "kinesisanalytics" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "KinesisAnalytics"
     human_friendly      = "Kinesis Analytics"
   }
@@ -5232,7 +5085,6 @@ service "kinesisanalyticsv2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "KinesisAnalyticsV2"
     human_friendly      = "Kinesis Analytics V2"
   }
@@ -5262,7 +5114,6 @@ service "firehose" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Firehose"
     human_friendly      = "Kinesis Firehose"
   }
@@ -5289,7 +5140,6 @@ service "kinesisvideo" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "KinesisVideo"
     human_friendly      = "Kinesis Video"
   }
@@ -5324,7 +5174,6 @@ service "kinesisvideoarchivedmedia" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "KinesisVideoArchivedMedia"
     human_friendly      = "Kinesis Video Archived Media"
   }
@@ -5356,7 +5205,6 @@ service "kinesisvideomedia" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "KinesisVideoMedia"
     human_friendly      = "Kinesis Video Media"
   }
@@ -5420,7 +5268,6 @@ service "kms" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "KMS"
     human_friendly      = "KMS (Key Management)"
   }
@@ -5446,7 +5293,6 @@ service "lakeformation" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "LakeFormation"
     human_friendly      = "Lake Formation"
   }
@@ -5472,7 +5318,6 @@ service "lambda" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Lambda"
     human_friendly      = "Lambda"
   }
@@ -5503,7 +5348,6 @@ service "launchwizard" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "LaunchWizard"
     human_friendly      = "Launch Wizard"
   }
@@ -5680,7 +5524,6 @@ service "licensemanager" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "LicenseManager"
     human_friendly      = "License Manager"
   }
@@ -5710,7 +5553,6 @@ service "lightsail" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Lightsail"
     human_friendly      = "Lightsail"
   }
@@ -5775,7 +5617,6 @@ service "lookoutequipment" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "LookoutEquipment"
     human_friendly      = "Lookout for Equipment"
   }
@@ -5802,7 +5643,6 @@ service "lookoutmetrics" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "LookoutMetrics"
     human_friendly      = "Lookout for Metrics"
   }
@@ -5860,7 +5700,6 @@ service "machinelearning" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MachineLearning"
     human_friendly      = "Machine Learning"
   }
@@ -5887,7 +5726,6 @@ service "macie2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Macie2"
     human_friendly      = "Macie"
   }
@@ -5917,7 +5755,6 @@ service "macie" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Macie"
     human_friendly      = "Macie Classic"
   }
@@ -5944,7 +5781,6 @@ service "m2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "M2"
     human_friendly      = "Mainframe Modernization"
   }
@@ -5970,7 +5806,6 @@ service "managedblockchain" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ManagedBlockchain"
     human_friendly      = "Managed Blockchain"
   }
@@ -6063,7 +5898,6 @@ service "kafkaconnect" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "KafkaConnect"
     human_friendly      = "Managed Streaming for Kafka Connect"
   }
@@ -6099,7 +5933,6 @@ service "marketplacecatalog" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MarketplaceCatalog"
     human_friendly      = "Marketplace Catalog"
   }
@@ -6126,7 +5959,6 @@ service "marketplacecommerceanalytics" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MarketplaceCommerceAnalytics"
     human_friendly      = "Marketplace Commerce Analytics"
   }
@@ -6222,7 +6054,6 @@ service "memorydb" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MemoryDB"
     human_friendly      = "MemoryDB for Redis"
   }
@@ -6257,7 +6088,6 @@ service "meta" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Meta"
     human_friendly      = "Meta Data Sources"
   }
@@ -6323,7 +6153,6 @@ service "migrationhubconfig" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MigrationHubConfig"
     human_friendly      = "Migration Hub Config"
   }
@@ -6355,7 +6184,6 @@ service "migrationhubrefactorspaces" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MigrationHubRefactorSpaces"
     human_friendly      = "Migration Hub Refactor Spaces"
   }
@@ -6414,7 +6242,6 @@ service "mobile" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Mobile"
     human_friendly      = "Mobile"
   }
@@ -6441,7 +6268,6 @@ service "mq" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MQ"
     human_friendly      = "MQ"
   }
@@ -6467,7 +6293,6 @@ service "mturk" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MTurk"
     human_friendly      = "MTurk (Mechanical Turk)"
   }
@@ -6494,7 +6319,6 @@ service "mwaa" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MWAA"
     human_friendly      = "MWAA (Managed Workflows for Apache Airflow)"
   }
@@ -6520,7 +6344,6 @@ service "neptune" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Neptune"
     human_friendly      = "Neptune"
   }
@@ -6560,7 +6383,6 @@ service "neptunegraph" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "NeptuneGraph"
     human_friendly      = "Neptune Analytics"
   }
@@ -6591,7 +6413,6 @@ service "networkfirewall" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "NetworkFirewall"
     human_friendly      = "Network Firewall"
   }
@@ -6621,7 +6442,6 @@ service "networkmanager" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "NetworkManager"
     human_friendly      = "Network Manager"
   }
@@ -6744,7 +6564,6 @@ service "opensearchserverless" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "OpenSearchServerless"
     human_friendly      = "OpenSearch Serverless"
   }
@@ -6796,7 +6615,6 @@ service "opsworks" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "OpsWorks"
     human_friendly      = "OpsWorks"
   }
@@ -6831,7 +6649,6 @@ service "opsworkscm" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "OpsWorksCM"
     human_friendly      = "OpsWorks CM"
   }
@@ -6858,7 +6675,6 @@ service "organizations" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Organizations"
     human_friendly      = "Organizations"
   }
@@ -6888,7 +6704,6 @@ service "outposts" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Outposts"
     human_friendly      = "Outposts"
   }
@@ -6918,7 +6733,6 @@ service "panorama" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Panorama"
     human_friendly      = "Panorama"
   }
@@ -6950,7 +6764,6 @@ service "paymentcryptography" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "PaymentCryptography"
     human_friendly      = "Payment Cryptography Control Plane"
   }
@@ -6981,7 +6794,6 @@ service "pcaconnectorad" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "PCAConnectorAD"
     human_friendly      = "Private CA Connector for Active Directory"
   }
@@ -7007,7 +6819,6 @@ service "personalize" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Personalize"
     human_friendly      = "Personalize"
   }
@@ -7039,7 +6850,6 @@ service "personalizeevents" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "PersonalizeEvents"
     human_friendly      = "Personalize Events"
   }
@@ -7071,7 +6881,6 @@ service "personalizeruntime" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "PersonalizeRuntime"
     human_friendly      = "Personalize Runtime"
   }
@@ -7098,7 +6907,6 @@ service "pinpoint" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Pinpoint"
     human_friendly      = "Pinpoint"
   }
@@ -7133,7 +6941,6 @@ service "pinpointemail" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "PinpointEmail"
     human_friendly      = "Pinpoint Email"
   }
@@ -7165,7 +6972,6 @@ service "pinpointsmsvoice" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "PinpointSMSVoice"
     human_friendly      = "Pinpoint SMS and Voice"
   }
@@ -7192,7 +6998,6 @@ service "pipes" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Pipes"
     human_friendly      = "EventBridge Pipes"
   }
@@ -7218,7 +7023,6 @@ service "polly" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Polly"
     human_friendly      = "Polly"
   }
@@ -7244,7 +7048,6 @@ service "pricing" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Pricing"
     human_friendly      = "Pricing Calculator"
   }
@@ -7270,7 +7073,6 @@ service "proton" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Proton"
     human_friendly      = "Proton"
   }
@@ -7297,7 +7099,6 @@ service "qbusiness" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "QBusiness"
     human_friendly      = "Amazon Q Business"
   }
@@ -7323,7 +7124,6 @@ service "qldb" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "QLDB"
     human_friendly      = "QLDB (Quantum Ledger Database)"
   }
@@ -7354,7 +7154,6 @@ service "qldbsession" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "QLDBSession"
     human_friendly      = "QLDB Session"
   }
@@ -7381,7 +7180,6 @@ service "quicksight" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "QuickSight"
     human_friendly      = "QuickSight"
   }
@@ -7412,7 +7210,6 @@ service "ram" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "RAM"
     human_friendly      = "RAM (Resource Access Manager)"
   }
@@ -7438,7 +7235,6 @@ service "rds" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "RDS"
     human_friendly      = "RDS (Relational Database)"
   }
@@ -7506,7 +7302,6 @@ service "pi" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "PI"
     human_friendly      = "RDS Performance Insights (PI)"
   }
@@ -7565,7 +7360,6 @@ service "redshift" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Redshift"
     human_friendly      = "Redshift"
   }
@@ -7637,7 +7431,6 @@ service "redshiftserverless" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "RedshiftServerless"
     human_friendly      = "Redshift Serverless"
   }
@@ -7667,7 +7460,6 @@ service "rekognition" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Rekognition"
     human_friendly      = "Rekognition"
   }
@@ -7693,7 +7485,6 @@ service "resiliencehub" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ResilienceHub"
     human_friendly      = "Resilience Hub"
   }
@@ -7725,7 +7516,6 @@ service "resourceexplorer2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ResourceExplorer2"
     human_friendly      = "Resource Explorer"
   }
@@ -7757,7 +7547,6 @@ service "resourcegroups" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ResourceGroups"
     human_friendly      = "Resource Groups"
   }
@@ -7809,7 +7598,6 @@ service "robomaker" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "RoboMaker"
     human_friendly      = "RoboMaker"
   }
@@ -7836,7 +7624,6 @@ service "rolesanywhere" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "RolesAnywhere"
     human_friendly      = "Roles Anywhere"
   }
@@ -7862,7 +7649,6 @@ service "route53" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Route53"
     human_friendly      = "Route 53"
   }
@@ -7894,7 +7680,6 @@ service "route53domains" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Route53Domains"
     human_friendly      = "Route 53 Domains"
   }
@@ -7925,7 +7710,6 @@ service "route53profiles" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Route53Profiles"
     human_friendly      = "Route 53 Profiles"
   }
@@ -7956,7 +7740,6 @@ service "route53recoverycluster" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Route53RecoveryCluster"
     human_friendly      = "Route 53 Recovery Cluster"
   }
@@ -7988,7 +7771,6 @@ service "route53recoverycontrolconfig" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Route53RecoveryControlConfig"
     human_friendly      = "Route 53 Recovery Control Config"
   }
@@ -8024,7 +7806,6 @@ service "route53recoveryreadiness" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Route53RecoveryReadiness"
     human_friendly      = "Route 53 Recovery Readiness"
   }
@@ -8055,7 +7836,6 @@ service "route53resolver" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Route53Resolver"
     human_friendly      = "Route 53 Resolver"
   }
@@ -8126,7 +7906,6 @@ service "s3control" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "S3Control"
     human_friendly      = "S3 Control"
   }
@@ -8153,7 +7932,6 @@ service "glacier" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Glacier"
     human_friendly      = "S3 Glacier"
   }
@@ -8179,7 +7957,6 @@ service "s3outposts" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "S3Outposts"
     human_friendly      = "S3 on Outposts"
   }
@@ -8209,7 +7986,6 @@ service "sagemaker" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SageMaker"
     human_friendly      = "SageMaker"
   }
@@ -8318,7 +8094,6 @@ service "sagemakerfeaturestoreruntime" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SageMakerFeatureStoreRuntime"
     human_friendly      = "SageMaker Feature Store Runtime"
   }
@@ -8350,7 +8125,6 @@ service "sagemakerruntime" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SageMakerRuntime"
     human_friendly      = "SageMaker Runtime"
   }
@@ -8377,7 +8151,6 @@ service "savingsplans" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SavingsPlans"
     human_friendly      = "Savings Plans"
   }
@@ -8445,7 +8218,6 @@ service "scheduler" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Scheduler"
     human_friendly      = "EventBridge Scheduler"
   }
@@ -8471,7 +8243,6 @@ service "secretsmanager" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SecretsManager"
     human_friendly      = "Secrets Manager"
   }
@@ -8497,7 +8268,6 @@ service "securityhub" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SecurityHub"
     human_friendly      = "Security Hub"
   }
@@ -8523,7 +8293,6 @@ service "securitylake" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SecurityLake"
     human_friendly      = "Security Lake"
   }
@@ -8585,7 +8354,6 @@ service "servicecatalog" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ServiceCatalog"
     human_friendly      = "Service Catalog"
   }
@@ -8656,7 +8424,6 @@ service "servicequotas" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "ServiceQuotas"
     human_friendly      = "Service Quotas"
   }
@@ -8681,7 +8448,6 @@ service "ses" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SES"
     human_friendly      = "SES (Simple Email)"
   }
@@ -8711,7 +8477,6 @@ service "sesv2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SESV2"
     human_friendly      = "SESv2 (Simple Email V2)"
   }
@@ -8772,7 +8537,6 @@ service "shield" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Shield"
     human_friendly      = "Shield"
   }
@@ -8803,7 +8567,6 @@ service "signer" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Signer"
     human_friendly      = "Signer"
   }
@@ -8829,7 +8592,6 @@ service "sms" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SMS"
     human_friendly      = "SMS (Server Migration)"
   }
@@ -8861,7 +8623,6 @@ service "snowdevicemanagement" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SnowDeviceManagement"
     human_friendly      = "Snow Device Management"
   }
@@ -8888,7 +8649,6 @@ service "snowball" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Snowball"
     human_friendly      = "Snow Family"
   }
@@ -8915,7 +8675,6 @@ service "sns" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SNS"
     human_friendly      = "SNS (Simple Notification)"
   }
@@ -8941,7 +8700,6 @@ service "sqs" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SQS"
     human_friendly      = "SQS (Simple Queue)"
   }
@@ -8967,7 +8725,6 @@ service "ssm" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SSM"
     human_friendly      = "SSM (Systems Manager)"
   }
@@ -8998,7 +8755,6 @@ service "ssmcontacts" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SSMContacts"
     human_friendly      = "SSM Contacts"
   }
@@ -9029,7 +8785,6 @@ service "ssmincidents" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SSMIncidents"
     human_friendly      = "SSM Incident Manager Incidents"
   }
@@ -9060,7 +8815,6 @@ service "ssmsap" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SSMSAP"
     human_friendly      = "Systems Manager for SAP"
   }
@@ -9086,7 +8840,6 @@ service "sso" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SSO"
     human_friendly      = "SSO (Single Sign-On)"
   }
@@ -9120,7 +8873,6 @@ service "ssoadmin" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SSOAdmin"
     human_friendly      = "SSO Admin"
   }
@@ -9150,7 +8902,6 @@ service "identitystore" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IdentityStore"
     human_friendly      = "SSO Identity Store"
   }
@@ -9182,7 +8933,6 @@ service "ssooidc" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SSOOIDC"
     human_friendly      = "SSO OIDC"
   }
@@ -9209,7 +8959,6 @@ service "storagegateway" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "StorageGateway"
     human_friendly      = "Storage Gateway"
   }
@@ -9239,7 +8988,6 @@ service "sts" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "STS"
     human_friendly      = "STS (Security Token)"
   }
@@ -9275,7 +9023,6 @@ service "support" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Support"
     human_friendly      = "Support"
   }
@@ -9302,7 +9049,6 @@ service "swf" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "SWF"
     human_friendly      = "SWF (Simple Workflow)"
   }
@@ -9329,7 +9075,6 @@ service "textract" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Textract"
     human_friendly      = "Textract"
   }
@@ -9361,7 +9106,6 @@ service "timestreaminfluxdb" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "TimestreamInfluxDB"
     human_friendly      = "Timestream for InfluxDB"
   }
@@ -9392,7 +9136,6 @@ service "timestreamquery" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "TimestreamQuery"
     human_friendly      = "Timestream Query"
   }
@@ -9424,7 +9167,6 @@ service "timestreamwrite" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "TimestreamWrite"
     human_friendly      = "Timestream Write"
   }
@@ -9513,7 +9255,6 @@ service "transfer" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Transfer"
     human_friendly      = "Transfer Family"
   }
@@ -9540,7 +9281,6 @@ service "translate" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Translate"
     human_friendly      = "Translate"
   }
@@ -9572,7 +9312,6 @@ service "vpclattice" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "VPCLattice"
     human_friendly      = "VPC Lattice"
   }
@@ -9598,7 +9337,6 @@ service "wafv2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WAFV2"
     human_friendly      = "WAF"
   }
@@ -9625,7 +9363,6 @@ service "waf" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WAF"
     human_friendly      = "WAF Classic"
   }
@@ -9656,7 +9393,6 @@ service "wafregional" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WAFRegional"
     human_friendly      = "WAF Classic Regional"
   }
@@ -9682,7 +9418,6 @@ service "budgets" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "Budgets"
     human_friendly      = "Web Services Budgets"
   }
@@ -9709,7 +9444,6 @@ service "wellarchitected" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WellArchitected"
     human_friendly      = "Well-Architected Tool"
   }
@@ -9735,7 +9469,6 @@ service "workdocs" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WorkDocs"
     human_friendly      = "WorkDocs"
   }
@@ -9762,7 +9495,6 @@ service "worklink" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WorkLink"
     human_friendly      = "WorkLink"
   }
@@ -9792,7 +9524,6 @@ service "workmail" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WorkMail"
     human_friendly      = "WorkMail"
   }
@@ -9819,7 +9550,6 @@ service "workmailmessageflow" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WorkMailMessageFlow"
     human_friendly      = "WorkMail Message Flow"
   }
@@ -9846,7 +9576,6 @@ service "workspaces" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WorkSpaces"
     human_friendly      = "WorkSpaces"
   }
@@ -9877,7 +9606,6 @@ service "workspacesweb" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "WorkSpacesWeb"
     human_friendly      = "WorkSpaces Web"
   }
@@ -9903,7 +9631,6 @@ service "xray" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "XRay"
     human_friendly      = "X-Ray"
   }
@@ -9929,7 +9656,6 @@ service "verifiedpermissions" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "VerifiedPermissions"
     human_friendly      = "Verified Permissions"
   }
@@ -9955,7 +9681,6 @@ service "codecatalyst" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "CodeCatalyst"
     human_friendly      = "CodeCatalyst"
   }
@@ -9981,7 +9706,6 @@ service "mediapackagev2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "MediaPackageV2"
     human_friendly      = "Elemental MediaPackage Version 2"
   }
@@ -10008,7 +9732,6 @@ service "iot" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "IoT"
     human_friendly      = "IoT Core"
   }
@@ -10038,7 +9761,6 @@ service "dynamodb" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "DynamoDB"
     human_friendly      = "DynamoDB"
   }
@@ -10072,7 +9794,6 @@ service "ec2" {
   }
 
   names {
-    aliases             = [""]
     provider_name_upper = "EC2"
     human_friendly      = "EC2 (Elastic Compute Cloud)"
   }
@@ -10109,8 +9830,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "EC2EBS"
+        provider_name_upper = "EC2EBS"
       human_friendly      = "EBS (EC2)"
     }
 
@@ -10146,8 +9866,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "EC2Outposts"
+        provider_name_upper = "EC2Outposts"
       human_friendly      = "Outposts (EC2)"
     }
 
@@ -10183,8 +9902,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "TransitGateway"
+        provider_name_upper = "TransitGateway"
       human_friendly      = "Transit Gateway"
     }
 
@@ -10220,8 +9938,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "VerifiedAccess"
+        provider_name_upper = "VerifiedAccess"
       human_friendly      = "Verified Access"
     }
 
@@ -10257,8 +9974,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "VPC"
+        provider_name_upper = "VPC"
       human_friendly      = "VPC (Virtual Private Cloud)"
     }
 
@@ -10294,8 +10010,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "IPAM"
+        provider_name_upper = "IPAM"
       human_friendly      = "VPC IPAM (IP Address Manager)"
     }
 
@@ -10330,8 +10045,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "ClientVPN"
+        provider_name_upper = "ClientVPN"
       human_friendly      = "VPN (Client)"
     }
 
@@ -10366,8 +10080,7 @@ service "ec2" {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "SiteVPN"
+        provider_name_upper = "SiteVPN"
       human_friendly      = "VPN (Site-to-Site)"
     }
 
@@ -10402,8 +10115,7 @@ go_packages {
     }
 
     names {
-      aliases             = [""]
-      provider_name_upper = "Wavelength"
+        provider_name_upper = "Wavelength"
       human_friendly      = "Wavelength"
     }
 

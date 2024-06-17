@@ -330,7 +330,7 @@ type SDK struct {
 }
 
 type Names struct {
-	Aliases           []string `hcl:"aliases,attr"`
+	Aliases           []string `hcl:"aliases,optional"`
 	ProviderNameUpper string   `hcl:"provider_name_upper,attr"`
 	HumanFriendly     string   `hcl:"human_friendly,attr"`
 }
