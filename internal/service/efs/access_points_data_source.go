@@ -71,25 +71,19 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]*awstypes.AccessPointDescription, error) {
-	var output []*awstypes.AccessPointDescription
+func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]awstypes.AccessPointDescription, error) {
+	var output []awstypes.AccessPointDescription
 
-	err := conn.DescribeAccessPointsPagesWithContext(ctx, input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := efs.NewDescribeAccessPointsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.AccessPoints {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.AccessPoints...)
 	}
 
 	return output, nil
