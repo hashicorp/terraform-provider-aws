@@ -24,9 +24,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON,
-						testAccPolicyDocumentExpectedJSON(),
-					),
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentExpectedJSON),
 				),
 			},
 		},
@@ -34,7 +32,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 }
 
 // lintignore:AWSAT003
-var testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
     vpn_ecmp_support = false
@@ -144,7 +142,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     action  = "share"
     mode    = "attachment-route"
     segment = "GoodSegmentSpecification"
-    share_with_except = [
+    share_with = [
       "a",
       "b",
       "c"
@@ -276,8 +274,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 `
 
 // lintignore:AWSAT003
-func testAccPolicyDocumentExpectedJSON() string {
-	return `{
+const testAccPolicyDocumentExpectedJSON = `{
   "version": "2021.12",
   "core-network-configuration": {
     "asn-ranges": [
@@ -494,11 +491,13 @@ func testAccPolicyDocumentExpectedJSON() string {
       "action": "share",
       "mode": "attachment-route",
       "segment": "AnotherGoodSegmentSpecification",
-      "share-with": [
-        "c",
-        "b",
-        "a"
-      ]
+      "share-with": {
+        "except": [
+          "c",
+          "b",
+          "a"
+        ]
+      }
     },
     {
       "action": "share",
@@ -512,4 +511,3 @@ func testAccPolicyDocumentExpectedJSON() string {
     }
   ]
 }`
-}

@@ -47,7 +47,7 @@ type coreNetworkPolicySegmentAction struct {
 	Segment               string                                    `json:"segment,omitempty"`
 	Mode                  string                                    `json:"mode,omitempty"`
 	ShareWith             interface{}                               `json:"share-with,omitempty"`
-	ShareWithExcept       interface{}                               `json:"except,omitempty"`
+	ShareWithExcept       interface{}                               `json:",omitempty"`
 	DestinationCidrBlocks interface{}                               `json:"destination-cidr-blocks,omitempty"`
 	Destinations          interface{}                               `json:"destinations,omitempty"`
 	Description           string                                    `json:"description,omitempty"`
@@ -95,18 +95,17 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	type Alias coreNetworkPolicySegmentAction
 	var share interface{}
 
-	if c.ShareWith != nil {
-		sWIntf := c.ShareWith.([]string)
-
-		if sWIntf[0] == "*" {
-			share = sWIntf[0]
+	if v := c.ShareWith; v != nil {
+		v := v.([]string)
+		if v[0] == "*" {
+			share = v[0]
 		} else {
-			share = sWIntf
+			share = v
 		}
-	}
-
-	if c.ShareWithExcept != nil {
-		share = c.ShareWithExcept.([]string)
+	} else if v := c.ShareWithExcept; v != nil {
+		share = map[string]interface{}{
+			"except": v.([]string),
+		}
 	}
 
 	return json.Marshal(&Alias{
