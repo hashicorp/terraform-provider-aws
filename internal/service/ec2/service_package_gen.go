@@ -530,6 +530,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceDefaultInternetGateway,
+			TypeName: "aws_default_internet_gateway",
+			Name:     "Internet Gateway",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory:  resourceDefaultNetworkACL,
 			TypeName: "aws_default_network_acl",
 			Name:     "Network ACL",
