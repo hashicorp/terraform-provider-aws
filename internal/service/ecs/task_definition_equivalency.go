@@ -10,9 +10,9 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/mitchellh/copystructure"
 )
 
@@ -56,7 +56,7 @@ func ContainerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 	return equal, nil
 }
 
-type containerDefinitions []*ecs.ContainerDefinition
+type containerDefinitions []awstypes.ContainerDefinition
 
 func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 	// Deal with fields which may be re-ordered in the API
@@ -66,17 +66,11 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 
 	for i, def := range cd {
 		// Deal with special fields which have defaults
-		if def.Cpu != nil && aws.Int64Value(def.Cpu) == 0 {
-			def.Cpu = nil
-		}
 		if def.Essential == nil {
 			def.Essential = aws.Bool(true)
 		}
 		for j, pm := range def.PortMappings {
-			if pm.Protocol != nil && aws.StringValue(pm.Protocol) == "tcp" {
-				cd[i].PortMappings[j].Protocol = nil
-			}
-			if pm.HostPort != nil && aws.Int64Value(pm.HostPort) == 0 {
+			if aws.ToInt32(pm.HostPort) == 0 {
 				cd[i].PortMappings[j].HostPort = nil
 			}
 			if isAWSVPC && cd[i].PortMappings[j].HostPort == nil {
@@ -101,8 +95,8 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 				}
 			}
 		}
-		iface := definition.Interface().(ecs.ContainerDefinition)
-		cd[i] = &iface
+		iface := definition.Interface().(awstypes.ContainerDefinition)
+		cd[i] = iface
 	}
 	return nil
 }
@@ -110,7 +104,7 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 func (cd containerDefinitions) OrderEnvironmentVariables() {
 	for _, def := range cd {
 		sort.Slice(def.Environment, func(i, j int) bool {
-			return aws.StringValue(def.Environment[i].Name) < aws.StringValue(def.Environment[j].Name)
+			return aws.ToString(def.Environment[i].Name) < aws.ToString(def.Environment[j].Name)
 		})
 	}
 }
@@ -118,13 +112,13 @@ func (cd containerDefinitions) OrderEnvironmentVariables() {
 func (cd containerDefinitions) OrderSecrets() {
 	for _, def := range cd {
 		sort.Slice(def.Secrets, func(i, j int) bool {
-			return aws.StringValue(def.Secrets[i].Name) < aws.StringValue(def.Secrets[j].Name)
+			return aws.ToString(def.Secrets[i].Name) < aws.ToString(def.Secrets[j].Name)
 		})
 	}
 }
 
 func (cd containerDefinitions) OrderContainers() {
 	sort.Slice(cd, func(i, j int) bool {
-		return aws.StringValue(cd[i].Name) < aws.StringValue(cd[j].Name)
+		return aws.ToString(cd[i].Name) < aws.ToString(cd[j].Name)
 	})
 }

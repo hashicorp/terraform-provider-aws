@@ -6,8 +6,8 @@ package ecs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -64,23 +64,23 @@ func DataSourceTaskDefinition() *schema.Resource {
 
 func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	taskDefinitionName := d.Get("task_definition").(string)
 	input := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(taskDefinitionName),
 	}
 
-	output, err := conn.DescribeTaskDefinitionWithContext(ctx, input)
+	output, err := conn.DescribeTaskDefinition(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", taskDefinitionName, err)
 	}
 
 	taskDefinition := output.TaskDefinition
-	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
+	d.SetId(aws.ToString(taskDefinition.TaskDefinitionArn))
 	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
-	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
+	d.Set("arn_without_revision", StripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
 	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set(names.AttrFamily, taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)
