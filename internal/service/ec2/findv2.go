@@ -3209,7 +3209,7 @@ func findTransitGateways(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 	var output []awstypes.TransitGateway
 
 	pages := ec2.NewDescribeTransitGatewaysPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayIDNotFound) {
@@ -3271,7 +3271,7 @@ func findTransitGatewayAttachments(ctx context.Context, conn *ec2.Client, input 
 	var output []awstypes.TransitGatewayAttachment
 
 	pages := ec2.NewDescribeTransitGatewayAttachmentsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
@@ -3326,7 +3326,7 @@ func findTransitGatewayConnects(ctx context.Context, conn *ec2.Client, input *ec
 	var output []awstypes.TransitGatewayConnect
 
 	pages := ec2.NewDescribeTransitGatewayConnectsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
@@ -3393,7 +3393,7 @@ func findTransitGatewayConnectPeers(ctx context.Context, conn *ec2.Client, input
 	var output []awstypes.TransitGatewayConnectPeer
 
 	pages := ec2.NewDescribeTransitGatewayConnectPeersPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayConnectPeerIDNotFound) {
@@ -3455,7 +3455,7 @@ func findTransitGatewayMulticastDomains(ctx context.Context, conn *ec2.Client, i
 	var output []awstypes.TransitGatewayMulticastDomain
 
 	pages := ec2.NewDescribeTransitGatewayMulticastDomainsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
@@ -3517,7 +3517,7 @@ func findTransitGatewayMulticastDomainAssociations(ctx context.Context, conn *ec
 	var output []awstypes.TransitGatewayMulticastDomainAssociation
 
 	pages := ec2.NewGetTransitGatewayMulticastDomainAssociationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
@@ -3573,7 +3573,7 @@ func findTransitGatewayMulticastGroups(ctx context.Context, conn *ec2.Client, in
 	var output []awstypes.TransitGatewayMulticastGroup
 
 	pages := ec2.NewSearchTransitGatewayMulticastGroupsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayMulticastDomainIdNotFound) {
@@ -3682,7 +3682,7 @@ func findTransitGatewayPeeringAttachments(ctx context.Context, conn *ec2.Client,
 	var output []awstypes.TransitGatewayPeeringAttachment
 
 	pages := ec2.NewDescribeTransitGatewayPeeringAttachmentsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
@@ -3748,7 +3748,7 @@ func findTransitGatewayPrefixListReferences(ctx context.Context, conn *ec2.Clien
 	var output []awstypes.TransitGatewayPrefixListReference
 
 	pages := ec2.NewGetTransitGatewayPrefixListReferencesPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -3870,7 +3870,7 @@ func findTransitGatewayPolicyTables(ctx context.Context, conn *ec2.Client, input
 	var output []awstypes.TransitGatewayPolicyTable
 
 	pages := ec2.NewDescribeTransitGatewayPolicyTablesPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
@@ -3894,7 +3894,7 @@ func findTransitGatewayRouteTables(ctx context.Context, conn *ec2.Client, input 
 	var output []awstypes.TransitGatewayRouteTable
 
 	pages := ec2.NewDescribeTransitGatewayRouteTablesPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -4039,7 +4039,7 @@ func findTransitGatewayPolicyTableAssociations(ctx context.Context, conn *ec2.Cl
 	var output []awstypes.TransitGatewayPolicyTableAssociation
 
 	pages := ec2.NewGetTransitGatewayPolicyTableAssociationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
@@ -4073,7 +4073,7 @@ func findTransitGatewayRouteTableAssociations(ctx context.Context, conn *ec2.Cli
 	var output []awstypes.TransitGatewayRouteTableAssociation
 
 	pages := ec2.NewGetTransitGatewayRouteTableAssociationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -4138,7 +4138,7 @@ func findTransitGatewayRouteTablePropagations(ctx context.Context, conn *ec2.Cli
 	var output []awstypes.TransitGatewayRouteTablePropagation
 
 	pages := ec2.NewGetTransitGatewayRouteTablePropagationsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
@@ -4172,7 +4172,7 @@ func findTransitGatewayVPCAttachments(ctx context.Context, conn *ec2.Client, inp
 	var output []awstypes.TransitGatewayVpcAttachment
 
 	pages := ec2.NewDescribeTransitGatewayVpcAttachmentsPaginator(conn, input)
-	if pages.HasMorePages() {
+	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {

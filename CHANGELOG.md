@@ -1,4 +1,36 @@
 ## 5.55.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` attribute ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
+* data-source/aws_glue_catalog_table: Add `additional_locations` argument in `storage_descriptor` ([#37891](https://github.com/hashicorp/terraform-provider-aws/issues/37891))
+* data-source/aws_launch_template: Add `instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` attribute ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
+* data-source/aws_networkmanager_core_network_policy_document: Add `attachment_policies.action.add_to_network_function_group` argument ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
+* data-source/aws_networkmanager_core_network_policy_document: Add `network_function_groups` configuration block ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
+* data-source/aws_networkmanager_core_network_policy_document: Add `send-via` and `send-to` as valid values for `segment_actions.action` ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
+* data-source/aws_networkmanager_core_network_policy_document: Add `single-hop` and `dual-hop` as valid values for `segment_actions.mode` ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
+* data-source/aws_networkmanager_core_network_policy_document: Add `when_sent_to` and `via` configuration blocks to `segment_actions` ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
+* resource/aws_api_gateway_integration: Increase maximum value of `timeout_milliseconds` from `29000` (29 seconds) to `300000` (5 minutes) ([#38010](https://github.com/hashicorp/terraform-provider-aws/issues/38010))
+* resource/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
+* resource/aws_docdb_cluster: Add `restore_to_point_in_time` argument ([#37716](https://github.com/hashicorp/terraform-provider-aws/issues/37716))
+* resource/aws_dynamodb_table: Adds validation for `ttl` values. ([#37991](https://github.com/hashicorp/terraform-provider-aws/issues/37991))
+* resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
+* resource/aws_glue_catalog_table: Add `additional_locations` argument in `storage_descriptor` ([#37891](https://github.com/hashicorp/terraform-provider-aws/issues/37891))
+* resource/aws_launch_template: Add `instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
+
+BUG FIXES:
+
+* data-source/aws_networkmanager_core_network_policy_document: Add correct `except` values to the returned JSON document when `segment_actions.share_with_except` is configured ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
+* resource/aws_dynamodb_table: Fixes perpetual diff when `ttl.attribute_name` is set when `ttl.enabled` is not set. ([#37991](https://github.com/hashicorp/terraform-provider-aws/issues/37991))
+* service/transitgateway: Fix resource Read pagination regression causing `NotFound` errors ([#38011](https://github.com/hashicorp/terraform-provider-aws/issues/38011))
+
+## 5.54.1 (June 14, 2024)
+
+BUG FIXES:
+
+* data-source/aws_ami: Fix `interface conversion: interface {} is types.ProductCodeValues, not string` panic ([#37977](https://github.com/hashicorp/terraform-provider-aws/issues/37977))
+* resource/aws_codebuild_project: Increase maximum values of `build_batch_config.timeout_in_mins` and `build_timeout` from `480` (8 hours) to `2160` (36 hours) ([#37970](https://github.com/hashicorp/terraform-provider-aws/issues/37970))
+
 ## 5.54.0 (June 14, 2024)
 
 NOTES:

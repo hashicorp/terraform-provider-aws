@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.54.0
+	github.com/aws/aws-sdk-go v1.54.2
 	github.com/aws/aws-sdk-go-v2 v1.27.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.18
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.18
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.51.3
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.4.10
-	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.21.10
+	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.22.10
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.6
@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.10
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.10
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.38.4
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.6
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.10
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.22.10
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.10
@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.9
 	github.com/aws/aws-sdk-go-v2/service/drs v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.8
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.164.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.164.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.10
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.42.0
@@ -112,7 +112,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.7
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.10
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.10
-	github.com/aws/aws-sdk-go-v2/service/kms v1.32.3
+	github.com/aws/aws-sdk-go-v2/service/kms v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.6
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.2
@@ -121,10 +121,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.10
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.10
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.7
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.52.6
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.11
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.11.6
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.10
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.11
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.27.4

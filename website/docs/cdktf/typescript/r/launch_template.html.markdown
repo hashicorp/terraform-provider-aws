@@ -131,7 +131,7 @@ This resource supports the following arguments:
 * `hibernationOptions` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iamInstanceProfile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `imageId` - (Optional) The AMI from which to launch the instance.
+* `imageId` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instanceInitiatedShutdownBehavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instanceMarketOptions` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -233,7 +233,7 @@ Attach an elastic GPU the instance.
 
 The `elasticGpuSpecifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 
@@ -530,4 +530,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f46e7c620bef392fe711cbf2b85d072ca960f48a73b748421452af4fa096fba6 -->
+<!-- cache-key: cdktf-0.20.1 input-8003f9c6450601e32f73e508e3a6c3a1d45c8eceab312b856d0b7abbfa41d04f -->
