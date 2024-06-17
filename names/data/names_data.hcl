@@ -1963,7 +1963,7 @@ service "deploy" {
   }
 
   client {
-  go_v1_client_typename = "CloudControlApi"
+  go_v1_client_typename = "CodeDeploy"
   }
 
   resource_prefix {
