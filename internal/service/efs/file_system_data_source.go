@@ -133,10 +133,10 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.FileSystemId = aws.String(v.(string))
 	}
 
-	filter := tfslices.PredicateTrue[*awstypes.FileSystemDescription]()
+	filter := tfslices.PredicateTrue[awstypes.FileSystemDescription]()
 
 	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
-		filter = func(v *awstypes.FileSystemDescription) bool {
+		filter = func(v awstypes.FileSystemDescription) bool {
 			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
 	}
