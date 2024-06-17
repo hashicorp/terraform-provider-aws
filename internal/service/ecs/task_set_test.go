@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -103,7 +104,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", ecs.ScaleUnitPercent),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", string(awstypes.ScaleUnitPercent)),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.value", acctest.Ct0),
 				),
 			},
@@ -120,7 +121,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", ecs.ScaleUnitPercent),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", string(awstypes.ScaleUnitPercent)),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "100"),
 				),
 			},
@@ -397,7 +398,7 @@ func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCh
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
 
@@ -406,12 +407,12 @@ func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCh
 		}
 
 		input := &ecs.DescribeTaskSetsInput{
-			TaskSets: aws.StringSlice([]string{taskSetId}),
+			TaskSets: []string{taskSetId},
 			Cluster:  aws.String(cluster),
 			Service:  aws.String(service),
 		}
 
-		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+		output, err := conn.DescribeTaskSets(ctx, input)
 
 		if err != nil {
 			return err
@@ -427,7 +428,7 @@ func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCh
 
 func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_task_set" {
@@ -441,14 +442,14 @@ func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			input := &ecs.DescribeTaskSetsInput{
-				TaskSets: aws.StringSlice([]string{taskSetId}),
+				TaskSets: []string{taskSetId},
 				Cluster:  aws.String(cluster),
 				Service:  aws.String(service),
 			}
 
-			output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+			output, err := conn.DescribeTaskSets(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) {
+			if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) {
 				continue
 			}
 

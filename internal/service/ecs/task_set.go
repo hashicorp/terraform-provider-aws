@@ -10,14 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -87,12 +88,12 @@ func ResourceTaskSet() *schema.Resource {
 				Optional: true,
 			},
 			"launch_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ValidateFunc:  validation.StringInSlice(ecs.LaunchType_Values(), false),
-				ConflictsWith: []string{names.AttrCapacityProviderStrategy},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
+				ConflictsWith:    []string{names.AttrCapacityProviderStrategy},
 			},
 			// If you are using the CodeDeploy or an external deployment controller,
 			// multiple target groups are not supported.
@@ -172,10 +173,10 @@ func ResourceTaskSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrUnit: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      ecs.ScaleUnitPercent,
-							ValidateFunc: validation.StringInSlice(ecs.ScaleUnit_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.ScaleUnitPercent,
+							ValidateDiagFunc: enum.Validate[awstypes.ScaleUnit](),
 						},
 						names.AttrValue: {
 							Type:         schema.TypeFloat,
@@ -273,7 +274,8 @@ func ResourceTaskSet() *schema.Resource {
 
 func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)
@@ -294,7 +296,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("launch_type"); ok {
-		input.LaunchType = aws.String(v.(string))
+		input.LaunchType = awstypes.LaunchType(v.(string))
 	}
 
 	if v, ok := d.GetOk("load_balancer"); ok && v.(*schema.Set).Len() > 0 {
@@ -320,7 +322,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := retryTaskSetCreate(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
 		output, err = retryTaskSetCreate(ctx, conn, input)
@@ -330,7 +332,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating ECS TaskSet: %s", err)
 	}
 
-	taskSetId := aws.StringValue(output.TaskSet.Id)
+	taskSetId := aws.ToString(output.TaskSet.Id)
 
 	d.SetId(fmt.Sprintf("%s,%s,%s", taskSetId, service, cluster))
 
@@ -343,10 +345,10 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTags(ctx, conn, aws.StringValue(output.TaskSet.TaskSetArn), tags)
+		err := createTags(ctx, conn, aws.ToString(output.TaskSet.TaskSetArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceTaskSetRead(ctx, d, meta)...)
 		}
 
@@ -360,7 +362,8 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
@@ -370,25 +373,25 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &ecs.DescribeTaskSetsInput{
 		Cluster:  aws.String(cluster),
-		Include:  aws.StringSlice([]string{ecs.TaskSetFieldTags}),
+		Include:  []awstypes.TaskSetField{awstypes.TaskSetFieldTags},
 		Service:  aws.String(service),
-		TaskSets: aws.StringSlice([]string{taskSetId}),
+		TaskSets: []string{taskSetId},
 	}
 
-	out, err := conn.DescribeTaskSetsWithContext(ctx, input)
+	out, err := conn.DescribeTaskSets(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) {
+	if !d.IsNewResource() && (errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err)) {
 		log.Printf("[WARN] ECS Task Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		log.Printf("[WARN] ECS tagging failed describing Task Set (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
-		out, err = conn.DescribeTaskSetsWithContext(ctx, input)
+		out, err = conn.DescribeTaskSets(ctx, input)
 	}
 
 	if err != nil {
@@ -444,7 +447,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		taskSetId, service, cluster, err := TaskSetParseID(d.Id())
@@ -460,7 +463,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Scale:   expandScale(d.Get("scale").([]interface{})),
 		}
 
-		_, err = conn.UpdateTaskSetWithContext(ctx, input)
+		_, err = conn.UpdateTaskSet(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ECS Task Set (%s): %s", d.Id(), err)
@@ -479,7 +482,7 @@ func resourceTaskSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
@@ -494,9 +497,9 @@ func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 		Force:   aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	}
 
-	_, err = conn.DeleteTaskSetWithContext(ctx, input)
+	_, err = conn.DeleteTaskSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeTaskSetNotFoundException) {
+	if errs.IsA[*awstypes.TaskSetNotFoundException](err) {
 		return diags
 	}
 
@@ -505,7 +508,7 @@ func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err := waitTaskSetDeleted(ctx, conn, taskSetId, service, cluster); err != nil {
-		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeTaskSetNotFoundException) {
+		if errs.IsA[*awstypes.TaskSetNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Set (%s): waiting for completion: %s", d.Id(), err)
@@ -524,14 +527,14 @@ func TaskSetParseID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
-func retryTaskSetCreate(ctx context.Context, conn *ecs.ECS, input *ecs.CreateTaskSetInput) (*ecs.CreateTaskSetOutput, error) {
+func retryTaskSetCreate(ctx context.Context, conn *ecs.Client, input *ecs.CreateTaskSetInput) (*ecs.CreateTaskSetOutput, error) {
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout+taskSetCreateTimeout,
 		func() (interface{}, error) {
-			return conn.CreateTaskSetWithContext(ctx, input)
+			return conn.CreateTaskSet(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) ||
-				tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+			if errs.IsA[*awstypes.ClusterNotFoundException](err) || errs.IsA[*awstypes.ServiceNotFoundException](err) || errs.IsA[*awstypes.TaskSetNotFoundException](err) ||
+				errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "does not have an associated load balancer") {
 				return true, err
 			}
 			return false, err

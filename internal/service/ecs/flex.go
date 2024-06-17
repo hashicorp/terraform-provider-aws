@@ -48,17 +48,17 @@ func flattenCapacityProviderStrategy(cps []awstypes.CapacityProviderStrategyItem
 
 // Takes the result of flatmap. Expand for an array of load balancers and
 // returns ecs.LoadBalancer compatible objects
-func expandLoadBalancers(configured []interface{}) []*awstypes.LoadBalancer {
-	loadBalancers := make([]*awstypes.LoadBalancer, 0, len(configured))
+func expandLoadBalancers(configured []interface{}) []awstypes.LoadBalancer {
+	loadBalancers := make([]awstypes.LoadBalancer, 0, len(configured))
 
 	// Loop over our configured load balancers and create
 	// an array of aws-sdk-go compatible objects
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
 
-		l := &awstypes.LoadBalancer{
+		l := awstypes.LoadBalancer{
 			ContainerName: aws.String(data["container_name"].(string)),
-			ContainerPort: aws.Int64(int64(data["container_port"].(int))),
+			ContainerPort: aws.Int32(int32(data["container_port"].(int))),
 		}
 
 		if v, ok := data["elb_name"]; ok && v.(string) != "" {
@@ -98,12 +98,12 @@ func flattenLoadBalancers(list []*awstypes.LoadBalancer) []map[string]interface{
 
 // Expand for an array of load balancers and
 // returns ecs.LoadBalancer compatible objects for an ECS TaskSet
-func expandTaskSetLoadBalancers(l []interface{}) []*awstypes.LoadBalancer {
+func expandTaskSetLoadBalancers(l []interface{}) []awstypes.LoadBalancer {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	loadBalancers := make([]*awstypes.LoadBalancer, 0, len(l))
+	loadBalancers := make([]awstypes.LoadBalancer, 0, len(l))
 
 	// Loop over our configured load balancers and create
 	// an array of aws-sdk-go compatible objects
@@ -117,7 +117,7 @@ func expandTaskSetLoadBalancers(l []interface{}) []*awstypes.LoadBalancer {
 		}
 
 		if v, ok := data["container_port"].(int); ok {
-			l.ContainerPort = aws.Int64(int64(v))
+			l.ContainerPort = aws.Int32(int32(v))
 		}
 
 		if v, ok := data["load_balancer_name"]; ok && v.(string) != "" {
@@ -134,7 +134,7 @@ func expandTaskSetLoadBalancers(l []interface{}) []*awstypes.LoadBalancer {
 }
 
 // Flattens an array of ECS LoadBalancers (of an ECS TaskSet) into a []map[string]interface{}
-func flattenTaskSetLoadBalancers(list []*awstypes.LoadBalancer) []map[string]interface{} {
+func flattenTaskSetLoadBalancers(list []awstypes.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, loadBalancer := range list {
 		l := map[string]interface{}{
@@ -157,8 +157,8 @@ func flattenTaskSetLoadBalancers(list []*awstypes.LoadBalancer) []map[string]int
 
 // Expand for an array of service registries and
 // returns ecs.ServiceRegistry compatible objects for an ECS TaskSet
-func expandServiceRegistries(l []interface{}) []*awstypes.ServiceRegistry {
-	result := make([]*awstypes.ServiceRegistry, 0, len(l))
+func expandServiceRegistries(l []interface{}) []awstypes.ServiceRegistry {
+	result := make([]awstypes.ServiceRegistry, 0, len(l))
 
 	for _, v := range l {
 		m := v.(map[string]interface{})
@@ -169,10 +169,10 @@ func expandServiceRegistries(l []interface{}) []*awstypes.ServiceRegistry {
 			sr.ContainerName = aws.String(raw)
 		}
 		if raw, ok := m["container_port"].(int); ok && raw > 0 {
-			sr.ContainerPort = aws.Int64(int64(raw))
+			sr.ContainerPort = aws.Int32(int32(raw))
 		}
 		if raw, ok := m[names.AttrPort].(int); ok && raw > 0 {
-			sr.Port = aws.Int64(int64(raw))
+			sr.Port = aws.Int32(int32(raw))
 		}
 		result = append(result, sr)
 	}
