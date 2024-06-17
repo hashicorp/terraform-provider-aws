@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_medialive_channel: fix documentation `audio_selector` and `caption_selector`.
-```
