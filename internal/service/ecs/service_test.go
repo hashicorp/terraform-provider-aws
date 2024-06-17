@@ -11,16 +11,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -90,7 +90,7 @@ func Test_GetClustereNameFromARN(t *testing.T) {
 
 func TestAccECSService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -125,7 +125,7 @@ func TestAccECSService_basic(t *testing.T) {
 
 func TestAccECSService_basicImport(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 	importInput := fmt.Sprintf("%s/%s", rName, rName)
@@ -165,7 +165,7 @@ func TestAccECSService_basicImport(t *testing.T) {
 
 func TestAccECSService_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -189,7 +189,7 @@ func TestAccECSService_disappears(t *testing.T) {
 
 func TestAccECSService_PlacementStrategy_unnormalized(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -211,7 +211,7 @@ func TestAccECSService_PlacementStrategy_unnormalized(t *testing.T) {
 
 func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -239,7 +239,7 @@ func TestAccECSService_CapacityProviderStrategy_basic(t *testing.T) {
 
 func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 ecs.Service
+	var service1, service2 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -268,7 +268,7 @@ func TestAccECSService_CapacityProviderStrategy_forceNewDeployment(t *testing.T)
 
 func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 ecs.Service
+	var service1, service2 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -309,7 +309,7 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 
 func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -331,7 +331,7 @@ func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
 
 func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -365,7 +365,7 @@ func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 
 func TestAccECSService_familyAndRevision(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -394,7 +394,7 @@ func TestAccECSService_familyAndRevision(t *testing.T) {
 
 func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -443,7 +443,7 @@ func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 
 func TestAccECSService_iamRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -465,7 +465,7 @@ func TestAccECSService_iamRole(t *testing.T) {
 
 func TestAccECSService_DeploymentControllerType_codeDeploy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -480,7 +480,7 @@ func TestAccECSService_DeploymentControllerType_codeDeploy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeCodeDeploy),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", string(awstypes.DeploymentControllerTypeCodeDeploy)),
 				),
 			},
 			{
@@ -498,7 +498,7 @@ func TestAccECSService_DeploymentControllerType_codeDeploy(t *testing.T) {
 
 func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndHealthCheckGracePeriod(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -517,7 +517,7 @@ func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndH
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeCodeDeploy),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", string(awstypes.DeploymentControllerTypeCodeDeploy)),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct1),
 				),
 			},
@@ -541,7 +541,7 @@ func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndH
 
 func TestAccECSService_DeploymentControllerType_external(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -556,7 +556,7 @@ func TestAccECSService_DeploymentControllerType_external(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeExternal),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", string(awstypes.DeploymentControllerTypeExternal)),
 				),
 			},
 			{
@@ -573,7 +573,7 @@ func TestAccECSService_DeploymentControllerType_external(t *testing.T) {
 
 func TestAccECSService_alarmsAdd(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -604,7 +604,7 @@ func TestAccECSService_alarmsAdd(t *testing.T) {
 
 func TestAccECSService_alarmsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -636,7 +636,7 @@ func TestAccECSService_alarmsUpdate(t *testing.T) {
 
 func TestAccECSService_DeploymentValues_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -661,7 +661,7 @@ func TestAccECSService_DeploymentValues_basic(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform-provider-aws/issues/6315
 func TestAccECSService_DeploymentValues_minZeroMaxOneHundred(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -685,7 +685,7 @@ func TestAccECSService_DeploymentValues_minZeroMaxOneHundred(t *testing.T) {
 
 func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -711,7 +711,7 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/3444
 func TestAccECSService_loadBalancerChanges(t *testing.T) {
 	ctx := acctest.Context(t)
-	var s1, s2 ecs.Service
+	var s1, s2 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -741,7 +741,7 @@ func TestAccECSService_loadBalancerChanges(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/3361
 func TestAccECSService_clusterName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -764,7 +764,7 @@ func TestAccECSService_clusterName(t *testing.T) {
 
 func TestAccECSService_alb(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -787,7 +787,7 @@ func TestAccECSService_alb(t *testing.T) {
 
 func TestAccECSService_multipleTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -810,7 +810,7 @@ func TestAccECSService_multipleTargetGroups(t *testing.T) {
 
 func TestAccECSService_forceNewDeployment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 ecs.Service
+	var service1, service2 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -843,7 +843,7 @@ func TestAccECSService_forceNewDeployment(t *testing.T) {
 
 func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 ecs.Service
+	var service1, service2 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -880,7 +880,7 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 
 func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2, service3, service4 ecs.Service
+	var service1, service2, service3, service4 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -954,7 +954,7 @@ func TestAccECSService_PlacementStrategy_missing(t *testing.T) {
 
 func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service1, service2 ecs.Service
+	var service1, service2 awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -985,7 +985,7 @@ func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 
 func TestAccECSService_PlacementConstraints_emptyExpression(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1008,7 +1008,7 @@ func TestAccECSService_PlacementConstraints_emptyExpression(t *testing.T) {
 
 func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1049,7 +1049,7 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 
 func TestAccECSService_LaunchTypeFargate_platformVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1086,7 +1086,7 @@ func TestAccECSService_LaunchTypeFargate_platformVersion(t *testing.T) {
 
 func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1120,7 +1120,7 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 
 func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1162,7 +1162,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 
 func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1196,7 +1196,7 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 
 func TestAccECSService_DaemonSchedulingStrategy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1219,7 +1219,7 @@ func TestAccECSService_DaemonSchedulingStrategy_basic(t *testing.T) {
 
 func TestAccECSService_DaemonSchedulingStrategy_setDeploymentMinimum(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1242,7 +1242,7 @@ func TestAccECSService_DaemonSchedulingStrategy_setDeploymentMinimum(t *testing.
 
 func TestAccECSService_replicaSchedulingStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1265,7 +1265,7 @@ func TestAccECSService_replicaSchedulingStrategy(t *testing.T) {
 
 func TestAccECSService_ServiceRegistries_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1288,7 +1288,7 @@ func TestAccECSService_ServiceRegistries_basic(t *testing.T) {
 
 func TestAccECSService_ServiceRegistries_container(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1311,7 +1311,7 @@ func TestAccECSService_ServiceRegistries_container(t *testing.T) {
 
 func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	serviceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedServiceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1347,7 +1347,7 @@ func TestAccECSService_ServiceRegistries_changes(t *testing.T) {
 
 func TestAccECSService_ServiceRegistries_removal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	serviceDiscoveryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
@@ -1382,7 +1382,7 @@ func TestAccECSService_ServiceRegistries_removal(t *testing.T) {
 
 func TestAccECSService_ServiceConnect_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1405,7 +1405,7 @@ func TestAccECSService_ServiceConnect_basic(t *testing.T) {
 
 func TestAccECSService_ServiceConnect_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1428,7 +1428,7 @@ func TestAccECSService_ServiceConnect_full(t *testing.T) {
 
 func TestAccECSService_ServiceConnect_tls_with_empty_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1451,7 +1451,7 @@ func TestAccECSService_ServiceConnect_tls_with_empty_timeout(t *testing.T) {
 
 func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1484,7 +1484,7 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 
 func TestAccECSService_ServiceConnect_remove(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1515,7 +1515,7 @@ func TestAccECSService_ServiceConnect_remove(t *testing.T) {
 
 func TestAccECSService_Tags_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1565,7 +1565,7 @@ func TestAccECSService_Tags_basic(t *testing.T) {
 
 func TestAccECSService_Tags_managed(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1589,7 +1589,7 @@ func TestAccECSService_Tags_managed(t *testing.T) {
 
 func TestAccECSService_Tags_propagate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second, third ecs.Service
+	var first, second, third awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1604,21 +1604,21 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, ecs.PropagateTagsService),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.PropagateTagsService)),
 				),
 			},
 			{
 				Config: testAccServiceConfig_propagateTags(rName, "TASK_DEFINITION"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &second),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, ecs.PropagateTagsTaskDefinition),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.PropagateTagsTaskDefinition)),
 				),
 			},
 			{
 				Config: testAccServiceConfig_propagateTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &third),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, ecs.PropagateTagsNone),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, string(awstypes.PropagateTagsNone)),
 				),
 			},
 		},
@@ -1627,7 +1627,7 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 
 func TestAccECSService_executeCommand(t *testing.T) {
 	ctx := acctest.Context(t)
-	var service ecs.Service
+	var service awstypes.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_service.test"
 
@@ -1657,14 +1657,15 @@ func TestAccECSService_executeCommand(t *testing.T) {
 
 func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_service" {
 				continue
 			}
 
-			service, err := tfecs.FindServiceNoTagsByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+			service, err := tfecs.FindServiceNoTagsByID(ctx, conn, partition, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -1672,7 +1673,7 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if aws.StringValue(service.Status) == "INACTIVE" {
+			if aws.ToString(service.Status) == "INACTIVE" {
 				return nil
 			}
 
@@ -1683,22 +1684,23 @@ func testAccCheckServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckServiceExists(ctx context.Context, name string, service *ecs.Service) resource.TestCheckFunc {
+func testAccCheckServiceExists(ctx context.Context, name string, service *awstypes.Service) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
+		partition := acctest.Provider.Meta().(*conns.AWSClient).Partition
 
 		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 			var err error
-			service, err = tfecs.FindServiceNoTagsByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["cluster"])
+			service, err = tfecs.FindServiceNoTagsByID(ctx, conn, partition, rs.Primary.ID, rs.Primary.Attributes["cluster"])
 			if tfresource.NotFound(err) {
 				return retry.RetryableError(err)
 			}
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+			if errs.IsA[*awstypes.ClusterNotFoundException](err) {
 				return retry.RetryableError(err)
 			}
 			if err != nil {
@@ -1712,10 +1714,10 @@ func testAccCheckServiceExists(ctx context.Context, name string, service *ecs.Se
 	}
 }
 
-func testAccCheckServiceNotRecreated(i, j *ecs.Service) resource.TestCheckFunc {
+func testAccCheckServiceNotRecreated(i, j *awstypes.Service) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
-			return fmt.Errorf("ECS Service (%s) unexpectedly recreated", aws.StringValue(j.ServiceArn))
+		if !aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
+			return fmt.Errorf("ECS Service (%s) unexpectedly recreated", aws.ToString(j.ServiceArn))
 		}
 
 		return nil

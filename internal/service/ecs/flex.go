@@ -75,7 +75,7 @@ func expandLoadBalancers(configured []interface{}) []awstypes.LoadBalancer {
 }
 
 // Flattens an array of ECS LoadBalancers into a []map[string]interface{}
-func flattenLoadBalancers(list []*awstypes.LoadBalancer) []map[string]interface{} {
+func flattenLoadBalancers(list []awstypes.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, loadBalancer := range list {
 		l := map[string]interface{}{
@@ -110,7 +110,7 @@ func expandTaskSetLoadBalancers(l []interface{}) []awstypes.LoadBalancer {
 	for _, lRaw := range l {
 		data := lRaw.(map[string]interface{})
 
-		l := &awstypes.LoadBalancer{}
+		l := awstypes.LoadBalancer{}
 
 		if v, ok := data["container_name"].(string); ok && v != "" {
 			l.ContainerName = aws.String(v)
@@ -162,7 +162,7 @@ func expandServiceRegistries(l []interface{}) []awstypes.ServiceRegistry {
 
 	for _, v := range l {
 		m := v.(map[string]interface{})
-		sr := &awstypes.ServiceRegistry{
+		sr := awstypes.ServiceRegistry{
 			RegistryArn: aws.String(m["registry_arn"].(string)),
 		}
 		if raw, ok := m["container_name"].(string); ok && raw != "" {
@@ -195,11 +195,11 @@ func expandScale(l []interface{}) *awstypes.Scale {
 	result := &awstypes.Scale{}
 
 	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
-		result.Unit = aws.String(v)
+		result.Unit = awstypes.ScaleUnit(v)
 	}
 
 	if v, ok := tfMap[names.AttrValue].(float64); ok {
-		result.Value = aws.Float64(v)
+		result.Value = v
 	}
 
 	return result
@@ -212,8 +212,8 @@ func flattenScale(scale *awstypes.Scale) []map[string]interface{} {
 	}
 
 	m := make(map[string]interface{})
-	m[names.AttrUnit] = aws.ToString(scale.Unit)
-	m[names.AttrValue] = aws.ToFloat64(scale.Value)
+	m[names.AttrUnit] = string(scale.Unit)
+	m[names.AttrValue] = scale.Value
 
 	return []map[string]interface{}{m}
 }

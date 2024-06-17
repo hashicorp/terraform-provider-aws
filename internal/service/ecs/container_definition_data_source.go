@@ -78,7 +78,7 @@ func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceDa
 	params := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 	}
-	log.Printf("[DEBUG] Reading ECS Container Definition: %s", params)
+	log.Printf("[DEBUG] Reading ECS Container Definition: %+v", params)
 	desc, err := conn.DescribeTaskDefinition(ctx, params)
 
 	if err != nil {

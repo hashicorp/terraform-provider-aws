@@ -98,7 +98,7 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 		EffectiveSettings: true,
 	}
 
-	log.Printf("[DEBUG] Reading Default Account Settings: %s", input)
+	log.Printf("[DEBUG] Reading Default Account Settings: %+v", input)
 	resp, err := conn.ListAccountSettings(ctx, input)
 
 	if err != nil {

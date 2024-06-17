@@ -13,10 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -25,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -133,11 +135,11 @@ func ResourceService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							Default:      ecs.DeploymentControllerTypeEcs,
-							ValidateFunc: validation.StringInSlice(ecs.DeploymentControllerType_Values(), false),
+							Type:             schema.TypeString,
+							ForceNew:         true,
+							Optional:         true,
+							Default:          awstypes.DeploymentControllerTypeEcs,
+							ValidateDiagFunc: enum.Validate[awstypes.DeploymentControllerType](),
 						},
 					},
 				},
@@ -147,7 +149,7 @@ func ResourceService() *schema.Resource {
 				Optional: true,
 				Default:  200,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon && new == "200" {
+					if d.Get("scheduling_strategy").(string) == string(awstypes.SchedulingStrategyDaemon) && new == "200" {
 						return true
 					}
 					return false
@@ -158,7 +160,7 @@ func ResourceService() *schema.Resource {
 				Optional: true,
 				Default:  100,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon && new == "100" {
+					if d.Get("scheduling_strategy").(string) == string(awstypes.SchedulingStrategyDaemon) && new == "100" {
 						return true
 					}
 					return false
@@ -168,7 +170,7 @@ func ResourceService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("scheduling_strategy").(string) == ecs.SchedulingStrategyDaemon
+					return d.Get("scheduling_strategy").(string) == string(awstypes.SchedulingStrategyDaemon)
 				},
 			},
 			"enable_ecs_managed_tags": {
@@ -197,11 +199,11 @@ func ResourceService() *schema.Resource {
 				Computed: true,
 			},
 			"launch_type": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ecs.LaunchType_Values(), false),
+				Type:             schema.TypeString,
+				ForceNew:         true,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LaunchType](),
 			},
 			"load_balancer": {
 				Type:     schema.TypeSet,
@@ -280,9 +282,9 @@ func ResourceService() *schema.Resource {
 							},
 						},
 						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ecs.PlacementStrategyType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PlacementStrategyType](),
 						},
 					},
 				},
@@ -298,9 +300,9 @@ func ResourceService() *schema.Resource {
 							Optional: true,
 						},
 						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ecs.PlacementConstraintType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PlacementConstraintType](),
 						},
 					},
 				},
@@ -319,14 +321,14 @@ func ResourceService() *schema.Resource {
 					}
 					return false
 				},
-				ValidateFunc: validation.StringInSlice(ecs.PropagateTags_Values(), false),
+				ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
 			},
 			"scheduling_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ecs.SchedulingStrategyReplica,
-				ValidateFunc: validation.StringInSlice(ecs.SchedulingStrategy_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.SchedulingStrategyReplica,
+				ValidateDiagFunc: enum.Validate[awstypes.SchedulingStrategy](),
 			},
 			"service_connect_configuration": {
 				Type:     schema.TypeList,
@@ -345,9 +347,9 @@ func ResourceService() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"log_driver": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(ecs.LogDriver_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.LogDriver](),
 									},
 									"options": {
 										Type:     schema.TypeMap,
@@ -545,10 +547,10 @@ func ResourceService() *schema.Resource {
 										Default:  true,
 									},
 									"file_system_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      ecs.TaskFilesystemTypeXfs,
-										ValidateFunc: validation.StringInSlice(ecs.TaskFilesystemType_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          awstypes.TaskFilesystemTypeXfs,
+										ValidateDiagFunc: enum.Validate[awstypes.TaskFilesystemType](),
 									},
 									names.AttrIOPS: {
 										Type:     schema.TypeInt,
@@ -593,7 +595,8 @@ func ResourceService() *schema.Resource {
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
@@ -602,12 +605,12 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := ecs.CreateServiceInput{
 		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get(names.AttrCapacityProviderStrategy).(*schema.Set)),
 		ClientToken:              aws.String(id.UniqueId()),
-		DeploymentConfiguration:  &ecs.DeploymentConfiguration{},
+		DeploymentConfiguration:  &awstypes.DeploymentConfiguration{},
 		DeploymentController:     deploymentController,
-		EnableECSManagedTags:     aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
-		EnableExecuteCommand:     aws.Bool(d.Get("enable_execute_command").(bool)),
+		EnableECSManagedTags:     d.Get("enable_ecs_managed_tags").(bool),
+		EnableExecuteCommand:     d.Get("enable_execute_command").(bool),
 		NetworkConfiguration:     expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{})),
-		SchedulingStrategy:       aws.String(schedulingStrategy),
+		SchedulingStrategy:       awstypes.SchedulingStrategy(schedulingStrategy),
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
 	}
@@ -620,12 +623,12 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Cluster = aws.String(v.(string))
 	}
 
-	if schedulingStrategy == ecs.SchedulingStrategyDaemon && deploymentMinimumHealthyPercent != 100 {
-		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(deploymentMinimumHealthyPercent))
-	} else if schedulingStrategy == ecs.SchedulingStrategyReplica {
-		input.DeploymentConfiguration.MaximumPercent = aws.Int64(int64(d.Get("deployment_maximum_percent").(int)))
-		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(deploymentMinimumHealthyPercent))
-		input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+	if schedulingStrategy == string(awstypes.SchedulingStrategyDaemon) && deploymentMinimumHealthyPercent != 100 {
+		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int32(int32(deploymentMinimumHealthyPercent))
+	} else if schedulingStrategy == string(awstypes.SchedulingStrategyReplica) {
+		input.DeploymentConfiguration.MaximumPercent = aws.Int32(int32(d.Get("deployment_maximum_percent").(int)))
+		input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int32(int32(deploymentMinimumHealthyPercent))
+		input.DesiredCount = aws.Int32(int32(d.Get("desired_count").(int)))
 	}
 
 	if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -633,7 +636,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("health_check_grace_period_seconds"); ok {
-		input.HealthCheckGracePeriodSeconds = aws.Int64(int64(v.(int)))
+		input.HealthCheckGracePeriodSeconds = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("iam_role"); ok {
@@ -641,13 +644,13 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("launch_type"); ok {
-		input.LaunchType = aws.String(v.(string))
+		input.LaunchType = awstypes.LaunchType(v.(string))
 		// When creating a service that uses the EXTERNAL deployment controller,
 		// you can specify only parameters that aren't controlled at the task set level
 		// hence you cannot set LaunchType, not changing the default launch_type from EC2 to empty
 		// string to have backward compatibility
-		if deploymentController != nil && aws.StringValue(deploymentController.Type) == ecs.DeploymentControllerTypeExternal {
-			input.LaunchType = aws.String("")
+		if deploymentController != nil && deploymentController.Type == awstypes.DeploymentControllerTypeExternal {
+			input.LaunchType = awstypes.LaunchType("")
 		}
 	}
 
@@ -681,7 +684,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
-		input.PropagateTags = aws.String(v.(string))
+		input.PropagateTags = awstypes.PropagateTags(v.(string))
 	}
 
 	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -694,17 +697,17 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	serviceRegistries := d.Get("service_registries").([]interface{})
 	if len(serviceRegistries) > 0 {
-		srs := make([]*ecs.ServiceRegistry, 0, len(serviceRegistries))
+		srs := make([]awstypes.ServiceRegistry, 0, len(serviceRegistries))
 		for _, v := range serviceRegistries {
 			raw := v.(map[string]interface{})
-			sr := &ecs.ServiceRegistry{
+			sr := awstypes.ServiceRegistry{
 				RegistryArn: aws.String(raw["registry_arn"].(string)),
 			}
 			if port, ok := raw[names.AttrPort].(int); ok && port != 0 {
-				sr.Port = aws.Int64(int64(port))
+				sr.Port = aws.Int32(int32(port))
 			}
 			if raw, ok := raw["container_port"].(int); ok && raw != 0 {
-				sr.ContainerPort = aws.Int64(int64(raw))
+				sr.ContainerPort = aws.Int32(int32(raw))
 			}
 			if raw, ok := raw["container_name"].(string); ok && raw != "" {
 				sr.ContainerName = aws.String(raw)
@@ -722,7 +725,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := serviceCreateWithRetry(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
 		output, err = serviceCreateWithRetry(ctx, conn, input)
@@ -732,13 +735,13 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating ECS Service (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Service.ServiceArn))
+	d.SetId(aws.ToString(output.Service.ServiceArn))
 
 	fn := waitServiceActive
 	if d.Get("wait_for_steady_state").(bool) {
 		fn = waitServiceStable
 	}
-	if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := fn(ctx, conn, partition, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) create: %s", d.Id(), err)
 	}
 
@@ -747,7 +750,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceServiceRead(ctx, d, meta)...)
 		}
 
@@ -761,11 +764,12 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	cluster := d.Get("cluster").(string)
 
-	service, err := FindServiceByIDWaitForActive(ctx, conn, d.Id(), cluster)
+	service, err := FindServiceByIDWaitForActive(ctx, conn, partition, d.Id(), cluster)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
@@ -773,7 +777,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diags
 	}
 
-	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+	if errs.IsA[*awstypes.ClusterNotFoundException](err) {
 		log.Printf("[WARN] ECS Service (%s) parent cluster (%s) not found, removing from state.", d.Id(), cluster)
 		d.SetId("")
 		return diags
@@ -790,7 +794,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading ECS service (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(service.ServiceArn))
+	d.SetId(aws.ToString(service.ServiceArn))
 	d.Set(names.AttrName, service.ServiceName)
 
 	// When creating a service that uses the EXTERNAL deployment controller,
@@ -801,7 +805,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if strings.HasPrefix(d.Get("task_definition").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 			d.Set("task_definition", service.TaskDefinition)
 		} else {
-			taskDefinition := buildFamilyAndRevisionFromARN(aws.StringValue(service.TaskDefinition))
+			taskDefinition := buildFamilyAndRevisionFromARN(aws.ToString(service.TaskDefinition))
 			d.Set("task_definition", taskDefinition)
 		}
 	}
@@ -821,7 +825,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 		d.Set("cluster", service.ClusterArn)
 	} else {
-		clusterARN := GetClusterNameFromARN(aws.StringValue(service.ClusterArn))
+		clusterARN := GetClusterNameFromARN(aws.ToString(service.ClusterArn))
 		d.Set("cluster", clusterARN)
 	}
 
@@ -830,7 +834,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		if strings.HasPrefix(d.Get("iam_role").(string), "arn:"+meta.(*conns.AWSClient).Partition+":iam:") {
 			d.Set("iam_role", service.RoleArn)
 		} else {
-			roleARN := GetRoleNameFromARN(aws.StringValue(service.RoleArn))
+			roleARN := GetRoleNameFromARN(aws.ToString(service.RoleArn))
 			d.Set("iam_role", roleARN)
 		}
 	}
@@ -897,18 +901,19 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ecs.UpdateServiceInput{
 			Cluster:            aws.String(d.Get("cluster").(string)),
-			ForceNewDeployment: aws.Bool(d.Get("force_new_deployment").(bool)),
+			ForceNewDeployment: d.Get("force_new_deployment").(bool),
 			Service:            aws.String(d.Id()),
 		}
 
 		if d.HasChange("alarms") {
 			if input.DeploymentConfiguration == nil {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+				input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
 			}
 
 			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -922,11 +927,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("deployment_circuit_breaker") {
 			if input.DeploymentConfiguration == nil {
-				input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+				input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
 			}
 
 			// To remove an existing deployment circuit breaker, specify an empty object.
-			input.DeploymentConfiguration.DeploymentCircuitBreaker = &ecs.DeploymentCircuitBreaker{}
+			input.DeploymentConfiguration.DeploymentCircuitBreaker = &awstypes.DeploymentCircuitBreaker{}
 
 			if v, ok := d.GetOk("deployment_circuit_breaker"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.DeploymentConfiguration.DeploymentCircuitBreaker = expandDeploymentCircuitBreaker(v.([]interface{})[0].(map[string]interface{}))
@@ -934,26 +939,26 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		switch schedulingStrategy := d.Get("scheduling_strategy").(string); schedulingStrategy {
-		case ecs.SchedulingStrategyDaemon:
+		case string(awstypes.SchedulingStrategyDaemon):
 			if d.HasChange("deployment_minimum_healthy_percent") {
 				if input.DeploymentConfiguration == nil {
-					input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+					input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
 				}
 
-				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int)))
+				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int32(int32(d.Get("deployment_minimum_healthy_percent").(int)))
 			}
-		case ecs.SchedulingStrategyReplica:
+		case string(awstypes.SchedulingStrategyReplica):
 			if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
 				if input.DeploymentConfiguration == nil {
-					input.DeploymentConfiguration = &ecs.DeploymentConfiguration{}
+					input.DeploymentConfiguration = &awstypes.DeploymentConfiguration{}
 				}
 
-				input.DeploymentConfiguration.MaximumPercent = aws.Int64(int64(d.Get("deployment_maximum_percent").(int)))
-				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int64(int64(d.Get("deployment_minimum_healthy_percent").(int)))
+				input.DeploymentConfiguration.MaximumPercent = aws.Int32(int32(d.Get("deployment_maximum_percent").(int)))
+				input.DeploymentConfiguration.MinimumHealthyPercent = aws.Int32(int32(d.Get("deployment_minimum_healthy_percent").(int)))
 			}
 
 			if d.HasChange("desired_count") {
-				input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
+				input.DesiredCount = aws.Int32(int32(d.Get("desired_count").(int)))
 			}
 		}
 
@@ -966,7 +971,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("health_check_grace_period_seconds") {
-			input.HealthCheckGracePeriodSeconds = aws.Int64(int64(d.Get("health_check_grace_period_seconds").(int)))
+			input.HealthCheckGracePeriodSeconds = aws.Int32(int32(d.Get("health_check_grace_period_seconds").(int)))
 		}
 
 		if d.HasChange("load_balancer") {
@@ -982,7 +987,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("ordered_placement_strategy") {
 			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementStrategy
 			// To remove an existing placement strategy, specify an empty object.
-			input.PlacementStrategy = []*ecs.PlacementStrategy{}
+			input.PlacementStrategy = []awstypes.PlacementStrategy{}
 
 			if v, ok := d.GetOk("ordered_placement_strategy"); ok && len(v.([]interface{})) > 0 {
 				ps, err := expandPlacementStrategy(v.([]interface{}))
@@ -998,7 +1003,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("placement_constraints") {
 			// Reference: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_UpdateService.html#ECS-UpdateService-request-placementConstraints
 			// To remove all existing placement constraints, specify an empty array.
-			input.PlacementConstraints = []*ecs.PlacementConstraint{}
+			input.PlacementConstraints = []awstypes.PlacementConstraint{}
 
 			if v, ok := d.Get("placement_constraints").(*schema.Set); ok && v.Len() > 0 {
 				pc, err := expandPlacementConstraints(v.List())
@@ -1016,7 +1021,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange(names.AttrPropagateTags) {
-			input.PropagateTags = aws.String(d.Get(names.AttrPropagateTags).(string))
+			input.PropagateTags = awstypes.PropagateTags(d.Get(names.AttrPropagateTags).(string))
 		}
 
 		if d.HasChange("service_connect_configuration") {
@@ -1037,14 +1042,14 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		// Retry due to IAM eventual consistency
 		err := retry.RetryContext(ctx, propagationTimeout+serviceUpdateTimeout, func() *retry.RetryError {
-			_, err := conn.UpdateServiceWithContext(ctx, input)
+			_, err := conn.UpdateService(ctx, input)
 
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "verify that the ECS service role being passed has the proper permissions") {
 					return retry.RetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+				if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "does not have an associated load balancer") {
 					return retry.RetryableError(err)
 				}
 
@@ -1054,7 +1059,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateServiceWithContext(ctx, input)
+			_, err = conn.UpdateService(ctx, input)
 		}
 
 		if err != nil {
@@ -1065,7 +1070,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.Get("wait_for_steady_state").(bool) {
 			fn = waitServiceStable
 		}
-		if _, err := fn(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := fn(ctx, conn, partition, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -1075,9 +1080,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn(ctx)
+	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
-	service, err := FindServiceNoTagsByID(ctx, conn, d.Id(), d.Get("cluster").(string))
+	service, err := FindServiceNoTagsByID(ctx, conn, partition, d.Id(), d.Get("cluster").(string))
 
 	if tfresource.NotFound(err) {
 		return diags
@@ -1087,16 +1093,16 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
-	if aws.StringValue(service.Status) == serviceStatusInactive {
+	if aws.ToString(service.Status) == serviceStatusInactive {
 		return diags
 	}
 
 	// Drain the ECS service
-	if aws.StringValue(service.Status) != serviceStatusDraining && aws.StringValue(service.SchedulingStrategy) != ecs.SchedulingStrategyDaemon {
-		_, err := conn.UpdateServiceWithContext(ctx, &ecs.UpdateServiceInput{
+	if aws.ToString(service.Status) != serviceStatusDraining && service.SchedulingStrategy != awstypes.SchedulingStrategyDaemon {
+		_, err := conn.UpdateService(ctx, &ecs.UpdateServiceInput{
 			Service:      aws.String(d.Id()),
 			Cluster:      aws.String(d.Get("cluster").(string)),
-			DesiredCount: aws.Int64(0),
+			DesiredCount: aws.Int32(0),
 		})
 
 		if err != nil {
@@ -1110,10 +1116,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	log.Printf("[DEBUG] Deleting ECS Service: %s", d.Id())
 	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
-		_, err := conn.DeleteServiceWithContext(ctx, &input)
+		_, err := conn.DeleteService(ctx, &input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "The service cannot be stopped while deployments are active.") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "The service cannot be stopped while deployments are active.") {
 				return retry.RetryableError(err)
 			}
 
@@ -1128,14 +1134,14 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteServiceWithContext(ctx, &input)
+		_, err = conn.DeleteService(ctx, &input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Service (%s): %s", d.Id(), err)
 	}
 
-	if err := waitServiceInactive(ctx, conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitServiceInactive(ctx, conn, partition, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Service (%s) delete: %s", d.Id(), err)
 	}
 
@@ -1216,29 +1222,29 @@ func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func expandAlarms(tfMap map[string]interface{}) *ecs.DeploymentAlarms {
+func expandAlarms(tfMap map[string]interface{}) *awstypes.DeploymentAlarms {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ecs.DeploymentAlarms{}
+	apiObject := &awstypes.DeploymentAlarms{}
 
 	if v, ok := tfMap["enable"].(bool); ok {
-		apiObject.Enable = aws.Bool(v)
+		apiObject.Enable = v
 	}
 
 	if v, ok := tfMap["rollback"].(bool); ok {
-		apiObject.Rollback = aws.Bool(v)
+		apiObject.Rollback = v
 	}
 
 	if v, ok := tfMap["alarm_names"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.AlarmNames = flex.ExpandStringSet(v)
+		apiObject.AlarmNames = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func flattenAlarms(apiObject *ecs.DeploymentAlarms) map[string]interface{} {
+func flattenAlarms(apiObject *awstypes.DeploymentAlarms) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1246,116 +1252,110 @@ func flattenAlarms(apiObject *ecs.DeploymentAlarms) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AlarmNames; v != nil {
-		tfMap["alarm_names"] = aws.StringValueSlice(v)
+		tfMap["alarm_names"] = v
 	}
 
-	if v := apiObject.Enable; v != nil {
-		tfMap["enable"] = aws.BoolValue(v)
-	}
+	tfMap["enable"] = apiObject.Enable
 
-	if v := apiObject.Rollback; v != nil {
-		tfMap["rollback"] = aws.BoolValue(v)
-	}
+	tfMap["rollback"] = apiObject.Rollback
 
 	return tfMap
 }
 
-func expandDeploymentController(l []interface{}) *ecs.DeploymentController {
+func expandDeploymentController(l []interface{}) *awstypes.DeploymentController {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	deploymentController := &ecs.DeploymentController{
-		Type: aws.String(m[names.AttrType].(string)),
+	deploymentController := &awstypes.DeploymentController{
+		Type: awstypes.DeploymentControllerType(m[names.AttrType].(string)),
 	}
 
 	return deploymentController
 }
 
-func flattenDeploymentController(deploymentController *ecs.DeploymentController) []interface{} {
+func flattenDeploymentController(deploymentController *awstypes.DeploymentController) []interface{} {
 	m := map[string]interface{}{
-		names.AttrType: ecs.DeploymentControllerTypeEcs,
+		names.AttrType: awstypes.DeploymentControllerTypeEcs,
 	}
 
 	if deploymentController == nil {
 		return []interface{}{m}
 	}
 
-	m[names.AttrType] = aws.StringValue(deploymentController.Type)
+	m[names.AttrType] = string(deploymentController.Type)
 
 	return []interface{}{m}
 }
 
-func expandDeploymentCircuitBreaker(tfMap map[string]interface{}) *ecs.DeploymentCircuitBreaker {
+func expandDeploymentCircuitBreaker(tfMap map[string]interface{}) *awstypes.DeploymentCircuitBreaker {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ecs.DeploymentCircuitBreaker{}
+	apiObject := &awstypes.DeploymentCircuitBreaker{}
 
-	apiObject.Enable = aws.Bool(tfMap["enable"].(bool))
-	apiObject.Rollback = aws.Bool(tfMap["rollback"].(bool))
+	apiObject.Enable = tfMap["enable"].(bool)
+	apiObject.Rollback = tfMap["rollback"].(bool)
 
 	return apiObject
 }
 
-func flattenDeploymentCircuitBreaker(apiObject *ecs.DeploymentCircuitBreaker) map[string]interface{} {
+func flattenDeploymentCircuitBreaker(apiObject *awstypes.DeploymentCircuitBreaker) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enable"] = aws.BoolValue(apiObject.Enable)
-	tfMap["rollback"] = aws.BoolValue(apiObject.Rollback)
+	tfMap["enable"] = apiObject.Enable
+	tfMap["rollback"] = apiObject.Rollback
 
 	return tfMap
 }
 
-func flattenNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(nc *awstypes.NetworkConfiguration) []interface{} {
 	if nc == nil {
 		return nil
 	}
 
 	result := make(map[string]interface{})
-	result[names.AttrSecurityGroups] = flex.FlattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
-	result[names.AttrSubnets] = flex.FlattenStringSet(nc.AwsvpcConfiguration.Subnets)
+	result[names.AttrSecurityGroups] = flex.FlattenStringValueSet(nc.AwsvpcConfiguration.SecurityGroups)
+	result[names.AttrSubnets] = flex.FlattenStringValueSet(nc.AwsvpcConfiguration.Subnets)
 
-	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
-		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == ecs.AssignPublicIpEnabled
-	}
+	result["assign_public_ip"] = nc.AwsvpcConfiguration.AssignPublicIp == awstypes.AssignPublicIpEnabled
 
 	return []interface{}{result}
 }
 
-func expandNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
+func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration {
 	if len(nc) == 0 {
 		return nil
 	}
-	awsVpcConfig := &ecs.AwsVpcConfiguration{}
+	awsVpcConfig := &awstypes.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
 	if val, ok := raw[names.AttrSecurityGroups]; ok {
-		awsVpcConfig.SecurityGroups = flex.ExpandStringSet(val.(*schema.Set))
+		awsVpcConfig.SecurityGroups = flex.ExpandStringValueSet(val.(*schema.Set))
 	}
-	awsVpcConfig.Subnets = flex.ExpandStringSet(raw[names.AttrSubnets].(*schema.Set))
+	awsVpcConfig.Subnets = flex.ExpandStringValueSet(raw[names.AttrSubnets].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
-		awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpDisabled)
+		awsVpcConfig.AssignPublicIp = awstypes.AssignPublicIp(awstypes.AssignPublicIpDisabled)
 		if val {
-			awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpEnabled)
+			awsVpcConfig.AssignPublicIp = awstypes.AssignPublicIp(awstypes.AssignPublicIpEnabled)
 		}
 	}
 
-	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
+	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandPlacementConstraints(tfList []interface{}) ([]*ecs.PlacementConstraint, error) {
+func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConstraint, error) {
 	if len(tfList) == 0 {
 		return nil, nil
 	}
 
-	var result []*ecs.PlacementConstraint
+	var result []awstypes.PlacementConstraint
 
 	for _, tfMapRaw := range tfList {
 		if tfMapRaw == nil {
@@ -1364,17 +1364,17 @@ func expandPlacementConstraints(tfList []interface{}) ([]*ecs.PlacementConstrain
 
 		tfMap := tfMapRaw.(map[string]interface{})
 
-		apiObject := &ecs.PlacementConstraint{}
+		apiObject := awstypes.PlacementConstraint{}
 
 		if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 			apiObject.Expression = aws.String(v)
 		}
 
 		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-			apiObject.Type = aws.String(v)
+			apiObject.Type = awstypes.PlacementConstraintType(v)
 		}
 
-		if err := validPlacementConstraint(aws.StringValue(apiObject.Type), aws.StringValue(apiObject.Expression)); err != nil {
+		if err := validPlacementConstraint(string(apiObject.Type), aws.ToString(apiObject.Expression)); err != nil {
 			return result, err
 		}
 
@@ -1384,16 +1384,16 @@ func expandPlacementConstraints(tfList []interface{}) ([]*ecs.PlacementConstrain
 	return result, nil
 }
 
-func flattenServicePlacementConstraints(pcs []*ecs.PlacementConstraint) []map[string]interface{} {
+func flattenServicePlacementConstraints(pcs []awstypes.PlacementConstraint) []map[string]interface{} {
 	if len(pcs) == 0 {
 		return nil
 	}
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c[names.AttrType] = aws.StringValue(pc.Type)
+		c[names.AttrType] = string(pc.Type)
 		if pc.Expression != nil {
-			c[names.AttrExpression] = aws.StringValue(pc.Expression)
+			c[names.AttrExpression] = aws.ToString(pc.Expression)
 		}
 
 		results = append(results, c)
@@ -1401,11 +1401,11 @@ func flattenServicePlacementConstraints(pcs []*ecs.PlacementConstraint) []map[st
 	return results
 }
 
-func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) {
+func expandPlacementStrategy(s []interface{}) ([]awstypes.PlacementStrategy, error) {
 	if len(s) == 0 {
 		return nil, nil
 	}
-	pss := make([]*ecs.PlacementStrategy, 0)
+	pss := make([]awstypes.PlacementStrategy, 0)
 	for _, raw := range s {
 		p, ok := raw.(map[string]interface{})
 
@@ -1428,8 +1428,8 @@ func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) 
 		if err := validPlacementStrategy(t, f); err != nil {
 			return nil, err
 		}
-		ps := &ecs.PlacementStrategy{
-			Type: aws.String(t),
+		ps := awstypes.PlacementStrategy{
+			Type: awstypes.PlacementStrategyType(t),
 		}
 		if f != "" {
 			// Field must be omitted (i.e. not empty string) for random strategy
@@ -1440,21 +1440,21 @@ func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) 
 	return pss, nil
 }
 
-func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
+func flattenPlacementStrategy(pss []awstypes.PlacementStrategy) []interface{} {
 	if len(pss) == 0 {
 		return nil
 	}
 	results := make([]interface{}, 0, len(pss))
 	for _, ps := range pss {
 		c := make(map[string]interface{})
-		c[names.AttrType] = aws.StringValue(ps.Type)
+		c[names.AttrType] = string(ps.Type)
 
 		if ps.Field != nil {
-			c[names.AttrField] = aws.StringValue(ps.Field)
+			c[names.AttrField] = aws.ToString(ps.Field)
 
 			// for some fields the API requires lowercase for creation but will return uppercase on query
-			if aws.StringValue(ps.Field) == "MEMORY" || aws.StringValue(ps.Field) == "CPU" {
-				c[names.AttrField] = strings.ToLower(aws.StringValue(ps.Field))
+			if aws.ToString(ps.Field) == "MEMORY" || aws.ToString(ps.Field) == "CPU" {
+				c[names.AttrField] = strings.ToLower(aws.ToString(ps.Field))
 			}
 		}
 
@@ -1463,17 +1463,17 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 	return results
 }
 
-func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConfiguration {
+func expandServiceConnectConfiguration(sc []interface{}) *awstypes.ServiceConnectConfiguration {
 	if len(sc) == 0 {
-		return &ecs.ServiceConnectConfiguration{
-			Enabled: aws.Bool(false),
+		return &awstypes.ServiceConnectConfiguration{
+			Enabled: false,
 		}
 	}
 	raw := sc[0].(map[string]interface{})
 
-	config := &ecs.ServiceConnectConfiguration{}
+	config := &awstypes.ServiceConnectConfiguration{}
 	if v, ok := raw[names.AttrEnabled].(bool); ok {
-		config.Enabled = aws.Bool(v)
+		config.Enabled = v
 	}
 
 	if v, ok := raw["log_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -1491,18 +1491,18 @@ func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConf
 	return config
 }
 
-func expandLogConfiguration(lc []interface{}) *ecs.LogConfiguration {
+func expandLogConfiguration(lc []interface{}) *awstypes.LogConfiguration {
 	if len(lc) == 0 {
-		return &ecs.LogConfiguration{}
+		return &awstypes.LogConfiguration{}
 	}
 	raw := lc[0].(map[string]interface{})
 
-	config := &ecs.LogConfiguration{}
+	config := &awstypes.LogConfiguration{}
 	if v, ok := raw["log_driver"].(string); ok && v != "" {
-		config.LogDriver = aws.String(v)
+		config.LogDriver = awstypes.LogDriver(v)
 	}
 	if v, ok := raw["options"].(map[string]interface{}); ok && len(v) > 0 {
-		config.Options = flex.ExpandStringMap(v)
+		config.Options = flex.ExpandStringValueMap(v)
 	}
 	if v, ok := raw["secret_option"].([]interface{}); ok && len(v) > 0 {
 		config.SecretOptions = expandSecretOptions(v)
@@ -1511,19 +1511,19 @@ func expandLogConfiguration(lc []interface{}) *ecs.LogConfiguration {
 	return config
 }
 
-func expandSecretOptions(sop []interface{}) []*ecs.Secret {
+func expandSecretOptions(sop []interface{}) []awstypes.Secret {
 	if len(sop) == 0 {
 		return nil
 	}
 
-	var out []*ecs.Secret
+	var out []awstypes.Secret
 	for _, item := range sop {
 		raw, ok := item.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		var config ecs.Secret
+		var config awstypes.Secret
 		if v, ok := raw[names.AttrName].(string); ok && v != "" {
 			config.Name = aws.String(v)
 		}
@@ -1531,23 +1531,23 @@ func expandSecretOptions(sop []interface{}) []*ecs.Secret {
 			config.ValueFrom = aws.String(v)
 		}
 
-		out = append(out, &config)
+		out = append(out, config)
 	}
 
 	return out
 }
 
-func expandVolumeConfigurations(vc []interface{}) []*ecs.ServiceVolumeConfiguration {
+func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfiguration {
 	if len(vc) == 0 {
 		return nil
 	}
 
-	vcs := make([]*ecs.ServiceVolumeConfiguration, 0)
+	vcs := make([]awstypes.ServiceVolumeConfiguration, 0)
 
 	for _, raw := range vc {
 		p := raw.(map[string]interface{})
 
-		config := &ecs.ServiceVolumeConfiguration{
+		config := awstypes.ServiceVolumeConfiguration{
 			Name: aws.String(p[names.AttrName].(string)),
 		}
 
@@ -1560,13 +1560,13 @@ func expandVolumeConfigurations(vc []interface{}) []*ecs.ServiceVolumeConfigurat
 	return vcs
 }
 
-func expandManagedEBSVolume(ebs []interface{}) *ecs.ServiceManagedEBSVolumeConfiguration {
+func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolumeConfiguration {
 	if len(ebs) == 0 {
-		return &ecs.ServiceManagedEBSVolumeConfiguration{}
+		return &awstypes.ServiceManagedEBSVolumeConfiguration{}
 	}
 	raw := ebs[0].(map[string]interface{})
 
-	config := &ecs.ServiceManagedEBSVolumeConfiguration{}
+	config := &awstypes.ServiceManagedEBSVolumeConfiguration{}
 	if v, ok := raw[names.AttrRoleARN].(string); ok && v != "" {
 		config.RoleArn = aws.String(v)
 	}
@@ -1574,22 +1574,22 @@ func expandManagedEBSVolume(ebs []interface{}) *ecs.ServiceManagedEBSVolumeConfi
 		config.Encrypted = aws.Bool(v)
 	}
 	if v, ok := raw["file_system_type"].(string); ok && v != "" {
-		config.FilesystemType = aws.String(v)
+		config.FilesystemType = awstypes.TaskFilesystemType(v)
 	}
 	if v, ok := raw[names.AttrIOPS].(int); ok && v != 0 {
-		config.Iops = aws.Int64(int64(v))
+		config.Iops = aws.Int32(int32(v))
 	}
 	if v, ok := raw[names.AttrKMSKeyID].(string); ok && v != "" {
 		config.KmsKeyId = aws.String(v)
 	}
 	if v, ok := raw["size_in_gb"].(int); ok && v != 0 {
-		config.SizeInGiB = aws.Int64(int64(v))
+		config.SizeInGiB = aws.Int32(int32(v))
 	}
 	if v, ok := raw[names.AttrSnapshotID].(string); ok && v != "" {
 		config.SnapshotId = aws.String(v)
 	}
 	if v, ok := raw[names.AttrThroughput].(int); ok && v != 0 {
-		config.Throughput = aws.Int64(int64(v))
+		config.Throughput = aws.Int32(int32(v))
 	}
 	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {
 		config.VolumeType = aws.String(v)
@@ -1598,19 +1598,19 @@ func expandManagedEBSVolume(ebs []interface{}) *ecs.ServiceManagedEBSVolumeConfi
 	return config
 }
 
-func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
+func expandServices(srv []interface{}) []awstypes.ServiceConnectService {
 	if len(srv) == 0 {
 		return nil
 	}
 
-	var out []*ecs.ServiceConnectService
+	var out []awstypes.ServiceConnectService
 	for _, item := range srv {
 		raw, ok := item.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		var config ecs.ServiceConnectService
+		var config awstypes.ServiceConnectService
 		if v, ok := raw["client_alias"].([]interface{}); ok && len(v) > 0 {
 			config.ClientAliases = expandClientAliases(v)
 		}
@@ -1618,7 +1618,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.DiscoveryName = aws.String(v)
 		}
 		if v, ok := raw["ingress_port_override"].(int); ok && v != 0 {
-			config.IngressPortOverride = aws.Int64(int64(v))
+			config.IngressPortOverride = aws.Int32(int32(v))
 		}
 		if v, ok := raw["port_name"].(string); ok && v != "" {
 			config.PortName = aws.String(v)
@@ -1632,13 +1632,13 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.Tls = expandTLS(v)
 		}
 
-		out = append(out, &config)
+		out = append(out, config)
 	}
 
 	return out
 }
 
-func expandTimeout(timeout []interface{}) *ecs.TimeoutConfiguration {
+func expandTimeout(timeout []interface{}) *awstypes.TimeoutConfiguration {
 	if len(timeout) == 0 {
 		return nil
 	}
@@ -1647,17 +1647,17 @@ func expandTimeout(timeout []interface{}) *ecs.TimeoutConfiguration {
 	if !ok {
 		return nil
 	}
-	timeoutConfig := &ecs.TimeoutConfiguration{}
+	timeoutConfig := &awstypes.TimeoutConfiguration{}
 	if v, ok := raw["idle_timeout_seconds"].(int); ok {
-		timeoutConfig.IdleTimeoutSeconds = aws.Int64(int64(v))
+		timeoutConfig.IdleTimeoutSeconds = aws.Int32(int32(v))
 	}
 	if v, ok := raw["per_request_timeout_seconds"].(int); ok {
-		timeoutConfig.PerRequestTimeoutSeconds = aws.Int64(int64(v))
+		timeoutConfig.PerRequestTimeoutSeconds = aws.Int32(int32(v))
 	}
 	return timeoutConfig
 }
 
-func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
+func expandTLS(tls []interface{}) *awstypes.ServiceConnectTlsConfiguration {
 	if len(tls) == 0 {
 		return nil
 	}
@@ -1666,7 +1666,7 @@ func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
 	if !ok {
 		return nil
 	}
-	tlsConfig := &ecs.ServiceConnectTlsConfiguration{}
+	tlsConfig := &awstypes.ServiceConnectTlsConfiguration{}
 	if v, ok := raw["issuer_cert_authority"].([]interface{}); ok && len(v) > 0 {
 		tlsConfig.IssuerCertificateAuthority = expandIssuerCertAuthority(v)
 	}
@@ -1679,7 +1679,7 @@ func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
 	return tlsConfig
 }
 
-func expandIssuerCertAuthority(pca []interface{}) *ecs.ServiceConnectTlsCertificateAuthority {
+func expandIssuerCertAuthority(pca []interface{}) *awstypes.ServiceConnectTlsCertificateAuthority {
 	if len(pca) == 0 {
 		return nil
 	}
@@ -1688,7 +1688,7 @@ func expandIssuerCertAuthority(pca []interface{}) *ecs.ServiceConnectTlsCertific
 	if !ok {
 		return nil
 	}
-	config := &ecs.ServiceConnectTlsCertificateAuthority{}
+	config := &awstypes.ServiceConnectTlsCertificateAuthority{}
 
 	if v, ok := raw["aws_pca_authority_arn"].(string); ok && v != "" {
 		config.AwsPcaAuthorityArn = aws.String(v)
@@ -1696,49 +1696,49 @@ func expandIssuerCertAuthority(pca []interface{}) *ecs.ServiceConnectTlsCertific
 	return config
 }
 
-func expandClientAliases(srv []interface{}) []*ecs.ServiceConnectClientAlias {
+func expandClientAliases(srv []interface{}) []awstypes.ServiceConnectClientAlias {
 	if len(srv) == 0 {
 		return nil
 	}
 
-	var out []*ecs.ServiceConnectClientAlias
+	var out []awstypes.ServiceConnectClientAlias
 	for _, item := range srv {
 		raw, ok := item.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		var config ecs.ServiceConnectClientAlias
+		var config awstypes.ServiceConnectClientAlias
 		if v, ok := raw[names.AttrPort].(int); ok {
-			config.Port = aws.Int64(int64(v))
+			config.Port = aws.Int32(int32(v))
 		}
 		if v, ok := raw[names.AttrDNSName].(string); ok && v != "" {
 			config.DnsName = aws.String(v)
 		}
 
-		out = append(out, &config)
+		out = append(out, config)
 	}
 
 	return out
 }
 
-func flattenServiceRegistries(srs []*ecs.ServiceRegistry) []map[string]interface{} {
+func flattenServiceRegistries(srs []awstypes.ServiceRegistry) []map[string]interface{} {
 	if len(srs) == 0 {
 		return nil
 	}
 	results := make([]map[string]interface{}, 0)
 	for _, sr := range srs {
 		c := map[string]interface{}{
-			"registry_arn": aws.StringValue(sr.RegistryArn),
+			"registry_arn": aws.ToString(sr.RegistryArn),
 		}
 		if sr.Port != nil {
-			c[names.AttrPort] = int(aws.Int64Value(sr.Port))
+			c[names.AttrPort] = int(aws.ToInt32(sr.Port))
 		}
 		if sr.ContainerPort != nil {
-			c["container_port"] = int(aws.Int64Value(sr.ContainerPort))
+			c["container_port"] = int(aws.ToInt32(sr.ContainerPort))
 		}
 		if sr.ContainerName != nil {
-			c["container_name"] = aws.StringValue(sr.ContainerName)
+			c["container_name"] = aws.ToString(sr.ContainerName)
 		}
 		results = append(results, c)
 	}
@@ -1760,26 +1760,26 @@ func resourceLoadBalancerHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func serviceCreateWithRetry(ctx context.Context, conn *ecs.ECS, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
+func serviceCreateWithRetry(ctx context.Context, conn *ecs.Client, input ecs.CreateServiceInput) (*ecs.CreateServiceOutput, error) {
 	var output *ecs.CreateServiceOutput
 	err := retry.RetryContext(ctx, propagationTimeout+serviceCreateTimeout, func() *retry.RetryError {
 		var err error
-		output, err = conn.CreateServiceWithContext(ctx, &input)
+		output, err = conn.CreateService(ctx, &input)
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
+			if errs.IsA[*awstypes.ClusterNotFoundException](err) {
 				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "verify that the ECS service role being passed has the proper permissions") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "verify that the ECS service role being passed has the proper permissions") {
 				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "does not have an associated load balancer") {
 				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Unable to assume the service linked role") {
 				return retry.RetryableError(err)
 			}
 
@@ -1790,7 +1790,7 @@ func serviceCreateWithRetry(ctx context.Context, conn *ecs.ECS, input ecs.Create
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateServiceWithContext(ctx, &input)
+		output, err = conn.CreateService(ctx, &input)
 	}
 
 	return output, err

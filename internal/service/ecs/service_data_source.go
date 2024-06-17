@@ -69,7 +69,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		Services: []string{serviceName},
 	}
 
-	log.Printf("[DEBUG] Reading ECS Service: %s", params)
+	log.Printf("[DEBUG] Reading ECS Service: %+v", params)
 	desc, err := conn.DescribeServices(ctx, params)
 
 	if err != nil {

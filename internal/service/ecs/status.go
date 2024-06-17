@@ -6,8 +6,9 @@ package ecs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -25,9 +26,9 @@ const (
 	taskSetStatusPrimary  = "PRIMARY"
 )
 
-func statusCapacityProvider(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
+func statusCapacityProvider(ctx context.Context, conn *ecs.Client, partition, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(ctx, conn, arn)
+		output, err := FindCapacityProviderByARN(ctx, conn, partition, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -37,13 +38,13 @@ func statusCapacityProvider(ctx context.Context, conn *ecs.ECS, arn string) retr
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string) retry.StateRefreshFunc {
+func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.Client, partition, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCapacityProviderByARN(ctx, conn, arn)
+		output, err := FindCapacityProviderByARN(ctx, conn, partition, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -53,13 +54,13 @@ func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.UpdateStatus), nil
+		return output, string(output.UpdateStatus), nil
 	}
 }
 
-func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string) retry.StateRefreshFunc {
+func statusServiceNoTags(ctx context.Context, conn *ecs.Client, partition, id, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		service, err := FindServiceNoTagsByID(ctx, conn, id, cluster)
+		service, err := FindServiceNoTagsByID(ctx, conn, partition, id, cluster)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -67,13 +68,13 @@ func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string)
 			return nil, "", err
 		}
 
-		return service, aws.StringValue(service.Status), err
+		return service, aws.ToString(service.Status), err
 	}
 }
 
-func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster string) retry.StateRefreshFunc {
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.Client, partition, id, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		serviceRaw, status, err := statusServiceNoTags(ctx, conn, id, cluster)()
+		serviceRaw, status, err := statusServiceNoTags(ctx, conn, partition, id, cluster)()
 		if err != nil {
 			return nil, "", err
 		}
@@ -82,11 +83,11 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster 
 			return serviceRaw, status, nil
 		}
 
-		service := serviceRaw.(*ecs.Service)
+		service := serviceRaw.(*awstypes.Service)
 
 		if d, dc, rc := len(service.Deployments),
-			aws.Int64Value(service.DesiredCount),
-			aws.Int64Value(service.RunningCount); d == 1 && dc == rc {
+			service.DesiredCount,
+			service.RunningCount; d == 1 && dc == rc {
 			status = serviceStatusStable
 		} else {
 			status = serviceStatusPending
@@ -96,15 +97,15 @@ func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster 
 	}
 }
 
-func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) retry.StateRefreshFunc {
+func stabilityStatusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeTaskSetsInput{
 			Cluster:  aws.String(cluster),
 			Service:  aws.String(service),
-			TaskSets: aws.StringSlice([]string{taskSetID}),
+			TaskSets: []string{taskSetID},
 		}
 
-		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+		output, err := conn.DescribeTaskSets(ctx, input)
 
 		if err != nil {
 			return nil, "", err
@@ -114,19 +115,19 @@ func stabilityStatusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, servi
 			return nil, "", nil
 		}
 
-		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].StabilityStatus), nil
+		return output.TaskSets[0], string(output.TaskSets[0].StabilityStatus), nil
 	}
 }
 
-func statusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, cluster string) retry.StateRefreshFunc {
+func statusTaskSet(ctx context.Context, conn *ecs.Client, taskSetID, service, cluster string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &ecs.DescribeTaskSetsInput{
 			Cluster:  aws.String(cluster),
 			Service:  aws.String(service),
-			TaskSets: aws.StringSlice([]string{taskSetID}),
+			TaskSets: []string{taskSetID},
 		}
 
-		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+		output, err := conn.DescribeTaskSets(ctx, input)
 
 		if err != nil {
 			return nil, "", err
@@ -136,6 +137,6 @@ func statusTaskSet(ctx context.Context, conn *ecs.ECS, taskSetID, service, clust
 			return nil, "", nil
 		}
 
-		return output.TaskSets[0], aws.StringValue(output.TaskSets[0].Status), nil
+		return output.TaskSets[0], aws.ToString(output.TaskSets[0].Status), nil
 	}
 }

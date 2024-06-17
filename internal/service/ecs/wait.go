@@ -33,11 +33,11 @@ const (
 	taskSetDeleteTimeout = 10 * time.Minute
 )
 
-func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.CapacityProvider, error) {
+func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, partition, arn string) (*awstypes.CapacityProvider, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderStatusActive),
 		Target:  []string{},
-		Refresh: statusCapacityProvider(ctx, conn, arn),
+		Refresh: statusCapacityProvider(ctx, conn, partition, arn),
 		Timeout: capacityProviderDeleteTimeout,
 	}
 
@@ -50,11 +50,11 @@ func waitCapacityProviderDeleted(ctx context.Context, conn *ecs.Client, arn stri
 	return nil, err
 }
 
-func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn string) (*awstypes.CapacityProvider, error) {
+func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, partition, arn string) (*awstypes.CapacityProvider, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateInProgress),
 		Target:  enum.Slice(awstypes.CapacityProviderUpdateStatusUpdateComplete),
-		Refresh: statusCapacityProviderUpdate(ctx, conn, arn),
+		Refresh: statusCapacityProviderUpdate(ctx, conn, partition, arn),
 		Timeout: capacityProviderUpdateTimeout,
 	}
 
@@ -68,7 +68,7 @@ func waitCapacityProviderUpdated(ctx context.Context, conn *ecs.Client, arn stri
 }
 
 // waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running. Does not return tags.
-func waitServiceStable(ctx context.Context, conn *ecs.Client, id, cluster string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceStable(ctx context.Context, conn *ecs.Client, partition, id, cluster string, timeout time.Duration) (*awstypes.Service, error) {
 	input := &ecs.DescribeServicesInput{
 		Services: []string{id},
 	}
@@ -80,7 +80,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, id, cluster string
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(ctx, conn, id, cluster),
+		Refresh: statusServiceWaitForStable(ctx, conn, partition, id, cluster),
 		Timeout: timeout,
 	}
 
@@ -94,7 +94,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.Client, id, cluster string
 }
 
 // waitServiceInactive waits for an ECS Service to reach the status "INACTIVE".
-func waitServiceInactive(ctx context.Context, conn *ecs.Client, id, cluster string, timeout time.Duration) error {
+func waitServiceInactive(ctx context.Context, conn *ecs.Client, partition, id, cluster string, timeout time.Duration) error {
 	input := &ecs.DescribeServicesInput{
 		Services: []string{id},
 	}
@@ -106,7 +106,7 @@ func waitServiceInactive(ctx context.Context, conn *ecs.Client, id, cluster stri
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{serviceStatusActive, serviceStatusDraining},
 		Target:     []string{serviceStatusInactive},
-		Refresh:    statusServiceNoTags(ctx, conn, id, cluster),
+		Refresh:    statusServiceNoTags(ctx, conn, partition, id, cluster),
 		Timeout:    timeout,
 		MinTimeout: serviceInactiveMinTimeout,
 	}
@@ -117,11 +117,11 @@ func waitServiceInactive(ctx context.Context, conn *ecs.Client, id, cluster stri
 }
 
 // waitServiceActive waits for an ECS Service to reach the status "ACTIVE". Does not return tags.
-func waitServiceActive(ctx context.Context, conn *ecs.Client, id, cluster string, timeout time.Duration) (*awstypes.Service, error) {
+func waitServiceActive(ctx context.Context, conn *ecs.Client, partition, id, cluster string, timeout time.Duration) (*awstypes.Service, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
-		Refresh: statusServiceNoTags(ctx, conn, id, cluster),
+		Refresh: statusServiceNoTags(ctx, conn, partition, id, cluster),
 		Timeout: timeout,
 	}
 

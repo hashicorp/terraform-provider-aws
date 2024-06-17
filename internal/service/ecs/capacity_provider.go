@@ -171,8 +171,9 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
-	output, err := FindCapacityProviderByARN(ctx, conn, d.Id())
+	output, err := FindCapacityProviderByARN(ctx, conn, partition, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Capacity Provider (%s) not found, removing from state", d.Id())
@@ -200,6 +201,7 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ecs.UpdateCapacityProviderInput{
@@ -207,7 +209,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 			Name:                     aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		log.Printf("[DEBUG] Updating ECS Capacity Provider: %s", input)
+		log.Printf("[DEBUG] Updating ECS Capacity Provider: %+v", input)
 		err := retry.RetryContext(ctx, capacityProviderUpdateTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateCapacityProvider(ctx, input)
 
@@ -230,7 +232,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 			return sdkdiag.AppendErrorf(diags, "updating ECS Capacity Provider (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitCapacityProviderUpdated(ctx, conn, d.Id()); err != nil {
+		if _, err = waitCapacityProviderUpdated(ctx, conn, partition, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) to update: %s", d.Id(), err)
 		}
 	}
@@ -241,6 +243,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	log.Printf("[DEBUG] Deleting ECS Capacity Provider (%s)", d.Id())
 	_, err := conn.DeleteCapacityProvider(ctx, &ecs.DeleteCapacityProviderInput{
@@ -256,7 +259,7 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Capacity Provider (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitCapacityProviderDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCapacityProviderDeleted(ctx, conn, partition, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Capacity Provider (%s) to delete: %s", d.Id(), err)
 	}
 

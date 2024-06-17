@@ -603,7 +603,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.ToString(out.TaskDefinition.Family),
+	log.Printf("[DEBUG] Received task definition %s, status:%s\n %+v", aws.ToString(out.TaskDefinition.Family),
 		string(out.TaskDefinition.Status), out)
 
 	taskDefinition := out.TaskDefinition
