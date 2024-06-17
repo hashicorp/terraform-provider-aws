@@ -1347,6 +1347,10 @@ service "cloudcontrol" {
     human_friendly      = "Cloud Control API"
   }
 
+    client {
+    go_v1_client_typename = "CloudControlApi"
+  }
+
   endpoint_info {
     endpoint_api_call        = "ListResourceRequests"
   }
@@ -1956,6 +1960,10 @@ service "deploy" {
 
   endpoint_info {
     endpoint_api_call        = "ListApplications"
+  }
+
+  client {
+  go_v1_client_typename = "CloudControlApi"
   }
 
   resource_prefix {
@@ -9462,7 +9470,7 @@ service "transcribe" {
 
   provider_package_correct = "transcribe"
   doc_prefix               = ["transcribe_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "transcribestreaming" {
