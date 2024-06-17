@@ -14,9 +14,9 @@ type coreNetworkPolicyDocument struct {
 	Version                  string                                     `json:"version,omitempty"`
 	CoreNetworkConfiguration *coreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
 	Segments                 []*coreNetworkPolicySegment                `json:"segments"`
-	// TODO NetworkFunctionGroups
-	SegmentActions     []*coreNetworkPolicySegmentAction `json:"segment-actions,omitempty"`
-	AttachmentPolicies []*coreNetworkAttachmentPolicy    `json:"attachment-policies,omitempty"`
+	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups"`
+	SegmentActions           []*coreNetworkPolicySegmentAction          `json:"segment-actions,omitempty"`
+	AttachmentPolicies       []*coreNetworkPolicyAttachmentPolicy       `json:"attachment-policies,omitempty"`
 }
 
 type coreNetworkPolicyCoreNetworkConfiguration struct {
@@ -40,6 +40,12 @@ type coreNetworkPolicySegment struct {
 	RequireAttachmentAcceptance bool        `json:"require-attachment-acceptance"`
 	DenyFilter                  interface{} `json:"deny-filter,omitempty"`
 	AllowFilter                 interface{} `json:"allow-filter,omitempty"`
+}
+
+type coreNetworkPolicyNetworkFunctionGroup struct {
+	Name                        string `json:"name"`
+	Description                 string `json:"description,omitempty"`
+	RequireAttachmentAcceptance bool   `json:"require-attachment-acceptance"`
 }
 
 type coreNetworkPolicySegmentAction struct {
@@ -68,22 +74,22 @@ type coreNetworkPolicySegmentActionViaEdgeOverride struct {
 	UseEdge  string      `json:"use-edge,omitempty"`
 }
 
-type coreNetworkAttachmentPolicy struct {
-	RuleNumber     int                                     `json:"rule-number,omitempty"`
-	Description    string                                  `json:"description,omitempty"`
-	ConditionLogic string                                  `json:"condition-logic,omitempty"`
-	Conditions     []*coreNetworkAttachmentPolicyCondition `json:"conditions"`
-	Action         *coreNetworkAttachmentPolicyAction      `json:"action"`
+type coreNetworkPolicyAttachmentPolicy struct {
+	RuleNumber     int                                           `json:"rule-number,omitempty"`
+	Description    string                                        `json:"description,omitempty"`
+	ConditionLogic string                                        `json:"condition-logic,omitempty"`
+	Conditions     []*coreNetworkPolicyAttachmentPolicyCondition `json:"conditions"`
+	Action         *coreNetworkPolicyAttachmentPolicyAction      `json:"action"`
 }
 
-type coreNetworkAttachmentPolicyCondition struct {
+type coreNetworkPolicyAttachmentPolicyCondition struct {
 	Type     string `json:"type,omitempty"`
 	Operator string `json:"operator,omitempty"`
 	Key      string `json:"key,omitempty"`
 	Value    string `json:"value,omitempty"`
 }
 
-type coreNetworkAttachmentPolicyAction struct {
+type coreNetworkPolicyAttachmentPolicyAction struct {
 	AssociationMethod         string `json:"association-method,omitempty"`
 	Segment                   string `json:"segment,omitempty"`
 	TagValueOfKey             string `json:"tag-value-of-key,omitempty"`
@@ -115,6 +121,8 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 		DestinationCidrBlocks: c.DestinationCidrBlocks,
 		Segment:               c.Segment,
 		ShareWith:             share,
+		Via:                   c.Via,
+		WhenSentTo:            c.WhenSentTo,
 	})
 }
 

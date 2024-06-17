@@ -150,7 +150,26 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					},
 				},
 			},
-			// TODO network_function_groups
+			"network_function_groups": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrDescription: {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"require_attachment_acceptance": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 			"segment_actions": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -318,7 +337,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"association_method": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											"tag",
 											"constant",
@@ -359,42 +378,49 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 
 func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	mergedDoc := &coreNetworkPolicyDocument{
 		Version: d.Get(names.AttrVersion).(string),
 	}
 
 	// CoreNetworkConfiguration
-	networkConfiguration, err := expandDataCoreNetworkPolicyNetworkConfiguration(d.Get("core_network_configuration").([]interface{}))
+	networkConfiguration, err := expandCoreNetworkPolicyCoreNetworkConfiguration(d.Get("core_network_configuration").([]interface{}))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	mergedDoc.CoreNetworkConfiguration = networkConfiguration
 
-	// AttachmentPolicies
-	attachmentPolicies, err := expandDataCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]interface{}))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
-	}
-	mergedDoc.AttachmentPolicies = attachmentPolicies
-
-	// SegmentActions
-	segment_actions, err := expandDataCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]interface{}))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
-	}
-	mergedDoc.SegmentActions = segment_actions
-
 	// Segments
-	segments, err := expandDataCoreNetworkPolicySegments(d.Get("segments").([]interface{}))
+	segments, err := expandCoreNetworkPolicySegments(d.Get("segments").([]interface{}))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	mergedDoc.Segments = segments
 
+	// NetworkFunctionGroups
+	networkFunctionGroups, err := expandCoreNetworkPolicyNetworkFunctionGroups(d.Get("network_function_groups").([]interface{}))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	mergedDoc.NetworkFunctionGroups = networkFunctionGroups
+
+	// SegmentActions
+	segment_actions, err := expandCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]interface{}))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	mergedDoc.SegmentActions = segment_actions
+
+	// AttachmentPolicies
+	attachmentPolicies, err := expandCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]interface{}))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	mergedDoc.AttachmentPolicies = attachmentPolicies
+
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
-		// should never happen if the above code is correct
-		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: formatting JSON: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	jsonString := string(jsonDoc)
 
@@ -404,11 +430,15 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func expandDataCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetworkPolicySegmentAction, error) {
-	apiObjects := make([]*coreNetworkPolicySegmentAction, len(tfList))
+func expandCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNetworkPolicySegmentAction, error) {
+	apiObjects := make([]*coreNetworkPolicySegmentAction, 0)
 
 	for i, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
 		apiObject := &coreNetworkPolicySegmentAction{}
 
 		action := tfMap[names.AttrAction].(string)
@@ -511,248 +541,305 @@ func expandDataCoreNetworkPolicySegmentActions(tfList []interface{}) ([]*coreNet
 			}
 		}
 
-		apiObjects[i] = apiObject
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []interface{}) ([]*coreNetworkAttachmentPolicy, error) {
-	aPolicies := make([]*coreNetworkAttachmentPolicy, len(cfgAttachmentPolicyIntf))
-	ruleMap := make(map[string]struct{})
+func expandCoreNetworkPolicyAttachmentPolicies(tfList []interface{}) ([]*coreNetworkPolicyAttachmentPolicy, error) {
+	apiObjects := make([]*coreNetworkPolicyAttachmentPolicy, 0)
+	ruleMap := make(map[int]struct{})
 
-	for i, polI := range cfgAttachmentPolicyIntf {
-		cfgPol := polI.(map[string]interface{})
-		policy := &coreNetworkAttachmentPolicy{}
-
-		rule := cfgPol["rule_number"].(int)
-		ruleStr := strconv.Itoa(rule)
-		if _, ok := ruleMap[ruleStr]; ok {
-			return nil, fmt.Errorf("duplicate Rule Number (%s). Remove the Rule Number or ensure the Rule Number is unique.", ruleStr)
-		}
-		policy.RuleNumber = rule
-		ruleMap[ruleStr] = struct{}{}
-
-		if desc, ok := cfgPol[names.AttrDescription]; ok {
-			policy.Description = desc.(string)
-		}
-		if cL, ok := cfgPol["condition_logic"]; ok {
-			policy.ConditionLogic = cL.(string)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol[names.AttrAction].([]interface{}))
+		apiObject := &coreNetworkPolicyAttachmentPolicy{}
+
+		if v, ok := tfMap["rule_number"].(int); ok {
+			if _, ok := ruleMap[v]; ok {
+				return nil, fmt.Errorf("duplicate Rule Number (%d). Remove the Rule Number or ensure the Rule Number is unique", v)
+			}
+			apiObject.RuleNumber = v
+			ruleMap[apiObject.RuleNumber] = struct{}{}
+		}
+
+		if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+			apiObject.Description = v
+		}
+
+		if v, ok := tfMap["condition_logic"].(string); ok && v != "" {
+			apiObject.ConditionLogic = v
+		}
+
+		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfMap[names.AttrAction].([]interface{}))
 		if err != nil {
-			return nil, fmt.Errorf("Problem with attachment policy rule number (%s). See attachment_policy[%s].action: %q", ruleStr, strconv.Itoa(i), err)
+			return nil, err
 		}
-		policy.Action = action
+		apiObject.Action = action
 
-		conditions, err := expandDataCoreNetworkPolicyAttachmentPoliciesConditions(cfgPol["conditions"].([]interface{}))
+		conditions, err := expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfMap["conditions"].([]interface{}))
 		if err != nil {
-			return nil, fmt.Errorf("Problem with attachment policy rule number (%s). See attachment_policy[%s].conditions %q", ruleStr, strconv.Itoa(i), err)
+			return nil, err
 		}
-		policy.Conditions = conditions
+		apiObject.Conditions = conditions
 
-		aPolicies[i] = policy
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	// adjust
-	return aPolicies, nil
+	return apiObjects, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*coreNetworkAttachmentPolicyCondition, error) {
-	conditions := make([]*coreNetworkAttachmentPolicyCondition, len(tfList))
+func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*coreNetworkPolicyAttachmentPolicyCondition, error) {
+	apiObjects := make([]*coreNetworkPolicyAttachmentPolicyCondition, 0)
 
-	for i, condI := range tfList {
-		cfgCond := condI.(map[string]interface{})
-		condition := &coreNetworkAttachmentPolicyCondition{}
+	for i, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyAttachmentPolicyCondition{}
 		k := map[string]bool{
 			"operator":      false,
 			names.AttrKey:   false,
 			names.AttrValue: false,
 		}
 
-		t := cfgCond[names.AttrType].(string)
-		condition.Type = t
+		typ := tfMap[names.AttrType].(string)
+		apiObject.Type = typ
 
-		if o := cfgCond["operator"]; o != "" {
+		if v, ok := tfMap["operator"].(string); ok && v != "" {
 			k["operator"] = true
-			condition.Operator = o.(string)
-		}
-		if key := cfgCond[names.AttrKey]; key != "" {
-			k[names.AttrKey] = true
-			condition.Key = key.(string)
-		}
-		if v := cfgCond[names.AttrValue]; v != "" {
-			k[names.AttrValue] = true
-			condition.Value = v.(string)
+			apiObject.Operator = v
 		}
 
-		if t == "any" {
+		if v := tfMap[names.AttrKey].(string); ok && v != "" {
+			k[names.AttrKey] = true
+			apiObject.Key = v
+		}
+
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+			k[names.AttrValue] = true
+			apiObject.Value = v
+		}
+
+		switch typ {
+		case "any":
 			for _, key := range k {
 				if key {
-					return nil, fmt.Errorf("Conditions %s: You cannot set \"operator\", \"key\", or \"value\" if type = \"any\".", strconv.Itoa(i))
+					return nil, fmt.Errorf("Conditions %d: You cannot set \"operator\", \"key\", or \"value\" if type = \"any\".", i)
 				}
 			}
-		}
-		if t == "tag-exists" {
+
+		case "tag-exists":
 			if !k[names.AttrKey] || k["operator"] || k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %s: You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".", strconv.Itoa(i))
+				return nil, fmt.Errorf("Conditions %d: You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".", i)
 			}
-		}
-		if t == "tag-value" {
+
+		case "tag-value":
 			if !k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %s: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", strconv.Itoa(i))
+				return nil, fmt.Errorf("Conditions %d: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", i)
 			}
-		}
-		if t == names.AttrRegion || t == "resource-id" || t == "account-id" {
+
+		case names.AttrRegion, "resource-id", "account-id":
 			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
-				return nil, fmt.Errorf("Conditions %s: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", strconv.Itoa(i))
+				return nil, fmt.Errorf("Conditions %d: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", i)
+			}
+
+		case "attachment-type":
+			if k[names.AttrKey] || !k[names.AttrValue] || tfMap["operator"].(string) != "equals" {
+				return nil, fmt.Errorf("Conditions %d: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", i)
 			}
 		}
-		if t == "attachment-type" {
-			if k[names.AttrKey] || !k[names.AttrValue] || cfgCond["operator"].(string) != "equals" {
-				return nil, fmt.Errorf("Conditions %s: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", strconv.Itoa(i))
-			}
-		}
-		conditions[i] = condition
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return conditions, nil
+
+	return apiObjects, nil
 }
 
-func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (*coreNetworkAttachmentPolicyAction, error) {
+func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []interface{}) (*coreNetworkPolicyAttachmentPolicyAction, error) {
 	tfMap := tfList[0].(map[string]interface{})
 
 	associationMethod := tfMap["association_method"].(string)
-	apiObject := &coreNetworkAttachmentPolicyAction{
+	apiObject := &coreNetworkPolicyAttachmentPolicyAction{
 		AssociationMethod: associationMethod,
 	}
 
-	if v := tfMap["segment"]; v != "" {
+	if v, ok := tfMap["segment"].(string); ok && v != "" {
 		if associationMethod == "tag" {
 			return nil, fmt.Errorf(`cannot set "segment" argument if association_method = "tag"`)
 		}
-		apiObject.Segment = v.(string)
+		apiObject.Segment = v
 	}
 
-	if v := tfMap["tag_value_of_key"]; v != "" {
+	if v, ok := tfMap["tag_value_of_key"].(string); ok && v != "" {
 		if associationMethod == "constant" {
 			return nil, fmt.Errorf(`cannot set "tag_value_of_key" argument if association_method = "constant"`)
 		}
-		apiObject.TagValueOfKey = v.(string)
+		apiObject.TagValueOfKey = v
 	}
 
-	if v, ok := tfMap["require_acceptance"]; ok {
-		apiObject.RequireAcceptance = v.(bool)
+	if v, ok := tfMap["require_acceptance"].(bool); ok {
+		apiObject.RequireAcceptance = v
 	}
 
-	if v := tfMap["add_to_network_function_group"]; v != "" {
-		apiObject.AddToNetworkFunctionGroup = v.(string)
+	if v, ok := tfMap["add_to_network_function_group"].(string); ok && v != "" {
+		apiObject.AddToNetworkFunctionGroup = v
 	}
 
 	return apiObject, nil
 }
 
-func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*coreNetworkPolicySegment, error) {
-	Sgmts := make([]*coreNetworkPolicySegment, len(cfgSgmtIntf))
+func expandCoreNetworkPolicySegments(tfList []interface{}) ([]*coreNetworkPolicySegment, error) {
+	apiObjects := make([]*coreNetworkPolicySegment, 0)
 	nameMap := make(map[string]struct{})
 
-	for i, sgmtI := range cfgSgmtIntf {
-		cfgSgmt := sgmtI.(map[string]interface{})
-		sgmt := &coreNetworkPolicySegment{}
-
-		if name, ok := cfgSgmt[names.AttrName]; ok {
-			if _, ok := nameMap[name.(string)]; ok {
-				return nil, fmt.Errorf("duplicate Name (%s). Remove the Name or ensure the Name is unique.", name.(string))
-			}
-			sgmt.Name = name.(string)
-			if len(sgmt.Name) > 0 {
-				nameMap[sgmt.Name] = struct{}{}
-			}
-		}
-		if description, ok := cfgSgmt[names.AttrDescription]; ok {
-			sgmt.Description = description.(string)
-		}
-		if actions := cfgSgmt["allow_filter"].(*schema.Set).List(); len(actions) > 0 {
-			sgmt.AllowFilter = coreNetworkPolicyExpandStringList(actions)
-		}
-		if actions := cfgSgmt["deny_filter"].(*schema.Set).List(); len(actions) > 0 {
-			sgmt.DenyFilter = coreNetworkPolicyExpandStringList(actions)
-		}
-		if edgeLocations := cfgSgmt["edge_locations"].(*schema.Set).List(); len(edgeLocations) > 0 {
-			sgmt.EdgeLocations = coreNetworkPolicyExpandStringList(edgeLocations)
-		}
-		if b, ok := cfgSgmt["require_attachment_acceptance"]; ok {
-			sgmt.RequireAttachmentAcceptance = b.(bool)
-		}
-		if b, ok := cfgSgmt["isolate_attachments"]; ok {
-			sgmt.IsolateAttachments = b.(bool)
-		}
-		Sgmts[i] = sgmt
-	}
-
-	return Sgmts, nil
-}
-
-func expandDataCoreNetworkPolicyNetworkConfiguration(networkCfgIntf []interface{}) (*coreNetworkPolicyCoreNetworkConfiguration, error) {
-	m := networkCfgIntf[0].(map[string]interface{})
-
-	nc := &coreNetworkPolicyCoreNetworkConfiguration{}
-
-	nc.AsnRanges = coreNetworkPolicyExpandStringList(m["asn_ranges"].(*schema.Set).List())
-
-	if cidrs := m["inside_cidr_blocks"].(*schema.Set).List(); len(cidrs) > 0 {
-		nc.InsideCidrBlocks = coreNetworkPolicyExpandStringList(cidrs)
-	}
-
-	nc.VpnEcmpSupport = m["vpn_ecmp_support"].(bool)
-
-	el, err := expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(m["edge_locations"].([]interface{}))
-
-	if err != nil {
-		return nil, err
-	}
-	nc.EdgeLocations = el
-
-	return nc, nil
-}
-
-func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []interface{}) ([]*coreNetworkPolicyCoreNetworkEdgeLocation, error) {
-	edgeLocations := make([]*coreNetworkPolicyCoreNetworkEdgeLocation, len(tfList))
-	locMap := make(map[string]struct{})
-
-	for i, edgeLocationsRaw := range tfList {
-		cfgEdgeLocation, ok := edgeLocationsRaw.(map[string]interface{})
-		edgeLocation := &coreNetworkPolicyCoreNetworkEdgeLocation{}
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		location := cfgEdgeLocation[names.AttrLocation].(string)
+		apiObject := &coreNetworkPolicySegment{}
 
-		if _, ok := locMap[location]; ok {
-			return nil, fmt.Errorf("duplicate Location (%s). Remove the Location or ensure the Location is unique.", location)
-		}
-		edgeLocation.Location = location
-		if len(edgeLocation.Location) > 0 {
-			locMap[edgeLocation.Location] = struct{}{}
+		if v, ok := tfMap[names.AttrName].(string); ok {
+			if _, ok := nameMap[v]; ok {
+				return nil, fmt.Errorf("duplicate Name (%s). Remove the Name or ensure the Name is unique", v)
+			}
+			apiObject.Name = v
+			if len(apiObject.Name) > 0 {
+				nameMap[apiObject.Name] = struct{}{}
+			}
 		}
 
-		if v, ok := cfgEdgeLocation["asn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+			apiObject.Description = v
+		}
+
+		if v := tfMap["allow_filter"].(*schema.Set).List(); len(v) > 0 {
+			apiObject.AllowFilter = coreNetworkPolicyExpandStringList(v)
+		}
+
+		if v := tfMap["deny_filter"].(*schema.Set).List(); len(v) > 0 {
+			apiObject.DenyFilter = coreNetworkPolicyExpandStringList(v)
+		}
+
+		if v := tfMap["edge_locations"].(*schema.Set).List(); len(v) > 0 {
+			apiObject.EdgeLocations = coreNetworkPolicyExpandStringList(v)
+		}
+
+		if v, ok := tfMap["require_attachment_acceptance"].(bool); ok {
+			apiObject.RequireAttachmentAcceptance = v
+		}
+
+		if v, ok := tfMap["isolate_attachments"].(bool); ok {
+			apiObject.IsolateAttachments = v
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
+}
+
+func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []interface{}) (*coreNetworkPolicyCoreNetworkConfiguration, error) {
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &coreNetworkPolicyCoreNetworkConfiguration{}
+
+	apiObject.AsnRanges = coreNetworkPolicyExpandStringList(tfMap["asn_ranges"].(*schema.Set).List())
+
+	if v := tfMap["inside_cidr_blocks"].(*schema.Set).List(); len(v) > 0 {
+		apiObject.InsideCidrBlocks = coreNetworkPolicyExpandStringList(v)
+	}
+
+	apiObject.VpnEcmpSupport = tfMap["vpn_ecmp_support"].(bool)
+
+	el, err := expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfMap["edge_locations"].([]interface{}))
+	if err != nil {
+		return nil, err
+	}
+	apiObject.EdgeLocations = el
+
+	return apiObject, nil
+}
+
+func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []interface{}) ([]*coreNetworkPolicyCoreNetworkEdgeLocation, error) {
+	apiObjects := make([]*coreNetworkPolicyCoreNetworkEdgeLocation, 0)
+	locationMap := make(map[string]struct{})
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyCoreNetworkEdgeLocation{}
+
+		if v, ok := tfMap[names.AttrLocation].(string); ok {
+			if _, ok := locationMap[v]; ok {
+				return nil, fmt.Errorf("duplicate Location (%s). Remove the Location or ensure the Location is unique", v)
+			}
+			apiObject.Location = v
+			if len(apiObject.Location) > 0 {
+				locationMap[apiObject.Location] = struct{}{}
+			}
+		}
+
+		if v, ok := tfMap["asn"].(string); ok && v != "" {
 			v, err := strconv.ParseInt(v, 10, 64)
-
 			if err != nil {
 				return nil, err
 			}
-
-			edgeLocation.Asn = v
+			apiObject.Asn = v
 		}
 
-		if cidrs := cfgEdgeLocation["inside_cidr_blocks"].([]interface{}); len(cidrs) > 0 {
-			edgeLocation.InsideCidrBlocks = coreNetworkPolicyExpandStringList(cidrs)
+		if v := tfMap["inside_cidr_blocks"].([]interface{}); len(v) > 0 {
+			apiObject.InsideCidrBlocks = coreNetworkPolicyExpandStringList(v)
 		}
 
-		edgeLocations[i] = edgeLocation
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return edgeLocations, nil
+
+	return apiObjects, nil
+}
+
+func expandCoreNetworkPolicyNetworkFunctionGroups(tfList []interface{}) ([]*coreNetworkPolicyNetworkFunctionGroup, error) {
+	apiObjects := make([]*coreNetworkPolicyNetworkFunctionGroup, 0)
+	nameMap := make(map[string]struct{})
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := &coreNetworkPolicyNetworkFunctionGroup{}
+
+		if v, ok := tfMap[names.AttrName].(string); ok {
+			if _, ok := nameMap[v]; ok {
+				return nil, fmt.Errorf("duplicate Name (%s). Remove the Name or ensure the Name is unique", v)
+			}
+			apiObject.Name = v
+			if len(apiObject.Name) > 0 {
+				nameMap[apiObject.Name] = struct{}{}
+			}
+		}
+
+		if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+			apiObject.Description = v
+		}
+
+		if v, ok := tfMap["require_attachment_acceptance"].(bool); ok {
+			apiObject.RequireAttachmentAcceptance = v
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
 }

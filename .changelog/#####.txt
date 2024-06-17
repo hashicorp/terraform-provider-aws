@@ -17,3 +17,7 @@ data-source/aws_networkmanager_core_network_policy_document: Add `when_sent_to` 
 ```release-note:bug
 data-source/aws_networkmanager_core_network_policy_document: Add correct `except` values to the returned JSON document when `segment_actions.share_with_except` is configured
 ```
+
+```release-note:enhancement
+data-source/aws_networkmanager_core_network_policy_document: Add `network_function_groups` configuration block
+```

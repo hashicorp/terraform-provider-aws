@@ -170,6 +170,7 @@ The following arguments are available:
 * `core_network_configuration` (Required) - The core network configuration section defines the Regions where a core network should operate. For AWS Regions that are defined in the policy, the core network creates a Core Network Edge where you can connect attachments. After it's created, each Core Network Edge is peered with every other defined Region and is configured with consistent segment and routing across all Regions. Regions cannot be removed until the associated attachments are deleted. Detailed below.
 * `segments` (Required) - Block argument that defines the different segments in the network. Here you can provide descriptions, change defaults, and provide explicit Regional operational and route filters. The names defined for each segment are used in the `segment_actions` and `attachment_policies` section. Each segment is created, and operates, as a completely separated routing domain. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
 * `segment_actions` (Optional) - A block argument, `segment_actions` define how routing works between segments. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
+* `network_function_groups` (Optional) - Block argument that defines the service insertion actions you want to include. Detailed below.
 
 ### `attachment_policies`
 
@@ -186,10 +187,11 @@ The following arguments are available:
 
 The following arguments are available:
 
-* `association_method` (Required) - Defines how a segment is mapped. Values can be `constant` or `tag`. `constant` statically defines the segment to associate the attachment to. `tag` uses the value of a tag to dynamically try to map to a segment.reference_policies_elements_condition_operators.html) to evaluate.
+* `association_method` (Optional) - Defines how a segment is mapped. Values can be `constant` or `tag`. `constant` statically defines the segment to associate the attachment to. `tag` uses the value of a tag to dynamically try to map to a segment.reference_policies_elements_condition_operators.html) to evaluate.
 * `segment` (Optional) - Name of the `segment` to share as defined in the `segments` section. This is used only when the `association_method` is `constant`.
 * `tag_value_of_key` (Optional) - Maps the attachment to the value of a known key. This is used with the `association_method` is `tag`. For example a `tag` of `stage = “test”`, will map to a segment named `test`. The value must exactly match the name of a segment. This allows you to have many segments, but use only a single rule without having to define multiple nearly identical conditions. This prevents creating many similar conditions that all use the same keys to map to segments.
 * `require_acceptance` (Optional) - Determines if this mapping should override the segment value for `require_attachment_acceptance`. You can only set this to `true`, indicating that this setting applies only to segments that have `require_attachment_acceptance` set to `false`. If the segment already has the default `require_attachment_acceptance`, you can set this to inherit segment’s acceptance value.
+* `add_to_network_function_group` (Optional) - The name of the network function group to attach to the attachment policy.
 
 ### `conditions`
 
@@ -233,7 +235,7 @@ The following arguments are available:
 
 ### `segment_actions`
 
-`segment_actions` have differnt outcomes based on their `action` argument value. Behaviors of the below arguments changed depending on the `action` you specify. For more details on their use see the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html#cloudwan-segment-actions-json).
+`segment_actions` have different outcomes based on their `action` argument value. Behaviors of the below arguments changed depending on the `action` you specify. For more details on their use see the [AWS documentation](https://docs.aws.amazon.com/vpc/latest/cloudwan/cloudwan-policies-json.html#cloudwan-segment-actions-json).
 
 ~> **NOTE:** `share_with` and `share_with_except` break from the AWS API specification. The API has 1 argument `share-with` and it can accept 3 input types as valid (`"*"`, `["<segment-name>"]`, or `{ except: ["<segment-name>"]}`). To emulate this behavior, `share_with` is always a list that can accept the argument `["*"]` as valid for `"*"` and `share_with_except` is a that can accept `["<segment-name>"]` as valid for `{ except: ["<segment-name>"]}`. You may only specify one of: `share_with` or `share_with_except`.
 
@@ -254,6 +256,12 @@ The following arguments are available:
     * `with_edge_override` (Optional) - Any edge overrides and the preferred edge to use.
         * `edge_sets` (Optional) - A list of strings. The list of edges associated with the network function group.
         * `use_edge` (Optional) - The preferred edge to use.
+
+### `network_function_groups`
+
+* `name` (Required) - This identifies the network function group container.
+* `description` (Optional) - Optional description of the network function group.
+* `require_attachment_acceptance` (Required) - This will be either `true`, that attachment acceptance is required, or `false`, that it is not required.
 
 ## Attribute Reference
 
