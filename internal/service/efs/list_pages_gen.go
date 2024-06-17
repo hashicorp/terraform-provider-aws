@@ -5,19 +5,20 @@ package efs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/aws-sdk-go/service/efs/efsiface"
 )
 
 func describeMountTargetsPages(ctx context.Context, conn efsiface.EFSAPI, input *efs.DescribeMountTargetsInput, fn func(*efs.DescribeMountTargetsOutput, bool) bool) error {
 	for {
-		output, err := conn.DescribeMountTargetsWithContext(ctx, input)
+		output, err := conn.DescribeMountTargets(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextMarker) == ""
+		lastPage := aws.ToString(output.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}

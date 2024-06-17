@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -42,8 +43,8 @@ func ResourceBackupPolicy() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								efs.StatusDisabled,
-								efs.StatusEnabled,
+								awstypes.StatusDisabled,
+								awstypes.StatusEnabled,
 							}, false),
 						},
 					},
@@ -61,7 +62,7 @@ func ResourceBackupPolicy() *schema.Resource {
 
 func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fsID := d.Get(names.AttrFileSystemID).(string)
 
@@ -76,7 +77,7 @@ func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	output, err := FindBackupPolicyByID(ctx, conn, d.Id())
 
@@ -101,7 +102,7 @@ func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBackupPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	if err := backupPolicyPut(ctx, conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EFS Backup Policy (%s): %s", d.Id(), err)
@@ -112,13 +113,13 @@ func resourceBackupPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	err := backupPolicyPut(ctx, conn, d.Id(), map[string]interface{}{
-		names.AttrStatus: efs.StatusDisabled,
+		names.AttrStatus: awstypes.StatusDisabled,
 	})
 
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
 		return diags
 	}
 
@@ -131,20 +132,20 @@ func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 
 // backupPolicyPut attempts to update the file system's backup policy.
 // Any error is returned.
-func backupPolicyPut(ctx context.Context, conn *efs.EFS, fsID string, tfMap map[string]interface{}) error {
+func backupPolicyPut(ctx context.Context, conn *efs.Client, fsID string, tfMap map[string]interface{}) error {
 	input := &efs.PutBackupPolicyInput{
 		BackupPolicy: expandBackupPolicy(tfMap),
 		FileSystemId: aws.String(fsID),
 	}
 
 	log.Printf("[DEBUG] Putting EFS Backup Policy: %s", input)
-	_, err := conn.PutBackupPolicyWithContext(ctx, input)
+	_, err := conn.PutBackupPolicy(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("putting EFS Backup Policy (%s): %w", fsID, err)
 	}
 
-	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
+	if aws.ToString(input.BackupPolicy.Status) == awstypes.StatusEnabled {
 		if _, err := waitBackupPolicyEnabled(ctx, conn, fsID); err != nil {
 			return fmt.Errorf("waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
@@ -157,21 +158,21 @@ func backupPolicyPut(ctx context.Context, conn *efs.EFS, fsID string, tfMap map[
 	return nil
 }
 
-func expandBackupPolicy(tfMap map[string]interface{}) *efs.BackupPolicy {
+func expandBackupPolicy(tfMap map[string]interface{}) *awstypes.BackupPolicy {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &efs.BackupPolicy{}
+	apiObject := &awstypes.BackupPolicy{}
 
 	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
-		apiObject.Status = aws.String(v)
+		apiObject.Status = awstypes.Status(v)
 	}
 
 	return apiObject
 }
 
-func flattenBackupPolicy(apiObject *efs.BackupPolicy) map[string]interface{} {
+func flattenBackupPolicy(apiObject *awstypes.BackupPolicy) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -179,7 +180,7 @@ func flattenBackupPolicy(apiObject *efs.BackupPolicy) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Status; v != nil {
-		tfMap[names.AttrStatus] = aws.StringValue(v)
+		tfMap[names.AttrStatus] = aws.ToString(v)
 	}
 
 	return tfMap

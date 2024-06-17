@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccEFSBackupPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v efs.BackupPolicy
+	var v awstypes.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -51,7 +52,7 @@ func TestAccEFSBackupPolicy_basic(t *testing.T) {
 
 func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v efs.BackupPolicy
+	var v awstypes.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	fsResourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -76,7 +77,7 @@ func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 
 func TestAccEFSBackupPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v efs.BackupPolicy
+	var v awstypes.BackupPolicy
 	resourceName := "aws_efs_backup_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -119,7 +120,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 	})
 }
 
-func testAccCheckBackupPolicyExists(ctx context.Context, name string, v *efs.BackupPolicy) resource.TestCheckFunc {
+func testAccCheckBackupPolicyExists(ctx context.Context, name string, v *awstypes.BackupPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -130,7 +131,7 @@ func testAccCheckBackupPolicyExists(ctx context.Context, name string, v *efs.Bac
 			return fmt.Errorf("no ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		output, err := tfefs.FindBackupPolicyByID(ctx, conn, rs.Primary.ID)
 
@@ -146,7 +147,7 @@ func testAccCheckBackupPolicyExists(ctx context.Context, name string, v *efs.Bac
 
 func testAccCheckBackupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_efs_backup_policy" {
@@ -163,7 +164,7 @@ func testAccCheckBackupPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			if aws.StringValue(output.Status) == efs.StatusDisabled {
+			if string(output.Status) == awstypes.StatusDisabled {
 				continue
 			}
 

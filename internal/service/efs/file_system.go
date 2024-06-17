@@ -9,15 +9,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -90,17 +92,17 @@ func ResourceFileSystem() *schema.Resource {
 						"transition_to_archive": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(efs.TransitionToArchiveRules_Values(), false),
+							ValidateFunc: enum.Validate[awstypes.TransitionToArchiveRules](),
 						},
 						"transition_to_ia": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(efs.TransitionToIARules_Values(), false),
+							ValidateFunc: enum.Validate[awstypes.TransitionToIARules](),
 						},
 						"transition_to_primary_storage_class": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice(efs.TransitionToPrimaryStorageClassRules_Values(), false),
+							ValidateFunc: enum.Validate[awstypes.TransitionToPrimaryStorageClassRules](),
 						},
 					},
 				},
@@ -122,7 +124,7 @@ func ResourceFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(efs.PerformanceMode_Values(), false),
+				ValidateFunc: enum.Validate[awstypes.PerformanceMode](),
 			},
 			"protection": {
 				Type:     schema.TypeList,
@@ -136,8 +138,8 @@ func ResourceFileSystem() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								efs.ReplicationOverwriteProtectionEnabled,
-								efs.ReplicationOverwriteProtectionDisabled,
+								awstypes.ReplicationOverwriteProtectionEnabled,
+								awstypes.ReplicationOverwriteProtectionDisabled,
 							}, false),
 						},
 					},
@@ -172,8 +174,8 @@ func ResourceFileSystem() *schema.Resource {
 			"throughput_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      efs.ThroughputModeBursting,
-				ValidateFunc: validation.StringInSlice(efs.ThroughputMode_Values(), false),
+				Default:      awstypes.ThroughputModeBursting,
+				ValidateFunc: enum.Validate[awstypes.ThroughputMode](),
 			},
 		},
 	}
@@ -182,7 +184,7 @@ func ResourceFileSystem() *schema.Resource {
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	var creationToken string
 	if v, ok := d.GetOk("creation_token"); ok {
@@ -202,10 +204,10 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("performance_mode"); ok {
-		input.PerformanceMode = aws.String(v.(string))
+		input.PerformanceMode = awstypes.PerformanceMode(v.(string))
 	}
 
-	if throughputMode == efs.ThroughputModeProvisioned {
+	if throughputMode == awstypes.ThroughputModeProvisioned {
 		input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
 	}
 
@@ -224,13 +226,13 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, errors.New("encrypted must be set to true when kms_key_id is specified"))
 	}
 
-	output, err := conn.CreateFileSystemWithContext(ctx, input)
+	output, err := conn.CreateFileSystem(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EFS file system: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.FileSystemId))
+	d.SetId(aws.ToString(output.FileSystemId))
 
 	if _, err := waitFileSystemAvailable(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EFS file system (%s) create: %s", d.Id(), err)
@@ -242,7 +244,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 			LifecyclePolicies: expandFileSystemLifecyclePolicies(v.([]interface{})),
 		}
 
-		_, err := conn.PutLifecycleConfigurationWithContext(ctx, input)
+		_, err := conn.PutLifecycleConfiguration(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
@@ -252,7 +254,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
 
-		_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+		_, err := conn.UpdateFileSystemProtection(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
@@ -265,7 +267,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fs, err := FindFileSystemByID(ctx, conn, d.Id())
 
@@ -301,7 +303,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	setTagsOut(ctx, fs.Tags)
 
-	output, err := conn.DescribeLifecycleConfigurationWithContext(ctx, &efs.DescribeLifecycleConfigurationInput{
+	output, err := conn.DescribeLifecycleConfiguration(ctx, &efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 
@@ -319,7 +321,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
@@ -328,11 +330,11 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			ThroughputMode: aws.String(throughputMode),
 		}
 
-		if throughputMode == efs.ThroughputModeProvisioned {
+		if throughputMode == awstypes.ThroughputModeProvisioned {
 			input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
 		}
 
-		_, err := conn.UpdateFileSystemWithContext(ctx, input)
+		_, err := conn.UpdateFileSystem(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s): %s", d.Id(), err)
@@ -353,10 +355,10 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		// InvalidParameter: 1 validation error(s) found.
 		// - missing required field, PutLifecycleConfigurationInput.LifecyclePolicies.
 		if input.LifecyclePolicies == nil {
-			input.LifecyclePolicies = []*efs.LifecyclePolicy{}
+			input.LifecyclePolicies = []*awstypes.LifecyclePolicy{}
 		}
 
-		_, err := conn.PutLifecycleConfigurationWithContext(ctx, input)
+		_, err := conn.PutLifecycleConfiguration(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting EFS file system (%s) lifecycle configuration: %s", d.Id(), err)
@@ -367,7 +369,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		if v, ok := d.GetOk("protection"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input := expandUpdateFileSystemProtectionInput(d.Id(), v.([]interface{})[0].(map[string]interface{}))
 
-			_, err := conn.UpdateFileSystemProtectionWithContext(ctx, input)
+			_, err := conn.UpdateFileSystemProtection(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EFS file system (%s) protection: %s", d.Id(), err)
@@ -381,14 +383,14 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
-	_, err := conn.DeleteFileSystemWithContext(ctx, &efs.DeleteFileSystemInput{
+	_, err := conn.DeleteFileSystem(ctx, &efs.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
 		return diags
 	}
 
@@ -403,7 +405,7 @@ func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func findFileSystem(ctx context.Context, conn *efs.EFS, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*efs.FileSystemDescription]) (*efs.FileSystemDescription, error) {
+func findFileSystem(ctx context.Context, conn *efs.Client, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystemDescription]) (*awstypes.FileSystemDescription, error) {
 	output, err := findFileSystems(ctx, conn, input, filter)
 
 	if err != nil {
@@ -413,8 +415,8 @@ func findFileSystem(ctx context.Context, conn *efs.EFS, input *efs.DescribeFileS
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findFileSystems(ctx context.Context, conn *efs.EFS, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*efs.FileSystemDescription]) ([]*efs.FileSystemDescription, error) {
-	var output []*efs.FileSystemDescription
+func findFileSystems(ctx context.Context, conn *efs.Client, input *efs.DescribeFileSystemsInput, filter tfslices.Predicate[*awstypes.FileSystemDescription]) ([]*awstypes.FileSystemDescription, error) {
+	var output []*awstypes.FileSystemDescription
 
 	err := conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
 		if page == nil {
@@ -430,7 +432,7 @@ func findFileSystems(ctx context.Context, conn *efs.EFS, input *efs.DescribeFile
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -444,15 +446,15 @@ func findFileSystems(ctx context.Context, conn *efs.EFS, input *efs.DescribeFile
 	return output, nil
 }
 
-func FindFileSystemByID(ctx context.Context, conn *efs.EFS, id string) (*efs.FileSystemDescription, error) {
+func FindFileSystemByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.FileSystemDescription, error) {
 	input := &efs.DescribeFileSystemsInput{
 		FileSystemId: aws.String(id),
 	}
 
-	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*efs.FileSystemDescription]())
+	return findFileSystem(ctx, conn, input, tfslices.PredicateTrue[*awstypes.FileSystemDescription]())
 }
 
-func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
+func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindFileSystemByID(ctx, conn, id)
 
@@ -464,7 +466,7 @@ func statusFileSystemLifeCycleState(ctx context.Context, conn *efs.EFS, id strin
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.LifeCycleState), nil
+		return output, string(output.LifeCycleState), nil
 	}
 }
 
@@ -477,10 +479,10 @@ const (
 	fileSystemDeletedMinTimeout     = 3 * time.Second
 )
 
-func waitFileSystemAvailable(ctx context.Context, conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) { //nolint:unparam
+func waitFileSystemAvailable(ctx context.Context, conn *efs.Client, fileSystemID string) (*awstypes.FileSystemDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{efs.LifeCycleStateCreating, efs.LifeCycleStateUpdating},
-		Target:     []string{efs.LifeCycleStateAvailable},
+		Pending:    []string{awstypes.LifeCycleStateCreating, awstypes.LifeCycleStateUpdating},
+		Target:     []string{awstypes.LifeCycleStateAvailable},
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
 		Timeout:    fileSystemAvailableTimeout,
 		Delay:      fileSystemAvailableDelayTimeout,
@@ -489,16 +491,16 @@ func waitFileSystemAvailable(ctx context.Context, conn *efs.EFS, fileSystemID st
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*efs.FileSystemDescription); ok {
+	if output, ok := outputRaw.(*awstypes.FileSystemDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFileSystemDeleted(ctx context.Context, conn *efs.EFS, fileSystemID string) (*efs.FileSystemDescription, error) {
+func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID string) (*awstypes.FileSystemDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{efs.LifeCycleStateAvailable, efs.LifeCycleStateDeleting},
+		Pending:    []string{awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting},
 		Target:     []string{},
 		Refresh:    statusFileSystemLifeCycleState(ctx, conn, fileSystemID),
 		Timeout:    fileSystemDeletedTimeout,
@@ -508,14 +510,14 @@ func waitFileSystemDeleted(ctx context.Context, conn *efs.EFS, fileSystemID stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*efs.FileSystemDescription); ok {
+	if output, ok := outputRaw.(*awstypes.FileSystemDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
+func flattenFileSystemLifecyclePolicies(apiObjects []*awstypes.LifecyclePolicy) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
@@ -526,15 +528,15 @@ func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []int
 		tfMap := make(map[string]interface{})
 
 		if apiObject.TransitionToArchive != nil {
-			tfMap["transition_to_archive"] = aws.StringValue(apiObject.TransitionToArchive)
+			tfMap["transition_to_archive"] = aws.ToString(apiObject.TransitionToArchive)
 		}
 
 		if apiObject.TransitionToIA != nil {
-			tfMap["transition_to_ia"] = aws.StringValue(apiObject.TransitionToIA)
+			tfMap["transition_to_ia"] = aws.ToString(apiObject.TransitionToIA)
 		}
 
 		if apiObject.TransitionToPrimaryStorageClass != nil {
-			tfMap["transition_to_primary_storage_class"] = aws.StringValue(apiObject.TransitionToPrimaryStorageClass)
+			tfMap["transition_to_primary_storage_class"] = aws.ToString(apiObject.TransitionToPrimaryStorageClass)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -543,8 +545,8 @@ func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []int
 	return tfList
 }
 
-func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePolicy {
-	var apiObjects []*efs.LifecyclePolicy
+func expandFileSystemLifecyclePolicies(tfList []interface{}) []*awstypes.LifecyclePolicy {
+	var apiObjects []*awstypes.LifecyclePolicy
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -553,7 +555,7 @@ func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePol
 			continue
 		}
 
-		apiObject := &efs.LifecyclePolicy{}
+		apiObject := &awstypes.LifecyclePolicy{}
 
 		if v, ok := tfMap["transition_to_archive"].(string); ok && v != "" {
 			apiObject.TransitionToArchive = aws.String(v)
@@ -573,21 +575,21 @@ func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePol
 	return apiObjects
 }
 
-func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{} {
+func flattenFileSystemSizeInBytes(sizeInBytes *awstypes.FileSystemSize) []interface{} {
 	if sizeInBytes == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrValue: aws.Int64Value(sizeInBytes.Value),
+		names.AttrValue: aws.ToInt64(sizeInBytes.Value),
 	}
 
 	if sizeInBytes.ValueInIA != nil {
-		m["value_in_ia"] = aws.Int64Value(sizeInBytes.ValueInIA)
+		m["value_in_ia"] = aws.ToInt64(sizeInBytes.ValueInIA)
 	}
 
 	if sizeInBytes.ValueInStandard != nil {
-		m["value_in_standard"] = aws.Int64Value(sizeInBytes.ValueInStandard)
+		m["value_in_standard"] = aws.ToInt64(sizeInBytes.ValueInStandard)
 	}
 
 	return []interface{}{m}
@@ -603,13 +605,13 @@ func expandUpdateFileSystemProtectionInput(id string, tfMap map[string]interface
 	}
 
 	if v, ok := tfMap["replication_overwrite"].(string); ok && v != "" {
-		apiObject.ReplicationOverwriteProtection = aws.String(v)
+		apiObject.ReplicationOverwriteProtection = awstypes.ReplicationOverwriteProtection(v)
 	}
 
 	return apiObject
 }
 
-func flattenFileSystemProtection(protection *efs.FileSystemProtectionDescription) []interface{} {
+func flattenFileSystemProtection(protection *awstypes.FileSystemProtectionDescription) []interface{} {
 	if protection == nil {
 		return []interface{}{}
 	}
@@ -617,7 +619,7 @@ func flattenFileSystemProtection(protection *efs.FileSystemProtectionDescription
 	tfMap := map[string]interface{}{}
 
 	if protection.ReplicationOverwriteProtection != nil {
-		tfMap["replication_overwrite"] = aws.StringValue(protection.ReplicationOverwriteProtection)
+		tfMap["replication_overwrite"] = string(protection.ReplicationOverwriteProtection)
 	}
 
 	return []interface{}{tfMap}

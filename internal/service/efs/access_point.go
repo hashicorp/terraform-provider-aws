@@ -7,10 +7,11 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -132,7 +133,7 @@ func ResourceAccessPoint() *schema.Resource {
 
 func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fsId := d.Get(names.AttrFileSystemID).(string)
 	input := efs.CreateAccessPointInput{
@@ -150,12 +151,12 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Creating EFS Access Point: %#v", input)
 
-	ap, err := conn.CreateAccessPointWithContext(ctx, &input)
+	ap, err := conn.CreateAccessPoint(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EFS Access Point for File System (%s): %s", fsId, err)
 	}
 
-	d.SetId(aws.StringValue(ap.AccessPointId))
+	d.SetId(aws.ToString(ap.AccessPointId))
 
 	if _, err := waitAccessPointCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EFS access point (%s) to be available: %s", d.Id(), err)
@@ -174,13 +175,13 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	resp, err := conn.DescribeAccessPointsWithContext(ctx, &efs.DescribeAccessPointsInput{
+	resp, err := conn.DescribeAccessPoints(ctx, &efs.DescribeAccessPointsInput{
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
+		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeAccessPointNotFound) {
 			log.Printf("[WARN] EFS access point %q could not be found.", d.Id())
 			d.SetId("")
 			return diags
@@ -195,7 +196,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	ap := resp.AccessPoints[0]
 
 	d.Set(names.AttrARN, ap.AccessPointArn)
-	fsID := aws.StringValue(ap.FileSystemId)
+	fsID := aws.ToString(ap.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -220,21 +221,21 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting EFS access point %q", d.Id())
-	_, err := conn.DeleteAccessPointWithContext(ctx, &efs.DeleteAccessPointInput{
+	_, err := conn.DeleteAccessPoint(ctx, &efs.DeleteAccessPointInput{
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
+		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeAccessPointNotFound) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting EFS Access Point (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitAccessPointDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, efs.ErrCodeAccessPointNotFound) {
+		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeAccessPointNotFound) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "waiting for EFS access point (%s) deletion: %s", d.Id(), err)
@@ -252,14 +253,14 @@ func hasEmptyAccessPoints(aps *efs.DescribeAccessPointsOutput) bool {
 	return true
 }
 
-func expandAccessPointPOSIXUser(pUser []interface{}) *efs.PosixUser {
+func expandAccessPointPOSIXUser(pUser []interface{}) *awstypes.PosixUser {
 	if len(pUser) < 1 || pUser[0] == nil {
 		return nil
 	}
 
 	m := pUser[0].(map[string]interface{})
 
-	posixUser := &efs.PosixUser{
+	posixUser := &awstypes.PosixUser{
 		Gid: aws.Int64(int64(m["gid"].(int))),
 		Uid: aws.Int64(int64(m["uid"].(int))),
 	}
@@ -271,14 +272,14 @@ func expandAccessPointPOSIXUser(pUser []interface{}) *efs.PosixUser {
 	return posixUser
 }
 
-func expandAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
+func expandAccessPointRootDirectory(rDir []interface{}) *awstypes.RootDirectory {
 	if len(rDir) < 1 || rDir[0] == nil {
 		return nil
 	}
 
 	m := rDir[0].(map[string]interface{})
 
-	rootDir := &efs.RootDirectory{}
+	rootDir := &awstypes.RootDirectory{}
 
 	if v, ok := m[names.AttrPath]; ok {
 		rootDir.Path = aws.String(v.(string))
@@ -291,14 +292,14 @@ func expandAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
 	return rootDir
 }
 
-func expandAccessPointRootDirectoryCreationInfo(cInfo []interface{}) *efs.CreationInfo {
+func expandAccessPointRootDirectoryCreationInfo(cInfo []interface{}) *awstypes.CreationInfo {
 	if len(cInfo) < 1 || cInfo[0] == nil {
 		return nil
 	}
 
 	m := cInfo[0].(map[string]interface{})
 
-	creationInfo := &efs.CreationInfo{
+	creationInfo := &awstypes.CreationInfo{
 		OwnerGid:    aws.Int64(int64(m["owner_gid"].(int))),
 		OwnerUid:    aws.Int64(int64(m["owner_uid"].(int))),
 		Permissions: aws.String(m[names.AttrPermissions].(string)),
@@ -307,42 +308,42 @@ func expandAccessPointRootDirectoryCreationInfo(cInfo []interface{}) *efs.Creati
 	return creationInfo
 }
 
-func flattenAccessPointPOSIXUser(posixUser *efs.PosixUser) []interface{} {
+func flattenAccessPointPOSIXUser(posixUser *awstypes.PosixUser) []interface{} {
 	if posixUser == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"gid":            aws.Int64Value(posixUser.Gid),
-		"uid":            aws.Int64Value(posixUser.Uid),
+		"gid":            aws.ToInt64(posixUser.Gid),
+		"uid":            aws.ToInt64(posixUser.Uid),
 		"secondary_gids": aws.Int64ValueSlice(posixUser.SecondaryGids),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAccessPointRootDirectory(rDir *efs.RootDirectory) []interface{} {
+func flattenAccessPointRootDirectory(rDir *awstypes.RootDirectory) []interface{} {
 	if rDir == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrPath:  aws.StringValue(rDir.Path),
+		names.AttrPath:  aws.ToString(rDir.Path),
 		"creation_info": flattenAccessPointRootDirectoryCreationInfo(rDir.CreationInfo),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAccessPointRootDirectoryCreationInfo(cInfo *efs.CreationInfo) []interface{} {
+func flattenAccessPointRootDirectoryCreationInfo(cInfo *awstypes.CreationInfo) []interface{} {
 	if cInfo == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"owner_gid":           aws.Int64Value(cInfo.OwnerGid),
-		"owner_uid":           aws.Int64Value(cInfo.OwnerUid),
-		names.AttrPermissions: aws.StringValue(cInfo.Permissions),
+		"owner_gid":           aws.ToInt64(cInfo.OwnerGid),
+		"owner_uid":           aws.ToInt64(cInfo.OwnerUid),
+		names.AttrPermissions: aws.ToString(cInfo.Permissions),
 	}
 
 	return []interface{}{m}

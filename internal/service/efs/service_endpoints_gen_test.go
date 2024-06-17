@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
+	efs_sdkv1 "github.com/aws/aws-sdk-go-v2/service/efs"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -277,7 +277,7 @@ func defaultFIPSEndpoint(region string) string {
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.EFSConn(ctx)
+	client := meta.EFSClient(ctx)
 
 	req, _ := client.DescribeFileSystemsRequest(&efs_sdkv1.DescribeFileSystemsInput{})
 

@@ -6,21 +6,22 @@ package efs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindBackupPolicyByID(ctx context.Context, conn *efs.EFS, id string) (*efs.BackupPolicy, error) {
+func FindBackupPolicyByID(ctx context.Context, conn *efs.Client, id string) (*awstypes.BackupPolicy, error) {
 	input := &efs.DescribeBackupPolicyInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := conn.DescribeBackupPolicyWithContext(ctx, input)
+	output, err := conn.DescribeBackupPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -38,14 +39,14 @@ func FindBackupPolicyByID(ctx context.Context, conn *efs.EFS, id string) (*efs.B
 	return output.BackupPolicy, nil
 }
 
-func FindFileSystemPolicyByID(ctx context.Context, conn *efs.EFS, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
+func FindFileSystemPolicyByID(ctx context.Context, conn *efs.Client, id string) (*efs.DescribeFileSystemPolicyOutput, error) {
 	input := &efs.DescribeFileSystemPolicyInput{
 		FileSystemId: aws.String(id),
 	}
 
-	output, err := conn.DescribeFileSystemPolicyWithContext(ctx, input)
+	output, err := conn.DescribeFileSystemPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, efs.ErrCodePolicyNotFound) {
+	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) || tfawserr.ErrCodeEquals(err, awstypes.ErrCodePolicyNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

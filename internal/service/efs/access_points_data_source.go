@@ -6,8 +6,9 @@ package efs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -43,7 +44,7 @@ func DataSourceAccessPoints() *schema.Resource {
 
 func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
 	fileSystemID := d.Get(names.AttrFileSystemID).(string)
 	input := &efs.DescribeAccessPointsInput{
@@ -59,8 +60,8 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	var accessPointIDs, arns []string
 
 	for _, v := range output {
-		accessPointIDs = append(accessPointIDs, aws.StringValue(v.AccessPointId))
-		arns = append(arns, aws.StringValue(v.AccessPointArn))
+		accessPointIDs = append(accessPointIDs, aws.ToString(v.AccessPointId))
+		arns = append(arns, aws.ToString(v.AccessPointArn))
 	}
 
 	d.SetId(fileSystemID)
@@ -70,8 +71,8 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findAccessPointDescriptions(ctx context.Context, conn *efs.EFS, input *efs.DescribeAccessPointsInput) ([]*efs.AccessPointDescription, error) {
-	var output []*efs.AccessPointDescription
+func findAccessPointDescriptions(ctx context.Context, conn *efs.Client, input *efs.DescribeAccessPointsInput) ([]*awstypes.AccessPointDescription, error) {
+	var output []*awstypes.AccessPointDescription
 
 	err := conn.DescribeAccessPointsPagesWithContext(ctx, input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
 		if page == nil {

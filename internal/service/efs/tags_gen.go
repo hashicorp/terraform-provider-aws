@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/aws-sdk-go/service/efs/efsiface"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +24,7 @@ func listTags(ctx context.Context, conn efsiface.EFSAPI, identifier string) (tft
 	input := &efs.DescribeTagsInput{
 		FileSystemId: aws.String(identifier),
 	}
-	var output []*efs.Tag
+	var output []*awstypes.Tag
 
 	err := conn.DescribeTagsPagesWithContext(ctx, input, func(page *efs.DescribeTagsOutput, lastPage bool) bool {
 		if page == nil {
@@ -49,7 +50,7 @@ func listTags(ctx context.Context, conn efsiface.EFSAPI, identifier string) (tft
 // ListTags lists efs service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).EFSConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).EFSClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -65,11 +66,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns efs service tags.
-func Tags(tags tftags.KeyValueTags) []*efs.Tag {
-	result := make([]*efs.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []*awstypes.Tag {
+	result := make([]*awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &efs.Tag{
+		tag := &awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -81,11 +82,11 @@ func Tags(tags tftags.KeyValueTags) []*efs.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from efs service tags.
-func KeyValueTags(ctx context.Context, tags []*efs.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -93,7 +94,7 @@ func KeyValueTags(ctx context.Context, tags []*efs.Tag) tftags.KeyValueTags {
 
 // getTagsIn returns efs service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*efs.Tag {
+func getTagsIn(ctx context.Context) []*awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -104,7 +105,7 @@ func getTagsIn(ctx context.Context) []*efs.Tag {
 }
 
 // setTagsOut sets efs service tags in Context.
-func setTagsOut(ctx context.Context, tags []*efs.Tag) {
+func setTagsOut(ctx context.Context, tags []*awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -127,7 +128,7 @@ func updateTags(ctx context.Context, conn efsiface.EFSAPI, identifier string, ol
 			TagKeys:    aws.StringSlice(removedTags.Keys()),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -142,7 +143,7 @@ func updateTags(ctx context.Context, conn efsiface.EFSAPI, identifier string, ol
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -155,5 +156,5 @@ func updateTags(ctx context.Context, conn efsiface.EFSAPI, identifier string, ol
 // UpdateTags updates efs service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).EFSConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).EFSClient(ctx), identifier, oldTags, newTags)
 }
