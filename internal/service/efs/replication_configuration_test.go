@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -46,7 +45,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.status", awstypes.ReplicationStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", string(awstypes.ReplicationStatusEnabled)),
 					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, names.AttrID),
@@ -119,7 +118,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, names.AttrKeyID),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.status", awstypes.ReplicationStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", string(awstypes.ReplicationStatusEnabled)),
 					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, names.AttrID),
@@ -157,7 +156,7 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.file_system_id", destinationFsResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.status", awstypes.ReplicationStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", string(awstypes.ReplicationStatusEnabled)),
 				),
 			},
 		},
