@@ -1359,7 +1359,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatibl
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cluster_mode", names.AttrEnabled),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.Ct2),
