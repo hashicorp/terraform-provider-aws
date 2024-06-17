@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +24,7 @@ func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
 	//if testing.Short() {
 	//	t.Skip("skipping long-running test in short mode")
 	//}
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_drs_replication_configuration_template.test"
 	var rct awstypes.ReplicationConfigurationTemplate
 
@@ -36,7 +37,7 @@ func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationTemplateConfig_basic(),
+				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
@@ -105,29 +106,45 @@ func testAccCheckReplicationConfigurationTemplateDestroy(ctx context.Context) re
 	}
 }
 
-func testAccReplicationConfigurationTemplateConfig_basic() string {
-	return `
+func testAccReplicationConfigurationTemplateConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 resource "aws_drs_replication_configuration_template" "test" {
   associate_default_security_group        = false
-  bandwidth_throttling                    = 1
+  bandwidth_throttling                    = 12
   create_public_ip                        = false
   data_plane_routing                      = "PRIVATE_IP"
   default_large_staging_disk_type         = "GP2"
   ebs_encryption                          = "NONE"
   use_dedicated_replication_server        = false
-  replication_server_instance_type        = "t2.micro"
-  replication_servers_security_groups_ids = []
-  staging_area_subnet_id                  = ""
+  replication_server_instance_type        = "t3.small"
+  replication_servers_security_groups_ids = [aws_security_group.test.id]
+  staging_area_subnet_id                  = aws_subnet.test[0].id
 
   pit_policy {
-    interval           = 1
-    retention_duration = 1
-    units              = "DAY"
+    enabled            = true
+    interval           = 60
+    retention_duration = 120
+    units              = "MINUTE"
   }
 
   staging_area_tags = {
-    Name = "staging-area"
+    Name = %[1]q
   }
 }
-`
+`, rName))
 }

@@ -16,18 +16,24 @@ Provides an Elastic Disaster Recovery replication configuration template resourc
 
 ```terraform
 resource "aws_drs_replication_configuration_template" "example" {
-  associate_default_security_group        = True or False
-  bandwidth_throttling                    = 123
-  create_public_ip                        = True or False
-  data_plane_routing                      = "PRIVATE_IP" or "PUBLIC_IP"
-  default_large_staging_disk_type         = "GP2" or "GP3" or "ST1" or "AUTO"
-  ebs_ecryption                           = "DEFAULT" or "CUSTOM"
-  ebs_encryption_key_arn                  = "string"
-  pit_policy                              = [{"enabled": True or False, "interval":123}]
-  replication_server_instance_type        = "string"
-  replication_servers_security_groups_ids = ["string"]
-  staging_area_subnet_id                  = "string"
+  associate_default_security_group        = false
+  bandwidth_throttling                    = 12
+  create_public_ip                        = false
+  data_plane_routing                      = "PRIVATE_IP"
+  default_large_staging_disk_type         = "GP2"
+  ebs_ecryption                           = "DEFAULT"
+  ebs_encryption_key_arn                  = "arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+  replication_server_instance_type        = "t3.small"
+  replication_servers_security_groups_ids = aws_security_group.example[*].id
+  staging_area_subnet_id                  = aws_subnet.example.id
   use_dedicated_replication_server        = false
+
+  pit_policy {
+    enabled            = true
+    interval           = 1
+    retention_duration = 1
+    units              = "DAY"
+  }
 }
 ```
 
@@ -38,9 +44,9 @@ The following arguments are required:
 * `associate_default_security_group` - (Required) Whether to associate the default Elastic Disaster Recovery Security group with the Replication Configuration Template.
 * `bandwidth_throttling` - (Required) Configure bandwidth throttling for the outbound data transfer rate of the Source Server in Mbps.
 * `create_public_ip` - (Required) Whether to create a Public IP for the Recovery Instance by default.
-* `data_plane_routing` - (Required) Data plane routing mechanism that will be used for replication.
-* `default_large_staging_disk_type` - (Required) Staging Disk EBS volume type to be used during replication.
-* `ebs_encryption` - (Required) Type of EBS encryption to be used during replication.
+* `data_plane_routing` - (Required) Data plane routing mechanism that will be used for replication. Valid values are `PUBLIC_IP` and `PRIVATE_IP`.
+* `default_large_staging_disk_type` - (Required) Staging Disk EBS volume type to be used during replication. Valid values are `GP2`, `GP3`, `ST1`, or `AUTO`.
+* `ebs_encryption` - (Required) Type of EBS encryption to be used during replication. Valid values are `DEFAULT` and `CUSTOM`.
 * `ebs_encryption_key_arn` - (Required) ARN of the EBS encryption key to be used during replication.
 * `pit_policy` - (Required) Configuration block for Point in time (PIT) policy to manage snapshots taken during replication. [See below](#pit_policy).
 * `replication_server_instance_type` - (Required) Instance type to be used for the replication server.
