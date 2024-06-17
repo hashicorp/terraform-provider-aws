@@ -3648,7 +3648,7 @@ resource "aws_dynamodb_table" "test" {
 
   ttl {
     attribute_name = ""
-    enabled = %[2]t
+    enabled        = %[2]t
   }
 }
 `, rName, ttlEnabled)
