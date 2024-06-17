@@ -12,12 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -264,7 +264,7 @@ func testAccCheckAccessPointDestroy(ctx context.Context) resource.TestCheckFunc 
 				AccessPointId: aws.String(rs.Primary.ID),
 			})
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeAccessPointNotFound) {
+				if errs.IsA[*awstypes.AccessPointNotFound](err) {
 					continue
 				}
 				return fmt.Errorf("Error describing EFS access point in tests: %s", err)
@@ -307,7 +307,7 @@ func testAccCheckAccessPointExists(ctx context.Context, resourceID string, mount
 			return fmt.Errorf("access point ID mismatch: %q != %q", apId, fs.Primary.ID)
 		}
 
-		*mount = *mt.AccessPoints[0]
+		*mount = mt.AccessPoints[0]
 
 		return nil
 	}

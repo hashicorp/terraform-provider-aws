@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -181,7 +181,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeAccessPointNotFound) {
+		if errs.IsA[*awstypes.AccessPointNotFound](err) {
 			log.Printf("[WARN] EFS access point %q could not be found.", d.Id())
 			d.SetId("")
 			return diags
@@ -228,14 +228,14 @@ func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeAccessPointNotFound) {
+		if errs.IsA[*awstypes.AccessPointNotFound](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting EFS Access Point (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitAccessPointDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeAccessPointNotFound) {
+		if errs.IsA[*awstypes.AccessPointNotFound](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "waiting for EFS access point (%s) deletion: %s", d.Id(), err)
@@ -266,7 +266,7 @@ func expandAccessPointPOSIXUser(pUser []interface{}) *awstypes.PosixUser {
 	}
 
 	if v, ok := m["secondary_gids"].(*schema.Set); ok && len(v.List()) > 0 {
-		posixUser.SecondaryGids = flex.ExpandInt64Set(v)
+		posixUser.SecondaryGids = flex.ExpandInt64ValueSet(v)
 	}
 
 	return posixUser
@@ -316,7 +316,7 @@ func flattenAccessPointPOSIXUser(posixUser *awstypes.PosixUser) []interface{} {
 	m := map[string]interface{}{
 		"gid":            aws.ToInt64(posixUser.Gid),
 		"uid":            aws.ToInt64(posixUser.Uid),
-		"secondary_gids": aws.Int64ValueSlice(posixUser.SecondaryGids),
+		"secondary_gids": posixUser.SecondaryGids,
 	}
 
 	return []interface{}{m}
