@@ -14,12 +14,13 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -130,7 +131,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
-		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	mt, err := conn.CreateMountTarget(ctx, input)
@@ -203,7 +204,7 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange(names.AttrSecurityGroups) {
 		input := &efs.ModifyMountTargetSecurityGroupsInput{
 			MountTargetId:  aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
+			SecurityGroups: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyMountTargetSecurityGroups(ctx, input)
@@ -225,7 +226,7 @@ func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta
 		MountTargetId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeMountTargetNotFound) {
+	if errs.IsA[*awstypes.MountTargetNotFound](err) {
 		return diags
 	}
 
@@ -257,35 +258,29 @@ func findMountTarget(ctx context.Context, conn *efs.Client, input *efs.DescribeM
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput) ([]*awstypes.MountTargetDescription, error) {
-	var output []*awstypes.MountTargetDescription
+func findMountTargets(ctx context.Context, conn *efs.Client, input *efs.DescribeMountTargetsInput) ([]awstypes.MountTargetDescription, error) {
+	var output []awstypes.MountTargetDescription
 
-	err := conn.DescribeMountTargetsPagesWithContext(ctx, input, func(page *efs.DescribeMountTargetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := efs.NewDescribeMountTargetsPaginator(conn, input)
 
-		for _, v := range page.MountTargets {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.MountTargetNotFound](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeMountTargetNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.MountTargets...)
 	}
 
 	return output, nil
@@ -317,8 +312,8 @@ func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.Client, id s
 
 func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{awstypes.LifeCycleStateCreating},
-		Target:     []string{awstypes.LifeCycleStateAvailable},
+		Pending:    enum.Slice(awstypes.LifeCycleStateCreating),
+		Target:     enum.Slice(awstypes.LifeCycleStateAvailable),
 		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
@@ -336,7 +331,7 @@ func waitMountTargetCreated(ctx context.Context, conn *efs.Client, id string, ti
 
 func waitMountTargetDeleted(ctx context.Context, conn *efs.Client, id string, timeout time.Duration) (*awstypes.MountTargetDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted},
+		Pending:    enum.Slice(awstypes.LifeCycleStateAvailable, awstypes.LifeCycleStateDeleting, awstypes.LifeCycleStateDeleted),
 		Target:     []string{},
 		Refresh:    statusMountTargetLifeCycleState(ctx, conn, id),
 		Timeout:    timeout,
