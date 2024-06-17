@@ -517,27 +517,17 @@ func waitFileSystemDeleted(ctx context.Context, conn *efs.Client, fileSystemID s
 	return nil, err
 }
 
-func flattenFileSystemLifecyclePolicies(apiObjects []*awstypes.LifecyclePolicy) []interface{} {
+func flattenFileSystemLifecyclePolicies(apiObjects []awstypes.LifecyclePolicy) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfMap := make(map[string]interface{})
 
-		if apiObject.TransitionToArchive != nil {
-			tfMap["transition_to_archive"] = aws.ToString(apiObject.TransitionToArchive)
-		}
+		tfMap["transition_to_archive"] = string(apiObject.TransitionToArchive)
 
-		if apiObject.TransitionToIA != nil {
-			tfMap["transition_to_ia"] = aws.ToString(apiObject.TransitionToIA)
-		}
+		tfMap["transition_to_ia"] = string(apiObject.TransitionToIA)
 
-		if apiObject.TransitionToPrimaryStorageClass != nil {
-			tfMap["transition_to_primary_storage_class"] = aws.ToString(apiObject.TransitionToPrimaryStorageClass)
-		}
+		tfMap["transition_to_primary_storage_class"] = string(apiObject.TransitionToPrimaryStorageClass)
 
 		tfList = append(tfList, tfMap)
 	}
