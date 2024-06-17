@@ -1341,9 +1341,9 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 	}
 	awsVpcConfig.Subnets = flex.ExpandStringValueSet(raw[names.AttrSubnets].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
-		awsVpcConfig.AssignPublicIp = awstypes.AssignPublicIp(awstypes.AssignPublicIpDisabled)
+		awsVpcConfig.AssignPublicIp = awstypes.AssignPublicIpDisabled
 		if val {
-			awsVpcConfig.AssignPublicIp = awstypes.AssignPublicIp(awstypes.AssignPublicIpEnabled)
+			awsVpcConfig.AssignPublicIp = awstypes.AssignPublicIpEnabled
 		}
 	}
 

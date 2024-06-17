@@ -194,7 +194,6 @@ func sweepServices(region string) error {
 				}
 			}
 		}
-
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
