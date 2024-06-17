@@ -8,8 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -164,7 +162,7 @@ func testAccCheckBackupPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			if string(output.Status) == awstypes.StatusDisabled {
+			if output.Status == awstypes.StatusDisabled {
 				continue
 			}
 

@@ -11,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,10 +43,10 @@ func ResourceBackupPolicy() *schema.Resource {
 						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
+							ValidateFunc: validation.StringInSlice(enum.Slice(
 								awstypes.StatusDisabled,
 								awstypes.StatusEnabled,
-							}, false),
+							), false),
 						},
 					},
 				},
@@ -119,7 +120,7 @@ func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		names.AttrStatus: awstypes.StatusDisabled,
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeFileSystemNotFound) {
+	if errs.IsA[*awstypes.FileSystemNotFound](err) {
 		return diags
 	}
 
@@ -138,14 +139,14 @@ func backupPolicyPut(ctx context.Context, conn *efs.Client, fsID string, tfMap m
 		FileSystemId: aws.String(fsID),
 	}
 
-	log.Printf("[DEBUG] Putting EFS Backup Policy: %s", input)
+	log.Printf("[DEBUG] Putting EFS Backup Policy: %+v", input)
 	_, err := conn.PutBackupPolicy(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("putting EFS Backup Policy (%s): %w", fsID, err)
 	}
 
-	if aws.ToString(input.BackupPolicy.Status) == awstypes.StatusEnabled {
+	if input.BackupPolicy.Status == awstypes.StatusEnabled {
 		if _, err := waitBackupPolicyEnabled(ctx, conn, fsID); err != nil {
 			return fmt.Errorf("waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
@@ -179,9 +180,7 @@ func flattenBackupPolicy(apiObject *awstypes.BackupPolicy) map[string]interface{
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Status; v != nil {
-		tfMap[names.AttrStatus] = aws.ToString(v)
-	}
+	tfMap[names.AttrStatus] = string(apiObject.Status)
 
 	return tfMap
 }
