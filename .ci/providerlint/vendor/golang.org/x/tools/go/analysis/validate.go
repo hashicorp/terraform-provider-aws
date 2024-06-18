@@ -19,8 +19,6 @@ import (
 // that the Requires graph is acyclic;
 // that analyzer fact types are unique;
 // that each fact type is a pointer.
-//
-// Analyzer names need not be unique, though this may be confusing.
 func Validate(analyzers []*Analyzer) error {
 	// Map each fact type to its sole generating analyzer.
 	factTypes := make(map[reflect.Type]*Analyzer)

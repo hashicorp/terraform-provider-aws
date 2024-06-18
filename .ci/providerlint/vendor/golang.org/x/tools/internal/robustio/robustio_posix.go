@@ -5,6 +5,8 @@
 //go:build !windows && !plan9
 // +build !windows,!plan9
 
+// TODO(adonovan): use 'unix' tag when go1.19 can be assumed.
+
 package robustio
 
 import (
