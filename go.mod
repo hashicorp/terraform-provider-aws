@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.9
 	github.com/aws/aws-sdk-go-v2/service/fms v1.33.8
-	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.10
+	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.11
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.43.0
