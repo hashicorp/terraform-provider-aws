@@ -923,14 +923,16 @@ func resourceGroup() *schema.Resource {
 							},
 						},
 						"max_group_prepared_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  defaultWarmPoolMaxGroupPreparedCapacity,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      defaultWarmPoolMaxGroupPreparedCapacity,
+							ValidateFunc: validation.IntAtLeast(defaultWarmPoolMaxGroupPreparedCapacity),
 						},
 						"min_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"pool_state": {
 							Type:             schema.TypeString,
