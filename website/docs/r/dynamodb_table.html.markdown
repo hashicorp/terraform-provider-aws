@@ -169,7 +169,7 @@ resource "aws_dynamodb_tag" "example" {
 
 Required arguments:
 
-* `attribute` - (Required) Set of nested attribute definitions. Only required for `hash_key` and `range_key` attributes. See below.
+* `attribute` - (Required) Attributes as Blocks definitions. Only required for `hash_key` and `range_key` attributes. See below.
 * `hash_key` - (Required, Forces new resource) Attribute to use as the hash (partition) key. Must also be defined as an `attribute`. See below.
 * `name` - (Required) Unique within a region name of the table.
 
