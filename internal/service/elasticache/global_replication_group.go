@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -354,7 +354,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			} else if newNodeGroupCount < oldNodeGroupCount {
-				ids := tfslices.ApplyToAll(globalReplicationGroup.GlobalNodeGroups, func(v *awstypes.GlobalNodeGroup) string {
+				ids := tfslices.ApplyToAll(globalReplicationGroup.GlobalNodeGroups, func(v awstypes.GlobalNodeGroup) string {
 					return aws.ToString(v.GlobalNodeGroupId)
 				})
 				if err := decreaseGlobalReplicationGroupNodeGroupCount(ctx, conn, d.Id(), newNodeGroupCount, ids, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -547,7 +547,7 @@ func increaseGlobalReplicationGroupNodeGroupCount(ctx context.Context, conn *ela
 	input := &elasticache.IncreaseNodeGroupsInGlobalReplicationGroupInput{
 		ApplyImmediately:         aws.Bool(true),
 		GlobalReplicationGroupId: aws.String(id),
-		NodeGroupCount:           aws.Int64(int64(newNodeGroupCount)),
+		NodeGroupCount:           aws.Int32(int32(newNodeGroupCount)),
 	}
 
 	_, err := conn.IncreaseNodeGroupsInGlobalReplicationGroup(ctx, input)
@@ -577,9 +577,9 @@ func decreaseGlobalReplicationGroupNodeGroupCount(ctx context.Context, conn *ela
 
 	input := &elasticache.DecreaseNodeGroupsInGlobalReplicationGroupInput{
 		ApplyImmediately:         aws.Bool(true),
-		GlobalNodeGroupsToRetain: aws.StringSlice(nodeGroupIDs),
+		GlobalNodeGroupsToRetain: nodeGroupIDs,
 		GlobalReplicationGroupId: aws.String(id),
-		NodeGroupCount:           aws.Int64(int64(newNodeGroupCount)),
+		NodeGroupCount:           aws.Int32(int32(newNodeGroupCount)),
 	}
 
 	_, err := conn.DecreaseNodeGroupsInGlobalReplicationGroup(ctx, input)
@@ -601,11 +601,11 @@ func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client,
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, readyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidGlobalReplicationGroupStateFault](ctx, readyTimeout, func() (interface{}, error) {
 		return conn.DeleteGlobalReplicationGroup(ctx, input)
-	}, awstypes.ErrCodeInvalidGlobalReplicationGroupStateFault)
+	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeGlobalReplicationGroupNotFoundFault) {
+	if errs.IsA[*awstypes.GlobalReplicationGroupNotFoundFault](err) {
 		return nil
 	}
 
@@ -626,45 +626,43 @@ func findGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.Clien
 		ShowMemberInfo:           aws.Bool(true),
 	}
 
-	return findGlobalReplicationGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.GlobalReplicationGroup]())
+	return findGlobalReplicationGroup(ctx, conn, input, tfslices.PredicateTrue[awstypes.GlobalReplicationGroup]())
 }
 
-func findGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[*awstypes.GlobalReplicationGroup]) (*awstypes.GlobalReplicationGroup, error) {
+func findGlobalReplicationGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[awstypes.GlobalReplicationGroup]) (*awstypes.GlobalReplicationGroup, error) {
 	output, err := findGlobalReplicationGroups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[*awstypes.GlobalReplicationGroup]) ([]*awstypes.GlobalReplicationGroup, error) {
-	var output []*awstypes.GlobalReplicationGroup
+func findGlobalReplicationGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeGlobalReplicationGroupsInput, filter tfslices.Predicate[awstypes.GlobalReplicationGroup]) ([]awstypes.GlobalReplicationGroup, error) {
+	var output []awstypes.GlobalReplicationGroup
 
-	err := conn.DescribeGlobalReplicationGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeGlobalReplicationGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := elasticache.NewDescribeGlobalReplicationGroupsPaginator(conn, input)
 
-		for _, v := range page.GlobalReplicationGroups {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.GlobalReplicationGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeGlobalReplicationGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.GlobalReplicationGroups {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -757,7 +755,7 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 
 	for _, v := range globalReplicationGroup.Members {
 		if aws.ToString(v.ReplicationGroupId) == replicationGroupID {
-			return v, nil
+			return &v, nil
 		}
 	}
 
@@ -805,16 +803,16 @@ func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elastic
 	return nil, err
 }
 
-func flattenGlobalReplicationGroupAutomaticFailoverEnabled(members []*awstypes.GlobalReplicationGroupMember) bool {
+func flattenGlobalReplicationGroupAutomaticFailoverEnabled(members []awstypes.GlobalReplicationGroupMember) bool {
 	if len(members) == 0 {
 		return false
 	}
 
 	member := members[0]
-	return aws.ToString(member.AutomaticFailover) == awstypes.AutomaticFailoverStatusEnabled
+	return member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabled
 }
 
-func flattenGlobalNodeGroups(nodeGroups []*awstypes.GlobalNodeGroup) []any {
+func flattenGlobalNodeGroups(nodeGroups []awstypes.GlobalNodeGroup) []any {
 	if len(nodeGroups) == 0 {
 		return nil
 	}
@@ -822,21 +820,13 @@ func flattenGlobalNodeGroups(nodeGroups []*awstypes.GlobalNodeGroup) []any {
 	var l []any
 
 	for _, nodeGroup := range nodeGroups {
-		if nodeGroup == nil {
-			continue
-		}
-
 		l = append(l, flattenGlobalNodeGroup(nodeGroup))
 	}
 
 	return l
 }
 
-func flattenGlobalNodeGroup(nodeGroup *awstypes.GlobalNodeGroup) map[string]any {
-	if nodeGroup == nil {
-		return nil
-	}
-
+func flattenGlobalNodeGroup(nodeGroup awstypes.GlobalNodeGroup) map[string]any {
 	m := map[string]interface{}{}
 
 	if v := nodeGroup.GlobalNodeGroupId; v != nil {
@@ -850,7 +840,7 @@ func flattenGlobalNodeGroup(nodeGroup *awstypes.GlobalNodeGroup) map[string]any 
 	return m
 }
 
-func flattenGlobalReplicationGroupPrimaryGroupID(members []*awstypes.GlobalReplicationGroupMember) string {
+func flattenGlobalReplicationGroupPrimaryGroupID(members []awstypes.GlobalReplicationGroupMember) string {
 	for _, member := range members {
 		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
 			return aws.ToString(member.ReplicationGroupId)

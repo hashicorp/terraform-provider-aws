@@ -13,12 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1489,7 +1489,7 @@ func testAccPreCheckGlobalReplicationGroup(ctx context.Context, t *testing.T) {
 	_, err := conn.DescribeGlobalReplicationGroups(ctx, input)
 
 	if acctest.PreCheckSkipError(err) ||
-		tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, "Access Denied to API Version: APIGlobalDatastore") {
+		errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Access Denied to API Version: APIGlobalDatastore") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
