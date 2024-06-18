@@ -95,7 +95,7 @@ func resourceVaultPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	output, err := FindVaultAccessPolicyByName(ctx, conn, d.Id())
+	output, err := findVaultAccessPolicyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Policy (%s) not found, removing from state", d.Id())

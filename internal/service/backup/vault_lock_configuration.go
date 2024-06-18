@@ -97,7 +97,7 @@ func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	output, err := FindVaultByName(ctx, conn, d.Id())
+	output, err := findVaultByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())

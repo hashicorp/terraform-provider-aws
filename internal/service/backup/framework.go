@@ -176,7 +176,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	resp, err := FindFrameworkByName(ctx, conn, d.Id())
+	resp, err := findFrameworkByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())

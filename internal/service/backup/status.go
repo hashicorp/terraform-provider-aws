@@ -14,7 +14,7 @@ import (
 
 func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindJobByID(ctx, conn, id)
+		output, err := findJobByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -30,7 +30,7 @@ func statusJobState(ctx context.Context, conn *backup.Client, id string) retry.S
 
 func statusFramework(ctx context.Context, conn *backup.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFrameworkByName(ctx, conn, id)
+		output, err := findFrameworkByName(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -46,7 +46,7 @@ func statusFramework(ctx context.Context, conn *backup.Client, id string) retry.
 
 func statusRecoveryPoint(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindRecoveryPointByTwoPartKey(ctx, conn, backupVaultName, recoveryPointARN)
+		output, err := findRecoveryPointByTwoPartKey(ctx, conn, backupVaultName, recoveryPointARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

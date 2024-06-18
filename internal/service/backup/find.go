@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.DescribeBackupJobOutput, error) {
+func findJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.DescribeBackupJobOutput, error) {
 	input := &backup.DescribeBackupJobInput{
 		BackupJobId: aws.String(id),
 	}
@@ -40,7 +40,7 @@ func FindJobByID(ctx context.Context, conn *backup.Client, id string) (*backup.D
 	return output, nil
 }
 
-func FindRecoveryPointByTwoPartKey(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) (*backup.DescribeRecoveryPointOutput, error) {
+func findRecoveryPointByTwoPartKey(ctx context.Context, conn *backup.Client, backupVaultName, recoveryPointARN string) (*backup.DescribeRecoveryPointOutput, error) {
 	input := &backup.DescribeRecoveryPointInput{
 		BackupVaultName:  aws.String(backupVaultName),
 		RecoveryPointArn: aws.String(recoveryPointARN),
@@ -66,7 +66,7 @@ func FindRecoveryPointByTwoPartKey(ctx context.Context, conn *backup.Client, bac
 	return output, nil
 }
 
-func FindVaultAccessPolicyByName(ctx context.Context, conn *backup.Client, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {
+func findVaultAccessPolicyByName(ctx context.Context, conn *backup.Client, name string) (*backup.GetBackupVaultAccessPolicyOutput, error) {
 	input := &backup.GetBackupVaultAccessPolicyInput{
 		BackupVaultName: aws.String(name),
 	}
@@ -91,7 +91,7 @@ func FindVaultAccessPolicyByName(ctx context.Context, conn *backup.Client, name 
 	return output, nil
 }
 
-func FindVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
+func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}
@@ -116,7 +116,7 @@ func FindVaultByName(ctx context.Context, conn *backup.Client, name string) (*ba
 	return output, nil
 }
 
-func FindFrameworkByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeFrameworkOutput, error) {
+func findFrameworkByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeFrameworkOutput, error) {
 	input := &backup.DescribeFrameworkInput{
 		FrameworkName: aws.String(name),
 	}
