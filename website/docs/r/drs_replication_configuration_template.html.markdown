@@ -70,7 +70,7 @@ The following arguments are optional:
 * `rule_id` - (Optional) ID of the rule. Valid values are integers.
 * `units` - (Required) Units used to measure the `interval` and `retention_duration`. Valid values are `MINUTE`, `HOUR`, and `DAY`.
 
-## Attributes Reference
+## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
