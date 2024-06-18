@@ -106,9 +106,10 @@ func (tags KeyValueTags) IgnoreConfig(config *IgnoreConfig) KeyValueTags {
 		return tags
 	}
 
-	result := tags.IgnorePrefixes(config.KeyPrefixes)
-	result := tags.IgnoreSuffixes(config.KeySuffixes)
-	result = result.Ignore(config.Keys)
+	prefixes := tags.IgnorePrefixes(config.KeyPrefixes)
+	suffixes := prefixes.IgnoreSuffixes(config.KeySuffixes)
+
+	result := suffixes.Ignore(config.Keys)
 
 	return result
 }
