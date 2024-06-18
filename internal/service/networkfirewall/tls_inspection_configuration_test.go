@@ -59,7 +59,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_combinedIngressEgressBasic
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_configuration.*", map[string]string{
 						names.AttrKeyID: "AWS_OWNED_KMS_KEY",
-						names.AttrType:   "AWS_OWNED_KMS_KEY",
+						names.AttrType:  "AWS_OWNED_KMS_KEY",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.0.resource_arn", certificateArn),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.0.address_definition", "0.0.0.0/0"),
@@ -92,7 +92,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_combinedIngressEgressBasic
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_configuration.*", map[string]string{
 						names.AttrKeyID: "AWS_OWNED_KMS_KEY",
-						names.AttrType:   "AWS_OWNED_KMS_KEY",
+						names.AttrType:  "AWS_OWNED_KMS_KEY",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.0.resource_arn", certificateArn),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.0.address_definition", "10.0.0.0/8"),
@@ -148,7 +148,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_egressBasic(t *testing.T) 
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_configuration.*", map[string]string{
 						names.AttrKeyID: "AWS_OWNED_KMS_KEY",
-						names.AttrType:   "AWS_OWNED_KMS_KEY",
+						names.AttrType:  "AWS_OWNED_KMS_KEY",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn", ca),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", acctest.Ct1),
@@ -257,7 +257,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressBasic(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_configuration.*", map[string]string{
 						names.AttrKeyID: "AWS_OWNED_KMS_KEY",
-						names.AttrType:   "AWS_OWNED_KMS_KEY",
+						names.AttrType:  "AWS_OWNED_KMS_KEY",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.0.resource_arn", certificateArn),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.destination.0.address_definition", "0.0.0.0/0"),
