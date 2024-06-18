@@ -39,6 +39,7 @@ type DefaultConfig struct {
 type IgnoreConfig struct {
 	Keys        KeyValueTags
 	KeyPrefixes KeyValueTags
+	KeySuffixes KeyValueTags
 }
 
 // KeyValueTags is a standard implementation for AWS key-value resource tags.
@@ -106,6 +107,7 @@ func (tags KeyValueTags) IgnoreConfig(config *IgnoreConfig) KeyValueTags {
 	}
 
 	result := tags.IgnorePrefixes(config.KeyPrefixes)
+	result := tags.IgnoreSuffixes(config.KeySuffixes)
 	result = result.Ignore(config.Keys)
 
 	return result
@@ -143,6 +145,30 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 
 		for ignoreTagPrefix := range ignoreTagPrefixes {
 			if strings.HasPrefix(k, ignoreTagPrefix) {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
+// IgnoreSuffixes returns non-matching tag key prefixes.
+func (tags KeyValueTags) IgnoreSuffixes(ignoreTagSuffixes KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		var ignore bool
+
+		for ignoreTagSuffix := range ignoreTagSuffixes {
+			if strings.HasSuffix(k, ignoreTagSuffix) {
 				ignore = true
 				break
 			}
