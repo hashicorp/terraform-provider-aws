@@ -108,7 +108,7 @@ func Calculate(str1, str2 []rune, maxCost, insCost, subCost, delCost int) (dist,
 
 		for x := 0; x < l2; x++ {
 			dy, d[doff] = d[doff], d[doff]+insCost
-			for d[doff] > maxCost && dlen > 0 {
+			for doff < l1 && d[doff] > maxCost && dlen > 0 {
 				if str1[doff] != str2[x] {
 					dy += subCost
 				}
