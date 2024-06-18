@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.2.4
-	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.11
+	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.12
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.24.11
