@@ -54,7 +54,7 @@ func (r *replicationConfigurationTemplateResource) Metadata(_ context.Context, r
 func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 			},
 			"associate_default_security_group": schema.BoolAttribute{
@@ -84,7 +84,7 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 			"ebs_encryption_key_arn": schema.StringAttribute{
 				Optional: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Computed: true,
 			},
 			"replication_server_instance_type": schema.StringAttribute{
@@ -111,10 +111,10 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 				CustomType: fwtypes.NewListNestedObjectTypeOf[pitPolicy](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"enabled": schema.BoolAttribute{
+						names.AttrEnabled: schema.BoolAttribute{
 							Optional: true,
 						},
-						"interval": schema.Int64Attribute{
+						names.AttrInterval: schema.Int64Attribute{
 							Required: true,
 						},
 						"retention_duration": schema.Int64Attribute{
