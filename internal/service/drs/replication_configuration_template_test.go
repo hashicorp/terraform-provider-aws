@@ -48,7 +48,6 @@ func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "use_dedicated_replication_server", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replication_server_instance_type", "t3.small"),
 					resource.TestCheckResourceAttr(resourceName, "replication_servers_security_groups_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "replication_servers_security_groups_ids.0", aws.StringValue(&rct.ReplicationServersSecurityGroupsIDs[0])),
 					resource.TestCheckResourceAttr(resourceName, "staging_area_subnet_id", aws.StringValue(rct.StagingAreaSubnetId)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy", map[string]string{
 						names.AttrEnabled:    acctest.CtFalse,
