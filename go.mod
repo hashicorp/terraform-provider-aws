@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/kms v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.33.4
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.6
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.7
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.10
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.3
