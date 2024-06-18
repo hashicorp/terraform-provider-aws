@@ -107,19 +107,19 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"encryption_configuration": schema.ListNestedBlock{
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"key_id": schema.StringAttribute{
+						names.AttrKeyID: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Computed:   true,
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Optional: true,
 							Computed: true,
 							Default:  stringdefault.StaticString(networkfirewall.EncryptionTypeAwsOwnedKmsKey),
@@ -130,7 +130,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -175,7 +175,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 											},
 										},
 									},
-									"scope": schema.ListNestedBlock{
+									names.AttrScope: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[serverCertificateScopeModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -208,7 +208,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 														},
 													},
 												},
-												"destination": schema.ListNestedBlock{
+												names.AttrDestination: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[addressModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
@@ -262,7 +262,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 										CustomType: fwtypes.NewListNestedObjectTypeOf[serverCertificateModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"resource_arn": schema.StringAttribute{
+												names.AttrResourceARN: schema.StringAttribute{
 													CustomType: fwtypes.ARNType,
 													Optional:   true,
 												},
