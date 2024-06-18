@@ -66,7 +66,7 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			SkipClientGenerate:   l.SkipClientGenerate(),
+			GenerateClient:       !l.SkipClientGenerate(),
 			GoV1Package:          l.GoV1Package(),
 			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
@@ -112,7 +112,7 @@ type ResourceDatum struct {
 }
 
 type ServiceDatum struct {
-	SkipClientGenerate   bool
+	GenerateClient       bool
 	SDKVersion           string // AWS SDK for Go version ("1", "2" or "1,2")
 	GoV1Package          string // AWS SDK for Go v1 package name
 	GoV1ClientTypeName   string // AWS SDK for Go v1 client type name

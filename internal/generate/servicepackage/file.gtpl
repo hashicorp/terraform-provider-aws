@@ -5,7 +5,7 @@ package {{ .ProviderPackage }}
 import (
 	"context"
 
-{{if not .SkipClientGenerate }}
+{{ if .GenerateClient }}
 	{{- if eq .SDKVersion "1" "1,2" }}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
@@ -131,8 +131,8 @@ func (p *servicePackage) ServicePackageName() string {
 {{- end }}
 }
 
-{{- if not .SkipClientGenerate }}
-	{{if eq .SDKVersion "1" "1,2" }}
+{{- if .GenerateClient }}
+	{{ if eq .SDKVersion "1" "1,2" }}
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
 	sess := config[names.AttrSession].(*session_sdkv1.Session)
@@ -155,7 +155,7 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{
 }
 	{{- end }}
 
-	{{if eq .SDKVersion "2" "1,2" }}
+	{{ if eq .SDKVersion "2" "1,2" }}
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
