@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -41,17 +41,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		(*ast.BasicLit)(nil),
 	}
 
-	resolver := endpoints.DefaultResolver()
-	partitions := resolver.(endpoints.EnumPartitions).Partitions()
-	var regions []string
-
-	for _, p := range partitions {
-		for id := range p.Regions() {
-			regions = append(regions, id)
-		}
-	}
-
-	re := regexp.MustCompile(strings.Join(regions, "|"))
+	re := regexp.MustCompile(strings.Join(names.AllRegionIDs, "|"))
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		x := n.(*ast.BasicLit)
 
