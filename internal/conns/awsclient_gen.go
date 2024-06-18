@@ -200,7 +200,6 @@ import (
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
-	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
 	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
@@ -641,10 +640,6 @@ func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {
 	return errs.Must(client[*emrserverless_sdkv2.Client](ctx, c, names.EMRServerless, make(map[string]any)))
-}
-
-func (c *AWSClient) ElastiCacheConn(ctx context.Context) *elasticache_sdkv1.ElastiCache {
-	return errs.Must(conn[*elasticache_sdkv1.ElastiCache](ctx, c, names.ElastiCache, make(map[string]any)))
 }
 
 func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache_sdkv2.Client {
