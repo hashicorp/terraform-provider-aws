@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.24.11
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.11
-	github.com/aws/aws-sdk-go-v2/service/appstream v1.34.10
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.34.11
 	github.com/aws/aws-sdk-go-v2/service/athena v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.11
