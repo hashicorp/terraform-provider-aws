@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -172,13 +173,11 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 				if err != nil {
 					errs = append(errs, fmt.Errorf("deleting recovery point (%s): %w", recoveryPointARN, err))
-
 					continue
 				}
 
 				if _, err := waitRecoveryPointDeleted(ctx, conn, d.Id(), recoveryPointARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 					errs = append(errs, fmt.Errorf("waiting for recovery point (%s) delete: %w", recoveryPointARN, err))
-
 					continue
 				}
 			}
@@ -190,7 +189,7 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		BackupVaultName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || tfawserr.ErrCodeEquals(err, errCodeAccessDeniedException) {
 		return diags
 	}
 

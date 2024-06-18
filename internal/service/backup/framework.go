@@ -37,9 +37,9 @@ func ResourceFramework() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
-			Update: schema.DefaultTimeout(2 * time.Minute),
-			Delete: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
@@ -86,6 +86,7 @@ func ResourceFramework() *schema.Resource {
 									"compliance_resource_ids": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										Computed: true,
 										MinItems: 1,
 										MaxItems: 100,
 										Elem: &schema.Schema{
@@ -95,6 +96,7 @@ func ResourceFramework() *schema.Resource {
 									"compliance_resource_types": {
 										Type:     schema.TypeSet,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -174,11 +176,9 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	resp, err := conn.DescribeFramework(ctx, &backup.DescribeFrameworkInput{
-		FrameworkName: aws.String(d.Id()),
-	})
+	resp, err := FindFrameworkByName(ctx, conn, d.Id())
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Framework (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -245,6 +245,10 @@ func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteFramework(ctx, input)
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Backup Framework (%s): %s", d.Id(), err)

@@ -35,7 +35,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				Config: testAccRegionSettingsConfig_1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "12"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -62,7 +62,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				Config: testAccRegionSettingsConfig_2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "12"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -84,7 +84,7 @@ func TestAccBackupRegionSettings_basic(t *testing.T) {
 				Config: testAccRegionSettingsConfig_3(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "12"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -126,18 +126,22 @@ func testAccRegionSettingsConfig_1() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-    "Aurora"          = true
-    "DocumentDB"      = true
-    "DynamoDB"        = true
-    "EBS"             = true
-    "EC2"             = true
-    "EFS"             = true
-    "FSx"             = true
-    "Neptune"         = true
-    "RDS"             = true
-    "S3"              = true
-    "Storage Gateway" = true
-    "VirtualMachine"  = true
+    "Aurora"                 = true
+    "CloudFormation"         = true
+    "DocumentDB"             = true
+    "DynamoDB"               = true
+    "EBS"                    = true
+    "EC2"                    = true
+    "EFS"                    = true
+    "FSx"                    = true
+    "Neptune"                = true
+    "RDS"                    = true
+    "Redshift"               = true
+    "S3"                     = true
+    "SAP HANA on Amazon EC2" = true
+    "Storage Gateway"        = true
+    "Timestream"             = true
+    "VirtualMachine"         = true
   }
 }
 `
@@ -147,18 +151,22 @@ func testAccRegionSettingsConfig_2() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-    "Aurora"          = false
-    "DocumentDB"      = true
-    "DynamoDB"        = true
-    "EBS"             = true
-    "EC2"             = true
-    "EFS"             = true
-    "FSx"             = true
-    "Neptune"         = true
-    "RDS"             = true
-    "S3"              = true
-    "Storage Gateway" = true
-    "VirtualMachine"  = true
+    "Aurora"                 = false
+    "CloudFormation"         = true
+    "DocumentDB"             = true
+    "DynamoDB"               = true
+    "EBS"                    = true
+    "EC2"                    = true
+    "EFS"                    = true
+    "FSx"                    = true
+    "Neptune"                = true
+    "RDS"                    = true
+    "Redshift"               = true
+    "S3"                     = true
+    "SAP HANA on Amazon EC2" = true
+    "Storage Gateway"        = true
+    "Timestream"             = true
+    "VirtualMachine"         = true
   }
 
   resource_type_management_preference = {
@@ -173,18 +181,22 @@ func testAccRegionSettingsConfig_3() string {
 	return `
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-    "Aurora"          = false
-    "DocumentDB"      = true
-    "DynamoDB"        = true
-    "EBS"             = true
-    "EC2"             = true
-    "EFS"             = true
-    "FSx"             = true
-    "Neptune"         = true
-    "RDS"             = true
-    "S3"              = true
-    "Storage Gateway" = true
-    "VirtualMachine"  = false
+    "Aurora"                 = false
+    "CloudFormation"         = true
+    "DocumentDB"             = true
+    "DynamoDB"               = true
+    "EBS"                    = true
+    "EC2"                    = true
+    "EFS"                    = true
+    "FSx"                    = true
+    "Neptune"                = true
+    "RDS"                    = true
+    "Redshift"               = true
+    "S3"                     = true
+    "SAP HANA on Amazon EC2" = true
+    "Storage Gateway"        = true
+    "Timestream"             = true
+    "VirtualMachine"         = false
   }
 
   resource_type_management_preference = {

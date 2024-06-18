@@ -350,6 +350,11 @@ func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	_, err := conn.DeleteBackupSelection(ctx, input)
+
+	if errs.IsA[*awstypes.InvalidParameterValueException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Backup Selection: %s", err)
 	}

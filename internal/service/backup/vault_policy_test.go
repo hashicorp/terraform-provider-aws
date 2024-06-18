@@ -205,6 +205,8 @@ func testAccCheckVaultPolicyExists(ctx context.Context, name string, vault *back
 
 func testAccVaultPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_backup_vault" "test" {
   name = %[1]q
 }
@@ -219,7 +221,7 @@ resource "aws_backup_vault_policy" "test" {
       Sid    = "default"
       Effect = "Allow"
       Principal = {
-        AWS = "*"
+        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Action = [
         "backup:DescribeBackupVault",
@@ -240,6 +242,8 @@ resource "aws_backup_vault_policy" "test" {
 
 func testAccVaultPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_backup_vault" "test" {
   name = %[1]q
 }
@@ -254,7 +258,7 @@ resource "aws_backup_vault_policy" "test" {
       Sid    = "default"
       Effect = "Allow"
       Principal = {
-        AWS = "*"
+        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Action = [
         "backup:DescribeBackupVault",
@@ -276,6 +280,8 @@ resource "aws_backup_vault_policy" "test" {
 
 func testAccVaultPolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
 resource "aws_backup_vault" "test" {
   name = %[1]q
 }
@@ -290,7 +296,7 @@ resource "aws_backup_vault_policy" "test" {
       Sid    = "default"
       Effect = "Allow"
       Principal = {
-        AWS = "*"
+        AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Action = [
         "backup:DeleteBackupVault",
