@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
+	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,9 +22,6 @@ import (
 
 func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	//if testing.Short() {
-	//	t.Skip("skipping long-running test in short mode")
-	//}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_drs_replication_configuration_template.test"
 	var rct awstypes.ReplicationConfigurationTemplate
@@ -41,14 +39,26 @@ func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
+					resource.TestCheckResourceAttr(resourceName, "associate_default_security_group", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth_throttling", "12"),
+					resource.TestCheckResourceAttr(resourceName, "create_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "data_plane_routing", "PRIVATE_IP"),
+					resource.TestCheckResourceAttr(resourceName, "default_large_staging_disk_type", "GP2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_encryption", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "use_dedicated_replication_server", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replication_server_instance_type", "t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "replication_servers_security_groups_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_servers_security_groups_ids.0", aws.StringValue(&rct.ReplicationServersSecurityGroupsIDs[0])),
+					resource.TestCheckResourceAttr(resourceName, "staging_area_subnet_id", aws.StringValue(rct.StagingAreaSubnetId)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy", map[string]string{
+						"enabled":            "false",
+						"interval":           "14",
+						"retention_duration": "21",
+						"units":              "DAY",
+						"rule_id":            "1",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.Name", rName),
 				),
 			},
 			{
@@ -140,7 +150,7 @@ resource "aws_drs_replication_configuration_template" "test" {
     interval           = 14
     retention_duration = 21
     units              = "DAY"
-	rule_id            = 1
+    rule_id            = 1
   }
 
   staging_area_tags = {
