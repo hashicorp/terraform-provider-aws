@@ -204,7 +204,7 @@ func main() {
 			}
 
 			if resource.GenerateConfig {
-				dataSourceConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags_data_source.gtpl", sourceName))
+				dataSourceConfigTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_data_source.gtpl", sourceName))
 				var dataSourceConfigTmpl string
 				if _, err := os.Stat(dataSourceConfigTmplFile); err == nil {
 					b, err := os.ReadFile(dataSourceConfigTmplFile)

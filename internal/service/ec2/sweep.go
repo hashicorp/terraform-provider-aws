@@ -1378,13 +1378,11 @@ func sweepNetworkInsightsPaths(region string) error {
 			errs = multierror.Append(errs, fmt.Errorf("error listing Network Insights Paths for %s: %w", region, err))
 		}
 
-		for _, nip := range page.NetworkInsightsPaths {
-			id := aws.ToString(nip.NetworkInsightsPathId)
-
-			r := ResourceNetworkInsightsPath()
+		for _, v := range page.NetworkInsightsPaths {
+			r := resourceNetworkInsightsPath()
 			d := r.Data(nil)
+			d.SetId(aws.ToString(v.NetworkInsightsPathId))
 
-			d.SetId(id)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}

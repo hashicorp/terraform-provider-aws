@@ -1213,3 +1213,19 @@ func statusEBSSnapshotImport(ctx context.Context, conn *ec2.Client, id string) r
 		return output.SnapshotTaskDetail, aws.ToString(output.SnapshotTaskDetail.Status), nil
 	}
 }
+
+func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findNetworkInsightsAnalysisByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}

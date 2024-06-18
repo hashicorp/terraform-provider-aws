@@ -1030,7 +1030,7 @@ func TestAccCodeBuildProject_buildBatchConfigDelete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "480"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "2160"),
 				),
 			},
 			{
@@ -3918,7 +3918,7 @@ build_batch_config {
   }
 
   service_role    = aws_iam_role.test.arn
-  timeout_in_mins = 480
+  timeout_in_mins = 2160
 }
 `
 

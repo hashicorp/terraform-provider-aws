@@ -146,6 +146,7 @@ import (
 	route53_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
+	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
@@ -188,7 +189,6 @@ import (
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
@@ -991,8 +991,8 @@ func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
 	return errs.Must(client[*rds_sdkv2.Client](ctx, c, names.RDS, make(map[string]any)))
 }
 
-func (c *AWSClient) RUMConn(ctx context.Context) *cloudwatchrum_sdkv1.CloudWatchRUM {
-	return errs.Must(conn[*cloudwatchrum_sdkv1.CloudWatchRUM](ctx, c, names.RUM, make(map[string]any)))
+func (c *AWSClient) RUMClient(ctx context.Context) *rum_sdkv2.Client {
+	return errs.Must(client[*rum_sdkv2.Client](ctx, c, names.RUM, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
