@@ -7,38 +7,36 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_codeartifact_repository_permissions_policy")
-func ResourceRepositoryPermissionsPolicy() *schema.Resource {
+// @SDKResource("aws_codeartifact_repository_permissions_policy", name="Repository Permissions Policy")
+func resourceRepositoryPermissionsPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRepositoryPermissionsPolicyPut,
 		UpdateWithoutTimeout: resourceRepositoryPermissionsPolicyPut,
 		ReadWithoutTimeout:   resourceRepositoryPermissionsPolicyRead,
 		DeleteWithoutTimeout: resourceRepositoryPermissionsPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"repository": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +63,12 @@ func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"resource_arn": {
+			"repository": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,80 +78,75 @@ func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 
 func resourceRepositoryPermissionsPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
-	log.Print("[DEBUG] Creating CodeArtifact Repository Permissions Policy")
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	params := &codeartifact.PutRepositoryPermissionsPolicyInput{
-		Domain:         aws.String(d.Get("domain").(string)),
-		Repository:     aws.String(d.Get("repository").(string)),
+	input := &codeartifact.PutRepositoryPermissionsPolicyInput{
+		Domain:         aws.String(d.Get(names.AttrDomain).(string)),
 		PolicyDocument: aws.String(policy),
+		Repository:     aws.String(d.Get("repository").(string)),
 	}
 
 	if v, ok := d.GetOk("domain_owner"); ok {
-		params.DomainOwner = aws.String(v.(string))
+		input.DomainOwner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("policy_revision"); ok {
-		params.PolicyRevision = aws.String(v.(string))
+		input.PolicyRevision = aws.String(v.(string))
 	}
 
-	res, err := conn.PutRepositoryPermissionsPolicyWithContext(ctx, params)
+	output, err := conn.PutRepositoryPermissionsPolicy(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Repository Permissions Policy: %s", err)
 	}
 
-	d.SetId(aws.StringValue(res.Policy.ResourceArn))
+	if d.IsNewResource() {
+		d.SetId(aws.ToString(output.Policy.ResourceArn))
+	}
 
 	return append(diags, resourceRepositoryPermissionsPolicyRead(ctx, d, meta)...)
 }
 
 func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
-	log.Printf("[DEBUG] Reading CodeArtifact Repository Permissions Policy: %s", d.Id())
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
+	owner, domainName, repositoryName, err := parseRepositoryARN(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	dm, err := conn.GetRepositoryPermissionsPolicyWithContext(ctx, &codeartifact.GetRepositoryPermissionsPolicyInput{
-		Domain:      aws.String(domainName),
-		DomainOwner: aws.String(domainOwner),
-		Repository:  aws.String(repoName),
-	})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id())
+	policy, err := findRepositoryPermissionsPolicyByThreePartKey(ctx, conn, owner, domainName, repositoryName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CodeArtifact Repository Permissions Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Repository Permissions Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("domain", domainName)
-	d.Set("domain_owner", domainOwner)
-	d.Set("repository", repoName)
-	d.Set("resource_arn", dm.Policy.ResourceArn)
-	d.Set("policy_revision", dm.Policy.Revision)
+	d.Set(names.AttrDomain, domainName)
+	d.Set("domain_owner", owner)
+	d.Set("policy_revision", policy.Revision)
+	d.Set("repository", repositoryName)
+	d.Set(names.AttrResourceARN, policy.ResourceArn)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.StringValue(dm.Policy.Document))
-
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(policy.Document))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("policy_document", policyToSet)
@@ -158,23 +156,21 @@ func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.Reso
 
 func resourceRepositoryPermissionsPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
-	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
-	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
+	owner, domainName, repositoryName, err := parseRepositoryARN(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CodeArtifact Repository Permissions Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &codeartifact.DeleteRepositoryPermissionsPolicyInput{
+	log.Printf("[DEBUG] Deleting CodeArtifact Repository Permissions Policy: %s", d.Id())
+	_, err = conn.DeleteRepositoryPermissionsPolicy(ctx, &codeartifact.DeleteRepositoryPermissionsPolicyInput{
 		Domain:      aws.String(domainName),
-		DomainOwner: aws.String(domainOwner),
-		Repository:  aws.String(repoName),
-	}
+		DomainOwner: aws.String(owner),
+		Repository:  aws.String(repositoryName),
+	})
 
-	_, err = conn.DeleteRepositoryPermissionsPolicyWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -183,4 +179,31 @@ func resourceRepositoryPermissionsPolicyDelete(ctx context.Context, d *schema.Re
 	}
 
 	return diags
+}
+
+func findRepositoryPermissionsPolicyByThreePartKey(ctx context.Context, conn *codeartifact.Client, owner, domainName, repositoryName string) (*types.ResourcePolicy, error) {
+	input := &codeartifact.GetRepositoryPermissionsPolicyInput{
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(owner),
+		Repository:  aws.String(repositoryName),
+	}
+
+	output, err := conn.GetRepositoryPermissionsPolicy(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Policy, nil
 }

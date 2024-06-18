@@ -51,9 +51,9 @@ func statusTemplate(ctx context.Context, conn *quicksight.QuickSight, id string)
 }
 
 // Fetch Dashboard status
-func statusDashboard(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+func statusDashboard(ctx context.Context, conn *quicksight.QuickSight, id string, version int64) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindDashboardByID(ctx, conn, id)
+		out, err := FindDashboardByID(ctx, conn, id, version)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}

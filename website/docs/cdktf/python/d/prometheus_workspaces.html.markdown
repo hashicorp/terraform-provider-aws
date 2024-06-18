@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - List of ARNs of the matched Prometheus workspaces.
 * `workspace_ids` - List of workspace IDs of the matched Prometheus workspaces.
 
-<!-- cache-key: cdktf-0.19.0 input-80acf7908c27226d8c0361ef362e87dbc25d3955952bacb62b20968912d47d8e -->
+<!-- cache-key: cdktf-0.20.1 input-80acf7908c27226d8c0361ef362e87dbc25d3955952bacb62b20968912d47d8e -->

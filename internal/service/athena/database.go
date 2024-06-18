@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_athena_database")
@@ -55,16 +56,16 @@ func resourceDatabase() *schema.Resource {
 					},
 				},
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -77,7 +78,7 @@ func resourceDatabase() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -85,23 +86,23 @@ func resourceDatabase() *schema.Resource {
 					},
 				},
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -115,17 +116,17 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	createStmt := fmt.Sprintf("create database `%s`", name)
 	var queryString bytes.Buffer
 	queryString.WriteString(createStmt)
 
-	if v, ok := d.GetOk("comment"); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrComment); ok && v.(string) != "" {
 		commentStmt := fmt.Sprintf(" comment '%s'", strings.Replace(v.(string), "'", "\\'", -1))
 		queryString.WriteString(commentStmt)
 	}
 
-	if v, ok := d.GetOk("properties"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]interface{})) > 0 {
 		var props []string
 		for k, v := range v.(map[string]interface{}) {
 			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
@@ -174,9 +175,9 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Athena Database (%s): %s", d.Id(), err)
 	}
 
-	d.Set("comment", db.Description)
-	d.Set("name", db.Name)
-	d.Set("properties", db.Parameters)
+	d.Set(names.AttrComment, db.Description)
+	d.Set(names.AttrName, db.Name)
+	d.Set(names.AttrProperties, db.Parameters)
 
 	return diags
 }
@@ -186,7 +187,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		queryString += " cascade"
 	}
 	queryString += ";"
@@ -237,11 +238,11 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 
 func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
 	resultConfig := &types.ResultConfiguration{
-		OutputLocation:          aws.String("s3://" + d.Get("bucket").(string)),
-		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok {
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
 		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
@@ -253,7 +254,7 @@ func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguratio
 }
 
 func expandResultConfigurationEncryptionConfig(config []interface{}) *types.EncryptionConfiguration {
-	if len(config) <= 0 {
+	if len(config) == 0 {
 		return nil
 	}
 
@@ -263,7 +264,7 @@ func expandResultConfigurationEncryptionConfig(config []interface{}) *types.Encr
 		EncryptionOption: types.EncryptionOption(data["encryption_option"].(string)),
 	}
 
-	if v, ok := data["kms_key"].(string); ok && v != "" {
+	if v, ok := data[names.AttrKMSKey].(string); ok && v != "" {
 		encryptionConfig.KmsKey = aws.String(v)
 	}
 
@@ -271,7 +272,7 @@ func expandResultConfigurationEncryptionConfig(config []interface{}) *types.Encr
 }
 
 func expandResultConfigurationACLConfig(config []interface{}) *types.AclConfiguration {
-	if len(config) <= 0 {
+	if len(config) == 0 {
 		return nil
 	}
 

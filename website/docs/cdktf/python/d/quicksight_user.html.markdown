@@ -57,7 +57,7 @@ This data source exports the following attributes in addition to the arguments a
 * `principal_id` - The principal ID of the user.
 * `user_role` - The Amazon QuickSight role for the user. The user role can be one of the following:.
     - `READER`: A user who has read-only access to dashboards.
-    - `AUTHOR`: A user who can create data sources, datasets, analyses, and dashboards.
+    - `AUTHOR`: A user who can create data sources, datasets, analyzes, and dashboards.
     - `ADMIN`: A user who is an author, who can also manage Amazon QuickSight settings.
 
-<!-- cache-key: cdktf-0.19.0 input-8a09e3c69e880b414f66924d3def015ce6ed48913a9a062d5f17590c11a6327c -->
+<!-- cache-key: cdktf-0.20.1 input-457444eadae45697e966721307c49f85e32cdf3b03df2f91bb113b15e4105084 -->

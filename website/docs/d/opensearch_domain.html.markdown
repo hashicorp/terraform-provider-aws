@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `use_off_peak_window` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `cluster_config` - Cluster configuration of the domain.
     * `cold_storage_options` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
@@ -51,6 +52,7 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
     * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
     * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
+    * `multi_az_with_standby_enabled` - Whether a multi-AZ domain is turned on with a standby AZ.
     * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
     * `zone_awareness_config` - Configuration block containing zone awareness settings.
         * `availability_zone_count` - Number of availability zones used.
@@ -63,6 +65,7 @@ This data source exports the following attributes in addition to the arguments a
     * `identity_pool_id` - Cognito Identity pool used by the domain.
     * `role_arn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
+* `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 * `deleted` – Status of the deletion of the domain.
 * `domain_id` – Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
@@ -76,7 +79,7 @@ This data source exports the following attributes in addition to the arguments a
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
-* `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
+* `ip_address_type` - Type of IP addresses supported by the endpoint for the domain.
 * `kibana_endpoint` - (**Deprecated**) Domain-specific endpoint for kibana without https scheme. Use the `dashboard_endpoint` attribute instead.
 * `log_publishing_options` - Domain log publishing related options.
     * `log_type` - Type of OpenSearch log being published.

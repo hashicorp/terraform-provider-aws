@@ -63,21 +63,21 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				MaxItems: 3,
 				Optional: true,
@@ -91,7 +91,7 @@ func ResourceCluster() *schema.Resource {
 				Default:      1,
 				ValidateFunc: validation.IntAtMost(35),
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -119,7 +119,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -134,23 +134,23 @@ func ResourceCluster() *schema.Resource {
 					}, false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      engineNeptune,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
@@ -173,7 +173,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validGlobalCusterIdentifier,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func ResourceCluster() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -211,7 +211,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -223,7 +223,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -249,7 +249,7 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeFloat,
 							Optional: true,
 							Default:  ServerlessMaxNCUs,
@@ -282,15 +282,29 @@ func ResourceCluster() *schema.Resource {
 					return new == ""
 				},
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
+			names.AttrStorageType: {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// https://docs.aws.amazon.com/neptune/latest/userguide/storage-types.html#provisioned-iops-storage:
+					// "You can determine whether a cluster is using I/O–Optimized storage using any describe- call. If the I/O–Optimized storage is enabled, the call returns a storage-type field set to iopt1".
+					if old == "" && new == storageTypeStandard {
+						return true
+					}
+					return new == old
+				},
+				ValidateFunc: validation.StringInSlice(storageType_Values(), false),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -307,7 +321,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	clusterID := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("cluster_identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -324,19 +338,19 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	inputC := &neptune.CreateDBClusterInput{
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:              aws.String(clusterID),
-		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Engine:                           aws.String(d.Get("engine").(string)),
-		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		DeletionProtection:               aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
+		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
-		StorageEncrypted:                 aws.Bool(d.Get("storage_encrypted").(bool)),
+		StorageEncrypted:                 aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
 		Tags:                             getTagsIn(ctx),
 	}
 	inputR := &neptune.RestoreDBClusterFromSnapshotInput{
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:              aws.String(clusterID),
-		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Engine:                           aws.String(d.Get("engine").(string)),
-		Port:                             aws.Int64(int64(d.Get("port").(int))),
+		DeletionProtection:               aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
+		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
 		Tags:                             getTagsIn(ctx),
@@ -346,7 +360,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DBClusterIdentifier: aws.String(clusterID),
 	}
 
-	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
 
 		inputC.AvailabilityZones = flex.ExpandStringSet(v)
@@ -363,12 +377,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if v, ok := d.GetOk("global_cluster_identifier"); ok {
-		v := v.(string)
-
-		inputC.GlobalClusterIdentifier = aws.String(v)
-	}
-
 	if v, ok := d.GetOk("enable_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
 
@@ -376,11 +384,17 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputR.EnableCloudwatchLogsExports = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		v := v.(string)
 
 		inputC.EngineVersion = aws.String(v)
 		inputR.EngineVersion = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("global_cluster_identifier"); ok {
+		v := v.(string)
+
+		inputC.GlobalClusterIdentifier = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
@@ -390,7 +404,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputR.EnableIAMDatabaseAuthentication = aws.Bool(v)
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		v := v.(string)
 
 		inputC.KmsKeyId = aws.String(v)
@@ -420,7 +434,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputC.PreferredBackupWindow = aws.String(v)
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		v := v.(string)
 
 		inputC.PreferredMaintenanceWindow = aws.String(v)
@@ -432,7 +446,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputC.ReplicationSourceIdentifier = aws.String(v)
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrStorageType); ok {
+		v := v.(string)
+
+		inputC.StorageType = aws.String(v)
+		inputR.StorageType = aws.String(v)
+	}
+
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		v := v.(*schema.Set)
 
 		inputC.VpcSecurityGroupIds = flex.ExpandStringSet(v)
@@ -513,10 +534,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	arn := aws.StringValue(dbc.DBClusterArn)
-	d.Set("arn", arn)
-	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
 	for _, v := range dbc.DBClusterMembers {
@@ -525,35 +546,36 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
-	d.Set("deletion_protection", dbc.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, dbc.DeletionProtection)
 	d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
-	d.Set("endpoint", dbc.Endpoint)
-	d.Set("engine_version", dbc.EngineVersion)
-	d.Set("engine", dbc.Engine)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
+	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
+	d.Set(names.AttrEngine, dbc.Engine)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoles []string
 	for _, v := range dbc.AssociatedRoles {
 		iamRoles = append(iamRoles, aws.StringValue(v.RoleArn))
 	}
 	d.Set("iam_roles", iamRoles)
-	d.Set("kms_key_arn", dbc.KmsKeyId)
+	d.Set(names.AttrKMSKeyARN, dbc.KmsKeyId)
 	d.Set("neptune_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("neptune_subnet_group_name", dbc.DBSubnetGroup)
-	d.Set("port", dbc.Port)
+	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
 	}
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
+	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", securityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
 
 	return diags
 }
@@ -562,31 +584,24 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
-		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "global_cluster_identifier", "iam_roles", "skip_final_snapshot") {
+		allowMajorVersionUpgrade := d.Get(names.AttrAllowMajorVersionUpgrade).(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
-			ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier:      aws.String(d.Id()),
+		}
+
+		if d.HasChange("backup_retention_period") {
+			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
 		}
 
 		if d.HasChange("copy_tags_to_snapshot") {
 			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		}
 
-		// The DBInstanceParameterGroupName parameter is only valid in combination with the AllowMajorVersionUpgrade parameter.
-		if allowMajorVersionUpgrade {
-			if v, ok := d.GetOk("neptune_instance_parameter_group_name"); ok {
-				input.DBInstanceParameterGroupName = aws.String(v.(string))
-			}
-		}
-
-		if d.HasChange("vpc_security_group_ids") {
-			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
-			} else {
-				input.VpcSecurityGroupIds = aws.StringSlice([]string{})
-			}
+		if d.HasChange(names.AttrDeletionProtection) {
+			input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 		}
 
 		if d.HasChange("enable_cloudwatch_logs_exports") {
@@ -609,19 +624,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.CloudwatchLogsExportConfiguration = logs
 		}
 
-		if d.HasChange("preferred_backup_window") {
-			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
-		}
-
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
-		}
-
-		if d.HasChange("backup_retention_period") {
-			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
-		}
-
-		if d.HasChange("neptune_cluster_parameter_group_name") {
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 			input.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
 		}
 
@@ -629,17 +633,39 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		}
 
-		if d.HasChange("deletion_protection") {
-			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		if d.HasChange("neptune_cluster_parameter_group_name") {
+			input.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
-			input.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
+		// The DBInstanceParameterGroupName parameter is only valid in combination with the AllowMajorVersionUpgrade parameter.
+		if allowMajorVersionUpgrade {
+			if v, ok := d.GetOk("neptune_instance_parameter_group_name"); ok {
+				input.DBInstanceParameterGroupName = aws.String(v.(string))
+			}
+		}
+
+		if d.HasChange("preferred_backup_window") {
+			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		}
+
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("serverless_v2_scaling_configuration") {
 			input.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
+		}
+
+		if d.HasChange(names.AttrStorageType) {
+			input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
+		}
+
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
+				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+			} else {
+				input.VpcSecurityGroupIds = aws.StringSlice([]string{})
+			}
 		}
 
 		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
@@ -681,7 +707,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "existing Neptune Clusters cannot be migrated between existing Neptune Global Clusters")
 		}
 
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -731,7 +757,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if !skipFinalSnapshot {
-		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+		if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
 			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
@@ -739,7 +765,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("global_cluster_identifier"); ok {
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -953,7 +979,7 @@ func expandServerlessConfiguration(l []interface{}) *neptune.ServerlessV2Scaling
 	tfMap := l[0].(map[string]interface{})
 	return &neptune.ServerlessV2ScalingConfiguration{
 		MinCapacity: aws.Float64(tfMap["min_capacity"].(float64)),
-		MaxCapacity: aws.Float64(tfMap["max_capacity"].(float64)),
+		MaxCapacity: aws.Float64(tfMap[names.AttrMaxCapacity].(float64)),
 	}
 }
 
@@ -963,8 +989,8 @@ func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *neptune.Serve
 	}
 
 	m := map[string]interface{}{
-		"min_capacity": aws.Float64Value(serverlessConfig.MinCapacity),
-		"max_capacity": aws.Float64Value(serverlessConfig.MaxCapacity),
+		"min_capacity":        aws.Float64Value(serverlessConfig.MinCapacity),
+		names.AttrMaxCapacity: aws.Float64Value(serverlessConfig.MaxCapacity),
 	}
 
 	return []map[string]interface{}{m}

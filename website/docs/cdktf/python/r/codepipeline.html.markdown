@@ -29,7 +29,7 @@ from imports.aws.data_aws_kms_alias import DataAwsKmsAlias
 from imports.aws.iam_role import IamRole
 from imports.aws.iam_role_policy import IamRolePolicy
 from imports.aws.s3_bucket import S3Bucket
-from imports.aws.s3_bucket_acl import S3BucketAcl
+from imports.aws.s3_bucket_public_access_block import S3BucketPublicAccessBlock
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
@@ -40,9 +40,12 @@ class MyConvertedCode(TerraformStack):
         codepipeline_bucket = S3Bucket(self, "codepipeline_bucket",
             bucket="test-bucket"
         )
-        S3BucketAcl(self, "codepipeline_bucket_acl",
-            acl="private",
-            bucket=codepipeline_bucket.id
+        S3BucketPublicAccessBlock(self, "codepipeline_bucket_pab",
+            block_public_acls=True,
+            block_public_policy=True,
+            bucket=codepipeline_bucket.id,
+            ignore_public_acls=True,
+            restrict_public_buckets=True
         )
         assume_role = DataAwsIamPolicyDocument(self, "assume_role",
             statement=[DataAwsIamPolicyDocumentStatement(
@@ -159,10 +162,16 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the pipeline.
+* `pipeline_type` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
 * `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifact_store` (Required) One or more artifact_store blocks. Artifact stores are documented below.
+* `execution_mode` (Optional) The method that the pipeline will use to handle multiple executions. The default mode is `SUPERSEDED`. For value values, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_PipelineDeclaration.html#CodePipeline-Type-PipelineDeclaration-executionMode).
+
+  **Note:** `QUEUED` or `PARALLEL` mode can only be used with V2 pipelines.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `trigger` - (Optional) A trigger block. Valid only when `pipeline_type` is `V2`. Triggers are documented below.
+* `variable` - (Optional) A pipeline-level variable block. Valid only when `pipeline_type` is `V2`. Variable are documented below.
 
 An `artifact_store` block supports the following arguments:
 
@@ -196,6 +205,50 @@ An `action` block supports the following arguments:
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
 
+A `trigger` block supports the following arguments:
+
+* `provider_type` - (Required) The source provider for the event. Possible value is `CodeStarSourceConnection`.
+* `git_configuration` - (Required) Provides the filter criteria and the source stage for the repository event that starts the pipeline. For more information, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/userguide/pipelines-filter.html). A `git_configuration` block is documented below.
+
+A `git_configuration` block supports the following arguments:
+
+* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration, such as Git tags, is specified. The trigger configuration will start the pipeline upon the specified change only.
+* `pull_request` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pull_request` block is documented below.
+* `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
+
+A `pull_request` block supports the following arguments:
+
+* `events` - (Optional) A list that specifies which pull request events to filter on (opened, updated, closed) for the trigger configuration. Possible values are `OPEN`, `UPDATED ` and `CLOSED`.
+* `branches` - (Optional) The field that specifies to filter on branches for the pull request trigger configuration. A `branches` block is documented below.
+* `file_paths` - (Optional) The field that specifies to filter on file paths for the pull request trigger configuration. A `file_paths` block is documented below.
+
+A `push` block supports the following arguments:
+
+* `branches` - (Optional) The field that specifies to filter on branches for the push trigger configuration. A `branches` block is documented below.
+* `file_paths` - (Optional) The field that specifies to filter on file paths for the push trigger configuration. A `file_paths` block is documented below.
+* `tags` - (Optional) The field that contains the details for the Git tags trigger configuration. A `tags` block is documented below.
+
+A `branches` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be excluded from starting the pipeline.
+
+A `file_paths` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be excluded from starting the pipeline.
+
+A `tags` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git tags that, when pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git tags that, when pushed, are to be excluded from starting the pipeline.
+
+A `variable` block supports the following arguments:
+
+* `name` - (Required) The name of a pipeline-level variable.
+* `default_value` - (Optional) The default value of a pipeline-level variable.
+* `description` - (Optional) The description of a pipeline-level variable.
+
 ~> **Note:** The input artifact of an action must exactly match the output artifact declared in a preceding action, but the input artifact does not have to be the next action in strict sequence from the action that provided the output artifact. Actions in parallel can declare different output artifacts, which are in turn consumed by different following actions.
 
 ## Attribute Reference
@@ -214,9 +267,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.codepipeline import Codepipeline
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        Codepipeline.generate_config_for_import(self, "foo", "example")
 ```
 
 Using `terraform import`, import CodePipelines using the name. For example:
@@ -225,4 +284,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-7564a4a21906390b235c7f254087ae49e059d302514c3158ce3d6d1c0c29ca5e -->
+<!-- cache-key: cdktf-0.20.1 input-071ecf43335ca92ceee0c2e48e1d18ec59e3738c955fe051ce998af580a98cc9 -->

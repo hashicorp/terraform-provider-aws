@@ -5,18 +5,19 @@ package cloudwatch
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -28,7 +29,8 @@ import (
 
 // @SDKResource("aws_cloudwatch_metric_alarm", name="Metric Alarm")
 // @Tags(identifierAttribute="arn")
-func ResourceMetricAlarm() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;awstypes;awstypes.MetricAlarm")
+func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricAlarmCreate,
@@ -71,14 +73,14 @@ func ResourceMetricAlarm() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"comparison_operator": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(cloudwatch.ComparisonOperator_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.ComparisonOperator](),
 			},
 			"datapoints_to_alarm": {
 				Type:         schema.TypeInt,
@@ -124,7 +126,7 @@ func ResourceMetricAlarm() *schema.Resource {
 					),
 				},
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"metric_query"},
@@ -133,23 +135,23 @@ func ResourceMetricAlarm() *schema.Resource {
 			"metric_query": {
 				Type:          schema.TypeSet,
 				Optional:      true,
-				ConflictsWith: []string{"metric_name"},
+				ConflictsWith: []string{names.AttrMetricName},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 255),
-						},
-						"account_id": {
+						names.AttrAccountID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"expression": {
+						names.AttrExpression: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
+						names.AttrID: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 						"metric": {
 							Type:     schema.TypeList,
@@ -162,12 +164,12 @@ func ResourceMetricAlarm() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -186,19 +188,21 @@ func ResourceMetricAlarm() *schema.Resource {
 									"stat": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateFunc: validation.Any(
-											validation.StringInSlice(cloudwatch.Statistic_Values(), false),
-											validation.StringMatch(
-												// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-												regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-												"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+										ValidateDiagFunc: validation.AnyDiag(
+											enum.Validate[types.Statistic](),
+											validation.ToDiagFunc(
+												validation.StringMatch(
+													// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
+													regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
+													"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
+												),
 											),
 										),
 									},
-									"unit": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
+									names.AttrUnit: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.StandardUnit](),
 									},
 								},
 							},
@@ -223,7 +227,7 @@ func ResourceMetricAlarm() *schema.Resource {
 					},
 				},
 			},
-			"namespace": {
+			names.AttrNamespace: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"metric_query"},
@@ -254,10 +258,10 @@ func ResourceMetricAlarm() *schema.Resource {
 				),
 			},
 			"statistic": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"extended_statistic", "metric_query"},
-				ValidateFunc:  validation.StringInSlice(cloudwatch.Statistic_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ConflictsWith:    []string{"extended_statistic", "metric_query"},
+				ValidateDiagFunc: enum.Validate[types.Statistic](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -278,61 +282,57 @@ func ResourceMetricAlarm() *schema.Resource {
 				Default:      missingDataMissing,
 				ValidateFunc: validation.StringInSlice(missingData_Values(), true),
 			},
-			"unit": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(cloudwatch.StandardUnit_Values(), false),
+			names.AttrUnit: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.StandardUnit](),
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
-	}
-}
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+				_, metricNameOk := diff.GetOk(names.AttrMetricName)
+				_, statisticOk := diff.GetOk("statistic")
+				_, extendedStatisticOk := diff.GetOk("extended_statistic")
 
-func validMetricAlarm(d *schema.ResourceData) error {
-	_, metricNameOk := d.GetOk("metric_name")
-	_, statisticOk := d.GetOk("statistic")
-	_, extendedStatisticOk := d.GetOk("extended_statistic")
+				if metricNameOk && ((!statisticOk && !extendedStatisticOk) || (statisticOk && extendedStatisticOk)) {
+					return errors.New("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
+				}
 
-	if metricNameOk && ((!statisticOk && !extendedStatisticOk) || (statisticOk && extendedStatisticOk)) {
-		return fmt.Errorf("One of `statistic` or `extended_statistic` must be set for a cloudwatch metric alarm")
-	}
-
-	if v := d.Get("metric_query"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
-			metricQueryResource := v.(map[string]interface{})
-			if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
-				if v := metricQueryResource["metric"]; v != nil {
-					if len(v.([]interface{})) > 0 {
-						return fmt.Errorf("No metric_query may have both `expression` and a `metric` specified")
+				if v := diff.Get("metric_query"); v != nil {
+					for _, v := range v.(*schema.Set).List() {
+						tfMap := v.(map[string]interface{})
+						if v, ok := tfMap[names.AttrExpression]; ok && v.(string) != "" {
+							if v := tfMap["metric"]; v != nil {
+								if len(v.([]interface{})) > 0 {
+									return errors.New("No metric_query may have both `expression` and a `metric` specified")
+								}
+							}
+						}
 					}
 				}
-			}
-		}
-	}
 
-	return nil
+				return nil
+			},
+		),
+	}
 }
 
 func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
-
-	err := validMetricAlarm(d)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", d.Get("alarm_name").(string), err)
-	}
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	name := d.Get("alarm_name").(string)
 	input := expandPutMetricAlarmInput(ctx, d)
 
-	_, err = conn.PutMetricAlarmWithContext(ctx, input)
+	_, err := conn.PutMetricAlarm(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		input.Tags = nil
 
-		_, err = conn.PutMetricAlarmWithContext(ctx, input)
+		_, err = conn.PutMetricAlarm(ctx, input)
 	}
 
 	if err != nil {
@@ -343,16 +343,16 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		alarm, err := FindMetricAlarmByName(ctx, conn, d.Id())
+		alarm, err := findMetricAlarmByName(ctx, conn, d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 		}
 
-		err = createTags(ctx, conn, aws.StringValue(alarm.AlarmArn), tags)
+		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 		}
 
@@ -366,9 +366,9 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	alarm, err := FindMetricAlarmByName(ctx, conn, d.Id())
+	alarm, err := findMetricAlarmByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Metric Alarm %s not found, removing from state", d.Id())
@@ -381,10 +381,10 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("actions_enabled", alarm.ActionsEnabled)
-	d.Set("alarm_actions", aws.StringValueSlice(alarm.AlarmActions))
+	d.Set("alarm_actions", alarm.AlarmActions)
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
-	d.Set("arn", alarm.AlarmArn)
+	d.Set(names.AttrARN, alarm.AlarmArn)
 	d.Set("comparison_operator", alarm.ComparisonOperator)
 	d.Set("datapoints_to_alarm", alarm.DatapointsToAlarm)
 	if err := d.Set("dimensions", flattenMetricAlarmDimensions(alarm.Dimensions)); err != nil {
@@ -393,15 +393,15 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
 	d.Set("evaluation_periods", alarm.EvaluationPeriods)
 	d.Set("extended_statistic", alarm.ExtendedStatistic)
-	d.Set("insufficient_data_actions", aws.StringValueSlice(alarm.InsufficientDataActions))
-	d.Set("metric_name", alarm.MetricName)
+	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
+	d.Set(names.AttrMetricName, alarm.MetricName)
 	if len(alarm.Metrics) > 0 {
 		if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting metric_query: %s", err)
 		}
 	}
-	d.Set("namespace", alarm.Namespace)
-	d.Set("ok_actions", aws.StringValueSlice(alarm.OKActions))
+	d.Set(names.AttrNamespace, alarm.Namespace)
+	d.Set("ok_actions", alarm.OKActions)
 	d.Set("period", alarm.Period)
 	d.Set("statistic", alarm.Statistic)
 	d.Set("threshold", alarm.Threshold)
@@ -411,19 +411,19 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("treat_missing_data", missingDataMissing)
 	}
-	d.Set("unit", alarm.Unit)
+	d.Set(names.AttrUnit, alarm.Unit)
 
 	return diags
 }
 
 func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := expandPutMetricAlarmInput(ctx, d)
 
-		_, err := conn.PutMetricAlarmWithContext(ctx, input)
+		_, err := conn.PutMetricAlarm(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Alarm (%s): %s", d.Id(), err)
@@ -435,14 +435,14 @@ func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
-	_, err := conn.DeleteAlarmsWithContext(ctx, &cloudwatch.DeleteAlarmsInput{
-		AlarmNames: aws.StringSlice([]string{d.Id()}),
+	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
+		AlarmNames: []string{d.Id()},
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -453,41 +453,30 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindMetricAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.MetricAlarm, error) {
+func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.MetricAlarm, error) {
 	input := &cloudwatch.DescribeAlarmsInput{
-		AlarmNames: aws.StringSlice([]string{name}),
-		AlarmTypes: aws.StringSlice([]string{cloudwatch.AlarmTypeMetricAlarm}),
+		AlarmNames: []string{name},
+		AlarmTypes: []types.AlarmType{types.AlarmTypeMetricAlarm},
 	}
 
-	output, err := conn.DescribeAlarmsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+	output, err := conn.DescribeAlarms(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.MetricAlarms) == 0 || output.MetricAlarms[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.MetricAlarms); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.MetricAlarms[0], nil
+	return tfresource.AssertSingleValueResult(output.MetricAlarms)
 }
 
 func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *cloudwatch.PutMetricAlarmInput {
 	apiObject := &cloudwatch.PutMetricAlarmInput{
 		AlarmName:          aws.String(d.Get("alarm_name").(string)),
-		ComparisonOperator: aws.String(d.Get("comparison_operator").(string)),
-		EvaluationPeriods:  aws.Int64(int64(d.Get("evaluation_periods").(int))),
+		ComparisonOperator: types.ComparisonOperator(d.Get("comparison_operator").(string)),
+		EvaluationPeriods:  aws.Int32(int32(d.Get("evaluation_periods").(int))),
 		Tags:               getTagsIn(ctx),
 		TreatMissingData:   aws.String(d.Get("treat_missing_data").(string)),
 	}
@@ -496,8 +485,8 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.ActionsEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("alarm_actions"); ok {
-		apiObject.AlarmActions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("alarm_actions"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.AlarmActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("alarm_description"); ok {
@@ -505,10 +494,10 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 	}
 
 	if v, ok := d.GetOk("datapoints_to_alarm"); ok {
-		apiObject.DatapointsToAlarm = aws.Int64(int64(v.(int)))
+		apiObject.DatapointsToAlarm = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("dimensions"); ok {
+	if v, ok := d.GetOk("dimensions"); ok && len(v.(map[string]interface{})) > 0 {
 		apiObject.Dimensions = expandMetricAlarmDimensions(v.(map[string]interface{}))
 	}
 
@@ -520,32 +509,32 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.ExtendedStatistic = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("insufficient_data_actions"); ok {
-		apiObject.InsufficientDataActions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("insufficient_data_actions"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.InsufficientDataActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("metric_name"); ok {
+	if v, ok := d.GetOk(names.AttrMetricName); ok {
 		apiObject.MetricName = aws.String(v.(string))
 	}
 
-	if v := d.Get("metric_query"); v != nil {
-		apiObject.Metrics = expandMetricAlarmMetrics(v.(*schema.Set))
+	if v, ok := d.GetOk("metric_query"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.Metrics = expandMetricAlarmMetrics(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("namespace"); ok {
+	if v, ok := d.GetOk(names.AttrNamespace); ok {
 		apiObject.Namespace = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ok_actions"); ok {
-		apiObject.OKActions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("ok_actions"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.OKActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("period"); ok {
-		apiObject.Period = aws.Int64(int64(v.(int)))
+		apiObject.Period = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("statistic"); ok {
-		apiObject.Statistic = aws.String(v.(string))
+		apiObject.Statistic = types.Statistic(v.(string))
 	}
 
 	if v, ok := d.GetOk("threshold_metric_id"); ok {
@@ -554,125 +543,169 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.Threshold = aws.Float64(d.Get("threshold").(float64))
 	}
 
-	if v, ok := d.GetOk("unit"); ok {
-		apiObject.Unit = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrUnit); ok {
+		apiObject.Unit = types.StandardUnit(v.(string))
 	}
 
 	return apiObject
 }
 
-func flattenMetricAlarmDimensions(dims []*cloudwatch.Dimension) map[string]interface{} {
-	flatDims := make(map[string]interface{})
-	for _, d := range dims {
-		flatDims[aws.StringValue(d.Name)] = aws.StringValue(d.Value)
-	}
-	return flatDims
-}
+func flattenMetricAlarmDimensions(apiObjects []types.Dimension) map[string]interface{} {
+	tfMap := map[string]interface{}{}
 
-func flattenMetricAlarmMetrics(metrics []*cloudwatch.MetricDataQuery) []map[string]interface{} {
-	metricQueries := make([]map[string]interface{}, 0)
-	for _, mq := range metrics {
-		metricQuery := map[string]interface{}{
-			"account_id":  aws.StringValue(mq.AccountId),
-			"expression":  aws.StringValue(mq.Expression),
-			"id":          aws.StringValue(mq.Id),
-			"label":       aws.StringValue(mq.Label),
-			"return_data": aws.BoolValue(mq.ReturnData),
-		}
-		if mq.MetricStat != nil {
-			metric := flattenMetricAlarmMetricsMetricStat(mq.MetricStat)
-			metricQuery["metric"] = []interface{}{metric}
-		}
-		if mq.Period != nil {
-			metricQuery["period"] = aws.Int64Value(mq.Period)
-		}
-		metricQueries = append(metricQueries, metricQuery)
+	for _, apiObject := range apiObjects {
+		tfMap[aws.ToString(apiObject.Name)] = aws.ToString(apiObject.Value)
 	}
 
-	return metricQueries
+	return tfMap
 }
 
-func flattenMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat) map[string]interface{} {
-	msm := ms.Metric
-	metric := map[string]interface{}{
-		"metric_name": aws.StringValue(msm.MetricName),
-		"namespace":   aws.StringValue(msm.Namespace),
-		"period":      int(aws.Int64Value(ms.Period)),
-		"stat":        aws.StringValue(ms.Stat),
-		"unit":        aws.StringValue(ms.Unit),
-		"dimensions":  flattenMetricAlarmDimensions(msm.Dimensions),
+func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return metric
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrAccountID:  aws.ToString(apiObject.AccountId),
+			names.AttrExpression: aws.ToString(apiObject.Expression),
+			names.AttrID:         aws.ToString(apiObject.Id),
+			"label":              aws.ToString(apiObject.Label),
+			"return_data":        aws.ToBool(apiObject.ReturnData),
+		}
+
+		if v := apiObject.MetricStat; v != nil {
+			tfMap["metric"] = []interface{}{flattenMetricAlarmMetricsMetricStat(v)}
+		}
+
+		if apiObject.Period != nil {
+			tfMap["period"] = aws.ToInt32(apiObject.Period)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
-func expandMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
-	var metrics []*cloudwatch.MetricDataQuery
+func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
 
-	for _, v := range v.List() {
-		metricQueryResource := v.(map[string]interface{})
-		id := metricQueryResource["id"].(string)
+	tfMap := map[string]interface{}{
+		"period":       aws.ToInt32(apiObject.Period),
+		"stat":         aws.ToString(apiObject.Stat),
+		names.AttrUnit: apiObject.Unit,
+	}
+
+	if v := apiObject.Metric; v != nil {
+		tfMap["dimensions"] = flattenMetricAlarmDimensions(v.Dimensions)
+		tfMap[names.AttrMetricName] = aws.ToString(v.MetricName)
+		tfMap[names.AttrNamespace] = aws.ToString(v.Namespace)
+	}
+
+	return tfMap
+}
+
+func expandMetricAlarmMetrics(tfList []interface{}) []types.MetricDataQuery {
+	var apiObjects []types.MetricDataQuery
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		id := tfMap[names.AttrID].(string)
 		if id == "" {
 			continue
 		}
-		metricQuery := cloudwatch.MetricDataQuery{
+
+		apiObject := types.MetricDataQuery{
 			Id: aws.String(id),
 		}
-		if v, ok := metricQueryResource["expression"]; ok && v.(string) != "" {
-			metricQuery.Expression = aws.String(v.(string))
+
+		if v, ok := tfMap[names.AttrAccountID]; ok && v.(string) != "" {
+			apiObject.AccountId = aws.String(v.(string))
 		}
-		if v, ok := metricQueryResource["label"]; ok && v.(string) != "" {
-			metricQuery.Label = aws.String(v.(string))
+
+		if v, ok := tfMap[names.AttrExpression]; ok && v.(string) != "" {
+			apiObject.Expression = aws.String(v.(string))
 		}
-		if v, ok := metricQueryResource["return_data"]; ok {
-			metricQuery.ReturnData = aws.Bool(v.(bool))
+
+		if v, ok := tfMap["label"]; ok && v.(string) != "" {
+			apiObject.Label = aws.String(v.(string))
 		}
-		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
-			metricQuery.MetricStat = expandMetricAlarmMetricsMetric(v.([]interface{}))
+
+		if v, ok := tfMap["return_data"]; ok {
+			apiObject.ReturnData = aws.Bool(v.(bool))
 		}
-		if v, ok := metricQueryResource["period"]; ok && v.(int) != 0 {
-			metricQuery.Period = aws.Int64(int64(v.(int)))
+
+		if v, ok := tfMap["metric"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			apiObject.MetricStat = expandMetricAlarmMetricsMetric(v[0].(map[string]interface{}))
 		}
-		if v, ok := metricQueryResource["account_id"]; ok && v.(string) != "" {
-			metricQuery.AccountId = aws.String(v.(string))
+
+		if v, ok := tfMap["period"]; ok && v.(int) != 0 {
+			apiObject.Period = aws.Int32(int32(v.(int)))
 		}
-		metrics = append(metrics, &metricQuery)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return metrics
+
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	return apiObjects
 }
 
-func expandMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.MetricStat {
-	metricResource := v[0].(map[string]interface{})
-	metric := cloudwatch.Metric{
-		MetricName: aws.String(metricResource["metric_name"].(string)),
-	}
-	metricStat := cloudwatch.MetricStat{
-		Metric: &metric,
-		Stat:   aws.String(metricResource["stat"].(string)),
-	}
-	if v, ok := metricResource["namespace"]; ok && v.(string) != "" {
-		metric.Namespace = aws.String(v.(string))
-	}
-	if v, ok := metricResource["period"]; ok {
-		metricStat.Period = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := metricResource["unit"]; ok && v.(string) != "" {
-		metricStat.Unit = aws.String(v.(string))
-	}
-	if v, ok := metricResource["dimensions"]; ok {
-		metric.Dimensions = expandMetricAlarmDimensions(v.(map[string]interface{}))
+func expandMetricAlarmMetricsMetric(tfMap map[string]interface{}) *types.MetricStat {
+	if tfMap == nil {
+		return nil
 	}
 
-	return &metricStat
+	apiObject := &types.MetricStat{
+		Metric: &types.Metric{
+			MetricName: aws.String(tfMap[names.AttrMetricName].(string)),
+		},
+		Stat: aws.String(tfMap["stat"].(string)),
+	}
+
+	if v, ok := tfMap["dimensions"].(map[string]interface{}); ok && len(v) > 0 {
+		apiObject.Metric.Dimensions = expandMetricAlarmDimensions(v)
+	}
+
+	if v, ok := tfMap[names.AttrNamespace]; ok && v.(string) != "" {
+		apiObject.Metric.Namespace = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["period"]; ok {
+		apiObject.Period = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := tfMap[names.AttrUnit]; ok && v.(string) != "" {
+		apiObject.Unit = types.StandardUnit(v.(string))
+	}
+
+	return apiObject
 }
 
-func expandMetricAlarmDimensions(dims map[string]interface{}) []*cloudwatch.Dimension {
-	var dimensions []*cloudwatch.Dimension
-	for k, v := range dims {
-		dimensions = append(dimensions, &cloudwatch.Dimension{
+func expandMetricAlarmDimensions(tfMap map[string]interface{}) []types.Dimension {
+	if len(tfMap) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.Dimension
+
+	for k, v := range tfMap {
+		apiObjects = append(apiObjects, types.Dimension{
 			Name:  aws.String(k),
 			Value: aws.String(v.(string)),
 		})
 	}
-	return dimensions
+
+	return apiObjects
 }

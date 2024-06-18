@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
@@ -27,7 +27,7 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,8 +35,8 @@ func TestAccOpenSearchPackageAssociation_basic(t *testing.T) {
 				Config: testAccPackageAssociationConfig_basic(pkgName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPackageAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name", domainResourceName, "domain_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, domainResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, "package_id", packageResourceName, names.AttrID),
 				),
 			},
 		},
@@ -51,7 +51,7 @@ func TestAccOpenSearchPackageAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPackageAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func testAccCheckPackageAssociationExists(ctx context.Context, n string) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
 
-		_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["package_id"])
+		_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 
 		return err
 	}
@@ -91,7 +91,7 @@ func testAccCheckPackageAssociationDestroy(ctx context.Context) resource.TestChe
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
 
-			_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["package_id"])
+			_, err := tfopensearch.FindPackageAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["package_id"])
 
 			if tfresource.NotFound(err) {
 				continue

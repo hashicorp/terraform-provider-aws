@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
     * `name` - The friendly name of the delegated administrator's account.
     * `status` - The status of the delegated administrator's account in the organization.
 
-<!-- cache-key: cdktf-0.19.0 input-109c5f762c0d10ecbb15ab59b2bb18f8653bf89c01823c41fe23ae6036327116 -->
+<!-- cache-key: cdktf-0.20.1 input-109c5f762c0d10ecbb15ab59b2bb18f8653bf89c01823c41fe23ae6036327116 -->

@@ -5,9 +5,9 @@ package autoscaling
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +26,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceGroup,
+			Factory:  dataSourceGroup,
 			TypeName: "aws_autoscaling_group",
+			Name:     "Group",
 		},
 		{
-			Factory:  DataSourceGroups,
+			Factory:  dataSourceGroups,
 			TypeName: "aws_autoscaling_groups",
+			Name:     "Groups",
 		},
 		{
-			Factory:  DataSourceLaunchConfiguration,
+			Factory:  dataSourceLaunchConfiguration,
 			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
 		},
 	}
 }
@@ -43,40 +46,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAttachment,
+			Factory:  resourceAttachment,
 			TypeName: "aws_autoscaling_attachment",
+			Name:     "Attachment",
 		},
 		{
-			Factory:  ResourceGroup,
+			Factory:  resourceGroup,
 			TypeName: "aws_autoscaling_group",
+			Name:     "Group",
 		},
 		{
-			Factory:  ResourceGroupTag,
+			Factory:  resourceGroupTag,
 			TypeName: "aws_autoscaling_group_tag",
+			Name:     "Group Tag",
 		},
 		{
-			Factory:  ResourceLifecycleHook,
+			Factory:  resourceLifecycleHook,
 			TypeName: "aws_autoscaling_lifecycle_hook",
+			Name:     "Lifecycle Hook",
 		},
 		{
-			Factory:  ResourceNotification,
+			Factory:  resourceNotification,
 			TypeName: "aws_autoscaling_notification",
+			Name:     "Notification",
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_autoscaling_policy",
+			Name:     "Policy",
 		},
 		{
-			Factory:  ResourceSchedule,
+			Factory:  resourceSchedule,
 			TypeName: "aws_autoscaling_schedule",
+			Name:     "Scheduled Action",
 		},
 		{
-			Factory:  ResourceTrafficSourceAttachment,
+			Factory:  resourceTrafficSourceAttachment,
 			TypeName: "aws_autoscaling_traffic_source_attachment",
+			Name:     "Traffic Source Attachment",
 		},
 		{
-			Factory:  ResourceLaunchConfiguration,
+			Factory:  resourceLaunchConfiguration,
 			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
 		},
 	}
 }
@@ -85,11 +97,23 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AutoScaling
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*autoscaling_sdkv1.AutoScaling, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*autoscaling_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return autoscaling_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return autoscaling_sdkv2.NewFromConfig(cfg, func(o *autoscaling_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

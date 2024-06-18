@@ -12,7 +12,7 @@ description: |-
 
 Provides an AutoScaling Scaling Policy resource.
 
-~> **NOTE:** You may want to omit `desiredCapacity` attribute from attached `awsAutoscalingGroup`
+~> **NOTE:** You may want to omit `desiredCapacity` attribute from attached `aws_autoscaling_group`
 when using autoscaling policies. It's good practice to pick either
 [manual](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/as-manual-scaling.html)
 or [dynamic](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/as-scale-based-on-demand.html)
@@ -265,12 +265,12 @@ class MyConvertedCode extends TerraformStack {
 
 The following argument is only available to "SimpleScaling" and "StepScaling" type policies:
 
-* `minAdjustmentMagnitude` - (Optional) Minimum value to scale by when `adjustment_type` is set to `PercentChangeInCapacity`.
+* `minAdjustmentMagnitude` - (Optional) Minimum value to scale by when `adjustmentType` is set to `PercentChangeInCapacity`.
 
 The following arguments are only available to "SimpleScaling" type policies:
 
 * `cooldown` - (Optional) Amount of time, in seconds, after a scaling activity completes and before the next scaling activity can start.
-* `scalingAdjustment` - (Optional) Number of instances by which to scale. `adjustment_type` determines the interpretation of this number (e.g., as an absolute number or as a percentage of the existing Auto Scaling group size). A positive increment adds to the current capacity and a negative value removes from the current capacity.
+* `scalingAdjustment` - (Optional) Number of instances by which to scale. `adjustmentType` determines the interpretation of this number (e.g., as an absolute number or as a percentage of the existing Auto Scaling group size). A positive increment adds to the current capacity and a negative value removes from the current capacity.
 
 The following arguments are only available to "StepScaling" type policies:
 
@@ -367,8 +367,8 @@ class MyConvertedCode extends TerraformStack {
 
 The following fields are available in target tracking configuration:
 
-* `predefinedMetricSpecification` - (Optional) Predefined metric. Conflicts with `customized_metric_specification`.
-* `customizedMetricSpecification` - (Optional) Customized metric. Conflicts with `predefined_metric_specification`.
+* `predefinedMetricSpecification` - (Optional) Predefined metric. Conflicts with `customizedMetricSpecification`.
+* `customizedMetricSpecification` - (Optional) Customized metric. Conflicts with `predefinedMetricSpecification`.
 * `targetValue` - (Required) Target value for the metric.
 * `disableScaleIn` - (Optional, Default: false) Whether scale in by the target tracking policy is disabled.
 
@@ -401,10 +401,10 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metricStat`, but not both.
 * `id` - (Required) Short name for the metric used in target tracking scaling policy.
 * `label` - (Optional) Human-readable label for this metric or expression.
-* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metricStat`, but not both.
 * `returnData` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
 ##### metric_stat
@@ -444,7 +444,7 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `customizedCapacityMetricSpecification` - (Optional) Customized capacity metric specification. The field is only valid when you use `customized_load_metric_specification`
+* `customizedCapacityMetricSpecification` - (Optional) Customized capacity metric specification. The field is only valid when you use `customizedLoadMetricSpecification`
 * `customizedLoadMetricSpecification` - (Optional) Customized load metric specification.
 * `customizedScalingMetricSpecification` - (Optional) Customized scaling metric specification.
 * `predefinedLoadMetricSpecification` - (Optional) Predefined load metric specification.
@@ -494,10 +494,10 @@ This argument supports the following arguments:
 
 This argument supports the following arguments:
 
-* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metricStat`, but not both.
 * `id` - (Required) Short name for the metric used in predictive scaling policy.
 * `label` - (Optional) Human-readable label for this metric or expression.
-* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `metricStat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metricStat`, but not both.
 * `returnData` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
 
 ##### metric_stat
@@ -541,9 +541,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { AutoscalingPolicy } from "./.gen/providers/aws/autoscaling-policy";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    AutoscalingPolicy.generateConfigForImport(
+      this,
+      "testPolicy",
+      "asg-name/policy-name"
+    );
   }
 }
 
@@ -555,4 +565,4 @@ Using `terraform import`, import AutoScaling scaling policy using the role autos
 % terraform import aws_autoscaling_policy.test-policy asg-name/policy-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3cda1de0835095d7e158606559f0db3eb8b0ad3b3a1b8d1d3a230f006e768d8b -->
+<!-- cache-key: cdktf-0.20.1 input-3cda1de0835095d7e158606559f0db3eb8b0ad3b3a1b8d1d3a230f006e768d8b -->

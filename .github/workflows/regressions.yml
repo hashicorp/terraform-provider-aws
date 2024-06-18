@@ -3,7 +3,7 @@ on:
   issues:
     types:
       - labeled
-  pull_request:
+  pull_request_target:
     types:
       - labeled
 jobs:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack Notification
-        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117 # v1.24.0
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           EVENT_URL: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}

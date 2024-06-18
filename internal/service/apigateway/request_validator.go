@@ -9,19 +9,21 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_api_gateway_request_validator")
-func ResourceRequestValidator() *schema.Resource {
+// @SDKResource("aws_api_gateway_request_validator", name="Request Validator")
+func resourceRequestValidator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRequestValidatorCreate,
 		ReadWithoutTimeout:   resourceRequestValidatorRead,
@@ -43,7 +45,7 @@ func ResourceRequestValidator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -68,32 +70,32 @@ func ResourceRequestValidator() *schema.Resource {
 
 func resourceRequestValidatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateRequestValidatorInput{
 		Name:                      aws.String(name),
 		RestApiId:                 aws.String(d.Get("rest_api_id").(string)),
-		ValidateRequestBody:       aws.Bool(d.Get("validate_request_body").(bool)),
-		ValidateRequestParameters: aws.Bool(d.Get("validate_request_parameters").(bool)),
+		ValidateRequestBody:       d.Get("validate_request_body").(bool),
+		ValidateRequestParameters: d.Get("validate_request_parameters").(bool),
 	}
 
-	output, err := conn.CreateRequestValidatorWithContext(ctx, input)
+	output, err := conn.CreateRequestValidator(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Request Validator (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Id))
+	d.SetId(aws.ToString(output.Id))
 
 	return diags
 }
 
 func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	output, err := FindRequestValidatorByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
+	output, err := findRequestValidatorByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Request Validator (%s) not found, removing from state", d.Id())
@@ -105,7 +107,7 @@ func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Request Validator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	d.Set("validate_request_body", output.ValidateRequestBody)
 	d.Set("validate_request_parameters", output.ValidateRequestParameters)
 
@@ -114,29 +116,29 @@ func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	operations := make([]*apigateway.PatchOperation, 0)
+	operations := make([]types.PatchOperation, 0)
 
-	if d.HasChange("name") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+	if d.HasChange(names.AttrName) {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/name"),
-			Value: aws.String(d.Get("name").(string)),
+			Value: aws.String(d.Get(names.AttrName).(string)),
 		})
 	}
 
 	if d.HasChange("validate_request_body") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/validateRequestBody"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("validate_request_body").(bool))),
 		})
 	}
 
 	if d.HasChange("validate_request_parameters") {
-		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/validateRequestParameters"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("validate_request_parameters").(bool))),
 		})
@@ -148,7 +150,7 @@ func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData,
 		PatchOperations:    operations,
 	}
 
-	_, err := conn.UpdateRequestValidatorWithContext(ctx, input)
+	_, err := conn.UpdateRequestValidator(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Request Validator (%s): %s", d.Id(), err)
@@ -159,34 +161,36 @@ func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceRequestValidatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Request Validator: %s", d.Id())
-	_, err := conn.DeleteRequestValidatorWithContext(ctx, &apigateway.DeleteRequestValidatorInput{
+	_, err := conn.DeleteRequestValidator(ctx, &apigateway.DeleteRequestValidatorInput{
 		RequestValidatorId: aws.String(d.Id()),
 		RestApiId:          aws.String(d.Get("rest_api_id").(string)),
 	})
 
+	// XXX: Figure out a way to delete the method that depends on the request validator first
+	// otherwise the validator will be dangling until the API is deleted.
+	if errs.IsA[*types.ConflictException](err) || errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		// XXX: Figure out a way to delete the method that depends on the request validator first
-		// otherwise the validator will be dangling until the API is deleted
-		if !strings.Contains(err.Error(), apigateway.ErrCodeConflictException) {
-			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Request Validator (%s): %s", d.Id(), err)
-		}
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Request Validator (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindRequestValidatorByTwoPartKey(ctx context.Context, conn *apigateway.APIGateway, requestValidatorID, apiID string) (*apigateway.UpdateRequestValidatorOutput, error) {
+func findRequestValidatorByTwoPartKey(ctx context.Context, conn *apigateway.Client, requestValidatorID, apiID string) (*apigateway.GetRequestValidatorOutput, error) {
 	input := &apigateway.GetRequestValidatorInput{
 		RequestValidatorId: aws.String(requestValidatorID),
 		RestApiId:          aws.String(apiID),
 	}
 
-	output, err := conn.GetRequestValidatorWithContext(ctx, input)
+	output, err := conn.GetRequestValidator(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

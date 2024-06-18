@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -260,6 +261,7 @@ var PrebuiltECRImageIDByRegion_sparkML = map[string]string{
 // https://github.com/aws/sagemaker-tensorflow-serving-container
 
 var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
+	endpoints.AfSouth1RegionID:     "626614931356",
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
 	endpoints.ApNortheast2RegionID: "763104351884",
@@ -344,7 +346,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
 		Schema: map[string]*schema.Schema{
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -397,7 +399,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 				Default:  "1",
 			},
 
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -418,16 +420,16 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
-	suffix := meta.(*conns.AWSClient).DNSSuffix
+	suffix := meta.(*conns.AWSClient).DNSSuffix(ctx)
 	if v, ok := d.GetOk("dns_suffix"); ok {
 		suffix = v.(string)
 	}
 
-	repo := d.Get("repository_name").(string)
+	repo := d.Get(names.AttrRepositoryName).(string)
 
 	id := ""
 	switch repo {

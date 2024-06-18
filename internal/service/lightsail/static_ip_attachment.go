@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_static_ip_attachment")
@@ -33,7 +34,7 @@ func ResourceStaticIPAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +85,7 @@ func resourceStaticIPAttachmentRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("instance_name", out.StaticIp.AttachedTo)
-	d.Set("ip_address", out.StaticIp.IpAddress)
+	d.Set(names.AttrIPAddress, out.StaticIp.IpAddress)
 
 	return diags
 }

@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDetectorFeature_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func testAccDetectorFeature_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -33,10 +33,10 @@ func testAccDetectorFeature_basic(t *testing.T) {
 				Config: testAccDetectorFeatureConfig_basic("RDS_LOGIN_EVENTS", "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", "RDS_LOGIN_EVENTS"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "RDS_LOGIN_EVENTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 		},
@@ -52,7 +52,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -60,33 +60,33 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "name", "EKS_RUNTIME_MONITORING"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("DISABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "name", "EKS_RUNTIME_MONITORING"),
-					resource.TestCheckResourceAttr(resourceName, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DISABLED"),
 				),
 			},
 			{
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "name", "EKS_RUNTIME_MONITORING"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 		},
@@ -104,7 +104,7 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -114,15 +114,15 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 					testAccCheckDetectorFeatureExists(ctx, resource1Name),
 					testAccCheckDetectorFeatureExists(ctx, resource2Name),
 					testAccCheckDetectorFeatureExists(ctx, resource3Name),
-					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
-					resource.TestCheckResourceAttr(resource1Name, "status", "ENABLED"),
-					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
-					resource.TestCheckResourceAttr(resource2Name, "status", "DISABLED"),
-					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
-					resource.TestCheckResourceAttr(resource3Name, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrName, "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrStatus, "DISABLED"),
+					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrName, "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{
@@ -131,15 +131,15 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 					testAccCheckDetectorFeatureExists(ctx, resource1Name),
 					testAccCheckDetectorFeatureExists(ctx, resource2Name),
 					testAccCheckDetectorFeatureExists(ctx, resource3Name),
-					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
-					resource.TestCheckResourceAttr(resource1Name, "status", "DISABLED"),
-					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
-					resource.TestCheckResourceAttr(resource2Name, "status", "ENABLED"),
-					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
-					resource.TestCheckResourceAttr(resource3Name, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrStatus, "DISABLED"),
+					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrName, "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrStatus, "ENABLED"),
+					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrName, "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{
@@ -148,15 +148,15 @@ func testAccDetectorFeature_multiple(t *testing.T) {
 					testAccCheckDetectorFeatureExists(ctx, resource1Name),
 					testAccCheckDetectorFeatureExists(ctx, resource2Name),
 					testAccCheckDetectorFeatureExists(ctx, resource3Name),
-					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource1Name, "name", "EBS_MALWARE_PROTECTION"),
-					resource.TestCheckResourceAttr(resource1Name, "status", "DISABLED"),
-					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource2Name, "name", "LAMBDA_NETWORK_LOGS"),
-					resource.TestCheckResourceAttr(resource2Name, "status", "DISABLED"),
-					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resource3Name, "name", "S3_DATA_EVENTS"),
-					resource.TestCheckResourceAttr(resource3Name, "status", "DISABLED"),
+					resource.TestCheckResourceAttr(resource1Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrName, "EBS_MALWARE_PROTECTION"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrStatus, "DISABLED"),
+					resource.TestCheckResourceAttr(resource2Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrName, "LAMBDA_NETWORK_LOGS"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrStatus, "DISABLED"),
+					resource.TestCheckResourceAttr(resource3Name, "additional_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrName, "S3_DATA_EVENTS"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrStatus, "DISABLED"),
 				),
 			},
 		},
@@ -172,7 +172,7 @@ func testAccCheckDetectorFeatureExists(ctx context.Context, n string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
 
-		_, err := tfguardduty.FindDetectorFeatureByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["name"])
+		_, err := tfguardduty.FindDetectorFeatureByTwoPartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

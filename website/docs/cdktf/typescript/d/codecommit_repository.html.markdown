@@ -44,9 +44,10 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `repositoryId` - ID of the repository
-* `arn` - ARN of the repository
+* `repositoryId` - ID of the repository.
+* `kmsKeyId` - The ID of the encryption key.
+* `arn` - ARN of the repository.
 * `cloneUrlHttp` - URL to use for cloning the repository over HTTPS.
 * `cloneUrlSsh` - URL to use for cloning the repository over SSH.
 
-<!-- cache-key: cdktf-0.19.0 input-5f322aa9e58ade376d26a7bc7fcca823f5fc4c32d9a5916f862aea8c60b99b90 -->
+<!-- cache-key: cdktf-0.20.1 input-b16ab4c6988819daea4a817d385a8fcb8fc011d4cde702f73a6773161f2a029a -->

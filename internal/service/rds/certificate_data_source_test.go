@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSCertificateDataSource_id(t *testing.T) {
@@ -20,14 +21,14 @@ func TestAccRDSCertificateDataSource_id(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCertificatePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateDataSourceConfig_id(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", "data.aws_rds_certificate.latest", "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, "data.aws_rds_certificate.latest", names.AttrID),
 				),
 			},
 		},
@@ -40,18 +41,18 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCertificatePreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateDataSourceConfig_latestValidTill(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "rds", regexache.MustCompile(`cert:rds-ca-[-0-9a-z]+$`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "rds", regexache.MustCompile(`cert:rds-ca-[-0-9a-z]+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "certificate_type", "CA"),
-					resource.TestCheckResourceAttr(dataSourceName, "customer_override", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "customer_override", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(dataSourceName, "customer_override_valid_till"),
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^rds-ca-[-0-9a-z]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^rds-ca-[-0-9a-z]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexache.MustCompile(`^[0-9a-f]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexache.MustCompile(acctest.RFC3339RegexPattern)),
 					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexache.MustCompile(acctest.RFC3339RegexPattern)),

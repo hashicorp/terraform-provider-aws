@@ -21,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_notification")
-func ResourceBucketNotification() *schema.Resource {
+// @SDKResource("aws_s3_bucket_notification", name="Bucket Notification")
+func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketNotificationPut,
 		ReadWithoutTimeout:   resourceBucketNotificationRead,
@@ -36,7 +37,7 @@ func ResourceBucketNotification() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -64,7 +65,7 @@ func ResourceBucketNotification() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -94,7 +95,7 @@ func ResourceBucketNotification() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -124,12 +125,12 @@ func ResourceBucketNotification() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -141,9 +142,12 @@ func ResourceBucketNotification() *schema.Resource {
 }
 
 func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		filterRulesSliceStartLen = 2
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 
 	var eventbridgeConfig *types.EventBridgeConfiguration
 	if d.Get("eventbridge").(bool) {
@@ -157,7 +161,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 
 		c := c.(map[string]interface{})
 
-		if val, ok := c["id"].(string); ok && val != "" {
+		if val, ok := c[names.AttrID].(string); ok && val != "" {
 			lc.Id = aws.String(val)
 		} else {
 			lc.Id = aws.String(id.PrefixedUniqueId("tf-s3-lambda-"))
@@ -201,7 +205,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 
 		c := c.(map[string]interface{})
 
-		if val, ok := c["id"].(string); ok && val != "" {
+		if val, ok := c[names.AttrID].(string); ok && val != "" {
 			qc.Id = aws.String(val)
 		} else {
 			qc.Id = aws.String(id.PrefixedUniqueId("tf-s3-queue-"))
@@ -245,13 +249,13 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 
 		c := c.(map[string]interface{})
 
-		if val, ok := c["id"].(string); ok && val != "" {
+		if val, ok := c[names.AttrID].(string); ok && val != "" {
 			tc.Id = aws.String(val)
 		} else {
 			tc.Id = aws.String(id.PrefixedUniqueId("tf-s3-topic-"))
 		}
 
-		if val, ok := c["topic_arn"].(string); ok {
+		if val, ok := c[names.AttrTopicARN].(string); ok {
 			tc.TopicArn = aws.String(val)
 		}
 
@@ -309,7 +313,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Notification: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Notification: %s", bucket, err)
 	}
 
 	if d.IsNewResource() {
@@ -320,7 +324,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		})
 
 		if err != nil {
-			return diag.Errorf("waiting for S3 Bucket Notification (%s) create: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Notification (%s) create: %s", d.Id(), err)
 		}
 	}
 
@@ -343,7 +347,7 @@ func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", d.Id())
+	d.Set(names.AttrBucket, d.Id())
 	d.Set("eventbridge", output.EventBridgeConfiguration != nil)
 	if err := d.Set("lambda_function", flattenLambdaFunctionConfigurations(output.LambdaFunctionConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda_function: %s", err)
@@ -371,11 +375,11 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.PutBucketNotificationConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Notification (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Notification (%s): %s", d.Id(), err)
 	}
 
 	// Don't wait for the notification configuration to disappear as it still exists after update.
@@ -438,9 +442,9 @@ func flattenTopicConfigurations(configs []types.TopicConfiguration) []map[string
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = aws.ToString(notification.Id)
+		conf[names.AttrID] = aws.ToString(notification.Id)
 		conf["events"] = notification.Events
-		conf["topic_arn"] = aws.ToString(notification.TopicArn)
+		conf[names.AttrTopicARN] = aws.ToString(notification.TopicArn)
 		topicNotifications = append(topicNotifications, conf)
 	}
 
@@ -457,7 +461,7 @@ func flattenQueueConfigurations(configs []types.QueueConfiguration) []map[string
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = aws.ToString(notification.Id)
+		conf[names.AttrID] = aws.ToString(notification.Id)
 		conf["events"] = notification.Events
 		conf["queue_arn"] = aws.ToString(notification.QueueArn)
 		queueNotifications = append(queueNotifications, conf)
@@ -476,7 +480,7 @@ func flattenLambdaFunctionConfigurations(configs []types.LambdaFunctionConfigura
 			conf = map[string]interface{}{}
 		}
 
-		conf["id"] = aws.ToString(notification.Id)
+		conf[names.AttrID] = aws.ToString(notification.Id)
 		conf["events"] = notification.Events
 		conf["lambda_function_arn"] = aws.ToString(notification.LambdaFunctionArn)
 		lambdaFunctionNotifications = append(lambdaFunctionNotifications, conf)

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,7 +49,7 @@ func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +72,7 @@ func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +93,7 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func TestAccELBV2TargetGroupAttachment_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -164,11 +165,11 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 			}},
 		}
 
-		if v := rs.Primary.Attributes["availability_zone"]; v != "" {
+		if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
 			input.Targets[0].AvailabilityZone = aws.String(v)
 		}
 
-		if v := rs.Primary.Attributes["port"]; v != "" {
+		if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
 			input.Targets[0].Port = flex.StringValueToInt64(v)
 		}
 
@@ -194,11 +195,11 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 				}},
 			}
 
-			if v := rs.Primary.Attributes["availability_zone"]; v != "" {
+			if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
 				input.Targets[0].AvailabilityZone = aws.String(v)
 			}
 
-			if v := rs.Primary.Attributes["port"]; v != "" {
+			if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
 				input.Targets[0].Port = flex.StringValueToInt64(v)
 			}
 
@@ -324,7 +325,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "lambda_elb.lambda_handler"
-  runtime       = "python3.7"
+  runtime       = "python3.12"
 }
 
 resource "aws_lambda_alias" "test" {

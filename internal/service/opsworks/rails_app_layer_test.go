@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,34 +36,34 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`layer/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_healing", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.5.3"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "custom_configure_recipes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "custom_deploy_recipes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "custom_configure_recipes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "custom_deploy_recipes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "custom_instance_profile_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_json", ""),
-					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "custom_setup_recipes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "custom_shutdown_recipes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "custom_undeploy_recipes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "custom_setup_recipes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "custom_shutdown_recipes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "custom_undeploy_recipes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elastic_load_balancer", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "120"),
-					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
-					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", "Rails App Server"),
+					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "manage_bundler", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Rails App Server"),
 					resource.TestCheckResourceAttr(resourceName, "passenger_version", "4.0.46"),
 					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.0.0"),
 					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.2.2"),
 					resource.TestCheckNoResourceAttr(resourceName, "short_name"),
-					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "use_ebs_optimized_instances", "false"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "use_ebs_optimized_instances", acctest.CtFalse),
 				),
 			},
 			{
@@ -82,7 +83,7 @@ func TestAccOpsWorksRailsAppLayer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,33 +107,33 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRailsAppLayerConfig_tags1(rName, "key1", "value1"),
+				Config: testAccRailsAppLayerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccRailsAppLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRailsAppLayerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRailsAppLayerConfig_tags1(rName, "key2", "value2"),
+				Config: testAccRailsAppLayerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -155,33 +156,33 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, "key1", "value1"),
+				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccRailsAppLayerConfig_tags2AlternateRegion(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRailsAppLayerConfig_tags2AlternateRegion(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, "key2", "value2"),
+				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -196,7 +197,7 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -206,8 +207,8 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "nginx_unicorn"),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.12.5"),
-					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "manage_bundler", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "passenger_version", "4.0.60"),
 					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.6"),
 					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.5.1"),
@@ -224,8 +225,8 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.15.4"),
-					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "manage_bundler", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "passenger_version", "5.1.3"),
 					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.3"),
 					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.7.9"),
@@ -243,7 +244,7 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -251,7 +252,7 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_elb(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.0", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.0", names.AttrName),
 				),
 			},
 			{
@@ -263,7 +264,7 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_elb(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.1", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.1", names.AttrName),
 				),
 			},
 		},

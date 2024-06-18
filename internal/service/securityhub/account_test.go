@@ -28,7 +28,7 @@ func testAccAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,9 +36,9 @@ func testAccAccount_basic(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorDefaultValueFromAWS),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func testAccAccount_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 				Config: testAccAccountConfig_enableDefaultStandardsFalse,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtFalse),
 				),
 			},
 		},
@@ -101,7 +101,7 @@ func testAccAccount_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		// control_finding_generator not supported in AWS GovCloud.
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +109,7 @@ func testAccAccount_full(t *testing.T) {
 				Config: testAccAccountConfig_full(false, "STANDARD_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "STANDARD_CONTROL"),
 				),
 			},
@@ -117,7 +117,7 @@ func testAccAccount_full(t *testing.T) {
 				Config: testAccAccountConfig_full(true, "SECURITY_CONTROL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", "SECURITY_CONTROL"),
 				),
 			},
@@ -131,7 +131,7 @@ func testAccAccount_migrateV0(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		CheckDestroy: testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -152,7 +152,7 @@ func testAccAccount_migrateV0(t *testing.T) {
 				Config:                   testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 				),
 			},
 		},
@@ -171,7 +171,7 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		CheckDestroy: testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -184,9 +184,9 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 				Config: testAccAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_default_standards", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "control_finding_generator", controlFindingGeneratorExpectedValue),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable_controls", acctest.CtTrue),
 				),
 				ExpectNonEmptyPlan: expectNonEmptyPlan,
 			},
@@ -206,7 +206,11 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.SecurityHubClient(ctx)
+
+		arn := tfsecurityhub.AccountHubARN(awsClient)
+		_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 		return err
 	}
@@ -214,12 +218,16 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.SecurityHubClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_account" {
 				continue
 			}
 
-			_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+			arn := tfsecurityhub.AccountHubARN(awsClient)
+			_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 			if tfresource.NotFound(err) {
 				continue

@@ -5,11 +5,12 @@ package shield
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,361 +20,222 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="DRT Access Log Bucket Association")
-func newResourceDRTAccessLogBucketAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDRTAccessLogBucketAssociation{}
+// @FrameworkResource(name="DRT Log Bucket Association")
+func newDRTAccessLogBucketAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &drtAccessLogBucketAssociationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameDRTAccessLogBucketAssociation = "DRT Access Log Bucket Association"
-)
-
-type resourceDRTAccessLogBucketAssociation struct {
+type drtAccessLogBucketAssociationResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDRTAccessLogBucketAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_shield_drt_access_log_bucket_association"
+func (r *drtAccessLogBucketAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_shield_drt_access_log_bucket_association"
 }
 
-func (r *resourceDRTAccessLogBucketAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *drtAccessLogBucketAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{ // required by hashicorps terraform plugin testing framework
-				DeprecationMessage:  "id is only for framework compatibility and not used by the provider",
-				MarkdownDescription: "The ID of the directory.",
-				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttribute(),
 			"log_bucket": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
-					// Validate string value length must be at least 3 characters and max 63.
 					stringvalidator.LengthBetween(3, 63),
 				},
 			},
 			"role_arn_association_id": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: `Unused`,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
-				Read:   true,
 			}),
 		},
 	}
 }
 
-func (r *resourceDRTAccessLogBucketAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var plan resourceDRTAccessLogBucketAssociationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *drtAccessLogBucketAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data drtAccessLogBucketAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &shield.AssociateDRTLogBucketInput{
-		LogBucket: aws.String(plan.LogBucket.ValueString()),
+	conn := r.Meta().ShieldClient(ctx)
+
+	logBucket := data.LogBucket.ValueString()
+	input := &shield.AssociateDRTLogBucketInput{
+		LogBucket: aws.String(logBucket),
 	}
-	out, err := conn.AssociateDRTLogBucketWithContext(ctx, in)
+
+	_, err := conn.AssociateDRTLogBucket(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Shield DRT Log Bucket Association (%s)", logBucket), err.Error())
+
 		return
 	}
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitDRTAccessLogBucketAssociationCreated(ctx, conn, plan.LogBucket.ValueString(), createTimeout)
+	// Set values for unknowns.
+	data.setID()
+
+	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+		return findDRTLogBucketAssociation(ctx, conn, logBucket)
+	})
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForCreation, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Shield DRT Log Bucket Association (%s) create", logBucket), err.Error())
+
 		return
 	}
-	plan.ID = types.StringValue(plan.LogBucket.ValueString())
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceDRTAccessLogBucketAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var state resourceDRTAccessLogBucketAssociationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *drtAccessLogBucketAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data drtAccessLogBucketAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	in := &shield.DescribeDRTAccessInput{}
 
-	out, err := conn.DescribeDRTAccessWithContext(ctx, in)
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().ShieldClient(ctx)
+
+	logBucket := data.ID.ValueString()
+	_, err := findDRTLogBucketAssociation(ctx, conn, logBucket)
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Shield DRT Log Bucket Association (%s)", logBucket), err.Error())
+
 		return
 	}
-	var associatedLogBucket *string
-	if out != nil {
-		associatedLogBucket = getAssociatedLogBucket(state.LogBucket.ValueString(), out.LogBucketList)
-		if len(out.LogBucketList) > 0 && associatedLogBucket == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Shield, create.ErrActionSetting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), nil),
-				errors.New("Log Bucket not in list").Error(),
-			)
-		}
-	}
 
-	if state.ID.IsNull() || state.ID.IsUnknown() {
-		// Setting ID of state - required by hashicorps terraform plugin testing framework for Import. See issue https://github.com/hashicorp/terraform-plugin-testing/issues/84
-		state.ID = types.StringValue(state.LogBucket.ValueString())
-	}
-	state.LogBucket = flex.StringToFramework(ctx, associatedLogBucket)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func getAssociatedLogBucket(bucket string, bucketList []*string) *string {
-	for _, bkt := range bucketList {
-		if aws.StringValue(bkt) == bucket {
-			return bkt
+func (r *drtAccessLogBucketAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data drtAccessLogBucketAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().ShieldClient(ctx)
+
+	logBucket := data.ID.ValueString()
+	input := &shield.DisassociateDRTLogBucketInput{
+		LogBucket: aws.String(logBucket),
+	}
+
+	_, err := conn.DisassociateDRTLogBucket(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Shield DRT Log Bucket Association (%s)", logBucket), err.Error())
+
+		return
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, r.DeleteTimeout(ctx, data.Timeouts), func() (interface{}, error) {
+		return findDRTLogBucketAssociation(ctx, conn, logBucket)
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Shield DRT Log Bucket Association (%s) delete", logBucket), err.Error())
+
+		return
+	}
+}
+
+func findDRTLogBucketAssociation(ctx context.Context, conn *shield.Client, name string) (*string, error) {
+	output, err := findDRTAccess(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.LogBucketList, func(v string) bool {
+		return v == name
+	}))
+}
+
+func findDRTAccess(ctx context.Context, conn *shield.Client) (*shield.DescribeDRTAccessOutput, error) {
+	input := &shield.DescribeDRTAccessInput{}
+
+	output, err := conn.DescribeDRTAccess(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+type drtAccessLogBucketAssociationResourceModel struct {
+	ID                   types.String   `tfsdk:"id"`
+	LogBucket            types.String   `tfsdk:"log_bucket"`
+	RoleARNAssociationID types.String   `tfsdk:"role_arn_association_id"`
+	Timeouts             timeouts.Value `tfsdk:"timeouts"`
+}
+
+func (model *drtAccessLogBucketAssociationResourceModel) InitFromID() error {
+	model.LogBucket = model.ID
+
 	return nil
 }
 
-func (r *resourceDRTAccessLogBucketAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var plan, state resourceDRTAccessLogBucketAssociationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !plan.LogBucket.Equal(state.LogBucket) {
-		in := &shield.AssociateDRTLogBucketInput{
-			LogBucket: aws.String(plan.LogBucket.ValueString()),
-		}
-		out, err := conn.AssociateDRTLogBucketWithContext(ctx, in)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitDRTAccessLogBucketAssociationUpdated(ctx, conn, plan.LogBucket.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForUpdate, ResNameDRTAccessLogBucketAssociation, plan.LogBucket.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceDRTAccessLogBucketAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().ShieldConn(ctx)
-
-	var state resourceDRTAccessLogBucketAssociationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if state.LogBucket.ValueString() == "" {
-		return
-	}
-
-	in := &shield.DisassociateDRTLogBucketInput{
-		LogBucket: aws.String(state.LogBucket.ValueString()),
-	}
-
-	_, err := conn.DisassociateDRTLogBucketWithContext(ctx, in)
-	if err != nil {
-		var nfe *shield.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionDeleting, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDRTAccessLogBucketAssociationDeleted(ctx, conn, state.LogBucket.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Shield, create.ErrActionWaitingForDeletion, ResNameDRTAccessLogBucketAssociation, state.LogBucket.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
-func waitDRTAccessLogBucketAssociationCreated(ctx context.Context, conn *shield.Shield, bucket string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{statusNormal},
-		Refresh:                   statusDRTAccessLogBucketAssociation(ctx, conn, bucket),
-		Timeout:                   timeout,
-		NotFoundChecks:            2,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*shield.DescribeDRTAccessOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDRTAccessLogBucketAssociationUpdated(ctx context.Context, conn *shield.Shield, bucket string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusDRTAccessLogBucketAssociation(ctx, conn, bucket),
-		Timeout:                   timeout,
-		NotFoundChecks:            2,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*shield.DescribeDRTAccessOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDRTAccessLogBucketAssociationDeleted(ctx context.Context, conn *shield.Shield, bucket string, timeout time.Duration) (*shield.DescribeDRTAccessOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
-		Refresh: statusDRTAccessLogBucketAssociation(ctx, conn, bucket),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*shield.DescribeDRTAccessOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusDRTAccessLogBucketAssociation(ctx context.Context, conn *shield.Shield, bucket string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := describeDRTAccessLogBucketAssociation(ctx, conn, bucket)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-		if out == nil || out.LogBucketList == nil || len(out.LogBucketList) == 0 {
-			return nil, "", nil
-		}
-
-		if out != nil && len(out.LogBucketList) > 0 {
-			for _, bkt := range out.LogBucketList {
-				if aws.StringValue(bkt) == bucket {
-					return out, statusNormal, nil
-				}
-			}
-			return nil, "", nil
-		}
-
-		return out, statusNormal, nil
-	}
-}
-
-func describeDRTAccessLogBucketAssociation(ctx context.Context, conn *shield.Shield, bucketName string) (*shield.DescribeDRTAccessOutput, error) {
-	in := &shield.DescribeDRTAccessInput{}
-
-	out, err := conn.DescribeDRTAccessWithContext(ctx, in)
-	if err != nil {
-		var nfe *shield.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-	}
-
-	if out == nil || out.LogBucketList == nil || len(out.LogBucketList) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	for _, bucket := range out.LogBucketList {
-		if aws.StringValue(bucket) == bucketName {
-			return out, nil
-		}
-	}
-	return nil, err
-}
-
-type resourceDRTAccessLogBucketAssociationData struct {
-	ID                   types.String   `tfsdk:"id"`
-	RoleArnAssociationID types.String   `tfsdk:"role_arn_association_id"`
-	LogBucket            types.String   `tfsdk:"log_bucket"`
-	Timeouts             timeouts.Value `tfsdk:"timeouts"`
+func (model *drtAccessLogBucketAssociationResourceModel) setID() {
+	model.ID = model.LogBucket
 }

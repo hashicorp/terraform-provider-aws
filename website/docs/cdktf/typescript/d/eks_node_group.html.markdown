@@ -58,16 +58,16 @@ This data source exports the following attributes in addition to the arguments a
 * `nodeRoleArn` – ARN of the IAM Role that provides permissions for the EKS Node Group.
 * `releaseVersion` – AMI version of the EKS Node Group.
 * `remoteAccess` - Configuration block with remote access settings.
-    * `ec2_ssh_key` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.
-    * `source_security_group_ids` - Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes.
+    * `ec2SshKey` - EC2 Key Pair name that provides access for SSH communication with the worker nodes in the EKS Node Group.
+    * `sourceSecurityGroupIds` - Set of EC2 Security Group IDs to allow SSH access (port 22) from on the worker nodes.
 * `resources` - List of objects containing information about underlying resources.
-    * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
+    * `autoscalingGroups` - List of objects containing information about AutoScaling Groups.
         * `name` - Name of the AutoScaling Group.
     * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
 * `scalingConfig` - Configuration block with scaling settings.
-    * `desired_size` - Desired number of worker nodes.
-    * `max_size` - Maximum number of worker nodes.
-    * `min_size` - Minimum number of worker nodes.
+    * `desiredSize` - Desired number of worker nodes.
+    * `maxSize` - Maximum number of worker nodes.
+    * `minSize` - Minimum number of worker nodes.
 * `status` - Status of the EKS Node Group.
 * `subnetIds` – Identifiers of EC2 Subnets to associate with the EKS Node Group.
 * `taints` - List of objects containing information about taints applied to the nodes in the EKS Node Group.
@@ -77,4 +77,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags.
 * `version` – Kubernetes version.
 
-<!-- cache-key: cdktf-0.19.0 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->
+<!-- cache-key: cdktf-0.20.1 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->

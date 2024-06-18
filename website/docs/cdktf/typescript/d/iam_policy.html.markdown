@@ -62,7 +62,7 @@ class MyConvertedCode extends TerraformStack {
 ## Argument Reference
 
 * `arn` - (Optional) ARN of the IAM policy.
-  Conflicts with `name` and `path_prefix`.
+  Conflicts with `name` and `pathPrefix`.
 * `name` - (Optional) Name of the IAM policy.
   Conflicts with `arn`.
 * `pathPrefix` - (Optional) Prefix of the path to the IAM policy.
@@ -74,10 +74,11 @@ class MyConvertedCode extends TerraformStack {
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the policy.
+* `attachmentCount` - Number of entities (users, groups, and roles) that the policy is attached to.
 * `path` - Path to the policy.
 * `description` - Description of the policy.
 * `policy` - Policy document of the policy.
 * `policyId` - Policy's ID.
 * `tags` - Key-value mapping of tags for the IAM Policy.
 
-<!-- cache-key: cdktf-0.19.0 input-0cf487c395058c7c9cab5e17ab81c86989934f0f0479c2c2af73d9be73409f10 -->
+<!-- cache-key: cdktf-0.20.1 input-3c54a12155467c15a1817ea34af002f9094ae08554f1069b46e84a9dbb938921 -->

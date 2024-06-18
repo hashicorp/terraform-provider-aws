@@ -12,7 +12,7 @@ description: |-
 
 Provides an independent configuration resource for S3 bucket [replication configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/crr.html).
 
-~> **NOTE:** S3 Buckets only support a single replication configuration. Declaring multiple `awsS3BucketReplicationConfiguration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
+~> **NOTE:** S3 Buckets only support a single replication configuration. Declaring multiple `aws_s3_bucket_replication_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
 -> This resource cannot be used with S3 directory buckets.
 
@@ -274,7 +274,7 @@ For more details, see [Using S3 Object Lock with replication](https://docs.aws.a
 
 ~> **NOTE:** Amazon S3's latest version of the replication configuration is V2, which includes the `filter` attribute for replication rules.
 
-~> **NOTE:** The `existingObjectReplication` parameter is not supported by Amazon S3 at this time and should not be included in your `rule` configurations. Specifying this parameter will result in `malformedXml` errors.
+~> **NOTE:** The `existingObjectReplication` parameter is not supported by Amazon S3 at this time and should not be included in your `rule` configurations. Specifying this parameter will result in `MalformedXML` errors.
 To replicate existing objects, please refer to the [Replicating existing objects with S3 Batch Replication](https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-batch-replication-batch.html) documentation in the Amazon S3 User Guide.
 
 The `rule` configuration block supports the following arguments:
@@ -314,9 +314,9 @@ The `deleteMarkerReplication` configuration block supports the following argumen
 The `destination` configuration block supports the following arguments:
 
 * `accessControlTranslation` - (Optional) Configuration block that specifies the overrides to use for object owners on replication. [See below](#access_control_translation). Specify this only in a cross-account scenario (where source and destination bucket owners are not the same), and you want to change replica ownership to the AWS account that owns the destination bucket. If this is not specified in the replication configuration, the replicas are owned by same AWS account that owns the source object. Must be used in conjunction with `account` owner override configuration.
-* `account` - (Optional) Account ID to specify the replica ownership. Must be used in conjunction with `access_control_translation` override configuration.
+* `account` - (Optional) Account ID to specify the replica ownership. Must be used in conjunction with `accessControlTranslation` override configuration.
 * `bucket` - (Required) ARN of the bucket where you want Amazon S3 to store the results.
-* `encryptionConfiguration` - (Optional) Configuration block that provides information about encryption. [See below](#encryption_configuration). If `source_selection_criteria` is specified, you must specify this element.
+* `encryptionConfiguration` - (Optional) Configuration block that provides information about encryption. [See below](#encryption_configuration). If `sourceSelectionCriteria` is specified, you must specify this element.
 * `metrics` - (Optional) Configuration block that specifies replication metrics-related settings enabling replication metrics and events. [See below](#metrics).
 * `replicationTime` - (Optional) Configuration block that specifies S3 Replication Time Control (S3 RTC), including whether S3 RTC is enabled and the time when all objects and operations on objects must be replicated. [See below](#replication_time). Replication Time Control must be used in conjunction with `metrics`.
 * `storageClass` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
@@ -470,7 +470,7 @@ The `sourceSelectionCriteria` configuration block supports the following argumen
 
 * `replicaModifications` - (Optional) Configuration block that you can specify for selections for modifications on replicas. Amazon S3 doesn't replicate replica modifications by default. In the latest version of replication configuration (when `filter` is specified), you can specify this element and set the status to `Enabled` to replicate modifications on replicas.
 
-* `sseKmsEncryptedObjects` - (Optional) Configuration block for filter information for the selection of Amazon S3 objects encrypted with AWS KMS. If specified, `replica_kms_key_id` in `destination` `encryption_configuration` must be specified as well.
+* `sseKmsEncryptedObjects` - (Optional) Configuration block for filter information for the selection of Amazon S3 objects encrypted with AWS KMS. If specified, `replicaKmsKeyId` in `destination` `encryptionConfiguration` must be specified as well.
 
 ### replica_modifications
 
@@ -498,9 +498,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { S3BucketReplicationConfigurationA } from "./.gen/providers/aws/s3-bucket-replication-configuration";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    S3BucketReplicationConfigurationA.generateConfigForImport(
+      this,
+      "replication",
+      "bucket-name"
+    );
   }
 }
 
@@ -512,4 +522,4 @@ Using `terraform import`, import S3 bucket replication configuration using the `
 % terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5484feb2a9dadde056091c90ce1a415b94cf5e3786fb164ffd1c493093f25acb -->
+<!-- cache-key: cdktf-0.20.1 input-5484feb2a9dadde056091c90ce1a415b94cf5e3786fb164ffd1c493093f25acb -->

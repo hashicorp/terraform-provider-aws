@@ -78,8 +78,8 @@ This data source exports the following attributes in addition to the arguments a
 * `defaultOutboundQueueId` - Specifies the default outbound queue for the Routing Profile.
 * `description` - Description of the Routing Profile.
 * `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).
-* `mediaConcurrencies` - One or more `media_concurrencies` blocks that specify the channels that agents can handle in the Contact Control Panel (CCP) for this Routing Profile. The `media_concurrencies` block is documented below.
-* `queueConfigs` - One or more `queue_configs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queue_configs` block is documented below.
+* `mediaConcurrencies` - One or more `mediaConcurrencies` blocks that specify the channels that agents can handle in the Contact Control Panel (CCP) for this Routing Profile. The `mediaConcurrencies` block is documented below.
+* `queueConfigs` - One or more `queueConfigs` blocks that specify the inbound queues associated with the routing profile. If no queue is added, the agent only can make outbound calls. The `queueConfigs` block is documented below.
 * `tags` - Map of tags to assign to the Routing Profile.
 
 A `mediaConcurrencies` block supports the following attributes:
@@ -96,4 +96,4 @@ A `queueConfigs` block supports the following attributes:
 * `queueId` - Identifier for the queue.
 * `queueName` - Name for the queue.
 
-<!-- cache-key: cdktf-0.19.0 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->
+<!-- cache-key: cdktf-0.20.1 input-7ae68b75fdca27a8760c4c164d2158714999272950916b7bd000a215ec569cf2 -->

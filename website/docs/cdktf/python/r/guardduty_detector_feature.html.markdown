@@ -49,19 +49,19 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `detector_id` - (Required) Amazon GuardDuty detector ID.
-* `name` - (Required) The name of the detector feature. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`.
+* `name` - (Required) The name of the detector feature. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`, `RUNTIME_MONITORING`. Only one of two features `EKS_RUNTIME_MONITORING` or `RUNTIME_MONITORING` can be added, adding both features will cause an error. Refer to the [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DetectorFeatureConfiguration.html) for the current list of supported values.
 * `status` - (Required) The status of the detector feature. Valid values: `ENABLED`, `DISABLED`.
-* `additional_configuration` - (Optional) Additional feature configuration block. See [below](#additional-configuration).
+* `additional_configuration` - (Optional) Additional feature configuration block for features`EKS_RUNTIME_MONITORING` or `RUNTIME_MONITORING`. See [below](#additional-configuration).
 
 ### Additional Configuration
 
 The `additional_configuration` block supports the following:
 
-* `name` - (Required) The name of the additional configuration. Valid values: `EKS_ADDON_MANAGEMENT`.
+* `name` - (Required) The name of the additional configuration for a feature. Valid values: `EKS_ADDON_MANAGEMENT`, `ECS_FARGATE_AGENT_MANAGEMENT`, `EC2_AGENT_MANAGEMENT`. Refer to the [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/APIReference/API_DetectorAdditionalConfiguration.html) for the current list of supported values.
 * `status` - (Required) The status of the additional configuration. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.19.0 input-730bfa0c7a2b94ed5a34772f00e9b6d3c65956aa82ca10d129920a025e89eb3e -->
+<!-- cache-key: cdktf-0.20.1 input-4eda0b7c33c40d11e57fe6f2b665966d8be0e7601ab5db09321b8a8f5146dacd -->

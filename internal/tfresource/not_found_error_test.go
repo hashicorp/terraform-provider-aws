@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -167,6 +168,76 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {
 				t.Errorf("got %t, expected %t", ok, testCase.expected)
+			}
+		})
+	}
+}
+
+func TestAssertSinglePtrResult(t *testing.T) {
+	t.Parallel()
+
+	type x struct {
+		A int
+	}
+
+	x1 := &x{A: 1}
+	x2 := &x{A: 2}
+	testCases := []struct {
+		name   string
+		input  []*x
+		fs     []foundFunc[x]
+		output *x
+		err    bool
+	}{
+		{
+			name: "nil input",
+			err:  true,
+		},
+		{
+			name:  "empty input",
+			input: []*x{},
+			err:   true,
+		},
+		{
+			name:  "single nil input",
+			input: []*x{nil},
+			err:   true,
+		},
+		{
+			name:   "single non-nil input",
+			input:  []*x{x1},
+			output: x1,
+		},
+		{
+			name:  "multiple inputs",
+			input: []*x{x1, x2},
+			err:   true,
+		},
+		{
+			name:   "single non-nil input, with found",
+			input:  []*x{x1},
+			fs:     []foundFunc[x]{func(v *x) bool { return v.A == 1 }},
+			output: x1,
+		},
+		{
+			name:  "single non-nil input, with not found",
+			input: []*x{x1},
+			fs:    []foundFunc[x]{func(v *x) bool { return v.A == 2 }},
+			err:   true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			output, err := AssertSinglePtrResult(testCase.input, testCase.fs...)
+			if got, want := err != nil, testCase.err; got != want {
+				t.Fatalf("AssertSinglePtrResult err %t, want %t", got, want)
+			}
+			if diff := cmp.Diff(output, testCase.output); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}

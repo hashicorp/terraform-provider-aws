@@ -5,52 +5,49 @@ package bedrock
 
 import (
 	"context"
-	"errors"
-	"time"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	iamPropagationTimeout                      = time.Minute * 1
-	ResNameModelInvocationLoggingConfiguration = "Model Invocation Logging Configuration"
-)
-
 // @FrameworkResource(name="Model Invocation Logging Configuration")
-func newResourceModelInvocationLoggingConfiguration(context.Context) (resource.ResourceWithConfigure, error) {
+func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceModelInvocationLoggingConfiguration{}, nil
 }
 
 type resourceModelInvocationLoggingConfiguration struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_model_invocation_logging_configuration"
+func (r *resourceModelInvocationLoggingConfiguration) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_bedrock_model_invocation_logging_configuration"
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"logging_config": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[loggingConfigModel](ctx),
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
 				Attributes: map[string]schema.Attribute{
 					"embedding_data_delivery_enabled": schema.BoolAttribute{
 						Required: true,
@@ -64,18 +61,23 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 				},
 				Blocks: map[string]schema.Block{
 					"cloudwatch_config": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"log_group_name": schema.StringAttribute{
+							names.AttrLogGroupName: schema.StringAttribute{
+								// Required: true,
 								Optional: true,
 							},
-							"role_arn": schema.StringAttribute{
-								Optional: true,
+							names.AttrRoleARN: schema.StringAttribute{
+								CustomType: fwtypes.ARNType,
+								Optional:   true,
 							},
 						},
 						Blocks: map[string]schema.Block{
 							"large_data_delivery_s3_config": schema.SingleNestedBlock{
+								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 								Attributes: map[string]schema.Attribute{
-									"bucket_name": schema.StringAttribute{
+									names.AttrBucketName: schema.StringAttribute{
+										// Required: true,
 										Optional: true,
 									},
 									"key_prefix": schema.StringAttribute{
@@ -86,8 +88,10 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 						},
 					},
 					"s3_config": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"bucket_name": schema.StringAttribute{
+							names.AttrBucketName: schema.StringAttribute{
+								// Required: true,
 								Optional: true,
 							},
 							"key_prefix": schema.StringAttribute{
@@ -101,281 +105,154 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 	}
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceModelInvocationLoggingConfiguration) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data modelInvocationLoggingConfigurationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(r.putModelInvocationLoggingConfiguration(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Set values for unknowns.
+	data.ID = types.StringValue(r.Meta().Region)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourceModelInvocationLoggingConfiguration) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data modelInvocationLoggingConfigurationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().BedrockClient(ctx)
 
-	var data resourceModelInvocationLoggingConfigurationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().Region)
+	output, err := findModelInvocationLoggingConfiguration(ctx, conn)
 
-	loggingConfig := expandLoggingConfig(ctx, data.LoggingConfig, resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	input := bedrock.PutModelInvocationLoggingConfigurationInput{
-		LoggingConfig: loggingConfig,
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
-	// Retry handling to allow for IAM propagation
-	//
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var data modelInvocationLoggingConfigurationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(r.putModelInvocationLoggingConfiguration(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data modelInvocationLoggingConfigurationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().BedrockClient(ctx)
+
+	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+}
+
+func (r *resourceModelInvocationLoggingConfiguration) putModelInvocationLoggingConfiguration(ctx context.Context, data *modelInvocationLoggingConfigurationResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := r.Meta().BedrockClient(ctx)
+
+	input := &bedrock.PutModelInvocationLoggingConfigurationInput{}
+	diags.Append(fwflex.Expand(ctx, data, input)...)
+	if diags.HasError() {
+		return diags
+	}
+
 	// Example:
 	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
 	//   the IAM role permissions are correct.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, iamPropagationTimeout,
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.PutModelInvocationLoggingConfiguration(ctx, &input)
+			return conn.PutModelInvocationLoggingConfiguration(ctx, input)
 		},
 		"Failed to validate permissions for log group",
 	)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameModelInvocationLoggingConfiguration, data.ID.String(), err),
-			err.Error(),
-		)
-		return
+		diags.AddError("putting Bedrock Model Invocation Logging Configuration", err.Error())
+
+		return diags
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	return diags
 }
 
-func (r *resourceModelInvocationLoggingConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().BedrockClient(ctx)
+func findModelInvocationLoggingConfiguration(ctx context.Context, conn *bedrock.Client) (*bedrock.GetModelInvocationLoggingConfigurationOutput, error) {
+	input := &bedrock.GetModelInvocationLoggingConfigurationInput{}
 
-	var state resourceModelInvocationLoggingConfigurationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.GetModelInvocationLoggingConfiguration(ctx, input)
 
-	output, err := FindModelInvocationLoggingConfigurationByID(ctx, conn)
-	var nfe *retry.NotFoundError
-	var ere *tfresource.EmptyResultError
-	if errors.As(err, &nfe) || errors.As(err, &ere) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionReading, ResNameModelInvocationLoggingConfiguration, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	state.LoggingConfig = flattenLoggingConfig(ctx, output)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceModelInvocationLoggingConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
-	var data resourceModelInvocationLoggingConfigurationModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	loggingConfig := expandLoggingConfig(ctx, data.LoggingConfig, resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	input := bedrock.PutModelInvocationLoggingConfigurationInput{
-		LoggingConfig: loggingConfig,
-	}
-
-	_, err := conn.PutModelInvocationLoggingConfiguration(ctx, &input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameModelInvocationLoggingConfiguration, data.ID.String(), err),
-			err.Error(),
-		)
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
-
-func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().BedrockClient(ctx)
-
-	var data resourceModelInvocationLoggingConfigurationModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Bedrock, create.ErrActionDeleting, ResNameModelInvocationLoggingConfiguration, data.ID.String(), err),
-			err.Error(),
-		)
-	}
-}
-
-func (r *resourceModelInvocationLoggingConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func FindModelInvocationLoggingConfigurationByID(ctx context.Context, conn *bedrock.Client) (*awstypes.LoggingConfig, error) {
-	in := &bedrock.GetModelInvocationLoggingConfigurationInput{}
-	out, err := conn.GetModelInvocationLoggingConfiguration(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
 		return nil, err
 	}
 
-	if out == nil || out.LoggingConfig == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.LoggingConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.LoggingConfig, nil
+	return output, nil
 }
 
-type resourceModelInvocationLoggingConfigurationModel struct {
-	ID            types.String `tfsdk:"id"`
-	LoggingConfig types.Object `tfsdk:"logging_config"`
+type modelInvocationLoggingConfigurationResourceModel struct {
+	ID            types.String                              `tfsdk:"id"`
+	LoggingConfig fwtypes.ObjectValueOf[loggingConfigModel] `tfsdk:"logging_config"`
 }
 
 type loggingConfigModel struct {
-	EmbeddingDataDeliveryEnabled types.Bool   `tfsdk:"embedding_data_delivery_enabled"`
-	ImageDataDeliveryEnabled     types.Bool   `tfsdk:"image_data_delivery_enabled"`
-	TextDataDeliveryEnabled      types.Bool   `tfsdk:"text_data_delivery_enabled"`
-	CloudWatchConfig             types.Object `tfsdk:"cloudwatch_config"`
-	S3Config                     types.Object `tfsdk:"s3_config"`
+	CloudWatchConfig             fwtypes.ObjectValueOf[cloudWatchConfigModel] `tfsdk:"cloudwatch_config"`
+	EmbeddingDataDeliveryEnabled types.Bool                                   `tfsdk:"embedding_data_delivery_enabled"`
+	ImageDataDeliveryEnabled     types.Bool                                   `tfsdk:"image_data_delivery_enabled"`
+	S3Config                     fwtypes.ObjectValueOf[s3ConfigModel]         `tfsdk:"s3_config"`
+	TextDataDeliveryEnabled      types.Bool                                   `tfsdk:"text_data_delivery_enabled"`
 }
 
 type cloudWatchConfigModel struct {
-	LogGroupName              types.String `tfsdk:"log_group_name"`
-	RoleArn                   types.String `tfsdk:"role_arn"`
-	LargeDataDeliveryS3Config types.Object `tfsdk:"large_data_delivery_s3_config"`
+	LargeDataDeliveryS3Config fwtypes.ObjectValueOf[s3ConfigModel] `tfsdk:"large_data_delivery_s3_config"`
+	LogGroupName              types.String                         `tfsdk:"log_group_name"`
+	RoleArn                   fwtypes.ARN                          `tfsdk:"role_arn"`
 }
 
 type s3ConfigModel struct {
 	BucketName types.String `tfsdk:"bucket_name"`
 	KeyPrefix  types.String `tfsdk:"key_prefix"`
-}
-
-func flattenLoggingConfig(ctx context.Context, apiObject *awstypes.LoggingConfig) types.Object {
-	attributeTypes := fwtypes.AttributeTypesMust[loggingConfigModel](ctx)
-	// Reflection above cannot determine the nested object attribute types
-	cwAttrTypes := fwtypes.AttributeTypesMust[cloudWatchConfigModel](ctx)
-	cwAttrTypes["large_data_delivery_s3_config"] = types.ObjectType{AttrTypes: fwtypes.AttributeTypesMust[s3ConfigModel](ctx)}
-	attributeTypes["cloudwatch_config"] = types.ObjectType{AttrTypes: cwAttrTypes}
-	attributeTypes["s3_config"] = types.ObjectType{AttrTypes: fwtypes.AttributeTypesMust[s3ConfigModel](ctx)}
-
-	if apiObject == nil {
-		return types.ObjectNull(attributeTypes)
-	}
-
-	attrs := map[string]attr.Value{
-		"embedding_data_delivery_enabled": flex.BoolToFramework(ctx, apiObject.EmbeddingDataDeliveryEnabled),
-		"image_data_delivery_enabled":     flex.BoolToFramework(ctx, apiObject.ImageDataDeliveryEnabled),
-		"text_data_delivery_enabled":      flex.BoolToFramework(ctx, apiObject.TextDataDeliveryEnabled),
-		"cloudwatch_config":               flattenCloudWatchConfig(ctx, apiObject.CloudWatchConfig),
-		"s3_config":                       flattenS3Config(ctx, apiObject.S3Config),
-	}
-
-	return types.ObjectValueMust(attributeTypes, attrs)
-}
-
-func flattenCloudWatchConfig(ctx context.Context, apiObject *awstypes.CloudWatchConfig) types.Object {
-	attributeTypes := fwtypes.AttributeTypesMust[cloudWatchConfigModel](ctx)
-	// Reflection above cannot determine the nested object attribute types
-	attributeTypes["large_data_delivery_s3_config"] = types.ObjectType{AttrTypes: fwtypes.AttributeTypesMust[s3ConfigModel](ctx)}
-
-	if apiObject == nil {
-		return types.ObjectNull(attributeTypes)
-	}
-
-	attrs := map[string]attr.Value{
-		"log_group_name":                flex.StringToFramework(ctx, apiObject.LogGroupName),
-		"role_arn":                      flex.StringToFramework(ctx, apiObject.RoleArn),
-		"large_data_delivery_s3_config": flattenS3Config(ctx, apiObject.LargeDataDeliveryS3Config),
-	}
-
-	return types.ObjectValueMust(attributeTypes, attrs)
-}
-
-func flattenS3Config(ctx context.Context, apiObject *awstypes.S3Config) types.Object {
-	attributeTypes := fwtypes.AttributeTypesMust[s3ConfigModel](ctx)
-	if apiObject == nil {
-		return types.ObjectNull(attributeTypes)
-	}
-
-	attrs := map[string]attr.Value{
-		"bucket_name": flex.StringToFramework(ctx, apiObject.BucketName),
-		"key_prefix":  flex.StringToFramework(ctx, apiObject.KeyPrefix),
-	}
-
-	return types.ObjectValueMust(attributeTypes, attrs)
-}
-
-func expandLoggingConfig(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.LoggingConfig {
-	if object.IsNull() {
-		return nil
-	}
-
-	var conf loggingConfigModel
-	diags.Append(object.As(ctx, &conf, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-
-	apiObject := &awstypes.LoggingConfig{
-		EmbeddingDataDeliveryEnabled: conf.EmbeddingDataDeliveryEnabled.ValueBoolPointer(),
-		ImageDataDeliveryEnabled:     conf.ImageDataDeliveryEnabled.ValueBoolPointer(),
-		TextDataDeliveryEnabled:      conf.TextDataDeliveryEnabled.ValueBoolPointer(),
-		CloudWatchConfig:             expandCloudWatchConfig(ctx, conf.CloudWatchConfig, diags),
-		S3Config:                     expandS3Config(ctx, conf.S3Config, diags),
-	}
-
-	return apiObject
-}
-
-func expandCloudWatchConfig(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.CloudWatchConfig {
-	if object.IsNull() {
-		return nil
-	}
-
-	var conf cloudWatchConfigModel
-	diags.Append(object.As(ctx, &conf, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-
-	return &awstypes.CloudWatchConfig{
-		LogGroupName:              conf.LogGroupName.ValueStringPointer(),
-		RoleArn:                   conf.RoleArn.ValueStringPointer(),
-		LargeDataDeliveryS3Config: expandS3Config(ctx, conf.LargeDataDeliveryS3Config, diags),
-	}
-}
-
-func expandS3Config(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.S3Config {
-	if object.IsNull() {
-		return nil
-	}
-
-	var conf s3ConfigModel
-	diags.Append(object.As(ctx, &conf, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil
-	}
-
-	return &awstypes.S3Config{
-		BucketName: conf.BucketName.ValueStringPointer(),
-		KeyPrefix:  conf.KeyPrefix.ValueStringPointer(),
-	}
 }

@@ -18,6 +18,8 @@ Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 
 ~> **NOTE:** For a given role, this resource is incompatible with using the [`aws_iam_role` resource](/docs/providers/aws/r/iam_role.html) `managed_policy_arns` argument. When using that argument and this resource, both will attempt to manage the role's managed policy attachments and Terraform will show a permanent difference.
 
+~> **NOTE:** To ensure Terraform correctly manages dependencies during updates, use a reference to the IAM resource when defining the `policy_arn` for `aws_iam_policy_attachment`, rather than constructing the ARN directly. For example, use `policy_arn = aws_iam_policy.example.arn` instead of `policy_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/Example"`. Failing to do so may lead to errors like `DeleteConflict: Cannot delete a policy attached to entities` or `NoSuchEntity`.
+
 ## Example Usage
 
 ```python
@@ -87,17 +89,17 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name`    (Required) - The name of the attachment. This cannot be an empty string.
-* `users`   (Optional) - The user(s) the policy should be applied to
-* `roles`   (Optional) - The role(s) the policy should be applied to
-* `groups`  (Optional) - The group(s) the policy should be applied to
-* `policy_arn`  (Required) - The ARN of the policy you want to apply
+* `name`    (Required) - Name of the attachment. This cannot be an empty string.
+* `users`   (Optional) - User(s) the policy should be applied to.
+* `roles`   (Optional) - Role(s) the policy should be applied to.
+* `groups`  (Optional) - Group(s) the policy should be applied to.
+* `policy_arn`  (Required) - ARN of the policy you want to apply. Typically this should be a reference to the ARN of another resource to ensure dependency ordering, such as `aws_iam_policy.example.arn`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The policy's ID.
-* `name` - The name of the attachment.
+* `id` - Policy's ID.
+* `name` - Name of the attachment.
 
-<!-- cache-key: cdktf-0.19.0 input-c752eb701a68e4598f3a6661db2c072cd7097ba8d948dc18d4d1833423b0719c -->
+<!-- cache-key: cdktf-0.20.1 input-38a98afa37b4bd05f0bd04f37583a500995213ef0322cf937ef548c6397b6391 -->

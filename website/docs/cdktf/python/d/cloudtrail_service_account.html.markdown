@@ -13,6 +13,8 @@ description: |-
 Use this data source to get the Account ID of the [AWS CloudTrail Service Account](http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html)
 in a given region for the purpose of allowing CloudTrail to store trail data in S3.
 
+~> **Note:** AWS documentation [states that](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html#troubleshooting-s3-bucket-policy) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
+
 ## Example Usage
 
 ```python
@@ -79,4 +81,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS CloudTrail service account in the selected region.
 * `arn` - ARN of the AWS CloudTrail service account in the selected region.
 
-<!-- cache-key: cdktf-0.19.0 input-c5f519c52875128e9a18f748579bb40b5819ba4da9ebe83e2a9cb71b3becf3ad -->
+<!-- cache-key: cdktf-0.20.1 input-3998e4f635a042ba272505edd7920f0a7d81b9494779e6ebad66cb92fc74ee17 -->

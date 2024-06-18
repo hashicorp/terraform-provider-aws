@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,25 +23,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_risk_configuration")
-func ResourceRiskConfiguration() *schema.Resource {
+// @SDKResource("aws_cognito_risk_configuration", name="Risk Configuration")
+func resourceRiskConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRiskConfigurationPut,
 		ReadWithoutTimeout:   resourceRiskConfigurationRead,
 		DeleteWithoutTimeout: resourceRiskConfigurationDelete,
 		UpdateWithoutTimeout: resourceRiskConfigurationPut,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validUserPoolID,
 			},
-			"client_id": {
+			names.AttrClientID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -56,7 +58,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -231,7 +233,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.EventFilterType_Values(), false),
 							},
 						},
-						"actions": {
+						names.AttrActions: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -292,13 +294,13 @@ func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	userPoolId := d.Get("user_pool_id").(string)
+	userPoolId := d.Get(names.AttrUserPoolID).(string)
 	id := userPoolId
 	input := &cognitoidentityprovider.SetRiskConfigurationInput{
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	if v, ok := d.GetOk("client_id"); ok {
+	if v, ok := d.GetOk(names.AttrClientID); ok {
 		input.ClientId = aws.String(v.(string))
 		id = fmt.Sprintf("%s:%s", userPoolId, v.(string))
 	}
@@ -346,10 +348,10 @@ func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Cognito Risk Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("user_pool_id", userPoolId)
+	d.Set(names.AttrUserPoolID, userPoolId)
 
 	if clientId != "" {
-		d.Set("client_id", clientId)
+		d.Set(names.AttrClientID, clientId)
 	}
 
 	if riskConfig.RiskExceptionConfiguration != nil {
@@ -387,6 +389,10 @@ func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	_, err = conn.SetRiskConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Risk Configuration (%s): %s", d.Id(), err)
@@ -446,7 +452,7 @@ func expandCompromisedCredentialsRiskConfiguration(riskConfig []interface{}) *co
 		riskExceptionConfigurationType.EventFilter = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := config["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := config[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		riskExceptionConfigurationType.Actions = expandCompromisedCredentialsActions(v)
 	}
 
@@ -465,7 +471,7 @@ func flattenCompromisedCredentialsRiskConfiguration(apiObject *cognitoidentitypr
 	}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = flattenCompromisedCredentialsActions(v)
+		tfMap[names.AttrActions] = flattenCompromisedCredentialsActions(v)
 	}
 
 	return []interface{}{tfMap}
@@ -514,7 +520,7 @@ func expandAccountTakeoverRiskConfiguration(riskConfig []interface{}) *cognitoid
 		accountTakeoverRiskConfiguration.NotifyConfiguration = expandNotifyConfiguration(v)
 	}
 
-	if v, ok := config["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := config[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		accountTakeoverRiskConfiguration.Actions = expandAccountTakeoverActions(v)
 	}
 
@@ -529,7 +535,7 @@ func flattenAccountTakeoverRiskConfiguration(apiObject *cognitoidentityprovider.
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = flattenAccountTakeoverActions(v)
+		tfMap[names.AttrActions] = flattenAccountTakeoverActions(v)
 	}
 
 	if v := apiObject.NotifyConfiguration; v != nil {

@@ -1,0 +1,6 @@
+```release-note:enhancement
+resource/aws_glue_catalog_table: Add `region` attribute to `target_table` block.
+```
+```release-note:enhancement
+data-source/aws_glue_catalog_table: Add `region` attribute to `target_table` block.
+```

@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kinesis"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
@@ -22,18 +22,17 @@ func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConsumerDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stream_arn", streamName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
@@ -49,18 +48,17 @@ func TestAccKinesisStreamConsumerDataSource_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConsumerDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stream_arn", streamName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
@@ -76,75 +74,68 @@ func TestAccKinesisStreamConsumerDataSource_arn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesis.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamConsumerDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stream_arn", streamName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
 	})
 }
 
-func testAccStreamConsumerBaseDataSourceConfig(rName string) string {
+func testAccStreamConsumerDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
-  name        = %q
+  name        = %[1]q
   shard_count = 2
 }
 `, rName)
 }
 
 func testAccStreamConsumerDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStreamConsumerBaseDataSourceConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStreamConsumerDataSourceConfig_base(rName), fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
   stream_arn = aws_kinesis_stream_consumer.test.stream_arn
 }
 
 resource "aws_kinesis_stream_consumer" "test" {
-  name       = %q
+  name       = %[1]q
   stream_arn = aws_kinesis_stream.test.arn
 }
 `, rName))
 }
 
 func testAccStreamConsumerDataSourceConfig_name(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStreamConsumerBaseDataSourceConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStreamConsumerDataSourceConfig_base(rName), fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
   name       = aws_kinesis_stream_consumer.test.name
   stream_arn = aws_kinesis_stream_consumer.test.stream_arn
 }
 
 resource "aws_kinesis_stream_consumer" "test" {
-  name       = %q
+  name       = %[1]q
   stream_arn = aws_kinesis_stream.test.arn
 }
 `, rName))
 }
 
 func testAccStreamConsumerDataSourceConfig_arn(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStreamConsumerBaseDataSourceConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStreamConsumerDataSourceConfig_base(rName), fmt.Sprintf(`
 data "aws_kinesis_stream_consumer" "test" {
   arn        = aws_kinesis_stream_consumer.test.arn
   stream_arn = aws_kinesis_stream_consumer.test.stream_arn
 }
 
 resource "aws_kinesis_stream_consumer" "test" {
-  name       = %q
+  name       = %[1]q
   stream_arn = aws_kinesis_stream.test.arn
 }
 `, rName))

@@ -398,15 +398,15 @@ This resource supports the following arguments:
 
 * `ruleGroup` - (Optional) A configuration block that defines the rule group rules. Required unless `rules` is specified. See [Rule Group](#rule-group) below for details.
 
-* `rules` - (Optional) The stateful rule group rules specifications in Suricata file format, with one rule per line. Use this to import your existing Suricata compatible rule groups. Required unless `rule_group` is specified.
+* `rules` - (Optional) The stateful rule group rules specifications in Suricata file format, with one rule per line. Use this to import your existing Suricata compatible rule groups. Required unless `ruleGroup` is specified.
 
-* `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `STATEFUL` or `STATELESS`.
 
 ### Encryption Configuration
 
-`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `awsOwnedKmsKey`).
+`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
 
 * `keyId` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
 * `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
@@ -415,7 +415,7 @@ This resource supports the following arguments:
 
 The `ruleGroup` block supports the following argument:
 
-* `referenceSets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details. Please notes that there can only be a maximum of 5 `reference_sets` in a `rule_group`. See the [AWS documentation](https://docs.aws.amazon.com/network-firewall/latest/developerguide/rule-groups-ip-set-references.html#rule-groups-ip-set-reference-limits) for details.
+* `referenceSets` - (Optional) A configuration block that defines the IP Set References for the rule group. See [Reference Sets](#reference-sets) below for details. Please notes that there can only be a maximum of 5 `referenceSets` in a `ruleGroup`. See the [AWS documentation](https://docs.aws.amazon.com/network-firewall/latest/developerguide/rule-groups-ip-set-references.html#rule-groups-ip-set-reference-limits) for details.
 
 * `ruleVariables` - (Optional) A configuration block that defines additional settings available to use in the rules defined in the rule group. Can only be specified for **stateful** rule groups. See [Rule Variables](#rule-variables) below for details.
 
@@ -441,7 +441,7 @@ The `ruleVariables` block supports the following arguments:
 
 The `ipSets` block supports the following arguments:
 
-* `key` - (Required) A unique alphanumeric string to identify the `ip_set`.
+* `key` - (Required) A unique alphanumeric string to identify the `ipSet`.
 
 * `ipSet` - (Required) A configuration block that defines a set of IP addresses. See [IP Set](#ip-set) below for details.
 
@@ -455,7 +455,7 @@ The `ipSet` configuration block supports the following argument:
 
 The `ipSetReference` configuration block supports the following argument:
 
-* `key` - (Required) A unique alphanumeric string to identify the `ip_set`.
+* `key` - (Required) A unique alphanumeric string to identify the `ipSet`.
 
 * `referenceArn` - (Required) Set of Managed Prefix IP ARN(s)
 
@@ -463,7 +463,7 @@ The `ipSetReference` configuration block supports the following argument:
 
 The `portSets` block supports the following arguments:
 
-* `key` - (Required) An unique alphanumeric string to identify the `port_set`.
+* `key` - (Required) An unique alphanumeric string to identify the `portSet`.
 
 * `portSet` - (Required) A configuration block that defines a set of port ranges. See [Port Set](#port-set) below for details.
 
@@ -491,7 +491,7 @@ The `rulesSource` block supports the following arguments:
 
 The `statefulRuleOptions` block supports the following argument:
 
-~> **NOTE:** If the `strictOrder` rule order is specified, this rule group can only be referenced in firewall policies that also utilize `strictOrder` for the stateful engine. `strictOrder` can only be specified when using a `rulesSource` of `rulesString` or `statefulRule`.
+~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this rule group can only be referenced in firewall policies that also utilize `STRICT_ORDER` for the stateful engine. `STRICT_ORDER` can only be specified when using a `rulesSource` of `rulesString` or `statefulRule`.
 
 * `ruleOrder` - (Required) Indicates how to manage the order of the rule evaluation for the rule group. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
 
@@ -551,7 +551,7 @@ See [Snort General Rule Options](http://manual-snort-org.s3-website-us-east-1.am
 
 The `customAction` block supports the following arguments:
 
-* `actionDefinition` - (Required) A configuration block describing the custom action associated with the `action_name`. See [Action Definition](#action-definition) below for details.
+* `actionDefinition` - (Required) A configuration block describing the custom action associated with the `actionName`. See [Action Definition](#action-definition) below for details.
 
 * `actionName` - (Required, Forces new resource) A friendly name of the custom action.
 
@@ -567,7 +567,7 @@ The `statelessRule` block supports the following arguments:
 
 The `ruleDefinition` block supports the following arguments:
 
-* `actions` - (Required) Set of actions to take on a packet that matches one of the stateless rule definition's `match_attributes`. For every rule you must specify 1 standard action, and you can add custom actions. Standard actions include: `aws:pass`, `aws:drop`, `aws:forward_to_sfe`.
+* `actions` - (Required) Set of actions to take on a packet that matches one of the stateless rule definition's `matchAttributes`. For every rule you must specify 1 standard action, and you can add custom actions. Standard actions include: `aws:pass`, `aws:drop`, `aws:forward_to_sfe`.
 
 * `matchAttributes` - (Required) A configuration block containing criteria for AWS Network Firewall to use to inspect an individual packet in stateless rule inspection. See [Match Attributes](#match-attributes) below for details.
 
@@ -615,9 +615,9 @@ The `destination` block supports the following argument:
 
 The `destinationPort` block supports the following arguments:
 
-* `fromPort` - (Required) The lower limit of the port range. This must be less than or equal to the `to_port`.
+* `fromPort` - (Required) The lower limit of the port range. This must be less than or equal to the `toPort`.
 
-* `toPort` - (Optional) The upper limit of the port range. This must be greater than or equal to the `from_port`.
+* `toPort` - (Optional) The upper limit of the port range. This must be greater than or equal to the `fromPort`.
 
 ### Source
 
@@ -629,9 +629,9 @@ The `source` block supports the following argument:
 
 The `sourcePort` block supports the following arguments:
 
-* `fromPort` - (Required) The lower limit of the port range. This must be less than or equal to the `to_port`.
+* `fromPort` - (Required) The lower limit of the port range. This must be less than or equal to the `toPort`.
 
-* `toPort` - (Optional) The upper limit of the port range. This must be greater than or equal to the `from_port`.
+* `toPort` - (Optional) The upper limit of the port range. This must be greater than or equal to the `fromPort`.
 
 ### TCP Flag
 
@@ -651,7 +651,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the rule group.
 
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `updateToken` - A string token used when updating the rule group.
 
@@ -663,9 +663,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { NetworkfirewallRuleGroup } from "./.gen/providers/aws/networkfirewall-rule-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    NetworkfirewallRuleGroup.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example"
+    );
   }
 }
 
@@ -677,4 +687,4 @@ Using `terraform import`, import Network Firewall Rule Groups using their `arn`.
 % terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ef93e2bf518258ff78b58b7d51462d1757a12fe5ecae8c6b421815590aa49874 -->
+<!-- cache-key: cdktf-0.20.1 input-ef93e2bf518258ff78b58b7d51462d1757a12fe5ecae8c6b421815590aa49874 -->

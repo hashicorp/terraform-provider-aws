@@ -49,6 +49,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `description` - Description of the specific Lambda Layer version.
 * `license_info` - License info associated with the specific Lambda Layer version.
 * `compatible_runtimes` - List of [Runtimes][1] the specific Lambda Layer version is compatible with.
@@ -58,11 +59,11 @@ This data source exports the following attributes in addition to the arguments a
 * `created_date` - Date this resource was created.
 * `signing_job_arn` - ARN of a signing job.
 * `signing_profile_version_arn` - The ARN for a signing profile version.
-* `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.
+* `source_code_hash` - (**Deprecated** use `code_sha256` instead) Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - Size in bytes of the function .zip file.
-* `version` - This Lamba Layer version.
+* `version` - This Lambda Layer version.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleRuntimes
 [2]: https://docs.aws.amazon.com/lambda/latest/dg/API_GetLayerVersion.html#SSS-GetLayerVersion-response-CompatibleArchitectures
 
-<!-- cache-key: cdktf-0.19.0 input-69ef06c57b86008a1c6e25d93dabac271b612b904a1a89dbe3fd5507d10e6742 -->
+<!-- cache-key: cdktf-0.20.1 input-d1c161e58ca70a0b6246f7541847478fbb5b478b19b9d6a1e04826a126b1b538 -->

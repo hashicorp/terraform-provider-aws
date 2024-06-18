@@ -61,4 +61,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `provider_name` - The name of the service provider associated with the connection.
 * `region` - The AWS Region where the connection is located.
 
-<!-- cache-key: cdktf-0.19.0 input-97bc5655cc271850c8ea111d0eeb9833b2352964ab1dc9e68ab175109b7b9dee -->
+<!-- cache-key: cdktf-0.20.1 input-97bc5655cc271850c8ea111d0eeb9833b2352964ab1dc9e68ab175109b7b9dee -->

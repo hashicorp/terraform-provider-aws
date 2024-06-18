@@ -78,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the distribution configuration.
 * `tags` - Key-value map of resource tags for the distribution configuration.
 
-<!-- cache-key: cdktf-0.19.0 input-7b28680ba5fe3c06481414befe6f2cb9eb821dae2ff9137702f5a2483f24bb91 -->
+<!-- cache-key: cdktf-0.20.1 input-7b28680ba5fe3c06481414befe6f2cb9eb821dae2ff9137702f5a2483f24bb91 -->

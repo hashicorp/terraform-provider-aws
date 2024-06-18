@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
@@ -21,37 +21,39 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "allow_version_upgrade"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "availability_zone"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_namespace_arn", resourceName, "cluster_namespace_arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_parameter_group_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_public_key"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_revision_number"),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "cluster_version"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "database_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "encrypted"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrEncrypted),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrSet(dataSourceName, "master_username"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "multi_az"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "node_type"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "number_of_nodes"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "port"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPort),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttrSet(dataSourceName, "manual_snapshot_retention_period"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_track_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "publicly_accessible"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPubliclyAccessible),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -66,16 +68,16 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "vpc_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "multi-node"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_subnet_group_name", subnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_subnet_group_name", subnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -90,15 +92,15 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_logging(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", "true"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "bucket_name", bucketResourceName, "bucket"),
-					resource.TestCheckResourceAttr(dataSourceName, "s3_key_prefix", "cluster-logging/"),
+					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrBucketName, bucketResourceName, names.AttrBucket),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrS3KeyPrefix, "cluster-logging/"),
 				),
 			},
 		},
@@ -113,13 +115,34 @@ func TestAccRedshiftClusterDataSource_availabilityZoneRelocationEnabled(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_availabilityZoneRelocationEnabled(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRedshiftClusterDataSource_multiAZEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_redshift_cluster.test"
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_multiAZEnabled(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 				),
 			},
 		},
@@ -254,6 +277,55 @@ resource "aws_redshift_cluster" "test" {
   publicly_accessible = false
 
   availability_zone_relocation_enabled = true
+}
+
+data "aws_redshift_cluster" "test" {
+  cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+}
+`, rName)
+}
+
+func testAccClusterDataSourceConfig_multiAZEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = %[1]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  master_password                     = "Mustbe8characters"
+  node_type                           = "ra3.xlplus"
+  number_of_nodes                     = 2
+  cluster_type                        = "multi-node"
+  automated_snapshot_retention_period = 1
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
+  encrypted                           = true
+  kms_key_id                          = aws_kms_key.test.arn
+
+  publicly_accessible                  = false
+  availability_zone_relocation_enabled = false
+  multi_az                             = true
 }
 
 data "aws_redshift_cluster" "test" {

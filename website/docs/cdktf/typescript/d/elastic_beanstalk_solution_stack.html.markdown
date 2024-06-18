@@ -56,4 +56,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [beanstalk-platforms]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"
 
-<!-- cache-key: cdktf-0.19.0 input-bc5855ffbad2c3da05d523f3dafaef60d18324e30f798e90fe32639ded015eeb -->
+<!-- cache-key: cdktf-0.20.1 input-bc5855ffbad2c3da05d523f3dafaef60d18324e30f798e90fe32639ded015eeb -->

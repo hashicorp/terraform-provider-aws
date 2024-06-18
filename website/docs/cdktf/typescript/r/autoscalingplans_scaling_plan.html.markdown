@@ -14,7 +14,7 @@ Manages an AWS Auto Scaling scaling plan.
 More information can be found in the [AWS Auto Scaling User Guide](https://docs.aws.amazon.com/autoscaling/plans/userguide/what-is-aws-auto-scaling.html).
 
 ~> **NOTE:** The AWS Auto Scaling service uses an AWS IAM service-linked role to manage predictive scaling of Amazon EC2 Auto Scaling groups. The service attempts to automatically create this role the first time a scaling plan with predictive scaling enabled is created.
-An [`awsIamServiceLinkedRole`](/docs/providers/aws/r/iam_service_linked_role.html) resource can be used to manually manage this role.
+An [`aws_iam_service_linked_role`](/docs/providers/aws/r/iam_service_linked_role.html) resource can be used to manually manage this role.
 See the [AWS documentation](https://docs.aws.amazon.com/autoscaling/plans/userguide/aws-auto-scaling-service-linked-roles.html#create-service-linked-role-manual) for more details.
 
 ## Example Usage
@@ -188,17 +188,17 @@ The `tagFilter` object supports the following:
 
 The `scalingInstruction` object supports the following:
 
-* `maxCapacity` - (Required) Maximum capacity of the resource. The exception to this upper limit is if you specify a non-default setting for `predictive_scaling_max_capacity_behavior`.
+* `maxCapacity` - (Required) Maximum capacity of the resource. The exception to this upper limit is if you specify a non-default setting for `predictiveScalingMaxCapacityBehavior`.
 * `minCapacity` - (Required) Minimum capacity of the resource.
 * `resourceId` - (Required) ID of the resource. This string consists of the resource type and unique identifier.
 * `scalableDimension` - (Required) Scalable dimension associated with the resource. Valid values: `autoscaling:autoScalingGroup:DesiredCapacity`, `dynamodb:index:ReadCapacityUnits`, `dynamodb:index:WriteCapacityUnits`, `dynamodb:table:ReadCapacityUnits`, `dynamodb:table:WriteCapacityUnits`, `ecs:service:DesiredCount`, `ec2:spot-fleet-request:TargetCapacity`, `rds:cluster:ReadReplicaCount`.
 * `serviceNamespace` - (Required) Namespace of the AWS service. Valid values: `autoscaling`, `dynamodb`, `ecs`, `ec2`, `rds`.
 * `targetTrackingConfiguration` - (Required) Structure that defines new target tracking configurations. Each of these structures includes a specific scaling metric and a target value for the metric, along with various parameters to use with dynamic scaling.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_TargetTrackingConfiguration.html).
-* `customizedLoadMetricSpecification` - (Optional) Customized load metric to use for predictive scaling. You must specify either `customized_load_metric_specification` or `predefined_load_metric_specification` when configuring predictive scaling.
+* `customizedLoadMetricSpecification` - (Optional) Customized load metric to use for predictive scaling. You must specify either `customizedLoadMetricSpecification` or `predefinedLoadMetricSpecification` when configuring predictive scaling.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_CustomizedLoadMetricSpecification.html).
 * `disableDynamicScaling` - (Optional) Boolean controlling whether dynamic scaling by AWS Auto Scaling is disabled. Defaults to `false`.
-* `predefinedLoadMetricSpecification` - (Optional) Predefined load metric to use for predictive scaling. You must specify either `predefined_load_metric_specification` or `customized_load_metric_specification` when configuring predictive scaling.
+* `predefinedLoadMetricSpecification` - (Optional) Predefined load metric to use for predictive scaling. You must specify either `predefinedLoadMetricSpecification` or `customizedLoadMetricSpecification` when configuring predictive scaling.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedLoadMetricSpecification.html).
 * `predictiveScalingMaxCapacityBehavior`- (Optional) Defines the behavior that should be applied if the forecast capacity approaches or exceeds the maximum capacity specified for the resource.
 Valid values: `SetForecastCapacityToMaxCapacity`, `SetMaxCapacityAboveForecastCapacity`, `SetMaxCapacityToForecastCapacity`.
@@ -223,10 +223,10 @@ The `predefinedLoadMetricSpecification` object supports the following:
 The `targetTrackingConfiguration` object supports the following:
 
 * `targetValue` - (Required) Target value for the metric.
-* `customizedScalingMetricSpecification` - (Optional) Customized metric. You can specify either `customized_scaling_metric_specification` or `predefined_scaling_metric_specification`.
+* `customizedScalingMetricSpecification` - (Optional) Customized metric. You can specify either `customizedScalingMetricSpecification` or `predefinedScalingMetricSpecification`.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_CustomizedScalingMetricSpecification.html).
 * `disableScaleIn` - (Optional) Boolean indicating whether scale in by the target tracking scaling policy is disabled. Defaults to `false`.
-* `predefinedScalingMetricSpecification` - (Optional) Predefined metric. You can specify either `predefined_scaling_metric_specification` or `customized_scaling_metric_specification`.
+* `predefinedScalingMetricSpecification` - (Optional) Predefined metric. You can specify either `predefinedScalingMetricSpecification` or `customizedScalingMetricSpecification`.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html).
 * `estimatedInstanceWarmup` - (Optional) Estimated time, in seconds, until a newly launched instance can contribute to the CloudWatch metrics.
 This value is used only if the resource is an Auto Scaling group.
@@ -263,9 +263,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { AutoscalingplansScalingPlan } from "./.gen/providers/aws/autoscalingplans-scaling-plan";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    AutoscalingplansScalingPlan.generateConfigForImport(
+      this,
+      "example",
+      "MyScale1"
+    );
   }
 }
 
@@ -277,4 +287,4 @@ Using `terraform import`, import Auto Scaling scaling plans using the `name`. Fo
 % terraform import aws_autoscalingplans_scaling_plan.example MyScale1
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-f67f35037f518287955e616d7a36d30ef67c9f228d87872a4d2e00fce74eaaef -->
+<!-- cache-key: cdktf-0.20.1 input-f67f35037f518287955e616d7a36d30ef67c9f228d87872a4d2e00fce74eaaef -->

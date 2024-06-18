@@ -71,8 +71,8 @@ Additionally, the following attributes are exported:
 * `associationId` - Association ID.
 * `carrierIp` - Carrier IP address associated with the network interface. This attribute is only set when the network interface is in a subnet which is associated with a Wavelength Zone.
 * `customerOwnedIp` - Customer-owned IP address.
-* `ipOwnerId` - ID of the Elastic IP address owner.
-* `publicDnsName` - Public DNS name.
+* `ip_owner_id` - ID of the Elastic IP address owner.
+* `public_dns_name` - Public DNS name.
 * `publicIp` - Address of the Elastic IP address bound to the network interface.
 
 ## Timeouts
@@ -81,4 +81,4 @@ Additionally, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-2076fd1e9228c52725c01e9ff2e4ab23d3afe4ebaba78ef4fa3e8e525341ba1e -->
+<!-- cache-key: cdktf-0.20.1 input-2076fd1e9228c52725c01e9ff2e4ab23d3afe4ebaba78ef4fa3e8e525341ba1e -->

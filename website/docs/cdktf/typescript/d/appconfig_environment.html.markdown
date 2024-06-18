@@ -52,10 +52,10 @@ This data source exports the following attributes in addition to the arguments a
 * `name` - Name of the environment.
 * `description` - Name of the environment.
 * `monitor` - Set of Amazon CloudWatch alarms to monitor during the deployment process.
-    * `alarm_arn` - ARN of the Amazon CloudWatch alarm.
-    * `alarm_role_arn` - ARN of an IAM role for AWS AppConfig to monitor.
+    * `alarmArn` - ARN of the Amazon CloudWatch alarm.
+    * `alarmRoleArn` - ARN of an IAM role for AWS AppConfig to monitor.
 * `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
   or `ROLLED_BACK`.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-2536eae28938ccf1a8bf0a1e33718611d0fbfe4294f71a133d77dbe21bc83180 -->
+<!-- cache-key: cdktf-0.20.1 input-2536eae28938ccf1a8bf0a1e33718611d0fbfe4294f71a133d77dbe21bc83180 -->

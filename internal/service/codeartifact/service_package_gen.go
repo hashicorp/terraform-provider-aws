@@ -5,9 +5,9 @@ package codeartifact
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	codeartifact_sdkv1 "github.com/aws/aws-sdk-go/service/codeartifact"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	codeartifact_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeartifact"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,12 +26,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAuthorizationToken,
+			Factory:  dataSourceAuthorizationToken,
 			TypeName: "aws_codeartifact_authorization_token",
+			Name:     "Authoiration Token",
 		},
 		{
-			Factory:  DataSourceRepositoryEndpoint,
+			Factory:  dataSourceRepositoryEndpoint,
 			TypeName: "aws_codeartifact_repository_endpoint",
+			Name:     "Repository Endpoint",
 		},
 	}
 }
@@ -39,28 +41,30 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDomain,
+			Factory:  resourceDomain,
 			TypeName: "aws_codeartifact_domain",
 			Name:     "Domain",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceDomainPermissionsPolicy,
+			Factory:  resourceDomainPermissionsPolicy,
 			TypeName: "aws_codeartifact_domain_permissions_policy",
+			Name:     "Domain Permissions Policy",
 		},
 		{
-			Factory:  ResourceRepository,
+			Factory:  resourceRepository,
 			TypeName: "aws_codeartifact_repository",
 			Name:     "Repository",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceRepositoryPermissionsPolicy,
+			Factory:  resourceRepositoryPermissionsPolicy,
 			TypeName: "aws_codeartifact_repository_permissions_policy",
+			Name:     "Repository Permissions Policy",
 		},
 	}
 }
@@ -69,11 +73,23 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.CodeArtifact
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*codeartifact_sdkv1.CodeArtifact, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*codeartifact_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return codeartifact_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return codeartifact_sdkv2.NewFromConfig(cfg, func(o *codeartifact_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

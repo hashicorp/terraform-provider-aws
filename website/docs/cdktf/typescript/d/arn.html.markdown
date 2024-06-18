@@ -56,4 +56,4 @@ Note that the ARNs for some resources do not require a region, so this component
 * `resource` - Content of this part of the ARN varies by service.
 It often includes an indicator of the type of resource—for example, an IAM user or Amazon RDS database —followed by a slash (/) or a colon (:), followed by the resource name itself.
 
-<!-- cache-key: cdktf-0.19.0 input-440ccf3a9b006a55df02867b675efa529ed16c151a5b0875e321f0dd97d87344 -->
+<!-- cache-key: cdktf-0.20.1 input-440ccf3a9b006a55df02867b675efa529ed16c151a5b0875e321f0dd97d87344 -->

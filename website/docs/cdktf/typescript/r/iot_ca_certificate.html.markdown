@@ -99,9 +99,9 @@ class MyConvertedCode extends TerraformStack {
 * `caCertificatePem` - (Required)  PEM encoded CA certificate.
 * `certificateMode` - (Optional)  The certificate mode in which the CA will be registered. Valida values: `DEFAULT` and `SNI_ONLY`. Default: `DEFAULT`.
 * `registrationConfig` - (Optional) Information about the registration configuration. See below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `verificationCertificatePem` - (Optional) PEM encoded verification certificate containing the common name of a registration code. Review
-  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Reuired if `certificate_mode` is `DEFAULT`.
+  [CreateVerificationCSR](https://docs.aws.amazon.com/iot/latest/developerguide/register-CA-cert.html). Reuired if `certificateMode` is `DEFAULT`.
 
 ### registration_config
 
@@ -117,9 +117,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the created CA certificate.
 * `customerVersion` - The customer version of the CA certificate.
 * `generationId` - The generation ID of the CA certificate.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `validity` - When the CA certificate is valid.
-    * `not_after` - The certificate is not valid after this date.
-    * `not_before` - The certificate is not valid before this date.
+    * `notAfter` - The certificate is not valid after this date.
+    * `notBefore` - The certificate is not valid before this date.
 
-<!-- cache-key: cdktf-0.19.0 input-c5fc1f0a710ef5472f25b8e9639aa2a5bb22ff79e04926030c3f0710b353cd73 -->
+<!-- cache-key: cdktf-0.20.1 input-c5fc1f0a710ef5472f25b8e9639aa2a5bb22ff79e04926030c3f0710b353cd73 -->

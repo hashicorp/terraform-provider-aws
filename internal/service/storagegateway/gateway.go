@@ -25,16 +25,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_storagegateway_gateway", name="Gateway")
 // @Tags(identifierAttribute="arn")
-func ResourceGateway() *schema.Resource {
+func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
 		ReadWithoutTimeout:   resourceGatewayRead,
@@ -57,7 +57,7 @@ func ResourceGateway() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func ResourceGateway() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(51200),
 			},
-			"cloudwatch_log_group_arn": {
+			names.AttrCloudWatchLogGroupARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -80,7 +80,7 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -197,7 +197,7 @@ func ResourceGateway() *schema.Resource {
 								),
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -210,7 +210,7 @@ func ResourceGateway() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
@@ -225,7 +225,7 @@ func ResourceGateway() *schema.Resource {
 							Default:      20,
 							ValidateFunc: validation.IntBetween(0, 3600),
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -298,7 +298,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
-		request, err := http.NewRequest("GET", requestURL, nil)
+		request, err := http.NewRequest(http.MethodGet, requestURL, nil)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}
@@ -335,7 +335,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Received HTTP response: %#v", response)
-		if response.StatusCode != 302 {
+		if response.StatusCode != http.StatusFound {
 			return sdkdiag.AppendErrorf(diags, "expected HTTP status code 302, received: %d", response.StatusCode)
 		}
 
@@ -382,7 +382,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway Gateway (%q) to be Connected: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrCloudWatchLogGroupARN); ok && v.(string) != "" {
 		input := &storagegateway.UpdateGatewayInformationInput{
 			GatewayARN:            aws.String(d.Id()),
 			CloudWatchLogGroupARN: aws.String(v.(string)),
@@ -522,7 +522,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("activation_key", d.Get("activation_key").(string))
 
-	d.Set("arn", output.GatewayARN)
+	d.Set(names.AttrARN, output.GatewayARN)
 	d.Set("gateway_id", output.GatewayId)
 
 	// The Storage Gateway API currently provides no way to read this value
@@ -546,7 +546,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	} else {
 		m := map[string]interface{}{
-			"domain_name":             aws.StringValue(smbSettingsOutput.DomainName),
+			names.AttrDomainName:      aws.StringValue(smbSettingsOutput.DomainName),
 			"active_directory_status": aws.StringValue(smbSettingsOutput.ActiveDirectoryStatus),
 			// The Storage Gateway API currently provides no way to read these values
 			// "password": ...,
@@ -559,8 +559,8 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		//    smb_active_directory_settings.0.username: "" => "Administrator"
 		if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
 			configM := v.([]interface{})[0].(map[string]interface{})
-			m["password"] = configM["password"]
-			m["username"] = configM["username"]
+			m[names.AttrPassword] = configM[names.AttrPassword]
+			m[names.AttrUsername] = configM[names.AttrUsername]
 			m["timeout_in_seconds"] = configM["timeout_in_seconds"]
 
 			if v, ok := configM["organizational_unit"]; ok {
@@ -588,11 +588,11 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// The Storage Gateway API currently provides no way to read this value
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("tape_drive_type", d.Get("tape_drive_type").(string))
-	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupARN)
+	d.Set(names.AttrCloudWatchLogGroupARN, output.CloudWatchLogGroupARN)
 	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
 	d.Set("smb_file_share_visibility", smbSettingsOutput.FileSharesVisible)
 	d.Set("ec2_instance_id", output.Ec2InstanceId)
-	d.Set("endpoint_type", output.EndpointType)
+	d.Set(names.AttrEndpointType, output.EndpointType)
 	d.Set("host_environment", output.HostEnvironment)
 
 	if err := d.Set("gateway_network_interface", flattenGatewayNetworkInterfaces(output.GatewayNetworkInterfaces)); err != nil {
@@ -648,9 +648,9 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
-	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
+	if d.HasChanges("gateway_name", "gateway_timezone", names.AttrCloudWatchLogGroupARN) {
 		input := &storagegateway.UpdateGatewayInformationInput{
-			CloudWatchLogGroupARN: aws.String(d.Get("cloudwatch_log_group_arn").(string)),
+			CloudWatchLogGroupARN: aws.String(d.Get(names.AttrCloudWatchLogGroupARN).(string)),
 			GatewayARN:            aws.String(d.Id()),
 			GatewayName:           aws.String(d.Get("gateway_name").(string)),
 			GatewayTimezone:       aws.String(d.Get("gateway_timezone").(string)),
@@ -817,10 +817,10 @@ func expandGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.Joi
 	}
 
 	domain := &storagegateway.JoinDomainInput{
-		DomainName:       aws.String(tfMap["domain_name"].(string)),
+		DomainName:       aws.String(tfMap[names.AttrDomainName].(string)),
 		GatewayARN:       aws.String(gatewayArn),
-		Password:         aws.String(tfMap["password"].(string)),
-		UserName:         aws.String(tfMap["username"].(string)),
+		Password:         aws.String(tfMap[names.AttrPassword].(string)),
+		UserName:         aws.String(tfMap[names.AttrUsername].(string)),
 		TimeoutInSeconds: aws.Int64(int64(tfMap["timeout_in_seconds"].(int))),
 	}
 
@@ -864,11 +864,11 @@ func expandUpdateMaintenanceStartTimeInput(tfMap map[string]interface{}) *storag
 
 	apiObject := &storagegateway.UpdateMaintenanceStartTimeInput{}
 
-	if v, null, _ := nullable.Int(tfMap["day_of_month"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(tfMap["day_of_month"].(string)).ValueInt64(); !null && v > 0 {
 		apiObject.DayOfMonth = aws.Int64(v)
 	}
 
-	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).Value(); !null {
+	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).ValueInt64(); !null {
 		apiObject.DayOfWeek = aws.Int64(v)
 	}
 

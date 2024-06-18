@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDetector_basic(t *testing.T) {
@@ -27,7 +27,7 @@ func testAccDetector_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,14 +35,14 @@ func testAccDetector_basic(t *testing.T) {
 				Config: testAccDetectorConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexache.MustCompile("detector/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAccountID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "SIX_HOURS"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -54,14 +54,14 @@ func testAccDetector_basic(t *testing.T) {
 				Config: testAccDetectorConfig_disable,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccDetectorConfig_enable,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable", acctest.CtTrue),
 				),
 			},
 			{
@@ -84,16 +84,16 @@ func testAccDetector_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDetectorConfig_tags1("key1", "value1"),
+				Config: testAccDetectorConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -102,20 +102,20 @@ func testAccDetector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDetectorConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccDetectorConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDetectorConfig_tags1("key2", "value2"),
+				Config: testAccDetectorConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -131,7 +131,7 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -139,9 +139,9 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesS3Logs(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", acctest.CtTrue),
 				),
 			},
 			{
@@ -153,9 +153,9 @@ func testAccDetector_datasources_s3logs(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesS3Logs(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", acctest.CtFalse),
 				),
 			},
 		},
@@ -171,7 +171,7 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,9 +179,9 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesKubernetesAuditLogs(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtTrue),
 				),
 			},
 			{
@@ -193,9 +193,9 @@ func testAccDetector_datasources_kubernetes_audit_logs(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesKubernetesAuditLogs(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtFalse),
 				),
 			},
 		},
@@ -211,7 +211,7 @@ func testAccDetector_datasources_malware_protection(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -219,11 +219,11 @@ func testAccDetector_datasources_malware_protection(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesMalwareProtection(true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", acctest.CtTrue),
 				),
 			},
 			{
@@ -235,10 +235,10 @@ func testAccDetector_datasources_malware_protection(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesMalwareProtection(false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", acctest.CtFalse),
 				),
 			},
 		},
@@ -254,7 +254,7 @@ func testAccDetector_datasources_all(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -262,13 +262,13 @@ func testAccDetector_datasources_all(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesAll(true, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", acctest.CtTrue),
 				),
 			},
 			{
@@ -280,39 +280,39 @@ func testAccDetector_datasources_all(t *testing.T) {
 				Config: testAccDetectorConfig_datasourcesAll(true, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccDetectorConfig_datasourcesAll(false, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccDetectorConfig_datasourcesAll(false, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.enable", acctest.CtFalse),
 				),
 			},
 		},

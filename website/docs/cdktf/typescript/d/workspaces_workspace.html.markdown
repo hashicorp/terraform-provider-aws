@@ -64,13 +64,13 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `bundleId` - (Optional) ID of the bundle for the WorkSpace.
-* `directoryId` - (Optional) ID of the directory for the WorkSpace. You have to specify `user_name` along with `directory_id`. You cannot combine this parameter with `workspace_id`.
+* `directoryId` - (Optional) ID of the directory for the WorkSpace. You have to specify `userName` along with `directoryId`. You cannot combine this parameter with `workspaceId`.
 * `rootVolumeEncryptionEnabled` - (Optional) Indicates whether the data stored on the root volume is encrypted.
 * `tags` - (Optional) Tags for the WorkSpace.
-* `userName` – (Optional) User name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace. You cannot combine this parameter with `workspace_id`.
+* `userName` – (Optional) User name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace. You cannot combine this parameter with `workspaceId`.
 * `userVolumeEncryptionEnabled` – (Optional) Indicates whether the data stored on the user volume is encrypted.
 * `volumeEncryptionKey` – (Optional) Symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs.
-* `workspaceId` - (Optional) ID of the WorkSpace. You cannot combine this parameter with `directory_id`.
+* `workspaceId` - (Optional) ID of the WorkSpace. You cannot combine this parameter with `directoryId`.
 * `workspaceProperties` – (Optional) WorkSpace properties.
 
 `workspaceProperties` supports the following:
@@ -90,4 +90,4 @@ This data source exports the following attributes in addition to the arguments a
 * `computerName` - Name of the WorkSpace, as seen by the operating system.
 * `state` - Operational state of the WorkSpace.
 
-<!-- cache-key: cdktf-0.19.0 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->
+<!-- cache-key: cdktf-0.20.1 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->

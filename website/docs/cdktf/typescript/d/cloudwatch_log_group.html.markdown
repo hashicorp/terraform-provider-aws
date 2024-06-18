@@ -46,8 +46,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Cloudwatch log group. Any `:*` suffix added by the API, denoting all CloudWatch Log Streams under the CloudWatch Log Group, is removed for greater compatibility with other AWS services that do not accept the suffix.
 * `creationTime` - Creation time of the log group, expressed as the number of milliseconds after Jan 1, 1970 00:00:00 UTC.
-* `retentionInDays` - Number of days log events retained in the specified log group.
 * `kmsKeyId` - ARN of the KMS Key to use when encrypting log data.
+* `logGroupClass` - The log class of the log group.
+* `retentionInDays` - Number of days log events retained in the specified log group.
 * `tags` - Map of tags to assign to the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-98c67f629213b5447fa03395fb5fb657973411cf76bb2bdbeae232bee8c64098 -->
+<!-- cache-key: cdktf-0.20.1 input-8a8ab510e997c869183a1e56bb94690ada516904b6b672569dc99353f2274fae -->

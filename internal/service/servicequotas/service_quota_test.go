@@ -27,9 +27,9 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -37,15 +37,15 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 				Config: testAccServiceQuotaConfig_sameValue(setQuotaServiceCode, setQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDefaultValue, dataSourceName, names.AttrDefaultValue),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_code", dataSourceName, "quota_code"),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_name", dataSourceName, "quota_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_code", dataSourceName, "service_code"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_name", dataSourceName, "service_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceName, dataSourceName, names.AttrServiceName),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric", dataSourceName, "usage_metric"),
 					resource.TestCheckNoResourceAttr(resourceName, "usage_metric.0.metric_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "value", dataSourceName, "value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
 				),
 			},
@@ -67,9 +67,9 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaUnset(ctx, t, unsetQuotaServiceCode, unsetQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -77,13 +77,13 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 				Config: testAccServiceQuotaConfig_sameValue(unsetQuotaServiceCode, unsetQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDefaultValue, dataSourceName, names.AttrDefaultValue),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_code", dataSourceName, "quota_code"),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_name", dataSourceName, "quota_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_code", dataSourceName, "service_code"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_name", dataSourceName, "service_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "value", dataSourceName, "value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceName, dataSourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric", dataSourceName, "usage_metric"),
 					resource.TestCheckNoResourceAttr(resourceName, "usage_metric.0.metric_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
@@ -107,9 +107,9 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			preCheckServiceQuotaHasUsageMetric(ctx, hasUsageMetricServiceCode, hasUsageMetricQuotaCode, t)
+			testAccPreCheckServiceQuotaHasUsageMetric(ctx, t, hasUsageMetricServiceCode, hasUsageMetricQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -117,16 +117,16 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 				Config: testAccServiceQuotaConfig_sameValue(hasUsageMetricServiceCode, hasUsageMetricQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDefaultValue, dataSourceName, names.AttrDefaultValue),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_code", dataSourceName, "quota_code"),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_name", dataSourceName, "quota_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_code", dataSourceName, "service_code"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_name", dataSourceName, "service_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "value", dataSourceName, "value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceName, dataSourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric", dataSourceName, "usage_metric"),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric.0.metric_name", dataSourceName, "usage_metric.0.metric_name"),
-					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", acctest.Ct1),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
 				),
 			},
@@ -166,7 +166,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -175,7 +175,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", value),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
 					resource.TestCheckResourceAttrSet(resourceName, "request_id"),
 				),
 			},
@@ -211,7 +211,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -220,7 +220,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
-					resource.TestCheckResourceAttrPair(resourceName, "value", dataSourceName, "value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
 				),
 			},
@@ -229,7 +229,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "quota_code", quotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", serviceCode),
-					resource.TestCheckResourceAttr(resourceName, "value", value),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
 					resource.TestCheckResourceAttrSet(resourceName, "request_id"),
 				),
 			},
@@ -241,7 +241,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckAssumeRoleARN(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

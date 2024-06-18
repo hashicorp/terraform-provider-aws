@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `diskId` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
 * `id` - Disk identifierE.g., `pci-0000:03:00.0-scsi-0:0:0:0`
 
-<!-- cache-key: cdktf-0.19.0 input-64c44f7144dae6178c64ac35e8513dac768f1816678a338129b7de095d6a0d5c -->
+<!-- cache-key: cdktf-0.20.1 input-64c44f7144dae6178c64ac35e8513dac768f1816678a338129b7de095d6a0d5c -->

@@ -62,7 +62,7 @@ func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resou
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"account_id": schema.StringAttribute{
+			names.AttrAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -72,7 +72,7 @@ func (r *accessGrantsLocationResource) Schema(ctx context.Context, request resou
 					fwvalidators.AWSAccountID(),
 				},
 			},
-			"iam_role_arn": schema.StringAttribute{
+			names.AttrIAMRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},

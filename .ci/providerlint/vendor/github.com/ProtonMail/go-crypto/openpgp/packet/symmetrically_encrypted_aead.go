@@ -115,7 +115,7 @@ func serializeSymmetricallyEncryptedAead(ciphertext io.WriteCloser, cipherSuite 
 
 	// Random salt
 	salt := make([]byte, aeadSaltSize)
-	if _, err := rand.Read(salt); err != nil {
+	if _, err := io.ReadFull(rand, salt); err != nil {
 		return nil, err
 	}
 

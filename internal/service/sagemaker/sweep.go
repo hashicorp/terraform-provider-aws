@@ -760,13 +760,21 @@ func sweepNotebookInstances(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.SageMakerConn(ctx)
-
+	input := &sagemaker.ListNotebookInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var sweeperErrs *multierror.Error
 
-	err = conn.ListNotebookInstancesPagesWithContext(ctx, &sagemaker.ListNotebookInstancesInput{}, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
-		for _, instance := range page.NotebookInstances {
-			name := aws.StringValue(instance.NotebookInstanceName)
+	err = conn.ListNotebookInstancesPagesWithContext(ctx, input, func(page *sagemaker.ListNotebookInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.NotebookInstances {
+			name := aws.StringValue(v.NotebookInstanceName)
+
+			if status := aws.StringValue(v.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusDeleting {
+				log.Printf("[INFO] Skipping SageMaker Notebook Instance %s: NotebookInstanceStatus=%s", name, status)
+				continue
+			}
 
 			r := ResourceNotebookInstance()
 			d := r.Data(nil)
@@ -780,17 +788,20 @@ func sweepNotebookInstances(region string) error {
 
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Notebook Instance sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
+		return nil
 	}
+
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Notbook Instances: %w", err))
+		return fmt.Errorf("error listing SageMaker Notebook Instances (%s): %w", region, err)
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping SageMaker Notbook Instances: %w", err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping SageMaker Notebook Instances (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepStudioLifecyclesConfig(region string) error {

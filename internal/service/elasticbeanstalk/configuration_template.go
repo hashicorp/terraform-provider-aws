@@ -7,15 +7,17 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elastic_beanstalk_configuration_template")
@@ -32,7 +34,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -41,7 +43,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -64,16 +66,16 @@ func ResourceConfigurationTemplate() *schema.Resource {
 
 func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &elasticbeanstalk.CreateConfigurationTemplateInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		OptionSettings:  gatherOptionSettings(d),
 		TemplateName:    aws.String(name),
 	}
 
-	if attr, ok := d.GetOk("description"); ok {
+	if attr, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(attr.(string))
 	}
 
@@ -85,20 +87,20 @@ func resourceConfigurationTemplateCreate(ctx context.Context, d *schema.Resource
 		input.SolutionStackName = aws.String(attr.(string))
 	}
 
-	output, err := conn.CreateConfigurationTemplateWithContext(ctx, input)
+	output, err := conn.CreateConfigurationTemplate(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Configuration Template (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.TemplateName))
+	d.SetId(aws.ToString(output.TemplateName))
 
 	return append(diags, resourceConfigurationTemplateRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	settings, err := FindConfigurationSettingsByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
 
@@ -113,8 +115,8 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("application", settings.ApplicationName)
-	d.Set("description", settings.Description)
-	d.Set("name", settings.TemplateName)
+	d.Set(names.AttrDescription, settings.Description)
+	d.Set(names.AttrName, settings.TemplateName)
 	d.Set("solution_stack_name", settings.SolutionStackName)
 
 	return diags
@@ -122,16 +124,16 @@ func resourceConfigurationTemplateRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &elasticbeanstalk.UpdateConfigurationTemplateInput{
 			ApplicationName: aws.String(d.Get("application").(string)),
-			Description:     aws.String(d.Get("description").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			TemplateName:    aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateConfigurationTemplateWithContext(ctx, input)
+		_, err := conn.UpdateConfigurationTemplate(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
@@ -161,11 +163,11 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 		// conflict. Here we loop through all the initial removables from the set
 		// difference, and we build up a slice of settings not found in the "add"
 		// set
-		var remove []*elasticbeanstalk.ConfigurationOptionSetting
+		var remove []awstypes.ConfigurationOptionSetting
 		for _, r := range rm {
 			for _, a := range add {
-				if aws.StringValue(r.Namespace) == aws.StringValue(a.Namespace) &&
-					aws.StringValue(r.OptionName) == aws.StringValue(a.OptionName) {
+				if aws.ToString(r.Namespace) == aws.ToString(a.Namespace) &&
+					aws.ToString(r.OptionName) == aws.ToString(a.OptionName) {
 					continue
 				}
 				remove = append(remove, r)
@@ -179,13 +181,13 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		for _, elem := range remove {
-			input.OptionsToRemove = append(input.OptionsToRemove, &elasticbeanstalk.OptionSpecification{
+			input.OptionsToRemove = append(input.OptionsToRemove, awstypes.OptionSpecification{
 				Namespace:  elem.Namespace,
 				OptionName: elem.OptionName,
 			})
 		}
 
-		_, err := conn.UpdateConfigurationTemplateWithContext(ctx, input)
+		_, err := conn.UpdateConfigurationTemplate(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
@@ -197,13 +199,21 @@ func resourceConfigurationTemplateUpdate(ctx context.Context, d *schema.Resource
 
 func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	log.Printf("[INFO] Deleting Elastic Beanstalk Configuration Template: %s", d.Id())
-	_, err := conn.DeleteConfigurationTemplateWithContext(ctx, &elasticbeanstalk.DeleteConfigurationTemplateInput{
+	_, err := conn.DeleteConfigurationTemplate(ctx, &elasticbeanstalk.DeleteConfigurationTemplateInput{
 		ApplicationName: aws.String(d.Get("application").(string)),
 		TemplateName:    aws.String(d.Id()),
 	})
+
+	errInvalidParameter := &invalidParameterValueError{err}
+
+	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Platform named") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
@@ -212,19 +222,19 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
-)
-
-func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, applicationName, templateName string) (*elasticbeanstalk.ConfigurationSettingsDescription, error) {
+func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, templateName string) (*awstypes.ConfigurationSettingsDescription, error) {
 	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
 		ApplicationName: aws.String(applicationName),
 		TemplateName:    aws.String(templateName),
 	}
 
-	output, err := conn.DescribeConfigurationSettingsWithContext(ctx, input)
+	output, err := conn.DescribeConfigurationSettings(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
+	errInvalidParameter := &invalidParameterValueError{err}
+
+	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Platform named") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -235,7 +245,7 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 		return nil, err
 	}
 
-	if output == nil || len(output.ConfigurationSettings) == 0 || output.ConfigurationSettings[0] == nil {
+	if output == nil || len(output.ConfigurationSettings) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -243,14 +253,25 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.ConfigurationSettings[0], nil
+	return &output.ConfigurationSettings[0], nil
 }
 
-func gatherOptionSettings(d *schema.ResourceData) []*elasticbeanstalk.ConfigurationOptionSetting {
+func gatherOptionSettings(d *schema.ResourceData) []awstypes.ConfigurationOptionSetting {
 	optionSettingsSet, ok := d.Get("setting").(*schema.Set)
 	if !ok || optionSettingsSet == nil {
 		optionSettingsSet = new(schema.Set)
 	}
 
 	return extractOptionSettings(optionSettingsSet)
+}
+
+type invalidParameterValueError struct {
+	error
+}
+
+func (e *invalidParameterValueError) ErrorMessage() string {
+	if e == nil || e.error == nil {
+		return ""
+	}
+	return e.Error()
 }

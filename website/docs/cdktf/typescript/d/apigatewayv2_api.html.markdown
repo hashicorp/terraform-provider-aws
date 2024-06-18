@@ -55,7 +55,7 @@ Applicable for WebSocket APIs.
 Applicable for HTTP APIs.
 * `description` - Description of the API.
 * `disableExecuteApiEndpoint` - Whether clients can invoke the API by using the default `execute-api` endpoint.
-* `executionArn` - ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute
+* `executionArn` - ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `sourceArn` attribute
 or in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-control-access-iam.html) for details.
 * `name` - Name of the API.
@@ -73,4 +73,4 @@ The `corsConfiguration` object supports the following:
 * `exposeHeaders` - Set of exposed HTTP headers.
 * `maxAge` - Number of seconds that the browser should cache preflight request results.
 
-<!-- cache-key: cdktf-0.19.0 input-476586bb733fc0bcc5e9d7e9c2f79656a99a92d47ca1c6953fdfd3eeeab546d6 -->
+<!-- cache-key: cdktf-0.20.1 input-476586bb733fc0bcc5e9d7e9c2f79656a99a92d47ca1c6953fdfd3eeeab546d6 -->

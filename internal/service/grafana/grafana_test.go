@@ -6,8 +6,20 @@ package grafana_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.GrafanaServiceID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"Active marketplace agreement not found",
+	)
+}
 
 func TestAccGrafana_serial(t *testing.T) {
 	t.Parallel()
@@ -16,7 +28,7 @@ func TestAccGrafana_serial(t *testing.T) {
 		"Workspace": {
 			"saml":                     testAccWorkspace_saml,
 			"sso":                      testAccWorkspace_sso,
-			"disappears":               testAccWorkspace_disappears,
+			acctest.CtDisappears:       testAccWorkspace_disappears,
 			"organization":             testAccWorkspace_organization,
 			"dataSources":              testAccWorkspace_dataSources,
 			"permissionType":           testAccWorkspace_permissionType,
@@ -28,16 +40,16 @@ func TestAccGrafana_serial(t *testing.T) {
 			"version":                  testAccWorkspace_version,
 		},
 		"ApiKey": {
-			"basic": testAccWorkspaceAPIKey_basic,
+			acctest.CtBasic: testAccWorkspaceAPIKey_basic,
 		},
 		"DataSource": {
-			"basic": testAccWorkspaceDataSource_basic,
+			acctest.CtBasic: testAccWorkspaceDataSource_basic,
 		},
 		"LicenseAssociation": {
 			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
 		},
 		"SamlConfiguration": {
-			"basic":         testAccWorkspaceSAMLConfiguration_basic,
+			acctest.CtBasic: testAccWorkspaceSAMLConfiguration_basic,
 			"loginValidity": testAccWorkspaceSAMLConfiguration_loginValidity,
 			"assertions":    testAccWorkspaceSAMLConfiguration_assertions,
 		},

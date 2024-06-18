@@ -21,10 +21,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_replication_configuration")
-func ResourceBucketReplicationConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_replication_configuration", name="Bucket Replication Configuration")
+func resourceBucketReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketReplicationConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketReplicationConfigurationRead,
@@ -36,18 +37,18 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1000,
@@ -59,7 +60,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status": {
+									names.AttrStatus: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.DeleteMarkerReplicationStatus](),
@@ -67,7 +68,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -79,7 +80,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"owner": {
+												names.AttrOwner: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
@@ -92,12 +93,12 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
 									},
-									"bucket": {
+									names.AttrBucket: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"encryption_configuration": {
+									names.AttrEncryptionConfiguration: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -134,7 +135,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 														},
 													},
 												},
-												"status": {
+												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.MetricsStatus](),
@@ -148,7 +149,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"status": {
+												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.ReplicationTimeStatus](),
@@ -173,7 +174,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 											},
 										},
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.StorageClass](),
@@ -187,7 +188,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status": {
+									names.AttrStatus: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ExistingObjectReplicationStatus](),
@@ -195,7 +196,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -207,16 +208,16 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"prefix": {
+												names.AttrPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 1024),
 												},
-												"tags": tftags.TagsSchema(),
+												names.AttrTags: tftags.TagsSchema(),
 											},
 										},
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -227,11 +228,11 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -241,19 +242,19 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 							Deprecated:   "Use filter instead",
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -269,7 +270,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"status": {
+												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.ReplicaModificationsStatus](),
@@ -283,7 +284,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"status": {
+												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.SseKmsEncryptedObjectsStatus](),
@@ -294,7 +295,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ReplicationRuleStatus](),
@@ -315,12 +316,12 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(bucket),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
-			Role:  aws.String(d.Get("role").(string)),
-			Rules: expandReplicationRules(ctx, d.Get("rule").([]interface{})),
+			Role:  aws.String(d.Get(names.AttrRole).(string)),
+			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 
@@ -383,9 +384,9 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Replication Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", d.Id())
-	d.Set("role", rc.Role)
-	if err := d.Set("rule", flattenReplicationRules(ctx, rc.Rules)); err != nil {
+	d.Set(names.AttrBucket, d.Id())
+	d.Set(names.AttrRole, rc.Role)
+	if err := d.Set(names.AttrRule, flattenReplicationRules(ctx, rc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -399,8 +400,8 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(d.Id()),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
-			Role:  aws.String(d.Get("role").(string)),
-			Rules: expandReplicationRules(ctx, d.Get("rule").([]interface{})),
+			Role:  aws.String(d.Get(names.AttrRole).(string)),
+			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 
@@ -485,7 +486,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 			rule.DeleteMarkerReplication = expandDeleteMarkerReplication(v)
 		}
 
-		if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrDestination].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Destination = expandDestination(v)
 		}
 
@@ -493,7 +494,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 			rule.ExistingObjectReplication = expandExistingObjectReplication(v)
 		}
 
-		if v, ok := tfMap["id"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 			rule.ID = aws.String(v)
 		}
 
@@ -501,20 +502,20 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 			rule.SourceSelectionCriteria = expandSourceSelectionCriteria(v)
 		}
 
-		if v, ok := tfMap["status"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 			rule.Status = types.ReplicationRuleStatus(v)
 		}
 
 		// Support the empty filter block in terraform i.e. 'filter {}',
 		// which implies the replication rule does not require a specific filter,
 		// by expanding the "filter" array even if the first element is nil.
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			// XML schema V2
 			rule.Filter = expandReplicationRuleFilter(ctx, v)
-			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
+			rule.Priority = aws.Int32(int32(tfMap[names.AttrPriority].(int)))
 		} else {
 			// XML schema V1
-			rule.Prefix = aws.String(tfMap["prefix"].(string))
+			rule.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 		}
 
 		rules = append(rules, rule)
@@ -536,7 +537,7 @@ func expandDeleteMarkerReplication(l []interface{}) *types.DeleteMarkerReplicati
 
 	result := &types.DeleteMarkerReplication{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		result.Status = types.DeleteMarkerReplicationStatus(v)
 	}
 
@@ -564,11 +565,11 @@ func expandDestination(l []interface{}) *types.Destination {
 		result.Account = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["encryption_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrEncryptionConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.EncryptionConfiguration = expandEncryptionConfiguration(v)
 	}
 
@@ -580,7 +581,7 @@ func expandDestination(l []interface{}) *types.Destination {
 		result.ReplicationTime = expandReplicationTime(v)
 	}
 
-	if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 		result.StorageClass = types.StorageClass(v)
 	}
 
@@ -600,7 +601,7 @@ func expandAccessControlTranslation(l []interface{}) *types.AccessControlTransla
 
 	result := &types.AccessControlTranslation{}
 
-	if v, ok := tfMap["owner"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
 		result.Owner = types.OwnerOverride(v)
 	}
 
@@ -644,7 +645,7 @@ func expandMetrics(l []interface{}) *types.Metrics {
 		result.EventThreshold = expandReplicationTimeValue(v)
 	}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		result.Status = types.MetricsStatus(v)
 	}
 
@@ -664,7 +665,7 @@ func expandReplicationTime(l []interface{}) *types.ReplicationTime {
 
 	result := &types.ReplicationTime{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		result.Status = types.ReplicationTimeStatus(v)
 	}
 
@@ -708,7 +709,7 @@ func expandExistingObjectReplication(l []interface{}) *types.ExistingObjectRepli
 
 	result := &types.ExistingObjectReplication{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		result.Status = types.ExistingObjectReplicationStatus(v)
 	}
 
@@ -751,7 +752,7 @@ func expandReplicaModifications(l []interface{}) *types.ReplicaModifications {
 
 	result := &types.ReplicaModifications{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		result.Status = types.ReplicaModificationsStatus(v)
 	}
 
@@ -771,7 +772,7 @@ func expandSSEKMSEncryptedObjects(l []interface{}) *types.SseKmsEncryptedObjects
 
 	result := &types.SseKmsEncryptedObjects{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		result.Status = types.SseKmsEncryptedObjectsStatus(v)
 	}
 
@@ -799,7 +800,7 @@ func expandReplicationRuleFilter(ctx context.Context, l []interface{}) types.Rep
 	// If a filter is specified as filter { prefix = "" } in Terraform, we should send the prefix value
 	// in the API request even if it is an empty value, else Terraform will report non-empty plans.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23487
-	if v, ok := tfMap["prefix"].(string); ok && result == nil {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && result == nil {
 		result = &types.ReplicationRuleFilterMemberPrefix{
 			Value: v,
 		}
@@ -823,11 +824,11 @@ func expandReplicationRuleFilterMemberAnd(ctx context.Context, l []interface{}) 
 		Value: types.ReplicationRuleAndOperator{},
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Value.Prefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
 		if len(tags) > 0 {
 			result.Value.Tags = tags
@@ -852,11 +853,11 @@ func expandReplicationRuleFilterMemberTag(l []interface{}) *types.ReplicationRul
 		Value: types.Tag{},
 	}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		result.Value.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		result.Value.Value = aws.String(v)
 	}
 
@@ -872,7 +873,7 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 
 	for _, rule := range rules {
 		m := map[string]interface{}{
-			"status": rule.Status,
+			names.AttrStatus: rule.Status,
 		}
 
 		if rule.DeleteMarkerReplication != nil {
@@ -880,7 +881,7 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 		}
 
 		if rule.Destination != nil {
-			m["destination"] = flattenDestination(rule.Destination)
+			m[names.AttrDestination] = flattenDestination(rule.Destination)
 		}
 
 		if rule.ExistingObjectReplication != nil {
@@ -888,19 +889,19 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenReplicationRuleFilter(ctx, rule.Filter)
+			m[names.AttrFilter] = flattenReplicationRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.ID != nil {
-			m["id"] = aws.ToString(rule.ID)
+			m[names.AttrID] = aws.ToString(rule.ID)
 		}
 
 		if rule.Prefix != nil {
-			m["prefix"] = aws.ToString(rule.Prefix)
+			m[names.AttrPrefix] = aws.ToString(rule.Prefix)
 		}
 
 		if rule.Priority != nil {
-			m["priority"] = aws.ToInt32(rule.Priority)
+			m[names.AttrPriority] = aws.ToInt32(rule.Priority)
 		}
 
 		if rule.SourceSelectionCriteria != nil {
@@ -919,7 +920,7 @@ func flattenDeleteMarkerReplication(dmr *types.DeleteMarkerReplication) []interf
 	}
 
 	m := map[string]interface{}{
-		"status": dmr.Status,
+		names.AttrStatus: dmr.Status,
 	}
 
 	return []interface{}{m}
@@ -931,7 +932,7 @@ func flattenDestination(dest *types.Destination) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"storage_class": dest.StorageClass,
+		names.AttrStorageClass: dest.StorageClass,
 	}
 
 	if dest.AccessControlTranslation != nil {
@@ -943,11 +944,11 @@ func flattenDestination(dest *types.Destination) []interface{} {
 	}
 
 	if dest.Bucket != nil {
-		m["bucket"] = aws.ToString(dest.Bucket)
+		m[names.AttrBucket] = aws.ToString(dest.Bucket)
 	}
 
 	if dest.EncryptionConfiguration != nil {
-		m["encryption_configuration"] = flattenEncryptionConfiguration(dest.EncryptionConfiguration)
+		m[names.AttrEncryptionConfiguration] = flattenEncryptionConfiguration(dest.EncryptionConfiguration)
 	}
 
 	if dest.Metrics != nil {
@@ -967,7 +968,7 @@ func flattenAccessControlTranslation(act *types.AccessControlTranslation) []inte
 	}
 
 	m := map[string]interface{}{
-		"owner": act.Owner,
+		names.AttrOwner: act.Owner,
 	}
 
 	return []interface{}{m}
@@ -993,7 +994,7 @@ func flattenMetrics(metrics *types.Metrics) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"status": metrics.Status,
+		names.AttrStatus: metrics.Status,
 	}
 
 	if metrics.EventThreshold != nil {
@@ -1021,7 +1022,7 @@ func flattenReplicationReplicationTime(rt *types.ReplicationTime) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"status": rt.Status,
+		names.AttrStatus: rt.Status,
 	}
 
 	if rt.Time != nil {
@@ -1037,7 +1038,7 @@ func flattenExistingObjectReplication(eor *types.ExistingObjectReplication) []in
 	}
 
 	m := map[string]interface{}{
-		"status": eor.Status,
+		names.AttrStatus: eor.Status,
 	}
 
 	return []interface{}{m}
@@ -1054,7 +1055,7 @@ func flattenReplicationRuleFilter(ctx context.Context, filter types.ReplicationR
 	case *types.ReplicationRuleFilterMemberAnd:
 		m["and"] = flattenReplicationRuleFilterMemberAnd(ctx, v)
 	case *types.ReplicationRuleFilterMemberPrefix:
-		m["prefix"] = v.Value
+		m[names.AttrPrefix] = v.Value
 	case *types.ReplicationRuleFilterMemberTag:
 		m["tag"] = flattenReplicationRuleFilterMemberTag(v)
 	default:
@@ -1072,11 +1073,11 @@ func flattenReplicationRuleFilterMemberAnd(ctx context.Context, op *types.Replic
 	m := make(map[string]interface{})
 
 	if v := op.Value.Prefix; v != nil {
-		m["prefix"] = aws.ToString(v)
+		m[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	if v := op.Value.Tags; v != nil {
-		m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
+		m[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}
@@ -1090,11 +1091,11 @@ func flattenReplicationRuleFilterMemberTag(op *types.ReplicationRuleFilterMember
 	m := make(map[string]interface{})
 
 	if v := op.Value.Key; v != nil {
-		m["key"] = aws.ToString(v)
+		m[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := op.Value.Value; v != nil {
-		m["value"] = aws.ToString(v)
+		m[names.AttrValue] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -1124,7 +1125,7 @@ func flattenReplicaModifications(rc *types.ReplicaModifications) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"status": rc.Status,
+		names.AttrStatus: rc.Status,
 	}
 
 	return []interface{}{m}
@@ -1136,7 +1137,7 @@ func flattenSSEKMSEncryptedObjects(objects *types.SseKmsEncryptedObjects) []inte
 	}
 
 	m := map[string]interface{}{
-		"status": objects.Status,
+		names.AttrStatus: objects.Status,
 	}
 
 	return []interface{}{m}

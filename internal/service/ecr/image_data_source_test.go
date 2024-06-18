@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRImageDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -38,7 +38,6 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceByDigest, "image_uri"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_pushed_at"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_size_in_bytes"),
-					resource.TestCheckTypeSetElemAttr(resourceByMostRecent, "image_tags.*", tag),
 				),
 			},
 		},

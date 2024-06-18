@@ -13,7 +13,7 @@ description: |-
 Use this data source to get information about a DB Snapshot for use when provisioning DB instances
 
 ~> **NOTE:** This data source does not apply to snapshots created on Aurora DB clusters.
-See the [`awsDbClusterSnapshot` data source](/docs/providers/aws/d/db_cluster_snapshot.html) for DB Cluster snapshots.
+See the [`aws_db_cluster_snapshot` data source](/docs/providers/aws/d/db_cluster_snapshot.html) for DB Cluster snapshots.
 
 ## Example Usage
 
@@ -103,6 +103,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of this DB snapshot.
 * `storageType` - Storage type associated with DB snapshot.
 * `vpcId` - ID of the VPC associated with the DB snapshot.
-* `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
+* `originalSnapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 
-<!-- cache-key: cdktf-0.19.0 input-9f41210b58c8bb6be2c45a9fec8d65b0d0e6ca683037a4f7c19bc634c7236062 -->
+<!-- cache-key: cdktf-0.20.1 input-c839ad8d58fed1752eb8fb0ecf7cb491e814d59ae1af484cefe56dffea031a1c -->

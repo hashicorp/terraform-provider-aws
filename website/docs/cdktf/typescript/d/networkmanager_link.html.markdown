@@ -57,4 +57,4 @@ The `bandwidth` object supports the following:
 * `downloadSpeed` - Download speed in Mbps.
 * `uploadSpeed` - Upload speed in Mbps.
 
-<!-- cache-key: cdktf-0.19.0 input-1bb44c97d9c2c1eb71096f7293f01a1e8423d9ada68f26d6602f08c19b25554d -->
+<!-- cache-key: cdktf-0.20.1 input-1bb44c97d9c2c1eb71096f7293f01a1e8423d9ada68f26d6602f08c19b25554d -->

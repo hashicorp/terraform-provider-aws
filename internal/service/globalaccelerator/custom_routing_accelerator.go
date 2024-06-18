@@ -9,15 +9,17 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -28,7 +30,7 @@ import (
 
 // @SDKResource("aws_globalaccelerator_custom_routing_accelerator", name="Custom Routing Accelerator")
 // @Tags(identifierAttribute="id")
-func ResourceCustomRoutingAccelerator() *schema.Resource {
+func resourceCustomRoutingAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomRoutingAcceleratorCreate,
 		ReadWithoutTimeout:   resourceCustomRoutingAcceleratorRead,
@@ -45,7 +47,7 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -70,26 +72,26 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_address_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      globalaccelerator.IpAddressTypeIpv4,
-				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
+			names.AttrIPAddressType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.IpAddressTypeIpv4,
+				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
-			"ip_addresses": {
+			names.AttrIPAddresses: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -100,7 +102,7 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_addresses": {
+						names.AttrIPAddresses: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -112,7 +114,7 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -132,46 +134,46 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 
 func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &globalaccelerator.CreateCustomRoutingAcceleratorInput{
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		Name:             aws.String(name),
 		IdempotencyToken: aws.String(id.UniqueId()),
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
-		input.IpAddressType = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_addresses"); ok && len(v.([]interface{})) > 0 {
-		input.IpAddresses = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]interface{})) > 0 {
+		input.IpAddresses = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	output, err := conn.CreateCustomRoutingAcceleratorWithContext(ctx, input)
+	output, err := conn.CreateCustomRoutingAccelerator(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Custom Routing Accelerator (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Accelerator.AcceleratorArn))
+	d.SetId(aws.ToString(output.Accelerator.AcceleratorArn))
 
 	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deploy: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
-		if _, err := conn.UpdateAcceleratorAttributesWithContext(ctx, input); err != nil {
+		if _, err := conn.UpdateAcceleratorAttributes(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 		}
 
 		if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deploy: %s", d.Id(), err)
 		}
 	}
 
@@ -180,9 +182,9 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 
 func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	accelerator, err := FindCustomRoutingAcceleratorByARN(ctx, conn, d.Id())
+	accelerator, err := findCustomRoutingAcceleratorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Custom Routing Accelerator (%s) not found, removing from state", d.Id())
@@ -194,22 +196,22 @@ func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("dns_name", accelerator.DnsName)
-	d.Set("enabled", accelerator.Enabled)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID())
-	d.Set("ip_address_type", accelerator.IpAddressType)
+	d.Set(names.AttrDNSName, accelerator.DnsName)
+	d.Set(names.AttrEnabled, accelerator.Enabled)
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
+	d.Set(names.AttrIPAddressType, accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
 	}
-	d.Set("name", accelerator.Name)
+	d.Set(names.AttrName, accelerator.Name)
 
-	acceleratorAttributes, err := FindCustomRoutingAcceleratorAttributesByARN(ctx, conn, d.Id())
+	acceleratorAttributes, err := findCustomRoutingAcceleratorAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set(names.AttrAttributes, []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
@@ -218,32 +220,32 @@ func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resourc
 
 func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	if d.HasChanges("name", "ip_address_type", "enabled") {
+	if d.HasChanges(names.AttrName, names.AttrIPAddressType, names.AttrEnabled) {
 		input := &globalaccelerator.UpdateCustomRoutingAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
-			Name:           aws.String(d.Get("name").(string)),
-			Enabled:        aws.Bool(d.Get("enabled").(bool)),
+			Name:           aws.String(d.Get(names.AttrName).(string)),
+			Enabled:        aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		}
 
-		if v, ok := d.GetOk("ip_address_type"); ok {
-			input.IpAddressType = aws.String(v.(string))
+		if v, ok := d.GetOk(names.AttrIPAddressType); ok {
+			input.IpAddressType = awstypes.IpAddressType(v.(string))
 		}
 
-		_, err := conn.UpdateCustomRoutingAcceleratorWithContext(ctx, input)
+		_, err := conn.UpdateCustomRoutingAccelerator(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deploy: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("attributes") {
-		o, n := d.GetChange("attributes")
+	if d.HasChange(names.AttrAttributes) {
+		o, n := d.GetChange(names.AttrAttributes)
 		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 				oInput := expandUpdateCustomRoutingAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
@@ -252,28 +254,28 @@ func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.Resou
 				nInput.AcceleratorArn = aws.String(d.Id())
 
 				// To change flow logs bucket and prefix attributes while flows are enabled, first disable flow logs.
-				if aws.BoolValue(oInput.FlowLogsEnabled) && aws.BoolValue(nInput.FlowLogsEnabled) {
+				if aws.ToBool(oInput.FlowLogsEnabled) && aws.ToBool(nInput.FlowLogsEnabled) {
 					oInput.FlowLogsEnabled = aws.Bool(false)
 
-					_, err := conn.UpdateCustomRoutingAcceleratorAttributesWithContext(ctx, oInput)
+					_, err := conn.UpdateCustomRoutingAcceleratorAttributes(ctx, oInput)
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 					}
 
 					if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deploy: %s", d.Id(), err)
 					}
 				}
 
-				_, err := conn.UpdateCustomRoutingAcceleratorAttributesWithContext(ctx, nInput)
+				_, err := conn.UpdateCustomRoutingAcceleratorAttributes(ctx, nInput)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 				}
 
 				if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deploy: %s", d.Id(), err)
 				}
 			}
 		}
@@ -284,16 +286,16 @@ func resourceCustomRoutingAcceleratorUpdate(ctx context.Context, d *schema.Resou
 
 func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.UpdateCustomRoutingAcceleratorInput{
 		AcceleratorArn: aws.String(d.Id()),
 		Enabled:        aws.Bool(false),
 	}
 
-	_, err := conn.UpdateCustomRoutingAcceleratorWithContext(ctx, input)
+	_, err := conn.UpdateCustomRoutingAccelerator(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
 		return diags
 	}
 
@@ -302,15 +304,15 @@ func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if _, err := waitCustomRoutingAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deployment: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Custom Routing Accelerator (%s) deploy: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Custom Routing  Accelerator (%s)", d.Id())
-	_, err = conn.DeleteCustomRoutingAcceleratorWithContext(ctx, &globalaccelerator.DeleteCustomRoutingAcceleratorInput{
+	_, err = conn.DeleteCustomRoutingAccelerator(ctx, &globalaccelerator.DeleteCustomRoutingAcceleratorInput{
 		AcceleratorArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
 		return diags
 	}
 
@@ -321,18 +323,14 @@ func resourceCustomRoutingAcceleratorDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func FindCustomRoutingAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAccelerator, error) {
+func findCustomRoutingAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.CustomRoutingAccelerator, error) {
 	input := &globalaccelerator.DescribeCustomRoutingAcceleratorInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return findCustomRoutingAccelerator(ctx, conn, input)
-}
+	output, err := conn.DescribeCustomRoutingAccelerator(ctx, input)
 
-func findCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorInput) (*globalaccelerator.CustomRoutingAccelerator, error) {
-	output, err := conn.DescribeCustomRoutingAcceleratorWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -350,18 +348,14 @@ func findCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.G
 	return output.Accelerator, nil
 }
 
-func FindCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
+func findCustomRoutingAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.CustomRoutingAcceleratorAttributes, error) {
 	input := &globalaccelerator.DescribeCustomRoutingAcceleratorAttributesInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return findCustomRoutingAcceleratorAttributes(ctx, conn, input)
-}
+	output, err := conn.DescribeCustomRoutingAcceleratorAttributes(ctx, input)
 
-func findCustomRoutingAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCustomRoutingAcceleratorAttributesInput) (*globalaccelerator.CustomRoutingAcceleratorAttributes, error) {
-	output, err := conn.DescribeCustomRoutingAcceleratorAttributesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
+	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -379,9 +373,9 @@ func findCustomRoutingAcceleratorAttributes(ctx context.Context, conn *globalacc
 	return output.AcceleratorAttributes, nil
 }
 
-func statusCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) retry.StateRefreshFunc {
+func statusCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		accelerator, err := FindCustomRoutingAcceleratorByARN(ctx, conn, arn)
+		accelerator, err := findCustomRoutingAcceleratorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -391,21 +385,21 @@ func statusCustomRoutingAccelerator(ctx context.Context, conn *globalaccelerator
 			return nil, "", err
 		}
 
-		return accelerator, aws.StringValue(accelerator.Status), nil
+		return accelerator, string(accelerator.Status), nil
 	}
 }
 
-func waitCustomRoutingAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.CustomRoutingAccelerator, error) { //nolint:unparam
+func waitCustomRoutingAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.Client, arn string, timeout time.Duration) (*awstypes.CustomRoutingAccelerator, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
-		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
+		Pending: enum.Slice(awstypes.AcceleratorStatusInProgress),
+		Target:  enum.Slice(awstypes.AcceleratorStatusDeployed),
 		Refresh: statusCustomRoutingAccelerator(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*globalaccelerator.CustomRoutingAccelerator); ok {
+	if output, ok := outputRaw.(*awstypes.CustomRoutingAccelerator); ok {
 		return output, err
 	}
 
@@ -416,6 +410,6 @@ func expandUpdateCustomRoutingAcceleratorAttributesInput(tfMap map[string]interf
 	return (*globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput)(expandUpdateAcceleratorAttributesInput(tfMap))
 }
 
-func flattenCustomRoutingAcceleratorAttributes(apiObject *globalaccelerator.CustomRoutingAcceleratorAttributes) map[string]interface{} {
-	return flattenAcceleratorAttributes((*globalaccelerator.AcceleratorAttributes)(apiObject))
+func flattenCustomRoutingAcceleratorAttributes(apiObject *awstypes.CustomRoutingAcceleratorAttributes) map[string]interface{} {
+	return flattenAcceleratorAttributes((*awstypes.AcceleratorAttributes)(apiObject))
 }

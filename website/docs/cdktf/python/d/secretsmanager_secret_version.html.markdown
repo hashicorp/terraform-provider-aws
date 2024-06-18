@@ -83,9 +83,10 @@ class MyConvertedCode(TerraformStack):
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
+* `created_date` - Created date of the secret in UTC.
 * `id` - Unique identifier of this version of the secret.
 * `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.
 * `secret_binary` - Decrypted part of the protected secret information that was originally provided as a binary.
 * `version_id` - Unique identifier of this version of the secret.
 
-<!-- cache-key: cdktf-0.19.0 input-0b6eddd0447056d7c1accf69edad117a5cfffc0cc933681a436ac5274d6d9488 -->
+<!-- cache-key: cdktf-0.20.1 input-e4e3782fdb0598a229742f4b10930527d75b81d8043a7552d4209b49f43234dd -->

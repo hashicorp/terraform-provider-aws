@@ -84,4 +84,4 @@ This data source exports the following attributes in addition to the arguments a
 * `computer_name` - Name of the WorkSpace, as seen by the operating system.
 * `state` - Operational state of the WorkSpace.
 
-<!-- cache-key: cdktf-0.19.0 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->
+<!-- cache-key: cdktf-0.20.1 input-e3b5b66bcfd6093ee222bffc5ccc77c7abda6688fc2aaac99be169c6d22b80cf -->

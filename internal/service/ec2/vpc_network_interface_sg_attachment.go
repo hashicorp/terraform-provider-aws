@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_interface_sg_attachment")
@@ -25,12 +27,19 @@ func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 		CreateWithoutTimeout: resourceNetworkInterfaceSGAttachmentCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceSGAttachmentRead,
 		DeleteWithoutTimeout: resourceNetworkInterfaceSGAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceNetworkInterfaceSGAttachmentImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Read:   schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -48,7 +57,7 @@ func resourceNetworkInterfaceSGAttachmentCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	networkInterfaceID := d.Get("network_interface_id").(string)
+	networkInterfaceID := d.Get(names.AttrNetworkInterfaceID).(string)
 	sgID := d.Get("security_group_id").(string)
 	mutexKey := "network_interface_sg_attachment_" + networkInterfaceID
 	conns.GlobalMutexKV.Lock(mutexKey)
@@ -97,9 +106,9 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	networkInterfaceID := d.Get("network_interface_id").(string)
+	networkInterfaceID := d.Get(names.AttrNetworkInterfaceID).(string)
 	sgID := d.Get("security_group_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, maxDuration(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func() (interface{}, error) {
 		return FindNetworkInterfaceSecurityGroup(ctx, conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 
@@ -115,17 +124,25 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 
 	groupIdentifier := outputRaw.(*ec2.GroupIdentifier)
 
-	d.Set("network_interface_id", networkInterfaceID)
+	d.Set(names.AttrNetworkInterfaceID, networkInterfaceID)
 	d.Set("security_group_id", groupIdentifier.GroupId)
 
 	return diags
+}
+
+func maxDuration(a, b time.Duration) time.Duration {
+	if a >= b {
+		return a
+	}
+
+	return b
 }
 
 func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	networkInterfaceID := d.Get("network_interface_id").(string)
+	networkInterfaceID := d.Get(names.AttrNetworkInterfaceID).(string)
 	sgID := d.Get("security_group_id").(string)
 	mutexKey := "network_interface_sg_attachment_" + networkInterfaceID
 	conns.GlobalMutexKV.Lock(mutexKey)
@@ -211,7 +228,7 @@ func resourceNetworkInterfaceSGAttachmentImport(ctx context.Context, d *schema.R
 	}
 
 	d.SetId(associationID)
-	d.Set("network_interface_id", networkInterfaceID)
+	d.Set(names.AttrNetworkInterfaceID, networkInterfaceID)
 
 	return []*schema.ResourceData{d}, nil
 }

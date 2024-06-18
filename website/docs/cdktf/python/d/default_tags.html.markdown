@@ -86,11 +86,6 @@ This data source has no arguments.
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `tags` - Blocks of default tags set on the provider. See details below.
+* `tags` - Key-value mapping of provider default tags.
 
-### tags
-
-* `key` - Key name of the tag (i.e., `tags.#.key`).
-* `value` - Value of the tag (i.e., `tags.#.value`).
-
-<!-- cache-key: cdktf-0.19.0 input-4241b507ba8cc2f145c5ca347d447ee201ff9625e2d883dc7fc4ea765952c336 -->
+<!-- cache-key: cdktf-0.20.1 input-5379afa329280e66ecb9be70d287e86ad43906ae22d2b8976a3316d39a343709 -->
