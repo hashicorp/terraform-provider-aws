@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -93,6 +92,7 @@ func resourceParameterGroup() *schema.Resource {
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	name := d.Get(names.AttrName).(string)
 	input := &elasticache.CreateCacheParameterGroupInput{
@@ -104,7 +104,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	output, err := conn.CreateCacheParameterGroup(ctx, input)
 
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		log.Printf("[WARN] failed creating ElastiCache Parameter Group with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil
@@ -195,7 +195,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 			// above, which may become out of date, here we add logic to
 			// workaround this API behavior
 
-			if tfresource.TimedOut(err) || tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, "Parameter reserved-memory doesn't exist") {
+			if tfresource.TimedOut(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Parameter reserved-memory doesn't exist") {
 				for i, paramToModify := range paramsToModify {
 					if aws.ToString(paramToModify.ParameterName) != "reserved-memory" {
 						continue
@@ -294,13 +294,13 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.Client, name st
 	const (
 		timeout = 3 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidCacheParameterGroupStateFault](ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteCacheParameterGroup(ctx, &elasticache.DeleteCacheParameterGroupInput{
 			CacheParameterGroupName: aws.String(name),
 		})
-	}, awstypes.ErrCodeInvalidCacheParameterGroupStateFault)
+	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeCacheParameterGroupNotFoundFault) {
+	if errs.IsA[*awstypes.CacheParameterGroupNotFoundFault](err) {
 		return nil
 	}
 
@@ -359,12 +359,12 @@ func parameterChanges(o, n interface{}) (remove, addOrUpdate []*awstypes.Paramet
 func resourceResetParameterGroup(ctx context.Context, conn *elasticache.Client, name string, parameters []*awstypes.ParameterNameValue) error {
 	input := elasticache.ResetCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(name),
-		ParameterNameValues:     parameters,
+		ParameterNameValues:     tfslices.Values(parameters),
 	}
 	return retry.RetryContext(ctx, 30*time.Second, func() *retry.RetryError {
 		_, err := conn.ResetCacheParameterGroup(ctx, &input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidCacheParameterGroupStateFault, " has pending changes") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheParameterGroupStateFault](err, " has pending changes") {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
@@ -376,7 +376,7 @@ func resourceResetParameterGroup(ctx context.Context, conn *elasticache.Client, 
 func resourceModifyParameterGroup(ctx context.Context, conn *elasticache.Client, name string, parameters []*awstypes.ParameterNameValue) error {
 	input := elasticache.ModifyCacheParameterGroupInput{
 		CacheParameterGroupName: aws.String(name),
-		ParameterNameValues:     parameters,
+		ParameterNameValues:     tfslices.Values(parameters),
 	}
 	_, err := conn.ModifyCacheParameterGroup(ctx, &input)
 	return err
@@ -387,45 +387,43 @@ func findCacheParameterGroupByName(ctx context.Context, conn *elasticache.Client
 		CacheParameterGroupName: aws.String(name),
 	}
 
-	return findCacheParameterGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheParameterGroup]())
+	return findCacheParameterGroup(ctx, conn, input, tfslices.PredicateTrue[awstypes.CacheParameterGroup]())
 }
 
-func findCacheParameterGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[*awstypes.CacheParameterGroup]) (*awstypes.CacheParameterGroup, error) {
+func findCacheParameterGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[awstypes.CacheParameterGroup]) (*awstypes.CacheParameterGroup, error) {
 	output, err := findCacheParameterGroups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCacheParameterGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[*awstypes.CacheParameterGroup]) ([]*awstypes.CacheParameterGroup, error) {
-	var output []*awstypes.CacheParameterGroup
+func findCacheParameterGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheParameterGroupsInput, filter tfslices.Predicate[awstypes.CacheParameterGroup]) ([]awstypes.CacheParameterGroup, error) {
+	var output []awstypes.CacheParameterGroup
 
-	err := conn.DescribeCacheParameterGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := elasticache.NewDescribeCacheParameterGroupsPaginator(conn, input)
 
-		for _, v := range page.CacheParameterGroups {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.CacheParameterGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeCacheParameterGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.CacheParameterGroups {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
@@ -438,7 +436,7 @@ func expandParameter(tfMap map[string]interface{}) *awstypes.ParameterNameValue 
 	}
 }
 
-func flattenParameters(apiObjects []*awstypes.Parameter) []interface{} {
+func flattenParameters(apiObjects []awstypes.Parameter) []interface{} {
 	tfList := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
