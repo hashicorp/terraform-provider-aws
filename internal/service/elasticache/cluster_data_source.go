@@ -9,7 +9,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -174,7 +174,7 @@ func dataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_id").(string)
@@ -184,11 +184,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache Cluster", err))
 	}
 
-	d.SetId(aws.StringValue(cluster.CacheClusterId))
+	d.SetId(aws.ToString(cluster.CacheClusterId))
 	d.Set(names.AttrARN, cluster.ARN)
 	d.Set(names.AttrAvailabilityZone, cluster.PreferredAvailabilityZone)
 	if cluster.ConfigurationEndpoint != nil {
-		clusterAddress, port := aws.StringValue(cluster.ConfigurationEndpoint.Address), aws.Int64Value(cluster.ConfigurationEndpoint.Port)
+		clusterAddress, port := aws.ToString(cluster.ConfigurationEndpoint.Address), aws.ToInt64(cluster.ConfigurationEndpoint.Port)
 		d.Set("cluster_address", clusterAddress)
 		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", clusterAddress, port))
 		d.Set(names.AttrPort, port)
@@ -202,7 +202,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("network_type", cluster.NetworkType)
 	d.Set("node_type", cluster.CacheNodeType)
 	if cluster.NotificationConfiguration != nil {
-		if aws.StringValue(cluster.NotificationConfiguration.TopicStatus) == "active" {
+		if aws.ToString(cluster.NotificationConfiguration.TopicStatus) == "active" {
 			d.Set("notification_topic_arn", cluster.NotificationConfiguration.TopicArn)
 		}
 	}
@@ -221,7 +221,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting cache_nodes: %s", err)
 	}
 
-	tags, err := listTags(ctx, conn, aws.StringValue(cluster.ARN))
+	tags, err := listTags(ctx, conn, aws.ToString(cluster.ARN))
 
 	if err != nil && !errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)

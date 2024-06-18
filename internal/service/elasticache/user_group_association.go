@@ -8,9 +8,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -53,19 +54,19 @@ func resourceUserGroupAssociation() *schema.Resource {
 
 func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	userGroupID := d.Get("user_group_id").(string)
 	userID := d.Get("user_id").(string)
 	id := errs.Must(flex.FlattenResourceId([]string{userGroupID, userID}, userGroupAssociationResourceIDPartCount, true))
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:  aws.String(userGroupID),
-		UserIdsToAdd: aws.StringSlice([]string{userID}),
+		UserIdsToAdd: []string{userID},
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
-		return conn.ModifyUserGroupWithContext(ctx, input)
-	}, elasticache.ErrCodeInvalidUserGroupStateFault)
+		return conn.ModifyUserGroup(ctx, input)
+	}, awstypes.ErrCodeInvalidUserGroupStateFault)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%s): %s", id, err)
@@ -82,7 +83,7 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	parts, err := flex.ExpandResourceId(d.Id(), userGroupAssociationResourceIDPartCount, true)
 	if err != nil {
@@ -110,7 +111,7 @@ func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	parts, err := flex.ExpandResourceId(d.Id(), userGroupAssociationResourceIDPartCount, true)
 	if err != nil {
@@ -120,13 +121,13 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 	log.Printf("[INFO] Deleting ElastiCache User Group Association: %s", d.Id())
 	userGroupID, userID := parts[0], parts[1]
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
-		return conn.ModifyUserGroupWithContext(ctx, &elasticache.ModifyUserGroupInput{
+		return conn.ModifyUserGroup(ctx, &elasticache.ModifyUserGroupInput{
 			UserGroupId:     aws.String(userGroupID),
-			UserIdsToRemove: aws.StringSlice([]string{userID}),
+			UserIdsToRemove: []string{userID},
 		})
-	}, elasticache.ErrCodeInvalidUserGroupStateFault)
+	}, awstypes.ErrCodeInvalidUserGroupStateFault)
 
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "not a member") {
+	if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, "not a member") {
 		return diags
 	}
 
@@ -141,7 +142,7 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func findUserGroupAssociationByTwoPartKey(ctx context.Context, conn *elasticache.ElastiCache, userGroupID, userID string) error {
+func findUserGroupAssociationByTwoPartKey(ctx context.Context, conn *elasticache.Client, userGroupID, userID string) error {
 	userGroup, err := findUserGroupByID(ctx, conn, userGroupID)
 
 	if err != nil {
@@ -149,7 +150,7 @@ func findUserGroupAssociationByTwoPartKey(ctx context.Context, conn *elasticache
 	}
 
 	for _, v := range userGroup.UserIds {
-		if aws.StringValue(v) == userID {
+		if aws.ToString(v) == userID {
 			return nil
 		}
 	}

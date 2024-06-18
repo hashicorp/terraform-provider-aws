@@ -8,8 +8,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -124,7 +125,7 @@ func dataSourceReplicationGroup() *schema.Resource {
 
 func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	groupID := d.Get("replication_group_id").(string)
 
@@ -134,28 +135,28 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache Replication Group", err))
 	}
 
-	d.SetId(aws.StringValue(rg.ReplicationGroupId))
+	d.SetId(aws.ToString(rg.ReplicationGroupId))
 	d.Set(names.AttrDescription, rg.Description)
 	d.Set(names.AttrARN, rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
 	if rg.AutomaticFailover != nil {
-		switch aws.StringValue(rg.AutomaticFailover) {
-		case elasticache.AutomaticFailoverStatusDisabled, elasticache.AutomaticFailoverStatusDisabling:
+		switch aws.ToString(rg.AutomaticFailover) {
+		case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
 			d.Set("automatic_failover_enabled", false)
-		case elasticache.AutomaticFailoverStatusEnabled, elasticache.AutomaticFailoverStatusEnabling:
+		case awstypes.AutomaticFailoverStatusEnabled, awstypes.AutomaticFailoverStatusEnabling:
 			d.Set("automatic_failover_enabled", true)
 		}
 	}
 
 	if rg.MultiAZ != nil {
-		switch strings.ToLower(aws.StringValue(rg.MultiAZ)) {
-		case elasticache.MultiAZStatusEnabled:
+		switch strings.ToLower(aws.ToString(rg.MultiAZ)) {
+		case awstypes.MultiAZStatusEnabled:
 			d.Set("multi_az_enabled", true)
-		case elasticache.MultiAZStatusDisabled:
+		case awstypes.MultiAZStatusDisabled:
 			d.Set("multi_az_enabled", false)
 		default:
-			log.Printf("Unknown MultiAZ state %q", aws.StringValue(rg.MultiAZ))
+			log.Printf("Unknown MultiAZ state %q", aws.ToString(rg.MultiAZ))
 		}
 	}
 
@@ -165,7 +166,7 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		if rg.NodeGroups == nil {
 			d.SetId("")
-			return sdkdiag.AppendErrorf(diags, "ElastiCache Replication Group (%s) doesn't have node groups", aws.StringValue(rg.ReplicationGroupId))
+			return sdkdiag.AppendErrorf(diags, "ElastiCache Replication Group (%s) doesn't have node groups", aws.ToString(rg.ReplicationGroupId))
 		}
 		d.Set(names.AttrPort, rg.NodeGroups[0].PrimaryEndpoint.Port)
 		d.Set("primary_endpoint_address", rg.NodeGroups[0].PrimaryEndpoint.Address)

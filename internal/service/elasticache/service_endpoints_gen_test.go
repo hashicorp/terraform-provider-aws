@@ -15,9 +15,9 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	elasticache_sdkv1 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -318,7 +318,7 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) api
 func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.ElastiCacheConn(ctx)
+	client := meta.ElastiCacheClient(ctx)
 
 	req, _ := client.DescribeCacheClustersRequest(&elasticache_sdkv1.DescribeCacheClustersInput{})
 

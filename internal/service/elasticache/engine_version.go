@@ -11,7 +11,7 @@ import (
 	"regexp"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -167,7 +167,7 @@ func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
 }
 
 func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
-	engineVersion, err := gversion.NewVersion(aws.StringValue(version))
+	engineVersion, err := gversion.NewVersion(aws.ToString(version))
 	if err != nil {
 		return fmt.Errorf("reading engine version: %w", err)
 	}

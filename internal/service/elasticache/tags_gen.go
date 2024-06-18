@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/aws/aws-sdk-go/service/elasticache/elasticacheiface"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,11 +28,11 @@ func listTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, identif
 	}
 
 	output, err := tfresource.RetryGWhenMessageContains(ctx, 15*time.Minute,
-		func() (*elasticache.TagListMessage, error) {
-			return conn.ListTagsForResourceWithContext(ctx, input)
+		func() (*awstypes.TagListMessage, error) {
+			return conn.ListTagsForResource(ctx, input)
 		},
 		[]string{
-			elasticache.ErrCodeInvalidReplicationGroupStateFault,
+			awstypes.ErrCodeInvalidReplicationGroupStateFault,
 		},
 		[]string{
 			"not in available state",
@@ -48,7 +49,7 @@ func listTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, identif
 // ListTags lists elasticache service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).ElastiCacheConn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ElastiCacheClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -64,11 +65,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns elasticache service tags.
-func Tags(tags tftags.KeyValueTags) []*elasticache.Tag {
-	result := make([]*elasticache.Tag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []*awstypes.Tag {
+	result := make([]*awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &elasticache.Tag{
+		tag := &awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -80,11 +81,11 @@ func Tags(tags tftags.KeyValueTags) []*elasticache.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from elasticache service tags.
-func KeyValueTags(ctx context.Context, tags []*elasticache.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -92,7 +93,7 @@ func KeyValueTags(ctx context.Context, tags []*elasticache.Tag) tftags.KeyValueT
 
 // getTagsIn returns elasticache service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*elasticache.Tag {
+func getTagsIn(ctx context.Context) []*awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -103,14 +104,14 @@ func getTagsIn(ctx context.Context) []*elasticache.Tag {
 }
 
 // setTagsOut sets elasticache service tags in Context.
-func setTagsOut(ctx context.Context, tags []*elasticache.Tag) {
+func setTagsOut(ctx context.Context, tags []*awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
 // createTags creates elasticache service tags for new resources.
-func createTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, identifier string, tags []*elasticache.Tag) error {
+func createTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, identifier string, tags []*awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -137,10 +138,10 @@ func updateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 
 		_, err := tfresource.RetryWhenMessageContains(ctx, 15*time.Minute,
 			func() (any, error) {
-				return conn.RemoveTagsFromResourceWithContext(ctx, input)
+				return conn.RemoveTagsFromResource(ctx, input)
 			},
 			[]string{
-				elasticache.ErrCodeInvalidReplicationGroupStateFault,
+				awstypes.ErrCodeInvalidReplicationGroupStateFault,
 			},
 			[]string{
 				"not in available state",
@@ -162,10 +163,10 @@ func updateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 
 		_, err := tfresource.RetryWhenMessageContains(ctx, 15*time.Minute,
 			func() (any, error) {
-				return conn.AddTagsToResourceWithContext(ctx, input)
+				return conn.AddTagsToResource(ctx, input)
 			},
 			[]string{
-				elasticache.ErrCodeInvalidReplicationGroupStateFault,
+				awstypes.ErrCodeInvalidReplicationGroupStateFault,
 			},
 			[]string{
 				"not in available state",
@@ -183,5 +184,5 @@ func updateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 // UpdateTags updates elasticache service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).ElastiCacheConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ElastiCacheClient(ctx), identifier, oldTags, newTags)
 }

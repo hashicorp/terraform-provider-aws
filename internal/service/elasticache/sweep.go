@@ -10,10 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
@@ -84,7 +86,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ElastiCacheConn(ctx)
+	conn := client.ElastiCacheClient(ctx)
 
 	var sweeperErrs *multierror.Error
 
@@ -98,7 +100,7 @@ func sweepClusters(region string) error {
 		}
 
 		for _, cluster := range page.CacheClusters {
-			id := aws.StringValue(cluster.CacheClusterId)
+			id := aws.ToString(cluster.CacheClusterId)
 
 			log.Printf("[INFO] Deleting ElastiCache Cluster: %s", id)
 			err := DeleteCacheCluster(ctx, conn, id, "")
@@ -134,7 +136,7 @@ func sweepGlobalReplicationGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ElastiCacheConn(ctx)
+	conn := client.ElastiCacheClient(ctx)
 
 	var grgGroup multierror.Group
 
@@ -150,7 +152,7 @@ func sweepGlobalReplicationGroups(region string) error {
 			globalReplicationGroup := globalReplicationGroup
 
 			grgGroup.Go(func() error {
-				id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
+				id := aws.ToString(globalReplicationGroup.GlobalReplicationGroupId)
 
 				disassociationErrors := DisassociateMembers(ctx, conn, globalReplicationGroup)
 				if disassociationErrors != nil {
@@ -187,7 +189,7 @@ func sweepParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ElastiCacheConn(ctx)
+	conn := client.ElastiCacheClient(ctx)
 
 	err = conn.DescribeCacheParameterGroupsPagesWithContext(ctx, &elasticache.DescribeCacheParameterGroupsInput{}, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
 		if len(page.CacheParameterGroups) == 0 {
@@ -196,7 +198,7 @@ func sweepParameterGroups(region string) error {
 		}
 
 		for _, parameterGroup := range page.CacheParameterGroups {
-			name := aws.StringValue(parameterGroup.CacheParameterGroupName)
+			name := aws.ToString(parameterGroup.CacheParameterGroupName)
 
 			if strings.HasPrefix(name, "default.") {
 				log.Printf("[INFO] Skipping ElastiCache Cache Parameter Group: %s", name)
@@ -204,7 +206,7 @@ func sweepParameterGroups(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting ElastiCache Parameter Group: %s", name)
-			_, err := conn.DeleteCacheParameterGroupWithContext(ctx, &elasticache.DeleteCacheParameterGroupInput{
+			_, err := conn.DeleteCacheParameterGroup(ctx, &elasticache.DeleteCacheParameterGroupInput{
 				CacheParameterGroupName: aws.String(name),
 			})
 			if err != nil {
@@ -231,7 +233,7 @@ func sweepReplicationGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ElastiCacheConn(ctx)
+	conn := client.ElastiCacheClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -249,7 +251,7 @@ func sweepReplicationGroups(region string) error {
 				d.Set("global_replication_group_id", replicationGroup.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
 			}
 
-			d.SetId(aws.StringValue(replicationGroup.ReplicationGroupId))
+			d.SetId(aws.ToString(replicationGroup.ReplicationGroupId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -281,7 +283,7 @@ func sweepSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ElastiCacheConn(ctx)
+	conn := client.ElastiCacheClient(ctx)
 	input := &elasticache.DescribeCacheSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -291,7 +293,7 @@ func sweepSubnetGroups(region string) error {
 		}
 
 		for _, v := range page.CacheSubnetGroups {
-			name := aws.StringValue(v.CacheSubnetGroupName)
+			name := aws.ToString(v.CacheSubnetGroupName)
 
 			if name == "default" {
 				log.Printf("[INFO] Skipping ElastiCache Subnet Group: %s", name)
@@ -332,7 +334,7 @@ func sweepUsers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ElastiCacheConn(ctx)
+	conn := client.ElastiCacheClient(ctx)
 	input := &elasticache.DescribeUsersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -342,7 +344,7 @@ func sweepUsers(region string) error {
 		}
 
 		for _, v := range page.Users {
-			id := aws.StringValue(v.UserId)
+			id := aws.ToString(v.UserId)
 
 			if id == "default" {
 				log.Printf("[INFO] Skipping ElastiCache User: %s", id)
@@ -383,7 +385,7 @@ func sweepUserGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ElastiCacheConn(ctx)
+	conn := client.ElastiCacheClient(ctx)
 	input := &elasticache.DescribeUserGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -395,7 +397,7 @@ func sweepUserGroups(region string) error {
 		for _, v := range page.UserGroups {
 			r := resourceUserGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.UserGroupId))
+			d.SetId(aws.ToString(v.UserGroupId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -421,20 +423,20 @@ func sweepUserGroups(region string) error {
 	return nil
 }
 
-func DisassociateMembers(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroup *elasticache.GlobalReplicationGroup) error {
+func DisassociateMembers(ctx context.Context, conn *elasticache.Client, globalReplicationGroup *awstypes.GlobalReplicationGroup) error {
 	var membersGroup multierror.Group
 
 	for _, member := range globalReplicationGroup.Members {
 		member := member
 
-		if aws.StringValue(member.Role) == globalReplicationGroupMemberRolePrimary {
+		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
 			continue
 		}
 
-		id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
+		id := aws.ToString(globalReplicationGroup.GlobalReplicationGroupId)
 
 		membersGroup.Go(func() error {
-			if err := disassociateReplicationGroup(ctx, conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
+			if err := disassociateReplicationGroup(ctx, conn, id, aws.ToString(member.ReplicationGroupId), aws.ToString(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
 				log.Printf("[ERROR] %s", err)
 				return err
 			}

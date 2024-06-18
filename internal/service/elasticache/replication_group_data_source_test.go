@@ -8,7 +8,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -142,7 +143,7 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),

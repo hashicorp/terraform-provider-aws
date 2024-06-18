@@ -267,7 +267,7 @@ func (r *serverlessCacheResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	input.Tags = getTagsInV2(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateServerlessCache(ctx, input)
 
