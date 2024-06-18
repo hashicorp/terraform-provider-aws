@@ -160,8 +160,8 @@ github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.11 h1:b3mS2
 github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.11/go.mod h1:Lk4opynUsQCdp+STPri3BraY1PxOk3OjgXjaJXRq0pU=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.38.7 h1:xgmVkpQKeT0vdFbl00fuI8H/cc+/rQ+yTIAZkCJvbiA=
 github.com/aws/aws-sdk-go-v2/service/costexplorer v1.38.7/go.mod h1:Wv65fTthM0PNJhgjDLBLM+YOmyZ9nyc36fBYjUWV1Dk=
-github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.10 h1:Dureguz7Rt4oCM6wjJ+8wnHVxzaMxE1yXoyx0dl6L40=
-github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.10/go.mod h1:xHvn/2S7UoUmuCmhOjFhxUJvVIYcFveju/wDRTJLUGo=
+github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.11 h1:h6owfjJgzSJdQPwDtqL7HqiMNnkedQxZ8CC6U+T1bg8=
+github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.11/go.mod h1:h1cMvB45dYwwfu6zif87XzvcB5SZvTLF6kBBKCVcdAE=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.10 h1:ihZtKZKPLNUFBzvRoZ0kXNdO3scdNwmLrZlNDCkYIj0=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.10/go.mod h1:/9TqI2Eb2CsFDP+NT6364fdmhy6/ENIRuOnyVInI8tI=
 github.com/aws/aws-sdk-go-v2/service/datasync v1.38.4 h1:XPbgYirjL7lgxww/Giiz5+sxvR+PsrUi7hEd0G2O7Tk=
