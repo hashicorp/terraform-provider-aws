@@ -10,6 +10,8 @@ description: |-
 
 Provides an Elastic Disaster Recovery replication configuration template resource.
 
+~> **NOTE:** This resource is provided on a best-effort basis and may not function as intended. Due to challenges with DRS permissions, it has not been fully tested. We are collaborating with AWS to enhance its functionality and [welcome your feedback](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose).
+
 ## Example Usage
 
 ### Basic configuration
@@ -58,7 +60,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `auto_replicate_new_disks` - (Optional) Whether to allow the AWS replication agent to automatically replicate newly added disks.
-* `tags` - (Optional) A set of tags to be associated with the Replication Configuration Template resource.
+* `tags` - (Optional) Set of tags to be associated with the Replication Configuration Template resource.
 
 ### `pit_policy`
 
@@ -74,6 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Replication configuration template ARN.
 * `id` - Replication configuration template ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
