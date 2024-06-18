@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,9 +38,10 @@ type DefaultConfig struct {
 
 // IgnoreConfig contains various options for removing resource tags.
 type IgnoreConfig struct {
-	Keys        KeyValueTags
-	KeyPrefixes KeyValueTags
-	KeySuffixes KeyValueTags
+	Keys             KeyValueTags
+	KeyPrefixes      KeyValueTags
+	KeySuffixes      KeyValueTags
+	KeyRegexPatterns KeyValueTags
 }
 
 // KeyValueTags is a standard implementation for AWS key-value resource tags.
@@ -108,8 +110,9 @@ func (tags KeyValueTags) IgnoreConfig(config *IgnoreConfig) KeyValueTags {
 
 	prefixes := tags.IgnorePrefixes(config.KeyPrefixes)
 	suffixes := prefixes.IgnoreSuffixes(config.KeySuffixes)
+	regexes := suffixes.IgnoreRegexPatterns(config.KeyRegexPatterns)
 
-	result := suffixes.Ignore(config.Keys)
+	result := regexes.Ignore(config.Keys)
 
 	return result
 }
@@ -161,7 +164,7 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 	return result
 }
 
-// IgnoreSuffixes returns non-matching tag key prefixes.
+// IgnoreSuffixes returns non-matching tag key suffixes.
 func (tags KeyValueTags) IgnoreSuffixes(ignoreTagSuffixes KeyValueTags) KeyValueTags {
 	result := make(KeyValueTags)
 
@@ -170,6 +173,35 @@ func (tags KeyValueTags) IgnoreSuffixes(ignoreTagSuffixes KeyValueTags) KeyValue
 
 		for ignoreTagSuffix := range ignoreTagSuffixes {
 			if strings.HasSuffix(k, ignoreTagSuffix) {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
+// IgnoreRegexPatterns returns non-matching tag key regex patterns.
+func (tags KeyValueTags) IgnoreRegexPatterns(IgnoreRegexPatterns KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		var ignore bool
+
+		for ignoreTagRegex := range IgnoreRegexPatterns {
+			re, err := regexp.Compile(ignoreTagRegex)
+			if err != nil {
+				fmt.Println("Invalid Regex expression provided")
+				break
+			}
+			if re.MatchString(k) {
 				ignore = true
 				break
 			}
