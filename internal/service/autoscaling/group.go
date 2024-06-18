@@ -923,14 +923,16 @@ func resourceGroup() *schema.Resource {
 							},
 						},
 						"max_group_prepared_capacity": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  defaultWarmPoolMaxGroupPreparedCapacity,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      defaultWarmPoolMaxGroupPreparedCapacity,
+							ValidateFunc: validation.IntAtLeast(defaultWarmPoolMaxGroupPreparedCapacity),
 						},
 						"min_size": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"pool_state": {
 							Type:             schema.TypeString,
@@ -3264,7 +3266,7 @@ func expandPutWarmPoolInput(name string, tfMap map[string]interface{}) *autoscal
 		apiObject.InstanceReusePolicy = expandInstanceReusePolicy(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["max_group_prepared_capacity"].(int); ok && v != 0 {
+	if v, ok := tfMap["max_group_prepared_capacity"].(int); ok {
 		apiObject.MaxGroupPreparedCapacity = aws.Int32(int32(v))
 	}
 
