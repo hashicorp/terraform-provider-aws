@@ -96,8 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.12.3 h1:9s0a3mkZFI6KwZZ3zoK
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.12.3/go.mod h1:dTLvT6SwaZNvFPBEWFTA7XqyixZYXZFNyTIo5yFpb2c=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.23.7 h1:pD6TgZw676xiyrheqw84d3hAmiwKKF5+N9oBFHJxLq8=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.23.7/go.mod h1:MGaKZwNAAjgc1JkM89T/MzB3gePUeC5GTADv89qpwwo=
-github.com/aws/aws-sdk-go-v2/service/chatbot v1.2.3 h1:MU/H6Bopqtfu7SOrVy1fZ/eZzX1gKKHqXIZAerKxomU=
-github.com/aws/aws-sdk-go-v2/service/chatbot v1.2.3/go.mod h1:Nup6J+0ugC1ddxf04M4e+Tl8KStEJ2m8DIuwIaFwqBc=
+github.com/aws/aws-sdk-go-v2/service/chatbot v1.2.4 h1:KHEE0/dc0YyS8yL6n5Fct67IY9NO8FGvyIbS/iySLjk=
+github.com/aws/aws-sdk-go-v2/service/chatbot v1.2.4/go.mod h1:i9LlctO63efc9FSCHKpLrmsDl9N5ub6Q1lVMMZrYWTU=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.11 h1:QWZ/DP2bVhPMKHfeEI6sZ7QOxCXpW36HavOqKCo2wTg=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.11/go.mod h1:pQZUK8Lm31nCPFLsDnZUDvmRxw/GGLqF7GtZvEZPB3A=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.15.6 h1:u4fcjpNEk1X0K2x7BvmssdWgavB65KaeU+t3Qi3juUc=
