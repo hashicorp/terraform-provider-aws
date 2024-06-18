@@ -527,7 +527,7 @@ func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		req.Name = aws.String(name)
 	}
 
-	log.Printf("[DEBUG] Elastic Transcoder Preset create opts: %s", req)
+	log.Printf("[DEBUG] Elastic Transcoder Preset create opts: %+v", req)
 	resp, err := conn.CreatePreset(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Transcoder Preset: %s", err)
@@ -805,10 +805,8 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting video: %s", d.Id(), err)
 		}
 
-		if preset.Video.CodecOptions != nil {
-			if err := d.Set("video_codec_options", preset.Video.CodecOptions); err != nil {
-				return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting video_codec_options: %s", d.Id(), err)
-			}
+		if err := d.Set("video_codec_options", preset.Video.CodecOptions); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Preset (%s): setting video_codec_options: %s", d.Id(), err)
 		}
 
 		if preset.Video.Watermarks != nil {

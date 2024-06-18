@@ -265,7 +265,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "you must specify only one of output_bucket or content_config.bucket")
 	}
 
-	log.Printf("[DEBUG] Elastic Transcoder Pipeline create opts: %s", req)
+	log.Printf("[DEBUG] Elastic Transcoder Pipeline create opts: %+v", req)
 	resp, err := conn.CreatePipeline(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Transcoder Pipeline: %s", err)
