@@ -5,12 +5,11 @@ package elasticache
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func flattenSecurityGroupIDs(securityGroups []*awstypes.SecurityGroupMembership) []string {
+func flattenSecurityGroupIDs(securityGroups []awstypes.SecurityGroupMembership) []string {
 	result := make([]string, 0, len(securityGroups))
 	for _, sg := range securityGroups {
 		if sg.SecurityGroupId != nil {
@@ -20,7 +19,7 @@ func flattenSecurityGroupIDs(securityGroups []*awstypes.SecurityGroupMembership)
 	return result
 }
 
-func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*awstypes.LogDeliveryConfiguration) []map[string]interface{} {
+func flattenLogDeliveryConfigurations(logDeliveryConfiguration []awstypes.LogDeliveryConfiguration) []map[string]interface{} {
 	if len(logDeliveryConfiguration) == 0 {
 		return nil
 	}
@@ -29,10 +28,10 @@ func flattenLogDeliveryConfigurations(logDeliveryConfiguration []*awstypes.LogDe
 	for _, v := range logDeliveryConfiguration {
 		logDeliveryConfig := make(map[string]interface{})
 
-		switch string(v.DestinationType) {
+		switch v.DestinationType {
 		case awstypes.DestinationTypeKinesisFirehose:
 			logDeliveryConfig[names.AttrDestination] = aws.ToString(v.DestinationDetails.KinesisFirehoseDetails.DeliveryStream)
-		case awstypes.DestinationTypeCloudwatchLogs:
+		case awstypes.DestinationTypeCloudWatchLogs:
 			logDeliveryConfig[names.AttrDestination] = aws.ToString(v.DestinationDetails.CloudWatchLogsDetails.LogGroup)
 		}
 

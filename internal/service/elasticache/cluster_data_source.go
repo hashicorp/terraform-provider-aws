@@ -176,6 +176,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	partition := meta.(*conns.AWSClient).Partition
 
 	clusterID := d.Get("cluster_id").(string)
 	cluster, err := findCacheClusterWithNodeInfoByID(ctx, conn, clusterID)
@@ -188,7 +189,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, cluster.ARN)
 	d.Set(names.AttrAvailabilityZone, cluster.PreferredAvailabilityZone)
 	if cluster.ConfigurationEndpoint != nil {
-		clusterAddress, port := aws.ToString(cluster.ConfigurationEndpoint.Address), aws.ToInt64(cluster.ConfigurationEndpoint.Port)
+		clusterAddress, port := aws.ToString(cluster.ConfigurationEndpoint.Address), aws.ToInt32(cluster.ConfigurationEndpoint.Port)
 		d.Set("cluster_address", clusterAddress)
 		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", clusterAddress, port))
 		d.Set(names.AttrPort, port)
@@ -223,7 +224,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	tags, err := listTags(ctx, conn, aws.ToString(cluster.ARN))
 
-	if err != nil && !errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if err != nil && !errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)
 	}
 

@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -77,10 +76,10 @@ func resourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"az_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.AZMode](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AZMode](),
 			},
 			"cache_nodes": {
 				Type:     schema.TypeList,
@@ -158,10 +157,10 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 			},
 			"ip_discovery": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.IpDiscovery](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
 			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
@@ -174,19 +173,19 @@ func resourceCluster() *schema.Resource {
 							Required: true,
 						},
 						"destination_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.DestinationType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
 						},
 						"log_format": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.LogFormat](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
 						},
 						"log_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.LogType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
 						},
 					},
 				},
@@ -203,11 +202,11 @@ func resourceCluster() *schema.Resource {
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.NetworkType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -224,11 +223,11 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"outpost_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"preferred_outpost_arn"},
-				ValidateFunc: enum.Validate[awstypes.OutpostMode](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				RequiredWith:     []string{"preferred_outpost_arn"},
+				ValidateDiagFunc: enum.Validate[awstypes.OutpostMode](),
 			},
 			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
@@ -350,6 +349,7 @@ func resourceCluster() *schema.Resource {
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	clusterID := d.Get("cluster_id").(string)
 	input := &elasticache.CreateCacheClusterInput{
@@ -360,7 +360,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		input.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		input.SecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set))
+		input.SecurityGroupIds = flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("node_type"); ok {
@@ -368,7 +368,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("num_cache_nodes"); ok {
-		input.NumCacheNodes = aws.Int64(int64(v.(int)))
+		input.NumCacheNodes = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("outpost_mode"); ok {
@@ -395,7 +395,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
-		input.Port = aws.Int64(int64(v.(int)))
+		input.Port = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("subnet_group_name"); ok {
@@ -408,7 +408,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
-		input.SnapshotRetentionLimit = aws.Int64(int64(v.(int)))
+		input.SnapshotRetentionLimit = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("snapshot_window"); ok {
@@ -416,11 +416,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("log_delivery_configuration"); ok {
-		input.LogDeliveryConfigurations = []*awstypes.LogDeliveryConfigurationRequest{}
+		input.LogDeliveryConfigurations = []awstypes.LogDeliveryConfigurationRequest{}
 		v := v.(*schema.Set).List()
 		for _, v := range v {
 			logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(v.(map[string]interface{}))
-			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+			input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
 		}
 	}
 
@@ -434,7 +434,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	snaps := d.Get("snapshot_arns").([]interface{})
 	if len(snaps) > 0 {
-		input.SnapshotArns = flex.ExpandStringList(snaps)
+		input.SnapshotArns = flex.ExpandStringValueList(snaps)
 		log.Printf("[DEBUG] Restoring Redis cluster from S3 snapshot: %#v", snaps)
 	}
 
@@ -455,7 +455,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
-		input.PreferredAvailabilityZones = flex.ExpandStringList(v.([]interface{}))
+		input.PreferredAvailabilityZones = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -466,7 +466,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NetworkType = awstypes.NetworkType(v.(string))
 	}
 
-	id, arn, err := createCacheCluster(ctx, conn, input)
+	id, arn, err := createCacheCluster(ctx, conn, partition, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Cache Cluster (%s): %s", clusterID, err)
@@ -486,7 +486,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		err := createTags(ctx, conn, arn, tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceClusterRead(ctx, d, meta)...)
 		}
 
@@ -528,7 +528,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if c.ConfigurationEndpoint != nil {
 		d.Set(names.AttrPort, c.ConfigurationEndpoint.Port)
-		d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", aws.ToString(c.ConfigurationEndpoint.Address), aws.ToInt64(c.ConfigurationEndpoint.Port))))
+		d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", aws.ToString(c.ConfigurationEndpoint.Address), aws.ToInt32(c.ConfigurationEndpoint.Port))))
 		d.Set("cluster_address", c.ConfigurationEndpoint.Address)
 	} else if len(c.CacheNodes) > 0 {
 		d.Set(names.AttrPort, c.CacheNodes[0].Endpoint.Port)
@@ -575,7 +575,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		requestUpdate := false
 		if d.HasChange(names.AttrSecurityGroupIDs) {
 			if attr := d.Get(names.AttrSecurityGroupIDs).(*schema.Set); attr.Len() > 0 {
-				input.SecurityGroupIds = flex.ExpandStringSet(attr)
+				input.SecurityGroupIds = flex.ExpandStringValueSet(attr)
 				requestUpdate = true
 			}
 		}
@@ -593,22 +593,22 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("log_delivery_configuration") {
 			oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
-			input.LogDeliveryConfigurations = []*awstypes.LogDeliveryConfigurationRequest{}
+			input.LogDeliveryConfigurations = []awstypes.LogDeliveryConfigurationRequest{}
 			logTypesToSubmit := make(map[string]bool)
 
 			currentLogDeliveryConfig := newLogDeliveryConfig.(*schema.Set).List()
 			for _, current := range currentLogDeliveryConfig {
 				logDeliveryConfigurationRequest := expandLogDeliveryConfigurations(current.(map[string]interface{}))
-				logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] = true
-				input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+				logTypesToSubmit[string(logDeliveryConfigurationRequest.LogType)] = true
+				input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
 			}
 
 			previousLogDeliveryConfig := oldLogDeliveryConfig.(*schema.Set).List()
 			for _, previous := range previousLogDeliveryConfig {
 				logDeliveryConfigurationRequest := expandEmptyLogDeliveryConfigurations(previous.(map[string]interface{}))
 				// if something was removed, send an empty request
-				if !logTypesToSubmit[*logDeliveryConfigurationRequest.LogType] {
-					input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, &logDeliveryConfigurationRequest)
+				if !logTypesToSubmit[string(logDeliveryConfigurationRequest.LogType)] {
+					input.LogDeliveryConfigurations = append(input.LogDeliveryConfigurations, logDeliveryConfigurationRequest)
 				}
 			}
 
@@ -654,7 +654,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("snapshot_retention_limit") {
-			input.SnapshotRetentionLimit = aws.Int64(int64(d.Get("snapshot_retention_limit").(int)))
+			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
 			requestUpdate = true
 		}
 
@@ -685,11 +685,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					if len(v.([]interface{})) != n {
 						return sdkdiag.AppendErrorf(diags, "length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
 					}
-					input.NewAvailabilityZones = flex.ExpandStringList(v.([]interface{})[o:])
+					input.NewAvailabilityZones = flex.ExpandStringValueList(v.([]interface{})[o:])
 				}
 			}
 
-			input.NumCacheNodes = aws.Int64(int64(d.Get("num_cache_nodes").(int)))
+			input.NumCacheNodes = aws.Int32(int32(d.Get("num_cache_nodes").(int)))
 			requestUpdate = true
 		}
 
@@ -720,7 +720,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var finalSnapshotID = d.Get(names.AttrFinalSnapshotIdentifier).(string)
 	err := DeleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeCacheClusterNotFoundFault) {
+		if errs.IsA[*awstypes.CacheClusterNotFoundFault](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Cache Cluster (%s): %s", d.Id(), err)
@@ -736,11 +736,11 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func createCacheCluster(ctx context.Context, conn *elasticache.Client, input *elasticache.CreateCacheClusterInput) (string, string, error) {
+func createCacheCluster(ctx context.Context, conn *elasticache.Client, partition string, input *elasticache.CreateCacheClusterInput) (string, string, error) {
 	output, err := conn.CreateCacheCluster(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
 		output, err = conn.CreateCacheCluster(ctx, input)
@@ -771,14 +771,14 @@ func DeleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClus
 	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteCacheCluster(ctx, input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidCacheClusterStateFault, "serving as primary") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "serving as primary") {
 				return retry.NonRetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidCacheClusterStateFault, "only member of a replication group") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidCacheClusterStateFault](err, "only member of a replication group") {
 				return retry.NonRetryableError(err)
 			}
 			// The cluster may be just snapshotting, so we retry until it's ready for deletion
-			if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeInvalidCacheClusterStateFault) {
+			if errs.IsA[*awstypes.InvalidCacheClusterStateFault](err) {
 				return retry.RetryableError(err)
 			}
 			return retry.NonRetryableError(err)
@@ -815,35 +815,29 @@ func findCacheCluster(ctx context.Context, conn *elasticache.Client, input *elas
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*awstypes.CacheCluster]) ([]*awstypes.CacheCluster, error) {
-	var output []*awstypes.CacheCluster
+func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*awstypes.CacheCluster]) ([]awstypes.CacheCluster, error) {
+	var output []awstypes.CacheCluster
 
-	err := conn.DescribeCacheClustersPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := elasticache.NewDescribeCacheClustersPaginator(conn, input)
 
-		for _, v := range page.CacheClusters {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.CacheClusterNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeCacheClusterNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.CacheClusters...)
 	}
 
 	return output, nil
@@ -928,18 +922,18 @@ func waitCacheClusterDeleted(ctx context.Context, conn *elasticache.Client, cach
 	return nil, err
 }
 
-func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []*string {
-	nodesIdsToRemove := []*string{}
+func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []string {
+	nodesIdsToRemove := []string{}
 	for i := oldNumberOfNodes; i > oldNumberOfNodes-cacheNodesToRemove && i > 0; i-- {
 		s := fmt.Sprintf("%04d", i)
-		nodesIdsToRemove = append(nodesIdsToRemove, &s)
+		nodesIdsToRemove = append(nodesIdsToRemove, s)
 	}
 
 	return nodesIdsToRemove
 }
 
 func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
-	sortedCacheNodes := make([]*awstypes.CacheNode, len(c.CacheNodes))
+	sortedCacheNodes := make([]awstypes.CacheNode, len(c.CacheNodes))
 	copy(sortedCacheNodes, c.CacheNodes)
 	sort.Sort(byCacheNodeId(sortedCacheNodes))
 
@@ -952,7 +946,7 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
 			names.AttrID:               aws.ToString(node.CacheNodeId),
 			names.AttrAddress:          aws.ToString(node.Endpoint.Address),
-			names.AttrPort:             aws.ToInt64(node.Endpoint.Port),
+			names.AttrPort:             aws.ToInt32(node.Endpoint.Port),
 			names.AttrAvailabilityZone: aws.ToString(node.CustomerAvailabilityZone),
 			"outpost_arn":              aws.ToString(node.CustomerOutpostArn),
 		})
@@ -961,7 +955,7 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 	return d.Set("cache_nodes", cacheNodeData)
 }
 
-type byCacheNodeId []*awstypes.CacheNode
+type byCacheNodeId []awstypes.CacheNode
 
 func (b byCacheNodeId) Len() int      { return len(b) }
 func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }

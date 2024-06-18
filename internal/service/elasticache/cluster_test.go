@@ -13,7 +13,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1060,7 +1059,7 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText),
+				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeCloudWatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeCloudWatchLogs, awstypes.LogFormatText),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -1102,7 +1101,7 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
-				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson),
+				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeCloudWatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -1117,7 +1116,7 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				),
 			},
 			{
-				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText),
+				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson, true, awstypes.DestinationTypeCloudWatchLogs, awstypes.LogFormatText),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &ec),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -1483,7 +1482,7 @@ func testAccCheckClusterReplicationGroupIDAttribute(cluster *awstypes.CacheClust
 
 func testAccCheckClusterNotRecreated(i, j *awstypes.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CacheClusterCreateTime).Equal(aws.TimeValue(j.CacheClusterCreateTime)) {
+		if !aws.ToTime(i.CacheClusterCreateTime).Equal(aws.ToTime(j.CacheClusterCreateTime)) {
 			return errors.New("ElastiCache Cluster was recreated")
 		}
 
@@ -1493,7 +1492,7 @@ func testAccCheckClusterNotRecreated(i, j *awstypes.CacheCluster) resource.TestC
 
 func testAccCheckClusterRecreated(i, j *awstypes.CacheCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CacheClusterCreateTime).Equal(aws.TimeValue(j.CacheClusterCreateTime)) {
+		if aws.ToTime(i.CacheClusterCreateTime).Equal(aws.ToTime(j.CacheClusterCreateTime)) {
 			return errors.New("ElastiCache Cluster was not recreated")
 		}
 
@@ -2089,7 +2088,7 @@ resource "aws_elasticache_cluster" "test" {
 `, rName, enable)
 }
 
-func testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName string, slowLogDeliveryEnabled bool, slowDeliveryDestination string, slowDeliveryFormat string, engineLogDeliveryEnabled bool, engineDeliveryDestination string, engineLogDeliveryFormat string) string {
+func testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName string, slowLogDeliveryEnabled bool, slowDeliveryDestination awstypes.DestinationType, slowDeliveryFormat awstypes.LogFormat, engineLogDeliveryEnabled bool, engineDeliveryDestination awstypes.DestinationType, engineLogDeliveryFormat awstypes.LogFormat) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "p" {
   statement {
