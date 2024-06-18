@@ -165,7 +165,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.11
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.29.13
-	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.10
+	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.11
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/shield v1.25.10
 	github.com/aws/aws-sdk-go-v2/service/signer v1.22.13
