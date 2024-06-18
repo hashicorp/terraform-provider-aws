@@ -96,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.11
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.8
-	github.com/aws/aws-sdk-go-v2/service/firehose v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.8
 	github.com/aws/aws-sdk-go-v2/service/fms v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.10
