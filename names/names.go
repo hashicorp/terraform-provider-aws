@@ -170,6 +170,9 @@ const (
 
 	// AWS ISOB (US) partition's regions.
 	USISOBEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
+
+	// AWS ISOF partition's regions.
+	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
 
 func DNSSuffixForPartition(partition string) string {
@@ -218,6 +221,8 @@ func PartitionForRegion(region string) string {
 		return ISOPartitionID
 	case USISOBEast1RegionID:
 		return ISOBPartitionID
+	case EUISOEWest1RegionID:
+		return ISOEPartitionID
 	case USGovEast1RegionID, USGovWest1RegionID:
 		return USGovCloudPartitionID
 	default:
