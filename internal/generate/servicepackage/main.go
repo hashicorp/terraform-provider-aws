@@ -67,7 +67,9 @@ func main() {
 
 		s := ServiceDatum{
 			GenerateClient:       !l.SkipClientGenerate(),
+			ClientSDKV1:          l.ClientSDKV1(),
 			GoV1Package:          l.GoV1Package(),
+			ClientSDKV2:          l.ClientSDKV2(),
 			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
 			ProviderNameUpper:    l.ProviderNameUpper(),
@@ -77,7 +79,6 @@ func main() {
 			SDKResources:         v.sdkResources,
 		}
 
-		s.SDKVersion = l.SDKVersion()
 		if l.ClientSDKV1() {
 			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
@@ -113,9 +114,10 @@ type ResourceDatum struct {
 
 type ServiceDatum struct {
 	GenerateClient       bool
-	SDKVersion           string // AWS SDK for Go version ("1", "2" or "1,2")
+	ClientSDKV1          bool
 	GoV1Package          string // AWS SDK for Go v1 package name
 	GoV1ClientTypeName   string // AWS SDK for Go v1 client type name
+	ClientSDKV2          bool
 	GoV2Package          string // AWS SDK for Go v2 package name
 	ProviderPackage      string
 	ProviderNameUpper    string

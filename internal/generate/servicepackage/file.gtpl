@@ -6,17 +6,17 @@ import (
 	"context"
 
 {{ if .GenerateClient }}
-	{{- if eq .SDKVersion "1" "1,2" }}
+	{{- if .ClientSDKV1 }}
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
 	{{- end }}
-	{{- if eq .SDKVersion "2" "1,2" }}
+	{{- if .ClientSDKV2 }}
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 	{{- end }}
-	{{- if .SDKVersion }}
+	{{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	{{- end }}
 {{- end }}
@@ -132,7 +132,7 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 {{- if .GenerateClient }}
-	{{ if eq .SDKVersion "1" "1,2" }}
+	{{ if .ClientSDKV1 }}
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
 	sess := config[names.AttrSession].(*session_sdkv1.Session)
@@ -155,7 +155,7 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{
 }
 	{{- end }}
 
-	{{ if eq .SDKVersion "2" "1,2" }}
+	{{ if .ClientSDKV2 }}
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
