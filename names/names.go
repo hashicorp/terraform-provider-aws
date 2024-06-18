@@ -18,6 +18,7 @@ package names
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -175,7 +176,7 @@ const (
 	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
 
-var AllRegionIDs = []string{
+var allRegionIDs = []string{
 	AFSouth1RegionID,
 	APEast1RegionID,
 	APNortheast1RegionID,
@@ -213,6 +214,10 @@ var AllRegionIDs = []string{
 	USISOWest1RegionID,
 	USISOBEast1RegionID,
 	EUISOEWest1RegionID,
+}
+
+func Regions() []string {
+	return slices.Clone(allRegionIDs)
 }
 
 func DNSSuffixForPartition(partition string) string {
