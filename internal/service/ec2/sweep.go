@@ -1378,13 +1378,11 @@ func sweepNetworkInsightsPaths(region string) error {
 			errs = multierror.Append(errs, fmt.Errorf("error listing Network Insights Paths for %s: %w", region, err))
 		}
 
-		for _, nip := range page.NetworkInsightsPaths {
-			id := aws.ToString(nip.NetworkInsightsPathId)
-
-			r := ResourceNetworkInsightsPath()
+		for _, v := range page.NetworkInsightsPaths {
+			r := resourceNetworkInsightsPath()
 			d := r.Data(nil)
+			d.SetId(aws.ToString(v.NetworkInsightsPathId))
 
-			d.SetId(id)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
@@ -1807,7 +1805,7 @@ func sweepTrafficMirrorFilters(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorFilters {
-			r := ResourceTrafficMirrorFilter()
+			r := resourceTrafficMirrorFilter()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorFilterId))
 
@@ -1848,7 +1846,7 @@ func sweepTrafficMirrorSessions(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorSessions {
-			r := ResourceTrafficMirrorSession()
+			r := resourceTrafficMirrorSession()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorSessionId))
 
@@ -1889,7 +1887,7 @@ func sweepTrafficMirrorTargets(region string) error {
 		}
 
 		for _, v := range page.TrafficMirrorTargets {
-			r := ResourceTrafficMirrorTarget()
+			r := resourceTrafficMirrorTarget()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.TrafficMirrorTargetId))
 

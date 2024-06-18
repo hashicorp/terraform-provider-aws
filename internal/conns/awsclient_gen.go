@@ -17,6 +17,7 @@ import (
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	applicationinsights_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	applicationsignals_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationsignals"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
@@ -146,6 +147,7 @@ import (
 	route53_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
+	rum_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rum"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	scheduler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/scheduler"
@@ -154,6 +156,7 @@ import (
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
+	servicediscovery_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
 	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
@@ -182,13 +185,11 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
@@ -246,7 +247,6 @@ import (
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
-	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
@@ -324,8 +324,8 @@ func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
 	return errs.Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync, make(map[string]any)))
 }
 
-func (c *AWSClient) ApplicationInsightsConn(ctx context.Context) *applicationinsights_sdkv1.ApplicationInsights {
-	return errs.Must(conn[*applicationinsights_sdkv1.ApplicationInsights](ctx, c, names.ApplicationInsights, make(map[string]any)))
+func (c *AWSClient) ApplicationInsightsClient(ctx context.Context) *applicationinsights_sdkv2.Client {
+	return errs.Must(client[*applicationinsights_sdkv2.Client](ctx, c, names.ApplicationInsights, make(map[string]any)))
 }
 
 func (c *AWSClient) ApplicationSignalsClient(ctx context.Context) *applicationsignals_sdkv2.Client {
@@ -996,8 +996,8 @@ func (c *AWSClient) RDSClient(ctx context.Context) *rds_sdkv2.Client {
 	return errs.Must(client[*rds_sdkv2.Client](ctx, c, names.RDS, make(map[string]any)))
 }
 
-func (c *AWSClient) RUMConn(ctx context.Context) *cloudwatchrum_sdkv1.CloudWatchRUM {
-	return errs.Must(conn[*cloudwatchrum_sdkv1.CloudWatchRUM](ctx, c, names.RUM, make(map[string]any)))
+func (c *AWSClient) RUMClient(ctx context.Context) *rum_sdkv2.Client {
+	return errs.Must(client[*rum_sdkv2.Client](ctx, c, names.RUM, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
@@ -1164,8 +1164,8 @@ func (c *AWSClient) ServiceCatalogAppRegistryClient(ctx context.Context) *servic
 	return errs.Must(client[*servicecatalogappregistry_sdkv2.Client](ctx, c, names.ServiceCatalogAppRegistry, make(map[string]any)))
 }
 
-func (c *AWSClient) ServiceDiscoveryConn(ctx context.Context) *servicediscovery_sdkv1.ServiceDiscovery {
-	return errs.Must(conn[*servicediscovery_sdkv1.ServiceDiscovery](ctx, c, names.ServiceDiscovery, make(map[string]any)))
+func (c *AWSClient) ServiceDiscoveryClient(ctx context.Context) *servicediscovery_sdkv2.Client {
+	return errs.Must(client[*servicediscovery_sdkv2.Client](ctx, c, names.ServiceDiscovery, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv2.Client {

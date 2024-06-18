@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 resource "aws_cloudwatch_log_group" "test" {
-  name =var.rName
+  name = var.rName
 
   tags = var.resource_tags
 }

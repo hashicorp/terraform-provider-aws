@@ -208,6 +208,25 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 	})
 }
 
+func TestAccEC2AMIDataSource_productCode(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_ami.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIDataSourceConfig_productCode,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", acctest.Ct1),
+				),
+			},
+		},
+	})
+}
+
 // testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore returns the configuration for a data source that
 // describes the latest Ubuntu 18.04 AMI using HVM virtualization and an instance store root device.
 // The data source is named 'ubuntu-bionic-ami-hvm-instance-store'.
@@ -322,3 +341,16 @@ data "aws_ami" "test" {
 }
 `)
 }
+
+// Image with product code.
+const testAccAMIDataSourceConfig_productCode = `
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["679593333241"]
+
+  filter {
+    name   = "name"
+    values = ["AwsMarketPublished_IBM App Connect v12.0.12.0 and IBM MQ v9.3.0.16 with RapidDeploy 5.1.12 -422d2ddd-3288-4067-be37-4e2a69450606"]
+  }
+}
+`
