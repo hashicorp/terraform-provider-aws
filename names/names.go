@@ -41,6 +41,7 @@ const (
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	AutoScalingPlansEndpointID           = "autoscaling-plans"
+	BackupEndpointID                     = "backup"
 	BatchEndpointID                      = "batch"
 	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"

@@ -800,7 +800,7 @@ service "backup" {
 
   sdk {
     id             = "Backup"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
