@@ -136,10 +136,11 @@ resource "aws_drs_replication_configuration_template" "test" {
   staging_area_subnet_id                  = aws_subnet.test[0].id
 
   pit_policy {
-    enabled            = true
-    interval           = 60
-    retention_duration = 120
-    units              = "MINUTE"
+    enabled            = false
+    interval           = 14
+    retention_duration = 21
+    units              = "DAY"
+	rule_id            = 1
   }
 
   staging_area_tags = {
