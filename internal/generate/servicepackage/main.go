@@ -125,7 +125,7 @@ type ServiceDatum struct {
 	SDKResources         map[string]ResourceDatum
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string
 
 // Annotation processing.
