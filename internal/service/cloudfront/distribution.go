@@ -51,7 +51,7 @@ func resourceDistribution() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
@@ -188,7 +188,7 @@ func resourceDistribution() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 									},
-									"function_arn": {
+									names.AttrFunctionARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -275,11 +275,11 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -287,7 +287,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -316,7 +316,7 @@ func resourceDistribution() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -325,7 +325,7 @@ func resourceDistribution() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -421,7 +421,7 @@ func resourceDistribution() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 									},
-									"function_arn": {
+									names.AttrFunctionARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -569,11 +569,11 @@ func resourceDistribution() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -622,7 +622,7 @@ func resourceDistribution() *schema.Resource {
 								},
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -648,7 +648,7 @@ func resourceDistribution() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -725,7 +725,7 @@ func resourceDistribution() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -736,7 +736,7 @@ func resourceDistribution() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -768,7 +768,7 @@ func resourceDistribution() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -901,10 +901,10 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "setting aliases: %s", err)
 		}
 	}
-	d.Set("arn", output.Distribution.ARN)
+	d.Set(names.AttrARN, output.Distribution.ARN)
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
-		d.Set("comment", distributionConfig.Comment)
+		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
@@ -919,11 +919,11 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting default_cache_behavior: %s", err)
 	}
 	d.Set("default_root_object", distributionConfig.DefaultRootObject)
-	d.Set("domain_name", output.Distribution.DomainName)
-	d.Set("enabled", distributionConfig.Enabled)
+	d.Set(names.AttrDomainName, output.Distribution.DomainName)
+	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
@@ -956,7 +956,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 	d.Set("staging", distributionConfig.Staging)
-	d.Set("status", output.Distribution.Status)
+	d.Set(names.AttrStatus, output.Distribution.Status)
 	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
 	}
@@ -975,7 +975,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudfront.UpdateDistributionInput{
 			DistributionConfig: expandDistributionConfig(d),
 			Id:                 aws.String(d.Id()),
@@ -1023,7 +1023,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	if d.Get("arn").(string) == "" {
+	if d.Get(names.AttrARN).(string) == "" {
 		diags = append(diags, resourceDistributionRead(ctx, d, meta)...)
 	}
 
@@ -1084,7 +1084,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		const (
 			timeout = 1 * time.Minute
 		)
-		_, err = tfresource.RetryWhenIsOneOf[*awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenIsOneOf2[*awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
 		})
 	}
@@ -1273,12 +1273,12 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 	apiObject := &awstypes.DistributionConfig{
 		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
 		CallerReference:              aws.String(id.UniqueId()),
-		Comment:                      aws.String(d.Get("comment").(string)),
+		Comment:                      aws.String(d.Get(names.AttrComment).(string)),
 		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
 		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
 		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
 		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
-		Enabled:                      aws.Bool(d.Get("enabled").(bool)),
+		Enabled:                      aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
 		HttpVersion:                  awstypes.HttpVersion(d.Get("http_version").(string)),
 		Origins:                      expandOrigins(d.Get("origin").(*schema.Set).List()),
@@ -1719,7 +1719,7 @@ func expandFunctionAssociation(tfMap map[string]interface{}) *awstypes.FunctionA
 		apiObject.EventType = awstypes.EventType(v.(string))
 	}
 
-	if v, ok := tfMap["function_arn"]; ok {
+	if v, ok := tfMap[names.AttrFunctionARN]; ok {
 		apiObject.FunctionARN = aws.String(v.(string))
 	}
 
@@ -1789,7 +1789,7 @@ func flattenFunctionAssociation(apiObject *awstypes.FunctionAssociation) map[str
 
 	if apiObject != nil {
 		tfMap["event_type"] = apiObject.EventType
-		tfMap["function_arn"] = aws.ToString(apiObject.FunctionARN)
+		tfMap[names.AttrFunctionARN] = aws.ToString(apiObject.FunctionARN)
 	}
 
 	return tfMap
@@ -2000,7 +2000,7 @@ func flattenOrigins(apiObject *awstypes.Origins) []interface{} {
 
 func expandOrigin(tfMap map[string]interface{}) *awstypes.Origin {
 	apiObject := &awstypes.Origin{
-		DomainName: aws.String(tfMap["domain_name"].(string)),
+		DomainName: aws.String(tfMap[names.AttrDomainName].(string)),
 		Id:         aws.String(tfMap["origin_id"].(string)),
 	}
 
@@ -2059,7 +2059,7 @@ func flattenOrigin(apiObject *awstypes.Origin) map[string]interface{} {
 	}
 
 	tfMap := make(map[string]interface{})
-	tfMap["domain_name"] = aws.ToString(apiObject.DomainName)
+	tfMap[names.AttrDomainName] = aws.ToString(apiObject.DomainName)
 	tfMap["origin_id"] = aws.ToString(apiObject.Id)
 
 	if apiObject.ConnectionAttempts != nil {
@@ -2281,8 +2281,8 @@ func expandOriginCustomHeader(tfMap map[string]interface{}) *awstypes.OriginCust
 	}
 
 	return &awstypes.OriginCustomHeader{
-		HeaderName:  aws.String(tfMap["name"].(string)),
-		HeaderValue: aws.String(tfMap["value"].(string)),
+		HeaderName:  aws.String(tfMap[names.AttrName].(string)),
+		HeaderValue: aws.String(tfMap[names.AttrValue].(string)),
 	}
 }
 
@@ -2292,8 +2292,8 @@ func flattenOriginCustomHeader(apiObject *awstypes.OriginCustomHeader) map[strin
 	}
 
 	return map[string]interface{}{
-		"name":  aws.ToString(apiObject.HeaderName),
-		"value": aws.ToString(apiObject.HeaderValue),
+		names.AttrName:  aws.ToString(apiObject.HeaderName),
+		names.AttrValue: aws.ToString(apiObject.HeaderValue),
 	}
 }
 
@@ -2362,7 +2362,7 @@ func expandOriginShield(tfMap map[string]interface{}) *awstypes.OriginShield {
 	}
 
 	return &awstypes.OriginShield{
-		Enabled:            aws.Bool(tfMap["enabled"].(bool)),
+		Enabled:            aws.Bool(tfMap[names.AttrEnabled].(bool)),
 		OriginShieldRegion: aws.String(tfMap["origin_shield_region"].(string)),
 	}
 }
@@ -2383,7 +2383,7 @@ func flattenOriginShield(apiObject *awstypes.OriginShield) map[string]interface{
 	}
 
 	return map[string]interface{}{
-		"enabled":              aws.ToBool(apiObject.Enabled),
+		names.AttrEnabled:      aws.ToBool(apiObject.Enabled),
 		"origin_shield_region": aws.ToString(apiObject.OriginShieldRegion),
 	}
 }
@@ -2479,10 +2479,10 @@ func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 	apiObject := &awstypes.LoggingConfig{}
 
 	if tfMap != nil {
-		apiObject.Bucket = aws.String(tfMap["bucket"].(string))
+		apiObject.Bucket = aws.String(tfMap[names.AttrBucket].(string))
 		apiObject.Enabled = aws.Bool(true)
 		apiObject.IncludeCookies = aws.Bool(tfMap["include_cookies"].(bool))
-		apiObject.Prefix = aws.String(tfMap["prefix"].(string))
+		apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	} else {
 		apiObject.Bucket = aws.String("")
 		apiObject.Enabled = aws.Bool(false)
@@ -2499,9 +2499,9 @@ func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"bucket":          aws.ToString(apiObject.Bucket),
+		names.AttrBucket:  aws.ToString(apiObject.Bucket),
 		"include_cookies": aws.ToBool(apiObject.IncludeCookies),
-		"prefix":          aws.ToString(apiObject.Prefix),
+		names.AttrPrefix:  aws.ToString(apiObject.Prefix),
 	}
 
 	return []interface{}{tfMap}
@@ -2643,8 +2643,8 @@ func flattenActiveTrustedKeyGroups(apiObject *awstypes.ActiveTrustedKeyGroups) [
 	}
 
 	tfMap := map[string]interface{}{
-		"enabled": aws.ToBool(apiObject.Enabled),
-		"items":   flattenKGKeyPairIDs(apiObject.Items),
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"items":           flattenKGKeyPairIDs(apiObject.Items),
 	}
 
 	return []interface{}{tfMap}
@@ -2671,8 +2671,8 @@ func flattenActiveTrustedSigners(apiObject *awstypes.ActiveTrustedSigners) []int
 	}
 
 	tfMap := map[string]interface{}{
-		"enabled": aws.ToBool(apiObject.Enabled),
-		"items":   flattenSigners(apiObject.Items),
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"items":           flattenSigners(apiObject.Items),
 	}
 
 	return []interface{}{tfMap}

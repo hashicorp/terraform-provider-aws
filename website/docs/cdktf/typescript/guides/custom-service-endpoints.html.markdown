@@ -179,6 +179,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
   <li><code>docdbelastic</code></li>
+  <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
@@ -323,6 +324,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>
@@ -334,6 +336,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
+  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>
@@ -442,4 +445,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fef19d282bd4baa2e4cfb819984b4f91b03ff5f8965b46d3753f80c46c4f1287 -->
+<!-- cache-key: cdktf-0.20.1 input-28568d63602252f93a7bf5c1c81b4800aae1f6e0c52b0a21222f9ee702daf47d -->

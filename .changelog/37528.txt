@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_ec2_capacity_block_reservation
+```
+
+```release-note:new-data-source
+aws_ec2_capacity_block_offering
+```
+
+```release-note:note
+resource/aws_ec2_capacity_block_reservation: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

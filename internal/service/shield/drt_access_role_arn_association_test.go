@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDRTAccessRoleARNAssociation_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func testAccDRTAccessRoleARNAssociation_basic(t *testing.T) {
 				Config: testAccDRTAccessRoleARNAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDRTAccessRoleARNAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -47,7 +48,7 @@ func testAccDRTAccessRoleARNAssociation_basic(t *testing.T) {
 				Config: testAccDRTAccessRoleARNAssociationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDRTAccessRoleARNAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
 			},
 		},
@@ -88,7 +89,7 @@ func testAccCheckDRTAccessRoleARNAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.Attributes["role_arn"])
+			_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.Attributes[names.AttrRoleARN])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -114,7 +115,7 @@ func testAccCheckDRTAccessRoleARNAssociationExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
-		_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.Attributes["role_arn"])
+		_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.Attributes[names.AttrRoleARN])
 
 		return err
 	}

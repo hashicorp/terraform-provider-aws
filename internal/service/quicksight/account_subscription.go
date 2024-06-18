@@ -74,7 +74,7 @@ func ResourceAccountSubscription() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					ForceNew: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -139,10 +139,11 @@ const (
 )
 
 func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 
@@ -196,23 +197,24 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 
 	out, err := conn.CreateAccountSubscriptionWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameAccountSubscription, d.Get("account_name").(string), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionCreating, ResNameAccountSubscription, d.Get("account_name").(string), err)
 	}
 
 	if out == nil || out.SignupResponse == nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameAccountSubscription, d.Get("account_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionCreating, ResNameAccountSubscription, d.Get("account_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(awsAccountId)
 
 	if _, err := waitAccountSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionWaitingForCreation, ResNameAccountSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForCreation, ResNameAccountSubscription, d.Id(), err)
 	}
 
-	return resourceAccountSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceAccountSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	out, err := FindAccountSubscriptionByID(ctx, conn, d.Id())
@@ -220,17 +222,17 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	// Ressource is logically deleted with UNSUBSCRIBED status
 	if !d.IsNewResource() && aws.StringValue(out.AccountSubscriptionStatus) == statusUnsuscribed {
 		log.Printf("[WARN] QuickSight AccountSubscription (%s) unsuscribed, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameAccountSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionReading, ResNameAccountSubscription, d.Id(), err)
 	}
 
 	d.Set("account_name", out.AccountName)
@@ -238,10 +240,11 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("notification_email", out.NotificationEmail)
 	d.Set("account_subscription_status", out.AccountSubscriptionStatus)
 
-	return nil
+	return diags
 }
 
 func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	log.Printf("[INFO] Deleting QuickSight AccountSubscription %s", d.Id())
@@ -251,18 +254,18 @@ func resourceAccountSubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 	})
 
 	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionDeleting, ResNameAccountSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionDeleting, ResNameAccountSubscription, d.Id(), err)
 	}
 
 	if _, err := waitAccountSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionWaitingForDeletion, ResNameAccountSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.QuickSight, create.ErrActionWaitingForDeletion, ResNameAccountSubscription, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // Not documented on AWS

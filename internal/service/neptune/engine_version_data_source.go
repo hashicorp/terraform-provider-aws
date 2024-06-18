@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_neptune_engine_version")
@@ -22,7 +23,7 @@ func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  engineNeptune,
@@ -45,7 +46,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"version"},
+				ConflictsWith: []string{names.AttrVersion},
 			},
 			"supported_timezones": {
 				Type:     schema.TypeSet,
@@ -65,7 +66,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
@@ -85,7 +86,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	input := &neptune.DescribeDBEngineVersionsInput{}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -93,7 +94,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	} else if _, ok := d.GetOk("preferred_versions"); !ok {
 		input.DefaultOnly = aws.Bool(true)
@@ -131,7 +132,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.StringValue(engineVersion.EngineVersion))
-	d.Set("engine", engineVersion.Engine)
+	d.Set(names.AttrEngine, engineVersion.Engine)
 	d.Set("engine_description", engineVersion.DBEngineDescription)
 	d.Set("exportable_log_types", aws.StringValueSlice(engineVersion.ExportableLogTypes))
 	d.Set("parameter_group_family", engineVersion.DBParameterGroupFamily)
@@ -144,7 +145,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		return aws.StringValue(v.EngineVersion)
 	}))
 
-	d.Set("version", engineVersion.EngineVersion)
+	d.Set(names.AttrVersion, engineVersion.EngineVersion)
 	d.Set("version_description", engineVersion.DBEngineVersionDescription)
 
 	return diags

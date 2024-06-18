@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func axisDisplayOptionsSchema() *schema.Schema {
@@ -310,7 +311,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"value": {
+										names.AttrValue: {
 											Type:     schema.TypeFloat,
 											Required: true,
 										},
@@ -357,7 +358,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 						},
 					},
 				},
-				"status": stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+				names.AttrStatus: stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 				"style_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineStyleConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -899,7 +900,7 @@ func expandReferenceLine(tfMap map[string]interface{}) *quicksight.ReferenceLine
 
 	line := &quicksight.ReferenceLine{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		line.Status = aws.String(v)
 	}
 	if v, ok := tfMap["data_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -977,7 +978,7 @@ func expandReferenceLineStaticDataConfiguration(tfList []interface{}) *quicksigh
 
 	config := &quicksight.ReferenceLineStaticDataConfiguration{}
 
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		config.Value = aws.Float64(v)
 	}
 
@@ -1546,7 +1547,7 @@ func flattenReferenceLine(apiObject []*quicksight.ReferenceLine) []interface{} {
 			tfMap["label_configuration"] = flattenReferenceLineLabelConfiguration(config.LabelConfiguration)
 		}
 		if config.Status != nil {
-			tfMap["status"] = aws.StringValue(config.Status)
+			tfMap[names.AttrStatus] = aws.StringValue(config.Status)
 		}
 		if config.StyleConfiguration != nil {
 			tfMap["style_configuration"] = flattenReferenceLineStyleConfiguration(config.StyleConfiguration)
@@ -1602,7 +1603,7 @@ func flattenReferenceLineStaticDataConfiguration(apiObject *quicksight.Reference
 	}
 
 	tfMap := map[string]interface{}{
-		"value": aws.Float64Value(apiObject.Value),
+		names.AttrValue: aws.Float64Value(apiObject.Value),
 	}
 
 	return []interface{}{tfMap}
