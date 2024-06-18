@@ -24,7 +24,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.11
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.11
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.25.11
-	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.10
+	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.24.10
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.10
