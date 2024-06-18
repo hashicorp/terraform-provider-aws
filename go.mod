@@ -158,7 +158,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rum v1.17.13
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.55.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.14
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.10
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.11
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.24.10
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.49.2
