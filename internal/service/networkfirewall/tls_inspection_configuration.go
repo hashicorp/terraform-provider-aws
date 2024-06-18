@@ -416,7 +416,6 @@ func (r *tlsInspectionConfigurationResource) Update(ctx context.Context, request
 		new.CertificateAuthority = old.CertificateAuthority
 		new.Certificates = old.Certificates
 		new.UpdateToken = old.UpdateToken
-
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
