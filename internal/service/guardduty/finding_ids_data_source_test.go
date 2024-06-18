@@ -27,7 +27,7 @@ func testAccFindingIDsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFindingIDsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "detector_id", detectorDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "detector_id", detectorDataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(dataSourceName, "has_findings"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "finding_ids.#"),
 				),

@@ -131,7 +131,7 @@ This resource supports the following arguments:
 * `hibernationOptions` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iamInstanceProfile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `imageId` - (Optional) The AMI from which to launch the instance.
+* `imageId` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instanceInitiatedShutdownBehavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instanceMarketOptions` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -153,7 +153,7 @@ This resource supports the following arguments:
 * `ramDiskId` - (Optional) The ID of the RAM disk.
 * `securityGroupNames` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpcSecurityGroupIds` instead.
-* `tagSpecifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
+* `tagSpecifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details. Default tags [are currently not propagated to ASG created resources](https://github.com/hashicorp/terraform-provider-aws/issues/32328) so you may wish to inject your default tags into this variable against the relevant child resource types created.
 * `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `updateDefaultVersion` - (Optional) Whether to update Default Version each update. Conflicts with `defaultVersion`.
 * `userData` - (Optional) The base64-encoded user data to provide when launching the instance.
@@ -233,7 +233,7 @@ Attach an elastic GPU the instance.
 
 The `elasticGpuSpecifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 
@@ -530,4 +530,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6dafc1b3aa9aeb3c0d519e7966a1099ae41e87ab70a181738865462566ce6e67 -->
+<!-- cache-key: cdktf-0.20.1 input-8003f9c6450601e32f73e508e3a6c3a1d45c8eceab312b856d0b7abbfa41d04f -->

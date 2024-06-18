@@ -35,7 +35,7 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -48,7 +48,7 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 		},
@@ -95,7 +95,7 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
@@ -108,7 +108,7 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_bypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 		},
@@ -132,7 +132,7 @@ func TestAccEFSFileSystemPolicy_equivalentPolicies(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_firstEquivalent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -160,7 +160,7 @@ func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
 				Config: testAccFileSystemPolicyConfig_equivalentIAMDoc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemPolicyExists(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{

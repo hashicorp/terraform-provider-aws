@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_backup_selection")
@@ -39,7 +40,7 @@ func ResourceSelection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,7 +54,7 @@ func ResourceSelection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"condition": {
+			names.AttrCondition: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -66,12 +67,12 @@ func ResourceSelection() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -85,12 +86,12 @@ func ResourceSelection() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -104,12 +105,12 @@ func ResourceSelection() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -123,12 +124,12 @@ func ResourceSelection() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -139,7 +140,7 @@ func ResourceSelection() *schema.Resource {
 					},
 				},
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -151,18 +152,18 @@ func ResourceSelection() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ConditionType](),
 						},
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -177,7 +178,7 @@ func ResourceSelection() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -192,12 +193,12 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	selection := &awstypes.BackupSelection{
-		Conditions:    expandConditions(d.Get("condition").(*schema.Set).List()),
-		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
+		Conditions:    expandConditions(d.Get(names.AttrCondition).(*schema.Set).List()),
+		IamRoleArn:    aws.String(d.Get(names.AttrIAMRoleARN).(string)),
 		ListOfTags:    expandConditionTags(d.Get("selection_tag").(*schema.Set).List()),
 		NotResources:  flex.ExpandStringValueSet(d.Get("not_resources").(*schema.Set)),
-		Resources:     flex.ExpandStringValueSet(d.Get("resources").(*schema.Set)),
-		SelectionName: aws.String(d.Get("name").(string)),
+		Resources:     flex.ExpandStringValueSet(d.Get(names.AttrResources).(*schema.Set)),
+		SelectionName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	input := &backup.CreateBackupSelectionInput{
@@ -301,11 +302,11 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("plan_id", resp.BackupPlanId)
-	d.Set("name", resp.BackupSelection.SelectionName)
-	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
+	d.Set(names.AttrName, resp.BackupSelection.SelectionName)
+	d.Set(names.AttrIAMRoleARN, resp.BackupSelection.IamRoleArn)
 
 	if conditions := resp.BackupSelection.Conditions; conditions != nil {
-		if err := d.Set("condition", flattenConditions(conditions)); err != nil {
+		if err := d.Set(names.AttrCondition, flattenConditions(conditions)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting conditions: %s", err)
 		}
 	}
@@ -316,9 +317,9 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 		for _, r := range resp.BackupSelection.ListOfTags {
 			m := make(map[string]interface{})
 
-			m["type"] = string(r.ConditionType)
-			m["key"] = aws.ToString(r.ConditionKey)
-			m["value"] = aws.ToString(r.ConditionValue)
+			m[names.AttrType] = string(r.ConditionType)
+			m[names.AttrKey] = aws.ToString(r.ConditionKey)
+			m[names.AttrValue] = aws.ToString(r.ConditionValue)
 
 			tags = append(tags, m)
 		}
@@ -328,7 +329,7 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if err := d.Set("resources", resp.BackupSelection.Resources); err != nil {
+	if err := d.Set(names.AttrResources, resp.BackupSelection.Resources); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 
@@ -378,9 +379,9 @@ func expandConditionTags(tagList []interface{}) []awstypes.Condition {
 		item := i.(map[string]interface{})
 		tag := awstypes.Condition{}
 
-		tag.ConditionType = awstypes.ConditionType(item["type"].(string))
-		tag.ConditionKey = aws.String(item["key"].(string))
-		tag.ConditionValue = aws.String(item["value"].(string))
+		tag.ConditionType = awstypes.ConditionType(item[names.AttrType].(string))
+		tag.ConditionKey = aws.String(item[names.AttrKey].(string))
+		tag.ConditionValue = aws.String(item[names.AttrValue].(string))
 
 		conditions = append(conditions, tag)
 	}
@@ -418,8 +419,8 @@ func expandConditionParameters(conditionParametersList []interface{}) []awstypes
 		item := i.(map[string]interface{})
 		conditionParameter := awstypes.ConditionParameter{}
 
-		conditionParameter.ConditionKey = aws.String(item["key"].(string))
-		conditionParameter.ConditionValue = aws.String(item["value"].(string))
+		conditionParameter.ConditionKey = aws.String(item[names.AttrKey].(string))
+		conditionParameter.ConditionValue = aws.String(item[names.AttrValue].(string))
 
 		conditionParameters = append(conditionParameters, conditionParameter)
 	}
@@ -475,8 +476,8 @@ func flattenConditionParameters(conditionParameters []awstypes.ConditionParamete
 
 	for _, conditionParameter := range conditionParameters {
 		tfMap := map[string]interface{}{
-			"key":   aws.ToString(conditionParameter.ConditionKey),
-			"value": aws.ToString(conditionParameter.ConditionValue),
+			names.AttrKey:   aws.ToString(conditionParameter.ConditionKey),
+			names.AttrValue: aws.ToString(conditionParameter.ConditionValue),
 		}
 
 		tfList = append(tfList, tfMap)

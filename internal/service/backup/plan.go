@@ -53,7 +53,7 @@ func ResourcePlan() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -63,16 +63,16 @@ func ResourcePlan() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -153,7 +153,7 @@ func ResourcePlan() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 							),
 						},
-						"schedule": {
+						names.AttrSchedule: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -176,7 +176,7 @@ func ResourcePlan() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -190,12 +190,12 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &awstypes.BackupPlanInput{
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			BackupPlanName:         aws.String(name),
-			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+			Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 		},
 		BackupPlanTags: getTagsIn(ctx),
 	}
@@ -232,12 +232,12 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("advanced_backup_setting", flattenPlanAdvancedSettings(output.AdvancedBackupSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_backup_setting: %s", err)
 	}
-	d.Set("arn", output.BackupPlanArn)
-	d.Set("name", output.BackupPlan.BackupPlanName)
-	if err := d.Set("rule", flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
+	d.Set(names.AttrARN, output.BackupPlanArn)
+	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
+	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
-	d.Set("version", output.VersionId)
+	d.Set(names.AttrVersion, output.VersionId)
 
 	return diags
 }
@@ -246,13 +246,13 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	if d.HasChanges("rule", "advanced_backup_setting") {
+	if d.HasChanges(names.AttrRule, "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &awstypes.BackupPlanInput{
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
-				BackupPlanName:         aws.String(d.Get("name").(string)),
-				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+				BackupPlanName:         aws.String(d.Get(names.AttrName).(string)),
+				Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 			},
 		}
 
@@ -332,7 +332,7 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []awstypes.BackupR
 		if vTargetVaultName, ok := mRule["target_vault_name"].(string); ok && vTargetVaultName != "" {
 			rule.TargetBackupVaultName = aws.String(vTargetVaultName)
 		}
-		if vSchedule, ok := mRule["schedule"].(string); ok && vSchedule != "" {
+		if vSchedule, ok := mRule[names.AttrSchedule].(string); ok && vSchedule != "" {
 			rule.ScheduleExpression = aws.String(vSchedule)
 		}
 		if vEnableContinuousBackup, ok := mRule["enable_continuous_backup"].(bool); ok {
@@ -374,7 +374,7 @@ func expandPlanAdvancedSettings(vAdvancedBackupSettings *schema.Set) []awstypes.
 		if v, ok := mAdvancedBackupSetting["backup_options"].(map[string]interface{}); ok && v != nil {
 			advancedBackupSetting.BackupOptions = flex.ExpandStringValueMap(v)
 		}
-		if v, ok := mAdvancedBackupSetting["resource_type"].(string); ok && v != "" {
+		if v, ok := mAdvancedBackupSetting[names.AttrResourceType].(string); ok && v != "" {
 			advancedBackupSetting.ResourceType = aws.String(v)
 		}
 
@@ -438,7 +438,7 @@ func flattenPlanRules(ctx context.Context, rules []awstypes.BackupRule) *schema.
 		mRule := map[string]interface{}{
 			"rule_name":                aws.ToString(rule.RuleName),
 			"target_vault_name":        aws.ToString(rule.TargetBackupVaultName),
-			"schedule":                 aws.ToString(rule.ScheduleExpression),
+			names.AttrSchedule:         aws.ToString(rule.ScheduleExpression),
 			"enable_continuous_backup": aws.ToBool(rule.EnableContinuousBackup),
 			"start_window":             int(aws.ToInt64(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.ToInt64(rule.CompletionWindowMinutes)),
@@ -462,8 +462,8 @@ func flattenPlanAdvancedSettings(advancedBackupSettings []awstypes.AdvancedBacku
 
 	for _, advancedBackupSetting := range advancedBackupSettings {
 		mAdvancedBackupSetting := map[string]interface{}{
-			"backup_options": advancedBackupSetting.BackupOptions,
-			"resource_type":  aws.ToString(advancedBackupSetting.ResourceType),
+			"backup_options":       advancedBackupSetting.BackupOptions,
+			names.AttrResourceType: aws.ToString(advancedBackupSetting.ResourceType),
 		}
 
 		vAdvancedBackupSettings = append(vAdvancedBackupSettings, mAdvancedBackupSetting)
@@ -519,7 +519,7 @@ func planHash(vRule interface{}) int {
 	if v, ok := mRule["target_vault_name"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if v, ok := mRule["schedule"].(string); ok {
+	if v, ok := mRule[names.AttrSchedule].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule["enable_continuous_backup"].(bool); ok {

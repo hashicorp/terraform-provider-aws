@@ -64,23 +64,23 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(4, 90),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -95,11 +95,11 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,8 +126,8 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("ignore_words"); ok {
 		input.IgnoreWords = flex.ExpandStringSet(v.(*schema.Set))
 	}
-	input.Name = aws.String(create.Name(d.Get("name").(string), d.Get("name_prefix").(string)))
-	if v, ok := d.GetOk("description"); ok {
+	input.Name = aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string)))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("maximum_match_distance"); ok {
@@ -191,9 +191,9 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
 	}
-	d.Set("name", resp.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(resp.Name)))
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
 
 	setTagsOut(ctx, resp.Tags)
@@ -203,8 +203,8 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 		d.SetId("")
 	}
 
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("arn", resp.Arn)
+	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrARN, resp.Arn)
 
 	return diags
 }

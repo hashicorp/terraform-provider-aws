@@ -349,6 +349,12 @@ service/ce:
           - any-glob-to-any-file:
               - 'internal/service/ce/**/*'
               - 'website/**/ce_*'
+service/chatbot:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/chatbot/**/*'
+              - 'website/**/chatbot_*'
 service/chime:
   - any:
       - changed-files:
@@ -2093,6 +2099,12 @@ service/textract:
           - any-glob-to-any-file:
               - 'internal/service/textract/**/*'
               - 'website/**/textract_*'
+service/timestreaminfluxdb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/timestreaminfluxdb/**/*'
+              - 'website/**/timestreaminfluxdb_*'
 service/timestreamquery:
   - any:
       - changed-files:

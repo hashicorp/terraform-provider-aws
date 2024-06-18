@@ -116,7 +116,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"client_secret": schema.StringAttribute{
+			names.AttrClientSecret: schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
@@ -158,7 +158,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -180,7 +180,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -192,12 +192,12 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 				Validators: append(
 					userPoolClientNameValidator,
 					stringvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName("name_prefix"),
+						path.MatchRelative().AtParent().AtName(names.AttrNamePrefix),
 						path.MatchRelative().AtParent().AtName("name_pattern"),
 					),
 				),
 			},
-			"name_prefix": schema.StringAttribute{
+			names.AttrNamePrefix: schema.StringAttribute{
 				Optional:   true,
 				Validators: userPoolClientNameValidator,
 			},
@@ -239,7 +239,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -267,27 +267,27 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 							Validators: []validator.String{
 								stringvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("application_arn"),
-									path.MatchRelative().AtParent().AtName("application_id"),
+									path.MatchRelative().AtParent().AtName(names.AttrApplicationID),
 								),
 								stringvalidator.ConflictsWith(
-									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
-						"application_id": schema.StringAttribute{
+						names.AttrApplicationID: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
-									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
-						"external_id": schema.StringAttribute{
+						names.AttrExternalID: schema.StringAttribute{
 							Optional: true,
 						},
-						"role_arn": schema.StringAttribute{
+						names.AttrRoleARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Computed:   true,
@@ -692,8 +692,8 @@ func (r *managedUserPoolClientResource) ImportState(ctx context.Context, request
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), clientId)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), userPoolId)...)
 }
 
 func (r *managedUserPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {

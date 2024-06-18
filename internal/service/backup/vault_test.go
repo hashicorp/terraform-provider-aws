@@ -38,18 +38,18 @@ func TestAccBackupVault_basic(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "backup", fmt.Sprintf("backup-vault:%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -92,34 +92,34 @@ func TestAccBackupVault_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVaultConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccVaultConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVaultConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVaultConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVaultConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -142,14 +142,14 @@ func TestAccBackupVault_withKMSKey(t *testing.T) {
 				Config: testAccVaultConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -171,14 +171,14 @@ func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -200,7 +200,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
 				),
 			},
 			{
@@ -214,7 +214,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct1),
 				),
 			},
 		},

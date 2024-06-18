@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_db_instances")
@@ -23,7 +24,7 @@ func DataSourceInstances() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 			"instance_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -34,7 +35,7 @@ func DataSourceInstances() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -45,12 +46,12 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &rds.DescribeDBInstancesInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	filter := tfslices.PredicateTrue[*rds.DBInstance]()
-	if v, ok := d.GetOk("tags"); ok {
+	if v, ok := d.GetOk(names.AttrTags); ok {
 		filter = func(x *rds.DBInstance) bool {
 			return KeyValueTags(ctx, x.TagList).ContainsAll(tftags.New(ctx, v.(map[string]interface{})))
 		}

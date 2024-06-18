@@ -5,6 +5,8 @@ package bedrockagent
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,21 +15,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,10 +47,6 @@ func newKnowledgeBaseResource(context.Context) (resource.ResourceWithConfigure, 
 	return r, nil
 }
 
-const (
-	ResNameKnowledgeBase = "Knowledge Base"
-)
-
 type knowledgeBaseResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
@@ -63,29 +61,26 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"failure_reasons": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -109,7 +104,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -142,7 +137,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -161,7 +156,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"namespace": schema.StringAttribute{
+									names.AttrNamespace: schema.StringAttribute{
 										Optional: true,
 									},
 								},
@@ -196,14 +191,14 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"database_name": schema.StringAttribute{
+									names.AttrDatabaseName: schema.StringAttribute{
 										Required: true,
 									},
-									"resource_arn": schema.StringAttribute{
+									names.AttrResourceARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"table_name": schema.StringAttribute{
+									names.AttrTableName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -244,7 +239,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 									},
-									"endpoint": schema.StringAttribute{
+									names.AttrEndpoint: schema.StringAttribute{
 										Required: true,
 									},
 									"vector_index_name": schema.StringAttribute{
@@ -315,7 +310,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -325,13 +320,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 }
 
 func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
 	var data knowledgeBaseResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().BedrockAgentClient(ctx)
 
 	input := &bedrockagent.CreateKnowledgeBaseInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
@@ -340,6 +335,7 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	// Additional fields.
+	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
@@ -347,77 +343,64 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	}, errCodeValidationException, "cannot assume role")
 
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNameKnowledgeBase, data.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating Bedrock Agent Knowledge Base", err.Error())
+
 		return
 	}
 
-	knowledgebase := outputRaw.(*bedrockagent.CreateKnowledgeBaseOutput).KnowledgeBase
-	data.KnowledgeBaseARN = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseArn)
-	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseId)
+	kb := outputRaw.(*bedrockagent.CreateKnowledgeBaseOutput).KnowledgeBase
+	data.KnowledgeBaseARN = fwflex.StringToFramework(ctx, kb.KnowledgeBaseArn)
+	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, kb.KnowledgeBaseId)
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	knowledgebase, err = waitKnowledgeBaseCreated(ctx, conn, data.KnowledgeBaseID.ValueString(), createTimeout)
+	kb, err = waitKnowledgeBaseCreated(ctx, conn, data.KnowledgeBaseID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForCreation, ResNameKnowledgeBase, data.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) create", data.KnowledgeBaseID.ValueString()), err.Error())
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &data)...)
-	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Set values for unknowns after creation is complete.
-	data.CreatedAt = fwflex.TimeToFramework(ctx, knowledgebase.CreatedAt)
-	data.UpdatedAt = fwflex.TimeToFramework(ctx, knowledgebase.UpdatedAt)
+	data.CreatedAt = fwflex.TimeToFramework(ctx, kb.CreatedAt)
+	data.FailureReasons = fwflex.FlattenFrameworkStringValueListOfString(ctx, kb.FailureReasons)
+	data.UpdatedAt = fwflex.TimeToFramework(ctx, kb.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
 func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
 	var data knowledgeBaseResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	knowledgebase, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseID.ValueString())
+	conn := r.Meta().BedrockAgentClient(ctx)
+
+	kb, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseID.ValueString())
 
 	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionSetting, ResNameKnowledgeBase, data.KnowledgeBaseID.String(), err),
-			err.Error(),
-		)
+
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &data)...)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent Knowledge Base (%s)", data.KnowledgeBaseID.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, kb, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Set values for unknowns after creation is complete.
-	data.CreatedAt = fwflex.TimeToFramework(ctx, knowledgebase.CreatedAt)
-	data.UpdatedAt = fwflex.TimeToFramework(ctx, knowledgebase.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
 	var old, new knowledgeBaseResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
@@ -428,9 +411,11 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 		return
 	}
 
-	if !new.Name.Equal(old.Name) ||
-		!new.Description.Equal(old.Description) ||
+	conn := r.Meta().BedrockAgentClient(ctx)
+
+	if !new.Description.Equal(old.Description) ||
 		!new.KnowledgeBaseConfiguration.Equal(old.KnowledgeBaseConfiguration) ||
+		!new.Name.Equal(old.Name) ||
 		!new.StorageConfiguration.Equal(old.StorageConfiguration) {
 		input := &bedrockagent.UpdateKnowledgeBaseInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
@@ -443,75 +428,59 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 		}, errCodeValidationException, "cannot assume role")
 
 		if err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameKnowledgeBase, new.KnowledgeBaseID.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent Knowledge Base (%s)", new.KnowledgeBaseID.ValueString()), err.Error())
+
 			return
 		}
-	}
 
-	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	knowledgebase, err := waitKnowledgeBaseUpdated(ctx, conn, new.KnowledgeBaseID.ValueString(), updateTimeout)
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForUpdate, ResNameKnowledgeBase, new.KnowledgeBaseID.String(), err),
-			err.Error(),
-		)
-		return
-	}
+		kb, err := waitKnowledgeBaseUpdated(ctx, conn, new.KnowledgeBaseID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) create", new.KnowledgeBaseID.ValueString()), err.Error())
 
-	// Set values for unknowns after update is complete.
-	new.CreatedAt = fwflex.TimeToFramework(ctx, knowledgebase.CreatedAt)
-	new.UpdatedAt = fwflex.TimeToFramework(ctx, knowledgebase.UpdatedAt)
+			return
+		}
+
+		new.FailureReasons = fwflex.FlattenFrameworkStringValueListOfString(ctx, kb.FailureReasons)
+		new.UpdatedAt = fwflex.TimeToFramework(ctx, kb.UpdatedAt)
+	} else {
+		new.FailureReasons = old.FailureReasons
+		new.UpdatedAt = old.UpdatedAt
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().BedrockAgentClient(ctx)
-
 	var data knowledgeBaseResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &bedrockagent.DeleteKnowledgeBaseInput{
+	conn := r.Meta().BedrockAgentClient(ctx)
+
+	_, err := conn.DeleteKnowledgeBase(ctx, &bedrockagent.DeleteKnowledgeBaseInput{
 		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
-	}
+	})
 
-	_, err := conn.DeleteKnowledgeBase(ctx, in)
-
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNameKnowledgeBase, data.KnowledgeBaseID.String(), err),
-			err.Error(),
-		)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	_, err = waitKnowledgeBaseDeleted(ctx, conn, data.KnowledgeBaseID.ValueString(), deleteTimeout)
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForDeletion, ResNameKnowledgeBase, data.KnowledgeBaseID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent Knowledge Base (%s)", data.KnowledgeBaseID.ValueString()), err.Error())
+
 		return
 	}
-}
 
-func (r *knowledgeBaseResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	_, err = waitKnowledgeBaseDeleted(ctx, conn, data.KnowledgeBaseID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent Knowledge Base (%s) delete", data.KnowledgeBaseID.ValueString()), err.Error())
+
+		return
+	}
 }
 
 func (r *knowledgeBaseResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -520,17 +489,18 @@ func (r *knowledgeBaseResource) ModifyPlan(ctx context.Context, request resource
 
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.KnowledgeBaseStatusCreating),
-		Target:                    enum.Slice(awstypes.KnowledgeBaseStatusActive),
-		Refresh:                   statusKnowledgeBase(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.KnowledgeBaseStatusCreating),
+		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
+		Refresh: statusKnowledgeBase(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.KnowledgeBase); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.KnowledgeBase); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
 	}
 
 	return nil, err
@@ -538,17 +508,18 @@ func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id
 
 func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.KnowledgeBaseStatusUpdating),
-		Target:                    enum.Slice(awstypes.KnowledgeBaseStatusActive),
-		Refresh:                   statusKnowledgeBase(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.KnowledgeBaseStatusUpdating),
+		Target:  enum.Slice(awstypes.KnowledgeBaseStatusActive),
+		Refresh: statusKnowledgeBase(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.KnowledgeBase); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.KnowledgeBase); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
 	}
 
 	return nil, err
@@ -563,8 +534,11 @@ func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.KnowledgeBase); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*awstypes.KnowledgeBase); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
 	}
 
 	return nil, err
@@ -573,6 +547,7 @@ func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id
 func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findKnowledgeBaseByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -586,27 +561,28 @@ func statusKnowledgeBase(ctx context.Context, conn *bedrockagent.Client, id stri
 }
 
 func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.KnowledgeBase, error) {
-	in := &bedrockagent.GetKnowledgeBaseInput{
+	input := &bedrockagent.GetKnowledgeBaseInput{
 		KnowledgeBaseId: aws.String(id),
 	}
 
-	out, err := conn.GetKnowledgeBase(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	output, err := conn.GetKnowledgeBase(ctx, input)
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.KnowledgeBase == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.KnowledgeBase == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.KnowledgeBase, nil
+	return output.KnowledgeBase, nil
 }
 
 type knowledgeBaseResourceModel struct {
