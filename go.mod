@@ -178,7 +178,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.12
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.12
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.13
-	github.com/aws/aws-sdk-go-v2/service/swf v1.23.2
+	github.com/aws/aws-sdk-go-v2/service/swf v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.10
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.0.8
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.11
