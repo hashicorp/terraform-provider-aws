@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -81,9 +80,9 @@ func resourceUser() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.InputAuthenticationType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InputAuthenticationType](),
 						},
 					},
 				},
@@ -131,6 +130,7 @@ func resourceUser() *schema.Resource {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	userID := d.Get("user_id").(string)
 	input := &elasticache.CreateUserInput{
@@ -147,13 +147,13 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("passwords"); ok && v.(*schema.Set).Len() > 0 {
-		input.Passwords = flex.ExpandStringSet(v.(*schema.Set))
+		input.Passwords = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	output, err := conn.CreateUser(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
 		output, err = conn.CreateUser(ctx, input)
@@ -174,7 +174,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		err := createTags(ctx, conn, aws.ToString(output.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceUserRead(ctx, d, meta)...)
 		}
 
@@ -208,9 +208,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrARN, user.ARN)
 	if v := user.Authentication; v != nil {
 		tfMap := map[string]interface{}{
-			"password_count": aws.ToInt64(v.PasswordCount),
+			"password_count": aws.ToInt32(v.PasswordCount),
 			"passwords":      d.Get("authentication_mode.0.passwords"),
-			names.AttrType:   aws.ToString(v.Type),
+			names.AttrType:   string(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
@@ -250,7 +250,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("passwords") {
-			input.Passwords = flex.ExpandStringSet(d.Get("passwords").(*schema.Set))
+			input.Passwords = flex.ExpandStringValueSet(d.Get("passwords").(*schema.Set))
 		}
 
 		_, err := conn.ModifyUser(ctx, input)
@@ -276,7 +276,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		UserId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeUserNotFoundFault) {
+	if errs.IsA[*awstypes.UserNotFoundFault](err) {
 		return diags
 	}
 
@@ -312,29 +312,27 @@ func findUser(ctx context.Context, conn *elasticache.Client, input *elasticache.
 func findUsers(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeUsersInput, filter tfslices.Predicate[*awstypes.User]) ([]*awstypes.User, error) {
 	var output []*awstypes.User
 
-	err := conn.DescribeUsersPagesWithContext(ctx, input, func(page *elasticache.DescribeUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := elasticache.NewDescribeUsersPaginator(conn, input)
 
-		for _, v := range page.Users {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.UserNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeUserNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.Users {
+			if filter(&v) {
+				output = append(output, &v)
+			}
+		}
 	}
 
 	return output, nil
@@ -422,11 +420,11 @@ func expandAuthenticationMode(tfMap map[string]interface{}) *awstypes.Authentica
 	apiObject := &awstypes.AuthenticationMode{}
 
 	if v, ok := tfMap["passwords"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Passwords = flex.ExpandStringSet(v)
+		apiObject.Passwords = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
+		apiObject.Type = awstypes.InputAuthenticationType(v)
 	}
 
 	return apiObject
