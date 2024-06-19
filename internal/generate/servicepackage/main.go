@@ -101,7 +101,7 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
-		if s.GenerateClient {
+		if p != "meta" {
 			g.Infof("Generating internal/service/%s/%s", servicePackage, endpointResolverFilenamne)
 
 			d = g.NewGoFileDestination(endpointResolverFilenamne)

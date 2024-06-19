@@ -4,15 +4,12 @@ package {{ .ProviderPackage }}
 
 import (
 	"context"
-{{- if .GenerateClient }}
 	"fmt"
 	"net"
 {{ if .ClientSDKV1 -}}
 	"net/url"
 {{ end }}
-{{ end }}
 
-{{ if .GenerateClient }}
 {{- if .ClientSDKV1 }}
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 {{- end }}
@@ -23,10 +20,8 @@ import (
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-{{- end }}
 )
 
-{{- if .GenerateClient }}
 {{ if .ClientSDKV1 }}
 var _ endpoints_sdkv1.Resolver = resolverSDKv1{}
 
@@ -158,5 +153,4 @@ func withBaseEndpoint(endpoint string) func(*{{ .GoV2Package }}_sdkv2.Options) {
 		}
 	}
 }
-{{ end }}
 {{ end }}
