@@ -143,14 +143,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	), nil
 }
 
-func withBaseEndpoint(endpoint string) func(*waf_sdkv2.Options) {
-	return func(o *waf_sdkv2.Options) {
-		if endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}
-}
-
 func ServicePackage(ctx context.Context) conns.ServicePackage {
 	return &servicePackage{}
 }

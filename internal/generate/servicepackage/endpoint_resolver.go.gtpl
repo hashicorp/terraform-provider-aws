@@ -28,6 +28,12 @@ type resolver struct {
 	defaultResolver {{ .GoV2Package }}_sdkv2.EndpointResolverV2
 }
 
+func newEndpointResolver() *resolver {
+	return &resolver{
+		defaultResolver: {{ .GoV2Package }}_sdkv2.NewDefaultEndpointResolverV2(),
+	}
+}
+
 func (r *resolver) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package }}_sdkv2.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
 	useFIPS := aws_sdkv2.ToBool(params.UseFIPS)
@@ -75,9 +81,11 @@ func (r *resolver) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package }
 	return r.defaultResolver.ResolveEndpoint(ctx, params)
 }
 
-func newEndpointResolver() *resolver {
-	return &resolver{
-		defaultResolver: {{ .GoV2Package }}_sdkv2.NewDefaultEndpointResolverV2(),
+func withBaseEndpoint(endpoint string) func(*{{ .GoV2Package }}_sdkv2.Options) {
+	return func(o *{{ .GoV2Package }}_sdkv2.Options) {
+		if endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
 	}
 }
 {{ end }}

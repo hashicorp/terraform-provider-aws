@@ -20,6 +20,12 @@ type resolver struct {
 	defaultResolver docdbelastic_sdkv2.EndpointResolverV2
 }
 
+func newEndpointResolver() *resolver {
+	return &resolver{
+		defaultResolver: docdbelastic_sdkv2.NewDefaultEndpointResolverV2(),
+	}
+}
+
 func (r *resolver) ResolveEndpoint(ctx context.Context, params docdbelastic_sdkv2.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
 	useFIPS := aws_sdkv2.ToBool(params.UseFIPS)
@@ -67,8 +73,10 @@ func (r *resolver) ResolveEndpoint(ctx context.Context, params docdbelastic_sdkv
 	return r.defaultResolver.ResolveEndpoint(ctx, params)
 }
 
-func newEndpointResolver() *resolver {
-	return &resolver{
-		defaultResolver: docdbelastic_sdkv2.NewDefaultEndpointResolverV2(),
+func withBaseEndpoint(endpoint string) func(*docdbelastic_sdkv2.Options) {
+	return func(o *docdbelastic_sdkv2.Options) {
+		if endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
 	}
 }

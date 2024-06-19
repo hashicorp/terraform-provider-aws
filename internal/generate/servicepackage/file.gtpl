@@ -163,14 +163,6 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
-
-func withBaseEndpoint(endpoint string) func(*{{ .GoV2Package }}_sdkv2.Options) {
-	return func(o *{{ .GoV2Package }}_sdkv2.Options) {
-		if endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}
-}
 	{{- end }}
 {{- end }}
 
