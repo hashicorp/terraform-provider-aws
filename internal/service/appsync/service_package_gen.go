@@ -45,8 +45,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Data Source",
 		},
 		{
-			Factory:  ResourceDomainName,
+			Factory:  resourceDomainName,
 			TypeName: "aws_appsync_domain_name",
+			Name:     "Domain Name",
 		},
 		{
 			Factory:  ResourceDomainNameAPIAssociation,
