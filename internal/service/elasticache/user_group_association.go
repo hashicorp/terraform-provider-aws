@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -64,9 +63,9 @@ func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceD
 		UserIdsToAdd: []string{userID},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, 10*time.Minute, func() (interface{}, error) {
 		return conn.ModifyUserGroup(ctx, input)
-	}, awstypes.ErrCodeInvalidUserGroupStateFault)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%s): %s", id, err)
@@ -120,14 +119,14 @@ func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[INFO] Deleting ElastiCache User Group Association: %s", d.Id())
 	userGroupID, userID := parts[0], parts[1]
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidUserGroupStateFault](ctx, 10*time.Minute, func() (interface{}, error) {
 		return conn.ModifyUserGroup(ctx, &elasticache.ModifyUserGroupInput{
 			UserGroupId:     aws.String(userGroupID),
 			UserIdsToRemove: []string{userID},
 		})
-	}, awstypes.ErrCodeInvalidUserGroupStateFault)
+	})
 
-	if tfawserr.ErrMessageContains(err, awstypes.ErrCodeInvalidParameterValueException, "not a member") {
+	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "not a member") {
 		return diags
 	}
 
@@ -150,7 +149,7 @@ func findUserGroupAssociationByTwoPartKey(ctx context.Context, conn *elasticache
 	}
 
 	for _, v := range userGroup.UserIds {
-		if aws.ToString(v) == userID {
+		if v == userID {
 			return nil
 		}
 	}
