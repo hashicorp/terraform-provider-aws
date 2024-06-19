@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -348,7 +347,7 @@ func DataSourceDomain() *schema.Resource {
 
 func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
@@ -381,7 +380,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("access_policies", policies)
 	}
 
-	if err := d.Set("advanced_options", flex.FlattenStringMap(ds.AdvancedOptions)); err != nil {
+	if err := d.Set("advanced_options", flex.FlattenStringValueMap(ds.AdvancedOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
 
@@ -425,7 +424,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
-		endpoints := flex.FlattenStringMap(ds.Endpoints)
+		endpoints := flex.FlattenStringValueMap(ds.Endpoints)
 		if err := d.Set(names.AttrEndpoint, endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
