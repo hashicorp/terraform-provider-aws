@@ -155,7 +155,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.24.0
-	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.8
+	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.17.13
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.14
