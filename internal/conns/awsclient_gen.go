@@ -20,6 +20,7 @@ import (
 	applicationinsights_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationinsights"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
+	appsync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appsync"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -186,7 +187,6 @@ import (
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
-	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -319,8 +319,8 @@ func (c *AWSClient) AppStreamClient(ctx context.Context) *appstream_sdkv2.Client
 	return errs.Must(client[*appstream_sdkv2.Client](ctx, c, names.AppStream, make(map[string]any)))
 }
 
-func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
-	return errs.Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync, make(map[string]any)))
+func (c *AWSClient) AppSyncClient(ctx context.Context) *appsync_sdkv2.Client {
+	return errs.Must(client[*appsync_sdkv2.Client](ctx, c, names.AppSync, make(map[string]any)))
 }
 
 func (c *AWSClient) ApplicationInsightsClient(ctx context.Context) *applicationinsights_sdkv2.Client {

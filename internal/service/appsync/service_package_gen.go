@@ -5,10 +5,8 @@ package appsync
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	appsync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appsync"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -79,25 +77,23 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AppSync
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*appsync_sdkv1.AppSync, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appsync_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
+	return appsync_sdkv2.NewFromConfig(cfg, func(o *appsync_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-
-		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
 		}
-	}
-
-	return appsync_sdkv1.New(sess.Copy(&cfg)), nil
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {
