@@ -69,6 +69,8 @@ service/applicationcostprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationcostprofiler_'
 service/applicationinsights:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationinsights_'
+service/applicationsignals:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_applicationsignals_'
 service/appmesh:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appmesh_'
 service/apprunner:

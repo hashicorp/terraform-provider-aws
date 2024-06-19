@@ -240,6 +240,12 @@ service/applicationinsights:
           - any-glob-to-any-file:
               - 'internal/service/applicationinsights/**/*'
               - 'website/**/applicationinsights_*'
+service/applicationsignals:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/applicationsignals/**/*'
+              - 'website/**/applicationsignals_*'
 service/appmesh:
   - any:
       - changed-files:

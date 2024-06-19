@@ -15,6 +15,7 @@ val services = mapOf(
     "appflow" to ServiceSpec("AppFlow"),
     "appintegrations" to ServiceSpec("AppIntegrations"),
     "applicationinsights" to ServiceSpec("CloudWatch Application Insights"),
+    "applicationsignals" to ServiceSpec("Application Signals"),
     "appmesh" to ServiceSpec("App Mesh"),
     "apprunner" to ServiceSpec("App Runner"),
     "appstream" to ServiceSpec("AppStream 2.0", vpcLock = true, parallelismOverride = 10),

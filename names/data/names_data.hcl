@@ -579,6 +579,36 @@ service "applicationcostprofiler" {
   not_implemented          = true
 }
 
+service "applicationsignals" {
+
+  cli_v2_command {
+    aws_cli_v2_command           = "application-signals"
+    aws_cli_v2_command_no_dashes = "applicationsignals"
+  }
+
+  sdk {
+    id             = "Application Signals"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "ApplicationSignals"
+    human_friendly      = "Application Signals"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListServiceLevelObjectives"
+  }
+
+  resource_prefix {
+    correct = "aws_applicationsignals_"
+  }
+
+  provider_package_correct = "applicationsignals"
+  doc_prefix               = ["applicationsignals_"]
+  brand                    = "Amazon"
+}
+
 service "discovery" {
 
   go_packages {
