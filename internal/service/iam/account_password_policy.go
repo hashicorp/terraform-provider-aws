@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -86,39 +87,39 @@ func resourceAccountPasswordPolicy() *schema.Resource {
 
 func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.UpdateAccountPasswordPolicyInput{}
 
 	if v, ok := d.GetOk("allow_users_to_change_password"); ok {
-		input.AllowUsersToChangePassword = aws.Bool(v.(bool))
+		input.AllowUsersToChangePassword = v.(bool)
 	}
 	if v, ok := d.GetOk("hard_expiry"); ok {
 		input.HardExpiry = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("max_password_age"); ok {
-		input.MaxPasswordAge = aws.Int64(int64(v.(int)))
+		input.MaxPasswordAge = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk("minimum_password_length"); ok {
-		input.MinimumPasswordLength = aws.Int64(int64(v.(int)))
+		input.MinimumPasswordLength = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk("password_reuse_prevention"); ok {
-		input.PasswordReusePrevention = aws.Int64(int64(v.(int)))
+		input.PasswordReusePrevention = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk("require_lowercase_characters"); ok {
-		input.RequireLowercaseCharacters = aws.Bool(v.(bool))
+		input.RequireLowercaseCharacters = v.(bool)
 	}
 	if v, ok := d.GetOk("require_numbers"); ok {
-		input.RequireNumbers = aws.Bool(v.(bool))
+		input.RequireNumbers = v.(bool)
 	}
 	if v, ok := d.GetOk("require_symbols"); ok {
-		input.RequireSymbols = aws.Bool(v.(bool))
+		input.RequireSymbols = v.(bool)
 	}
 	if v, ok := d.GetOk("require_uppercase_characters"); ok {
-		input.RequireUppercaseCharacters = aws.Bool(v.(bool))
+		input.RequireUppercaseCharacters = v.(bool)
 	}
 
-	_, err := conn.UpdateAccountPasswordPolicyWithContext(ctx, input)
+	_, err := conn.UpdateAccountPasswordPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating IAM Account Password Policy: %s", err)
@@ -133,7 +134,7 @@ func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.Resource
 
 func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	policy, err := findAccountPasswordPolicy(ctx, conn)
 
@@ -163,12 +164,12 @@ func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IAM Account Password Policy: %s", d.Id())
-	_, err := conn.DeleteAccountPasswordPolicyWithContext(ctx, &iam.DeleteAccountPasswordPolicyInput{})
+	_, err := conn.DeleteAccountPasswordPolicy(ctx, &iam.DeleteAccountPasswordPolicyInput{})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
 	}
 
@@ -179,12 +180,12 @@ func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func findAccountPasswordPolicy(ctx context.Context, conn *iam.IAM) (*iam.PasswordPolicy, error) {
+func findAccountPasswordPolicy(ctx context.Context, conn *iam.Client) (*awstypes.PasswordPolicy, error) {
 	input := &iam.GetAccountPasswordPolicyInput{}
 
-	output, err := conn.GetAccountPasswordPolicyWithContext(ctx, input)
+	output, err := conn.GetAccountPasswordPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

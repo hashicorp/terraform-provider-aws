@@ -70,7 +70,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cloudformation` - (Optional) A collection of AWS CloudFormation stacks. See [`cloudformation`](#cloudformation-argument-reference) below for additional details.
-* `tags` - (Optional) AWS tags used to filter the resources in the resource collection See [`tags`](#tags-argument-reference) below for additional details.
+* `tags` - (Optional) AWS tags used to filter the resources in the resource collection. See [`tags`](#tags-argument-reference) below for additional details.
 
 ### `cloudformation` Argument Reference
 

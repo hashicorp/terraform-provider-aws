@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -43,7 +44,7 @@ func resourceSecretVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +147,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ARN)
+	d.Set(names.AttrARN, output.ARN)
 	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
@@ -270,8 +271,8 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 			_, err := conn.UpdateSecretVersionStage(ctx, input)
 
 			if errs.IsA[*types.ResourceNotFoundException](err) ||
-				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can’t perform this operation on the secret because it was deleted") ||
-				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
 				return diags
 			}
 
@@ -325,8 +326,8 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	output, err := conn.GetSecretValue(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
-		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can’t perform this operation on the secret because it was deleted") ||
-		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

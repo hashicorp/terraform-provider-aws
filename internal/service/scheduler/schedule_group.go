@@ -46,11 +46,11 @@ func ResourceScheduleGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,29 +58,29 @@ func ResourceScheduleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,9 +95,10 @@ const (
 )
 
 func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	in := &scheduler.CreateScheduleGroupInput{
 		Name: aws.String(name),
@@ -106,23 +107,24 @@ func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.CreateScheduleGroup(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionCreating, ResNameScheduleGroup, name, err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameScheduleGroup, name, err)
 	}
 
 	if out == nil || out.ScheduleGroupArn == nil {
-		return create.DiagError(names.Scheduler, create.ErrActionCreating, ResNameScheduleGroup, name, errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionCreating, ResNameScheduleGroup, name, errors.New("empty output"))
 	}
 
 	d.SetId(name)
 
 	if _, err := waitScheduleGroupActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionWaitingForCreation, ResNameScheduleGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionWaitingForCreation, ResNameScheduleGroup, d.Id(), err)
 	}
 
-	return resourceScheduleGroupRead(ctx, d, meta)
+	return append(diags, resourceScheduleGroupRead(ctx, d, meta)...)
 }
 
 func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	out, err := findScheduleGroupByName(ctx, conn, d.Id())
@@ -130,21 +132,21 @@ func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Scheduler Schedule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameScheduleGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionReading, ResNameScheduleGroup, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("creation_date", aws.ToTime(out.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrCreationDate, aws.ToTime(out.CreationDate).Format(time.RFC3339))
 	d.Set("last_modification_date", aws.ToTime(out.LastModificationDate).Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
-	d.Set("state", out.State)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(out.Name)))
+	d.Set(names.AttrState, out.State)
 
-	return nil
+	return diags
 }
 
 func resourceScheduleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -153,6 +155,7 @@ func resourceScheduleGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceScheduleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Scheduler ScheduleGroup %s", d.Id())
@@ -164,15 +167,15 @@ func resourceScheduleGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.Scheduler, create.ErrActionDeleting, ResNameScheduleGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionDeleting, ResNameScheduleGroup, d.Id(), err)
 	}
 
 	if _, err := waitScheduleGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.Scheduler, create.ErrActionWaitingForDeletion, ResNameScheduleGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.Scheduler, create.ErrActionWaitingForDeletion, ResNameScheduleGroup, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

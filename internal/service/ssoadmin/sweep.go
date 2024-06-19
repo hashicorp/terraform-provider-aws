@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -63,7 +64,7 @@ func sweepAccountAssignments(region string) error {
 		return err
 	}
 
-	if v, ok := dsData.GetOk("arns"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]interface{})) > 0 {
 		instanceArn := v.([]interface{})[0].(string)
 
 		// To sweep account assignments, we need to first determine which Permission Sets
@@ -156,7 +157,7 @@ func sweepApplications(region string) error {
 		return err
 	}
 
-	if v, ok := dsData.GetOk("arns"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]interface{})) > 0 {
 		instanceArn := v.([]interface{})[0].(string)
 
 		input := &ssoadmin.ListApplicationsInput{
@@ -216,7 +217,7 @@ func sweepPermissionSets(region string) error {
 		return err
 	}
 
-	if v, ok := dsData.GetOk("arns"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := dsData.GetOk(names.AttrARNs); ok && len(v.([]interface{})) > 0 {
 		instanceArn := v.([]interface{})[0].(string)
 
 		input := &ssoadmin.ListPermissionSetsInput{

@@ -18,25 +18,27 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_endpoint_access")
-func ResourceEndpointAccess() *schema.Resource {
+// @SDKResource("aws_redshift_endpoint_access", name="Endpoint Access")
+func resourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAccessCreate,
 		ReadWithoutTimeout:   resourceEndpointAccessRead,
 		UpdateWithoutTimeout: resourceEndpointAccessUpdate,
 		DeleteWithoutTimeout: resourceEndpointAccessDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -50,11 +52,11 @@ func ResourceEndpointAccess() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
 				),
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"resource_owner": {
+			names.AttrResourceOwner: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -75,11 +77,11 @@ func ResourceEndpointAccess() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"network_interface_id": {
+									names.AttrNetworkInterfaceID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -87,25 +89,25 @@ func ResourceEndpointAccess() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"subnet_id": {
+									names.AttrSubnetID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -124,15 +126,15 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		SubnetGroupName: aws.String(d.Get("subnet_group_name").(string)),
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		createOpts.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("cluster_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
 		createOpts.ClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("resource_owner"); ok {
+	if v, ok := d.GetOk(names.AttrResourceOwner); ok {
 		createOpts.ResourceOwner = aws.String(v.(string))
 	}
 
@@ -155,7 +157,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	endpoint, err := FindEndpointAccessByName(ctx, conn, d.Id())
+	endpoint, err := findEndpointAccessByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift endpoint access (%s) not found, removing from state", d.Id())
@@ -169,11 +171,11 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("endpoint_name", endpoint.EndpointName)
 	d.Set("subnet_group_name", endpoint.SubnetGroupName)
-	d.Set("vpc_security_group_ids", vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
-	d.Set("resource_owner", endpoint.ResourceOwner)
-	d.Set("cluster_identifier", endpoint.ClusterIdentifier)
-	d.Set("port", endpoint.Port)
-	d.Set("address", endpoint.Address)
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
+	d.Set(names.AttrResourceOwner, endpoint.ResourceOwner)
+	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
+	d.Set(names.AttrPort, endpoint.Port)
+	d.Set(names.AttrAddress, endpoint.Address)
 
 	if err := d.Set("vpc_endpoint", flattenVPCEndpoint(endpoint.VpcEndpoint)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
@@ -186,8 +188,8 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChanges("vpc_security_group_ids") {
-		_, n := d.GetChange("vpc_security_group_ids")
+	if d.HasChanges(names.AttrVPCSecurityGroupIDs) {
+		_, n := d.GetChange(names.AttrVPCSecurityGroupIDs)
 		if n == nil {
 			n = new(schema.Set)
 		}
@@ -257,11 +259,11 @@ func flattenVPCEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -275,11 +277,11 @@ func flattenNetworkInterface(apiObject *redshift.NetworkInterface) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
@@ -287,7 +289,7 @@ func flattenNetworkInterface(apiObject *redshift.NetworkInterface) map[string]in
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap["subnet_id"] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.StringValue(v)
 	}
 
 	return tfMap

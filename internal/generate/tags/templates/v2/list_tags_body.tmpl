@@ -4,10 +4,10 @@
 func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, optFns ...func(*{{ .AWSService }}.Options)) (tftags.KeyValueTags, error) {
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
-		Filters: []*{{ .AWSService  }}.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
-				Values: []*string{aws.String(identifier)},
+				Values: []string{identifier},
 			},
 		},
 		{{- else }}
@@ -19,7 +19,11 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{ .ListTagsInIDElem }}: aws.String(identifier),
 		{{- end }}
 		{{- if .TagResTypeElem }}
+		{{- if .TagResTypeElemType }}
+		{{ .TagResTypeElem }}:         awstypes.{{ .TagResTypeElemType }}(resourceType),
+		{{- else }}
 		{{ .TagResTypeElem }}:         aws.String(resourceType),
+		{{- end }}
 		{{- end }}
 		{{- end }}
 	}
@@ -28,7 +32,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 
 	pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		page, err := pages.NextPage(ctx, optFns...)
 
 	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
 			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {

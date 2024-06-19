@@ -216,6 +216,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the association
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Web ACL Association using their `web_acl_id:resource_arn`. For example:
@@ -248,4 +254,4 @@ Using `terraform import`, import WAF Regional Web ACL Association using their `w
 % terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-92667f5c1ba12f0dd670b9a0c354eaa6a7710825c86ec694fd9b66942f7d2390 -->
+<!-- cache-key: cdktf-0.20.1 input-748840947a2a9cc391b869f3bab0bc54cc54f0f6f837b68a1e0e5c25081b9174 -->

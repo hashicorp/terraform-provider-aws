@@ -79,6 +79,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `QUICKSIGHT_NAMESPACE` | QuickSight namespace name for testing. |
 | `QUICKSIGHT_ATHENA_TESTING_ENABLED` | Enable QuickSight tests dependent on Amazon Athena resources. |
 | `ROUTE53DOMAINS_DOMAIN_NAME` | Registered domain for Route 53 Domains testing. |
+| `RESOURCEEXPLORER_INDEX_TYPE` | Index Type for Resource Explorer 2 Search datasource testing. |
 | `SAGEMAKER_IMAGE_VERSION_BASE_IMAGE` | SageMaker base image to use for tests. |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_QUOTA_CODE` | Quota Code for Service Quotas testing (submits support case). |
 | `SERVICEQUOTAS_INCREASE_ON_CREATE_SERVICE_CODE` | Service Code for Service Quotas testing (submits support case). |

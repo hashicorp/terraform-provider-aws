@@ -7,37 +7,32 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func TestOnceAWeekWindowTypeValidate(t *testing.T) {
+func TestOnceAWeekWindowValidateAttribute(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         tftypes.Value
+		val         fwtypes.OnceAWeekWindow
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"not a string": {
-			val:         tftypes.NewValue(tftypes.Bool, true),
-			expectError: true,
+		"unknown": {
+			val: fwtypes.OnceAWeekWindowUnknown(),
 		},
-		"unknown string": {
-			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"null": {
+			val: fwtypes.OnceAWeekWindowNull(),
 		},
-		"null string": {
-			val: tftypes.NewValue(tftypes.String, nil),
+		"valid lowercase": {
+			val: fwtypes.OnceAWeekWindowValue("thu:07:44-thu:09:44"),
 		},
-		"valid string lowercase": {
-			val: tftypes.NewValue(tftypes.String, "thu:07:44-thu:09:44"),
+		"valid uppercase": {
+			val: fwtypes.OnceAWeekWindowValue("THU:07:44-THU:09:44"),
 		},
-		"valid string uppercase": {
-			val: tftypes.NewValue(tftypes.String, "THU:07:44-THU:09:44"),
-		},
-		"invalid string": {
-			val:         tftypes.NewValue(tftypes.String, "thu:25:44-zat:09:88"),
+		"invalid": {
+			val:         fwtypes.OnceAWeekWindowValue("thu:25:44-zat:09:88"),
 			expectError: true,
 		},
 	}
@@ -49,14 +44,12 @@ func TestOnceAWeekWindowTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.OnceAWeekWindowType.Validate(ctx, test.val, path.Root("test"))
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
 
-			if !diags.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if diags.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %#v", diags)
+			test.val.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
 			}
 		})
 	}

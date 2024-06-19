@@ -44,3 +44,7 @@ func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 		"Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: "+err.Error(),
 	)
 }
+
+func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
+	return x, DiagnosticsError(diags)
+}

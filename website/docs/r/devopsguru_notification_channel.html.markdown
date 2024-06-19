@@ -44,11 +44,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `filters` - (Optional) Filter configurations for the Amazon SNS notification topic  See the [`filters` argument reference](#filters-argument-reference) below.
+* `filters` - (Optional) Filter configurations for the Amazon SNS notification topic. See the [`filters` argument reference](#filters-argument-reference) below.
 
 ### `sns` Argument Reference
 
-* `topic_arn` - (Required)
+* `topic_arn` - (Required) Amazon Resource Name (ARN) of an Amazon Simple Notification Service topic.
 
 ### `filters` Argument Reference
 

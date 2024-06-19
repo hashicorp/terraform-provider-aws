@@ -12,4 +12,5 @@ var (
 	FindEventSourcesConfig      = findEventSourcesConfig
 	FindNotificationChannelByID = findNotificationChannelByID
 	FindResourceCollectionByID  = findResourceCollectionByID
+	FindServiceIntegration      = findServiceIntegration
 )

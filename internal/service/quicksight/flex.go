@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandResourcePermissions(tfList []interface{}) []*quicksight.ResourcePermission {
@@ -17,8 +18,8 @@ func expandResourcePermissions(tfList []interface{}) []*quicksight.ResourcePermi
 		tfMap := tfListRaw.(map[string]interface{})
 
 		permission := &quicksight.ResourcePermission{
-			Actions:   flex.ExpandStringSet(tfMap["actions"].(*schema.Set)),
-			Principal: aws.String(tfMap["principal"].(string)),
+			Actions:   flex.ExpandStringSet(tfMap[names.AttrActions].(*schema.Set)),
+			Principal: aws.String(tfMap[names.AttrPrincipal].(string)),
 		}
 
 		permissions[i] = permission
@@ -103,11 +104,11 @@ func flattenPermissions(perms []*quicksight.ResourcePermission) []interface{} {
 		perm := make(map[string]interface{})
 
 		if p.Principal != nil {
-			perm["principal"] = aws.StringValue(p.Principal)
+			perm[names.AttrPrincipal] = aws.StringValue(p.Principal)
 		}
 
 		if p.Actions != nil {
-			perm["actions"] = flex.FlattenStringList(p.Actions)
+			perm[names.AttrActions] = flex.FlattenStringList(p.Actions)
 		}
 
 		values = append(values, perm)

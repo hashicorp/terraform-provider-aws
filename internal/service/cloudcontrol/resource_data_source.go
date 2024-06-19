@@ -13,23 +13,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudcontrolapi_resource")
-func DataSourceResource() *schema.Resource {
+// @SDKDataSource("aws_cloudcontrolapi_resource", name="Resource")
+func dataSourceResource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -51,13 +52,13 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
-	identifier := d.Get("identifier").(string)
+	identifier := d.Get(names.AttrIdentifier).(string)
 	typeName := d.Get("type_name").(string)
-	resourceDescription, err := FindResource(ctx, conn,
+	resourceDescription, err := findResource(ctx, conn,
 		identifier,
 		typeName,
 		d.Get("type_version_id").(string),
-		d.Get("role_arn").(string),
+		d.Get(names.AttrRoleARN).(string),
 	)
 
 	if err != nil {
@@ -66,7 +67,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(resourceDescription.Identifier))
 
-	d.Set("properties", resourceDescription.Properties)
+	d.Set(names.AttrProperties, resourceDescription.Properties)
 
 	return diags
 }

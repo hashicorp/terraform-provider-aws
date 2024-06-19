@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.VirtualMFADevice
+	var conf awstypes.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -37,12 +37,12 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("mfa/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "base_32_string_seed"),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_date"),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "qr_code_png"),
-					resource.TestCheckNoResourceAttr(resourceName, "user_name"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrUserName),
 				),
 			},
 			{
@@ -60,7 +60,7 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.VirtualMFADevice
+	var conf awstypes.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
 	path := "/path/"
@@ -77,8 +77,8 @@ func TestAccIAMVirtualMFADevice_path(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_path(rName, path),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("mfa%s%s", path, rName)),
-					resource.TestCheckResourceAttr(resourceName, "path", path),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa%s%s", path, rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func TestAccIAMVirtualMFADevice_path(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.VirtualMFADevice
+	var conf awstypes.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -121,7 +121,7 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 
 func testAccCheckVirtualMFADeviceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_virtual_mfa_device" {
@@ -143,7 +143,7 @@ func testAccCheckVirtualMFADeviceDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, v *iam.VirtualMFADevice) resource.TestCheckFunc {
+func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, v *awstypes.VirtualMFADevice) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,7 +154,7 @@ func testAccCheckVirtualMFADeviceExists(ctx context.Context, n string, v *iam.Vi
 			return errors.New("No Virtual MFA Device ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindVirtualMFADeviceBySerialNumber(ctx, conn, rs.Primary.ID)
 
@@ -184,49 +184,4 @@ resource "aws_iam_virtual_mfa_device" "test" {
   path = %[2]q
 }
 `, rName, path)
-}
-
-func testAccVirtualMFADeviceConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_virtual_mfa_device" "test" {
-  virtual_mfa_device_name = %[1]q
-}
-`, rName)
-}
-
-func testAccVirtualMFADeviceConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_virtual_mfa_device" "test" {
-  virtual_mfa_device_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccVirtualMFADeviceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_virtual_mfa_device" "test" {
-  virtual_mfa_device_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccVirtualMFADeviceConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_virtual_mfa_device" "test" {
-  virtual_mfa_device_name = %[1]q
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }
