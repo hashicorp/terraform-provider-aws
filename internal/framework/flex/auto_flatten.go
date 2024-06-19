@@ -398,7 +398,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 	var diags diag.Diagnostics
 
 	switch tSliceElem := vFrom.Type().Elem(); tSliceElem.Kind() {
-	case reflect.Int64:
+	case reflect.Int32, reflect.Int64:
 		switch tTo := tTo.(type) {
 		case basetypes.ListTypable:
 			//
@@ -542,6 +542,79 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 
 	case reflect.Ptr:
 		switch tSliceElem.Elem().Kind() {
+		case reflect.Int32:
+			switch tTo := tTo.(type) {
+			case basetypes.ListTypable:
+				//
+				// []*int32 -> types.List(OfInt64).
+				//
+				if vFrom.IsNil() {
+					to, d := tTo.ValueFromList(ctx, types.ListNull(types.Int64Type))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				from := vFrom.Interface().([]*int32)
+				elements := make([]attr.Value, len(from))
+				for i, v := range from {
+					elements[i] = newInt32PointerValue(v)
+				}
+				list, d := types.ListValue(types.Int64Type, elements)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				to, d := tTo.ValueFromList(ctx, list)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+
+			case basetypes.SetTypable:
+				//
+				// []*int32 -> types.Set(OfInt64).
+				//
+				if vFrom.IsNil() {
+					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.Int64Type))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				from := vFrom.Interface().([]*int32)
+				elements := make([]attr.Value, len(from))
+				for i, v := range from {
+					elements[i] = newInt32PointerValue(v)
+				}
+				set, d := types.SetValue(types.Int64Type, elements)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				to, d := tTo.ValueFromSet(ctx, set)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
 		case reflect.Int64:
 			switch tTo := tTo.(type) {
 			case basetypes.ListTypable:
@@ -1126,4 +1199,12 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return diags
+}
+
+func newInt32PointerValue(value *int32) basetypes.Int64Value {
+	if value == nil {
+		return basetypes.NewInt64Null()
+	}
+
+	return basetypes.NewInt64Value(int64(*value))
 }
