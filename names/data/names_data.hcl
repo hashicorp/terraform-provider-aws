@@ -6124,7 +6124,7 @@ service "meta" {
   }
 
   client {
-    go_v1_client_typename = ""
+    skip_client_generate = true
   }
 
   resource_prefix {
