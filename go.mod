@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.28.0
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.43.1
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.13
