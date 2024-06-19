@@ -11,13 +11,11 @@ import (
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	{{- end }}
 	{{- if .ClientSDKV2 }}
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
-	{{- end }}
-	{{- if ne .ProviderPackage "meta" }}
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	{{- end }}
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -160,19 +158,18 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg, func(o *{{ .GoV2Package }}_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg,
+		{{ .GoV2Package }}_sdkv2.WithEndpointResolverV2(newEndpointResolver()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
+}
 
-			if (o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled) {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
-			}
+func withBaseEndpoint(endpoint string) func(*{{ .GoV2Package }}_sdkv2.Options) {
+	return func(o *{{ .GoV2Package }}_sdkv2.Options) {
+		if endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
-	}), nil
+	}
 }
 	{{- end }}
 {{- end }}

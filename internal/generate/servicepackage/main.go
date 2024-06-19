@@ -26,7 +26,8 @@ import (
 
 func main() {
 	const (
-		filename = `service_package_gen.go`
+		filename                  = `service_package_gen.go`
+		endpointResolverFilenamne = `service_endpoint_resolver_gen.go`
 	)
 	g := common.NewGenerator()
 
@@ -100,6 +101,20 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
+		if s.GenerateClient && s.ClientSDKV2 {
+			g.Infof("Generating internal/service/%s/%s", servicePackage, endpointResolverFilenamne)
+
+			d = g.NewGoFileDestination(endpointResolverFilenamne)
+
+			if err := d.WriteTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
+				g.Fatalf("error generating %s endpoint resolver: %s", p, err)
+			}
+
+			if err := d.Write(); err != nil {
+				g.Fatalf("generating file (%s): %s", endpointResolverFilenamne, err)
+			}
+		}
+
 		break
 	}
 }
@@ -129,6 +144,9 @@ type ServiceDatum struct {
 
 //go:embed file.gtpl
 var tmpl string
+
+//go:embed endpoint_resolver.go.gtpl
+var endpointResolverTmpl string
 
 // Annotation processing.
 var (
