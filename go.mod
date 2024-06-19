@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.34.0
-	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.33.4
+	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.7
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.11
