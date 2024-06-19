@@ -380,7 +380,7 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
-		diags.Append(expander.listOfInt64(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.StringTypable:
@@ -402,8 +402,8 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 	return diags
 }
 
-// listOfString copies a Plugin Framework ListOfInt64(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOfInt64(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
+// listOrSetOfInt64 copies a Plugin Framework ListOfInt64(ish) or SetOfInt64(ish) value to a compatible AWS API value.
+func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom listOrSetValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -644,8 +644,7 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 
 	switch v.ElementType(ctx).(type) {
 	case basetypes.Int64Typable:
-		// TODO
-		// diags.Append(expander.setOfInt64(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfInt64(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.StringTypable:

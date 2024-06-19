@@ -872,6 +872,99 @@ func TestExpandListOfInt64(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandSetOfInt64(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value []int64",
+			Source: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+			Target:     &[]int64{},
+			WantTarget: &[]int64{1, -1},
+		},
+		{
+			TestName:   "empty value []int64",
+			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
+			Target:     &[]int64{},
+			WantTarget: &[]int64{},
+		},
+		{
+			TestName:   "null value []int64",
+			Source:     types.SetNull(types.Int64Type),
+			Target:     &[]int64{},
+			WantTarget: &[]int64{},
+		},
+		{
+			TestName: "valid value []*int64",
+			Source: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+			Target:     &[]*int64{},
+			WantTarget: &[]*int64{aws.Int64(1), aws.Int64(-1)},
+		},
+		{
+			TestName:   "empty value []*int64",
+			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
+			Target:     &[]*int64{},
+			WantTarget: &[]*int64{},
+		},
+		{
+			TestName:   "null value []*int64",
+			Source:     types.SetNull(types.Int64Type),
+			Target:     &[]*int64{},
+			WantTarget: &[]*int64{},
+		},
+		{
+			TestName: "valid value []int32",
+			Source: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{1, -1},
+		},
+		{
+			TestName:   "empty value []int32",
+			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		{
+			TestName:   "null value []int32",
+			Source:     types.SetNull(types.Int64Type),
+			Target:     &[]int32{},
+			WantTarget: &[]int32{},
+		},
+		{
+			TestName: "valid value []*int32",
+			Source: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{aws.Int32(1), aws.Int32(-1)},
+		},
+		{
+			TestName:   "empty value []*int32",
+			Source:     types.SetValueMust(types.Int64Type, []attr.Value{}),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+		{
+			TestName:   "null value []*int32",
+			Source:     types.SetNull(types.Int64Type),
+			Target:     &[]*int32{},
+			WantTarget: &[]*int32{},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 func TestExpandListOfStringEnum(t *testing.T) {
 	t.Parallel()
 
