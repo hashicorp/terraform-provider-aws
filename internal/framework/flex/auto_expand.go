@@ -384,7 +384,7 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 		return diags
 
 	case basetypes.StringTypable:
-		diags.Append(expander.listOfString(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfString(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.ObjectTypable:
@@ -403,7 +403,7 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 }
 
 // listOrSetOfInt64 copies a Plugin Framework ListOfInt64(ish) or SetOfInt64(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom listOrSetValue, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -458,15 +458,15 @@ func (expander autoExpander) listOrSetOfInt64(ctx context.Context, vFrom listOrS
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
-		"from list[%s]": vFrom.ElementType(ctx),
-		"to":            vTo.Kind(),
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
 	})
 
 	return diags
 }
 
-// listOfString copies a Plugin Framework ListOfString(ish) value to a compatible AWS API value.
-func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
+// listOrSetOfString copies a Plugin Framework ListOfString(ish) or SetOfString(ish) value to a compatible AWS API value.
+func (expander autoExpander) listOrSetOfString(ctx context.Context, vFrom valueWithElementsAs, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch vTo.Kind() {
@@ -510,8 +510,8 @@ func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.L
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
-		"from list[%s]": vFrom.ElementType(ctx),
-		"to":            vTo.Kind(),
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
 	})
 
 	return diags
@@ -648,7 +648,7 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 		return diags
 
 	case basetypes.StringTypable:
-		diags.Append(expander.setOfString(ctx, v, vTo)...)
+		diags.Append(expander.listOrSetOfString(ctx, v, vTo)...)
 		return diags
 
 	case basetypes.ObjectTypable:
@@ -660,58 +660,6 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from set[%s]": v.ElementType(ctx),
-		"to":           vTo.Kind(),
-	})
-
-	return diags
-}
-
-// setOfString copies a Plugin Framework SetOfString(ish) value to a compatible AWS API value.
-func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.SetValue, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	switch vTo.Kind() {
-	case reflect.Slice:
-		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
-		case reflect.String:
-			//
-			// types.Set(OfString) -> []string.
-			//
-			var to []string
-			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-			if diags.HasError() {
-				return diags
-			}
-
-			// Copy elements individually to enable expansion of lists of
-			// custom string types (AWS enums)
-			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
-			for i := 0; i < len(to); i++ {
-				vals.Index(i).SetString(to[i])
-			}
-			vTo.Set(vals)
-			return diags
-
-		case reflect.Ptr:
-			switch tSliceElem.Elem().Kind() {
-			case reflect.String:
-				//
-				// types.Set(OfString) -> []*string.
-				//
-				var to []*string
-				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
-				return diags
-			}
-		}
-	}
-
-	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
-		"from set[%s]": vFrom.ElementType(ctx),
 		"to":           vTo.Kind(),
 	})
 

@@ -223,10 +223,9 @@ func fieldExistsInStruct(field string, str reflect.Value) bool {
 	return false
 }
 
-// listOrSetValue extends the Value interface for values that have ElementsAs and ElementType methods.
-type listOrSetValue interface {
+// valueWithElementsAs extends the Value interface for values that have an ElementsAs method.
+type valueWithElementsAs interface {
 	attr.Value
 
 	ElementsAs(context.Context, any, bool) diag.Diagnostics
-	ElementType(context.Context) attr.Type
 }
