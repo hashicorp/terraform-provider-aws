@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -56,7 +57,7 @@ func ResourceDomainPolicy() *schema.Resource {
 
 func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
@@ -83,7 +84,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 	domainName := d.Get(names.AttrDomainName).(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
@@ -92,16 +93,13 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 				DomainName:     aws.String(domainName),
 				AccessPolicies: aws.String(policy),
 			})
-		},
-		elasticsearch.ErrCodeValidationException,
-		"A change/update is in progress",
-	)
+		}, "A change/update is in progress")
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain Policy (%s): %s", d.Id(), err)
 	}
@@ -117,7 +115,7 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:     aws.String(d.Get(names.AttrDomainName).(string)),
