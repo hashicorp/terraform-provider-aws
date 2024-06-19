@@ -3437,7 +3437,7 @@ service "elasticsearch" {
 
   sdk {
     id             = "Elasticsearch Service"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

@@ -84,6 +84,7 @@ import (
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elasticsearchservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	eventbridge_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eventbridge"
@@ -202,7 +203,6 @@ import (
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
-	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
 	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
@@ -664,8 +664,8 @@ func (c *AWSClient) ElasticTranscoderConn(ctx context.Context) *elastictranscode
 	return errs.Must(conn[*elastictranscoder_sdkv1.ElasticTranscoder](ctx, c, names.ElasticTranscoder, make(map[string]any)))
 }
 
-func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice_sdkv1.ElasticsearchService {
-	return errs.Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch, make(map[string]any)))
+func (c *AWSClient) ElasticsearchClient(ctx context.Context) *elasticsearchservice_sdkv2.Client {
+	return errs.Must(client[*elasticsearchservice_sdkv2.Client](ctx, c, names.Elasticsearch, make(map[string]any)))
 }
 
 func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge_sdkv2.Client {
