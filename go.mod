@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.39.0
-	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.11
+	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.7
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.11
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.55.0
