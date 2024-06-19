@@ -10,15 +10,13 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appsync"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -97,9 +95,9 @@ func ResourceFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.RuntimeName](),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(appsync.RuntimeName_Values(), false),
 						},
 						"runtime_version": {
 							Type:     schema.TypeString,
@@ -115,14 +113,14 @@ func ResourceFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"conflict_detection": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConflictDetectionType](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appsync.ConflictDetectionType_Values(), false),
 						},
 						"conflict_handler": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ConflictHandlerType](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appsync.ConflictHandlerType_Values(), false),
 						},
 						"lambda_conflict_handler_config": {
 							Type:     schema.TypeList,
@@ -147,7 +145,7 @@ func ResourceFunction() *schema.Resource {
 
 func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID := d.Get("api_id").(string)
 
@@ -176,7 +174,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOkExists("max_batch_size"); ok {
-		input.MaxBatchSize = int32(v.(int))
+		input.MaxBatchSize = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
@@ -187,19 +185,19 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
-	resp, err := conn.CreateFunction(ctx, input)
+	resp, err := conn.CreateFunctionWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppSync Function: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s-%s", apiID, aws.ToString(resp.FunctionConfiguration.FunctionId)))
+	d.SetId(fmt.Sprintf("%s-%s", apiID, aws.StringValue(resp.FunctionConfiguration.FunctionId)))
 
 	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
 func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
@@ -211,8 +209,8 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		FunctionId: aws.String(functionID),
 	}
 
-	resp, err := conn.GetFunction(ctx, input)
-	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
+	resp, err := conn.GetFunctionWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync Function (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -247,7 +245,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
@@ -279,7 +277,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("max_batch_size"); ok {
-		input.MaxBatchSize = int32(v.(int))
+		input.MaxBatchSize = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
@@ -290,7 +288,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
-	_, err = conn.UpdateFunction(ctx, input)
+	_, err = conn.UpdateFunctionWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating AppSync Function (%s): %s", d.Id(), err)
 	}
@@ -300,7 +298,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, functionID, err := DecodeFunctionID(d.Id())
 	if err != nil {
@@ -312,8 +310,8 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 		FunctionId: aws.String(functionID),
 	}
 
-	_, err = conn.DeleteFunction(ctx, input)
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	_, err = conn.DeleteFunctionWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 		return diags
 	}
 	if err != nil {
@@ -331,17 +329,17 @@ func DecodeFunctionID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func expandRuntime(l []interface{}) *awstypes.AppSyncRuntime {
+func expandRuntime(l []interface{}) *appsync.AppSyncRuntime {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	configured := l[0].(map[string]interface{})
 
-	result := &awstypes.AppSyncRuntime{}
+	result := &appsync.AppSyncRuntime{}
 
 	if v, ok := configured["name"].(string); ok {
-		result.Name = awstypes.RuntimeName(v)
+		result.Name = aws.String(v)
 	}
 
 	if v, ok := configured["runtime_version"].(string); ok {
@@ -351,34 +349,34 @@ func expandRuntime(l []interface{}) *awstypes.AppSyncRuntime {
 	return result
 }
 
-func flattenRuntime(config *awstypes.AppSyncRuntime) []map[string]interface{} {
+func flattenRuntime(config *appsync.AppSyncRuntime) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
 
 	result := map[string]interface{}{
-		"name":            string(config.Name),
-		"runtime_version": aws.ToString(config.RuntimeVersion),
+		"name":            aws.StringValue(config.Name),
+		"runtime_version": aws.StringValue(config.RuntimeVersion),
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func expandSyncConfig(l []interface{}) *awstypes.SyncConfig {
+func expandSyncConfig(l []interface{}) *appsync.SyncConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	configured := l[0].(map[string]interface{})
 
-	result := &awstypes.SyncConfig{}
+	result := &appsync.SyncConfig{}
 
 	if v, ok := configured["conflict_detection"].(string); ok {
-		result.ConflictDetection = awstypes.ConflictDetectionType(v)
+		result.ConflictDetection = aws.String(v)
 	}
 
 	if v, ok := configured["conflict_handler"].(string); ok {
-		result.ConflictHandler = awstypes.ConflictHandlerType(v)
+		result.ConflictHandler = aws.String(v)
 	}
 
 	if v, ok := configured["lambda_conflict_handler_config"].([]interface{}); ok && len(v) > 0 {
@@ -388,28 +386,28 @@ func expandSyncConfig(l []interface{}) *awstypes.SyncConfig {
 	return result
 }
 
-func flattenSyncConfig(config *awstypes.SyncConfig) []map[string]interface{} {
+func flattenSyncConfig(config *appsync.SyncConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
 
 	result := map[string]interface{}{
-		"conflict_detection":             string(config.ConflictDetection),
-		"conflict_handler":               string(config.ConflictHandler),
+		"conflict_detection":             aws.StringValue(config.ConflictDetection),
+		"conflict_handler":               aws.StringValue(config.ConflictHandler),
 		"lambda_conflict_handler_config": flattenLambdaConflictHandlerConfig(config.LambdaConflictHandlerConfig),
 	}
 
 	return []map[string]interface{}{result}
 }
 
-func expandLambdaConflictHandlerConfig(l []interface{}) *awstypes.LambdaConflictHandlerConfig {
+func expandLambdaConflictHandlerConfig(l []interface{}) *appsync.LambdaConflictHandlerConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	configured := l[0].(map[string]interface{})
 
-	result := &awstypes.LambdaConflictHandlerConfig{}
+	result := &appsync.LambdaConflictHandlerConfig{}
 
 	if v, ok := configured["lambda_conflict_handler_arn"].(string); ok {
 		result.LambdaConflictHandlerArn = aws.String(v)
@@ -418,13 +416,13 @@ func expandLambdaConflictHandlerConfig(l []interface{}) *awstypes.LambdaConflict
 	return result
 }
 
-func flattenLambdaConflictHandlerConfig(config *awstypes.LambdaConflictHandlerConfig) []map[string]interface{} {
+func flattenLambdaConflictHandlerConfig(config *appsync.LambdaConflictHandlerConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
 
 	result := map[string]interface{}{
-		"lambda_conflict_handler_arn": aws.ToString(config.LambdaConflictHandlerArn),
+		"lambda_conflict_handler_arn": aws.StringValue(config.LambdaConflictHandlerArn),
 	}
 
 	return []map[string]interface{}{result}

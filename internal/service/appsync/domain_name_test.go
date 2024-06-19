@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDomainName_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainName awstypes.DomainNameConfig
+	var domainName appsync.DomainNameConfig
 	appsyncCertDomain := getCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
@@ -30,7 +30,7 @@ func testAccDomainName_basic(t *testing.T) {
 	resourceName := "aws_appsync_domain_name.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -54,14 +54,14 @@ func testAccDomainName_basic(t *testing.T) {
 
 func testAccDomainName_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainName awstypes.DomainNameConfig
+	var domainName appsync.DomainNameConfig
 	appsyncCertDomain := getCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -91,14 +91,14 @@ func testAccDomainName_description(t *testing.T) {
 
 func testAccDomainName_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domainName awstypes.DomainNameConfig
+	var domainName appsync.DomainNameConfig
 	appsyncCertDomain := getCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
@@ -117,7 +117,7 @@ func testAccDomainName_disappears(t *testing.T) {
 
 func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_domain_name" {
 				continue
@@ -125,13 +125,13 @@ func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			domainName, err := tfappsync.FindDomainNameByID(ctx, conn, rs.Primary.ID)
 			if err == nil {
-				if errs.IsA[*awstypes.NotFoundException](err) {
+				if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 					return nil
 				}
 				return err
 			}
 
-			if domainName != nil && aws.ToString(domainName.DomainName) == rs.Primary.ID {
+			if domainName != nil && aws.StringValue(domainName.DomainName) == rs.Primary.ID {
 				return fmt.Errorf("Appsync Domain Name ID %q still exists", rs.Primary.ID)
 			}
 
@@ -141,13 +141,13 @@ func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDomainNameExists(ctx context.Context, resourceName string, domainName *awstypes.DomainNameConfig) resource.TestCheckFunc {
+func testAccCheckDomainNameExists(ctx context.Context, resourceName string, domainName *appsync.DomainNameConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Domain Name Not found in state: %s", resourceName)
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
 		domain, err := tfappsync.FindDomainNameByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

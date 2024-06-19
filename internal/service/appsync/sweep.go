@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -41,14 +41,14 @@ func sweepGraphQLAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.AppSyncClient(ctx)
+	conn := client.AppSyncConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListGraphqlApisInput{}
 
 	for {
-		output, err := conn.ListGraphqlApis(ctx, input)
+		output, err := conn.ListGraphqlApisWithContext(ctx, input)
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync GraphQL API sweep for %s: %s", region, err)
 			return nil
@@ -65,13 +65,13 @@ func sweepGraphQLAPIs(region string) error {
 			r := ResourceGraphQLAPI()
 			d := r.Data(nil)
 
-			id := aws.ToString(graphAPI.ApiId)
+			id := aws.StringValue(graphAPI.ApiId)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.ToString(output.NextToken) == "" {
+		if aws.StringValue(output.NextToken) == "" {
 			break
 		}
 
@@ -96,14 +96,14 @@ func sweepDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.AppSyncClient(ctx)
+	conn := client.AppSyncConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListDomainNamesInput{}
 
 	for {
-		output, err := conn.ListDomainNames(ctx, input)
+		output, err := conn.ListDomainNamesWithContext(ctx, input)
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync Domain Name sweep for %s: %s", region, err)
 			return nil
@@ -120,13 +120,13 @@ func sweepDomainNames(region string) error {
 			r := ResourceDomainName()
 			d := r.Data(nil)
 
-			id := aws.ToString(dm.DomainName)
+			id := aws.StringValue(dm.DomainName)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.ToString(output.NextToken) == "" {
+		if aws.StringValue(output.NextToken) == "" {
 			break
 		}
 
@@ -151,14 +151,14 @@ func sweepDomainNameAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.AppSyncClient(ctx)
+	conn := client.AppSyncConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appsync.ListDomainNamesInput{}
 
 	for {
-		output, err := conn.ListDomainNames(ctx, input)
+		output, err := conn.ListDomainNamesWithContext(ctx, input)
 		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping AppSync Domain Name Association sweep for %s: %s", region, err)
 			return nil
@@ -175,13 +175,13 @@ func sweepDomainNameAssociations(region string) error {
 			r := ResourceDomainNameAPIAssociation()
 			d := r.Data(nil)
 
-			id := aws.ToString(dm.DomainName)
+			id := aws.StringValue(dm.DomainName)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.ToString(output.NextToken) == "" {
+		if aws.StringValue(output.NextToken) == "" {
 			break
 		}
 

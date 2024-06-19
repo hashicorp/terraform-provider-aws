@@ -9,14 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appsync"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -51,9 +50,9 @@ func ResourceType() *schema.Resource {
 				Required: true,
 			},
 			"format": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TypeDefinitionFormat](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(appsync.TypeDefinitionFormat_Values(), false),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -65,29 +64,29 @@ func ResourceType() *schema.Resource {
 
 func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID := d.Get("api_id").(string)
 
 	params := &appsync.CreateTypeInput{
 		ApiId:      aws.String(apiID),
 		Definition: aws.String(d.Get("definition").(string)),
-		Format:     awstypes.TypeDefinitionFormat(d.Get("format").(string)),
+		Format:     aws.String(d.Get("format").(string)),
 	}
 
-	out, err := conn.CreateType(ctx, params)
+	out, err := conn.CreateTypeWithContext(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Appsync Type: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s:%s", apiID, string(out.Type.Format), aws.ToString(out.Type.Name)))
+	d.SetId(fmt.Sprintf("%s:%s:%s", apiID, aws.StringValue(out.Type.Format), aws.StringValue(out.Type.Name)))
 
 	return append(diags, resourceTypeRead(ctx, d, meta)...)
 }
 
 func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, format, name, err := DecodeTypeID(d.Id())
 	if err != nil {
@@ -117,16 +116,16 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.UpdateTypeInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
-		Format:     awstypes.TypeDefinitionFormat(d.Get("format").(string)),
+		Format:     aws.String(d.Get("format").(string)),
 		TypeName:   aws.String(d.Get("name").(string)),
 		Definition: aws.String(d.Get("definition").(string)),
 	}
 
-	_, err := conn.UpdateType(ctx, params)
+	_, err := conn.UpdateTypeWithContext(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Appsync Type %q: %s", d.Id(), err)
 	}
@@ -136,15 +135,15 @@ func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.DeleteTypeInput{
 		ApiId:    aws.String(d.Get("api_id").(string)),
 		TypeName: aws.String(d.Get("name").(string)),
 	}
-	_, err := conn.DeleteType(ctx, input)
+	_, err := conn.DeleteTypeWithContext(ctx, input)
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
+		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Appsync Type: %s", err)

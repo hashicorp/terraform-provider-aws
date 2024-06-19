@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/aws/aws-sdk-go/service/appsync/appsynciface"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -18,12 +19,12 @@ import (
 // listTags lists appsync service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *appsync.Client, identifier string, optFns ...func(*appsync.Options)) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn appsynciface.AppSyncAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &appsync.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -35,7 +36,7 @@ func listTags(ctx context.Context, conn *appsync.Client, identifier string, optF
 // ListTags lists appsync service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).AppSyncClient(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).AppSyncConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -48,21 +49,21 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]string handling
+// map[string]*string handling
 
 // Tags returns appsync service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
-	return tags.Map()
+func Tags(tags tftags.KeyValueTags) map[string]*string {
+	return aws.StringMap(tags.Map())
 }
 
 // KeyValueTags creates tftags.KeyValueTags from appsync service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
 // getTagsIn returns appsync service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]string {
+func getTagsIn(ctx context.Context) map[string]*string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -73,7 +74,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 }
 
 // setTagsOut sets appsync service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]string) {
+func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -82,7 +83,7 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 // updateTags updates appsync service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *appsync.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*appsync.Options)) error {
+func updateTags(ctx context.Context, conn appsynciface.AppSyncAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -93,10 +94,10 @@ func updateTags(ctx context.Context, conn *appsync.Client, identifier string, ol
 	if len(removedTags) > 0 {
 		input := &appsync.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.Keys(),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -111,7 +112,7 @@ func updateTags(ctx context.Context, conn *appsync.Client, identifier string, ol
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -124,5 +125,5 @@ func updateTags(ctx context.Context, conn *appsync.Client, identifier string, ol
 // UpdateTags updates appsync service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).AppSyncClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).AppSyncConn(ctx), identifier, oldTags, newTags)
 }

@@ -7,13 +7,12 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appsync"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appsync"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -44,19 +43,19 @@ func ResourceDomainNameAPIAssociation() *schema.Resource {
 
 func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
-	resp, err := conn.AssociateApi(ctx, params)
+	resp, err := conn.AssociateApiWithContext(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Appsync Domain Name API Association: %s", err)
 	}
 
-	d.SetId(aws.ToString(resp.ApiAssociation.DomainName))
+	d.SetId(aws.StringValue(resp.ApiAssociation.DomainName))
 
 	if err := waitDomainNameAPIAssociation(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Appsync Domain Name API (%s) Association: %s", d.Id(), err)
@@ -67,7 +66,7 @@ func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.Resou
 
 func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	association, err := FindDomainNameAPIAssociationByID(ctx, conn, d.Id())
 	if association == nil && !d.IsNewResource() {
@@ -88,14 +87,14 @@ func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.Resourc
 
 func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
-	_, err := conn.AssociateApi(ctx, params)
+	_, err := conn.AssociateApiWithContext(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Appsync Domain Name API Association: %s", err)
 	}
@@ -109,14 +108,14 @@ func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.Resou
 
 func resourceDomainNameAPIAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	input := &appsync.DisassociateApiInput{
 		DomainName: aws.String(d.Id()),
 	}
-	_, err := conn.DisassociateApi(ctx, input)
+	_, err := conn.DisassociateApiWithContext(ctx, input)
 	if err != nil {
-		if errs.IsA[*awstypes.NotFoundException](err) {
+		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Appsync Domain Name API Association: %s", err)

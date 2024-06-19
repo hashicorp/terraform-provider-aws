@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
+	"github.com/aws/aws-sdk-go/service/appsync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,12 +21,12 @@ import (
 
 func testAccAPICache_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiCache awstypes.ApiCache
+	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
@@ -51,12 +51,12 @@ func testAccAPICache_basic(t *testing.T) {
 
 func testAccAPICache_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiCache awstypes.ApiCache
+	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
@@ -75,7 +75,7 @@ func testAccAPICache_disappears(t *testing.T) {
 
 func testAccCheckAPICacheDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_api_cache" {
 				continue
@@ -95,14 +95,14 @@ func testAccCheckAPICacheDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAPICacheExists(ctx context.Context, resourceName string, apiCache *awstypes.ApiCache) resource.TestCheckFunc {
+func testAccCheckAPICacheExists(ctx context.Context, resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Api Cache Not found in state: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 		cache, err := tfappsync.FindAPICacheByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

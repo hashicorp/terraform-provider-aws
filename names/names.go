@@ -27,7 +27,6 @@ import (
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	AMPEndpointID                        = "aps"
-	AppSyncEndpointID                    = "appsync"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	BatchEndpointID                      = "batch"
