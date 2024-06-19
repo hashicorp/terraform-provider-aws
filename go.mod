@@ -138,7 +138,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.13.0
-	github.com/aws/aws-sdk-go-v2/service/polly v1.40.6
+	github.com/aws/aws-sdk-go-v2/service/polly v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.6.7
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.11
