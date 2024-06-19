@@ -214,8 +214,8 @@ github.com/aws/aws-sdk-go-v2/service/evidently v1.20.0 h1:QdYEs3DC8oWu4cV8FnrLBZ
 github.com/aws/aws-sdk-go-v2/service/evidently v1.20.0/go.mod h1:sPuFaQ/DeK2FsJ1KzyLj8sO5g2IV8+0V28VCVk1hk8o=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.25.0 h1:FelLYQ5vrVsgI4r3Q1hJJfKYbcRaj7kncgncF+sCm+Y=
 github.com/aws/aws-sdk-go-v2/service/finspace v1.25.0/go.mod h1:rSCRrHyvoKMZxPznz9FMC1lwK8DE4qLURw2rzMiEEMQ=
-github.com/aws/aws-sdk-go-v2/service/firehose v1.29.2 h1:i95j9+scSwmP8iffFRvRgHlnzHdk2s2xCPNOWZeYiTg=
-github.com/aws/aws-sdk-go-v2/service/firehose v1.29.2/go.mod h1:NsRuRAQlL/Awr82MPmfAWI06RnbgI+ej2aLXVsP+DoY=
+github.com/aws/aws-sdk-go-v2/service/firehose v1.30.0 h1:xDay+EZfe0OZKrx/Wtjhcweie3w+m01gpyexTebEA6U=
+github.com/aws/aws-sdk-go-v2/service/firehose v1.30.0/go.mod h1:GST/Kf+NkoLXbC7wXkaqnXQV1F/Pt6ezlK8Sza3QdDY=
 github.com/aws/aws-sdk-go-v2/service/fis v1.24.9 h1:a2hYrOUjJ5Q4AnX6eVEt7MG9kuJyRpiKZQyoM497ddQ=
 github.com/aws/aws-sdk-go-v2/service/fis v1.24.9/go.mod h1:KpXPRO+AgD0f7WU9H2RoSb3XSjiZihLcCDU5GzvFz20=
 github.com/aws/aws-sdk-go-v2/service/fms v1.33.8 h1:KPz28R5hdLrnU/gplBVszZnz93PIs97rVJ8GFeb/3Lw=
