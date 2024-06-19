@@ -131,7 +131,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.9.0
-	github.com/aws/aws-sdk-go-v2/service/oam v1.11.7
+	github.com/aws/aws-sdk-go-v2/service/oam v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.14
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.27.10
 	github.com/aws/aws-sdk-go-v2/service/osis v1.10.1
