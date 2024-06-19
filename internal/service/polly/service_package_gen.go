@@ -44,7 +44,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return polly_sdkv2.NewFromConfig(cfg,
-		polly_sdkv2.WithEndpointResolverV2(newEndpointResolver()),
+		polly_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

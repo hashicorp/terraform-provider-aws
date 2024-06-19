@@ -14,19 +14,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-var _ codestarnotifications_sdkv2.EndpointResolverV2 = &resolver{}
+var _ codestarnotifications_sdkv2.EndpointResolverV2 = resolverSDKv2{}
 
-type resolver struct {
+type resolverSDKv2 struct {
 	defaultResolver codestarnotifications_sdkv2.EndpointResolverV2
 }
 
-func newEndpointResolver() *resolver {
-	return &resolver{
+func newEndpointResolverSDKv2() resolverSDKv2 {
+	return resolverSDKv2{
 		defaultResolver: codestarnotifications_sdkv2.NewDefaultEndpointResolverV2(),
 	}
 }
 
-func (r *resolver) ResolveEndpoint(ctx context.Context, params codestarnotifications_sdkv2.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
+func (r resolverSDKv2) ResolveEndpoint(ctx context.Context, params codestarnotifications_sdkv2.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
 	useFIPS := aws_sdkv2.ToBool(params.UseFIPS)
 

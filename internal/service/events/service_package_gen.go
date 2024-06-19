@@ -107,7 +107,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return eventbridge_sdkv2.NewFromConfig(cfg,
-		eventbridge_sdkv2.WithEndpointResolverV2(newEndpointResolver()),
+		eventbridge_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

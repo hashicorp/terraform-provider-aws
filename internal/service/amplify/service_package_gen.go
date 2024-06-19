@@ -71,7 +71,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return amplify_sdkv2.NewFromConfig(cfg,
-		amplify_sdkv2.WithEndpointResolverV2(newEndpointResolver()),
+		amplify_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
