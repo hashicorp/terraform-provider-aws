@@ -309,6 +309,123 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	}
 }
 
+func TestFlattenFrameworkInt64Set(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []*int64
+		expected types.Set
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []*int64{aws.Int64(1), aws.Int64(-1)},
+			expected: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+		},
+		"zero elements": {
+			input:    []*int64{},
+			expected: types.SetNull(types.Int64Type),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.SetNull(types.Int64Type),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.FlattenFrameworkInt64Set(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkInt64ValueSet(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []int64
+		expected types.Set
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []int64{1, -1},
+			expected: types.SetValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+		},
+		"zero elements": {
+			input:    []int64{},
+			expected: types.SetNull(types.Int64Type),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.SetNull(types.Int64Type),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.FlattenFrameworkInt64ValueSet(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestFlattenFrameworkStringSet(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []*string
+		expected types.Set
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []*string{aws.String("GET"), aws.String("HEAD")},
+			expected: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+				types.StringValue("HEAD"),
+			}),
+		},
+		"zero elements": {
+			input:    []*string{},
+			expected: types.SetNull(types.StringType),
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.SetNull(types.StringType),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.FlattenFrameworkStringSet(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	t.Parallel()
 

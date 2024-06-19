@@ -61,6 +61,38 @@ func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable)
 	return output
 }
 
+// FlattenFrameworkInt64Set converts a slice of int64 pointers to a framework Set value.
+//
+// A nil slice is converted to a null Set.
+// An empty slice is converted to a null Set.
+func FlattenFrameworkInt64Set(ctx context.Context, v []*int64) types.Set {
+	if len(v) == 0 {
+		return types.SetNull(types.Int64Type)
+	}
+
+	var output types.Set
+
+	must(Flatten(ctx, v, &output))
+
+	return output
+}
+
+// FlattenFrameworkInt64ValueSet converts a slice of int64 values to a framework Set value.
+//
+// A nil slice is converted to a null Set.
+// An empty slice is converted to a null Set.
+func FlattenFrameworkInt64ValueSet[T ~int64](ctx context.Context, v []T) types.Set {
+	if len(v) == 0 {
+		return types.SetNull(types.Int64Type)
+	}
+
+	var output types.Set
+
+	must(Flatten(ctx, v, &output))
+
+	return output
+}
+
 // FlattenFrameworkStringSet converts a slice of string pointers to a framework Set value.
 //
 // A nil slice is converted to a null Set.
