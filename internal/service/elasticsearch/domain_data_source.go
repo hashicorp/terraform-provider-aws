@@ -6,8 +6,9 @@ package elasticsearch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -359,7 +360,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	}
 
-	respDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, reqDescribeDomainConfig)
+	respDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfig(ctx, reqDescribeDomainConfig)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "querying config for elasticsearch_domain: %s", err)
 	}
@@ -370,9 +371,9 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dc := respDescribeDomainConfig.DomainConfig
 
-	d.SetId(aws.StringValue(ds.ARN))
+	d.SetId(aws.ToString(ds.ARN))
 
-	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
+	if ds.AccessPolicies != nil && aws.ToString(ds.AccessPolicies) != "" {
 		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "access policies contain an invalid JSON: %s", err)

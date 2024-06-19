@@ -6,8 +6,8 @@ package elasticsearch
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -63,7 +63,7 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *elasticsearch.AutoTune
 	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
 
 	if v, ok := tfMap["rollback_on_disable"].(string); ok && v != "" {
-		options.RollbackOnDisable = aws.String(v)
+		options.RollbackOnDisable = awstypes.RollbackOnDisable(v)
 	}
 
 	return options
@@ -178,9 +178,9 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *elasticsearch.Advan
 	}
 
 	m := map[string]interface{}{}
-	m[names.AttrEnabled] = aws.BoolValue(advancedSecurityOptions.Enabled)
-	if aws.BoolValue(advancedSecurityOptions.Enabled) {
-		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
+	m[names.AttrEnabled] = aws.ToBool(advancedSecurityOptions.Enabled)
+	if aws.ToBool(advancedSecurityOptions.Enabled) {
+		m["internal_user_database_enabled"] = aws.ToBool(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
 	return []map[string]interface{}{m}
@@ -193,13 +193,13 @@ func flattenAutoTuneOptions(autoTuneOptions *elasticsearch.AutoTuneOptions) map[
 
 	m := map[string]interface{}{}
 
-	m["desired_state"] = aws.StringValue(autoTuneOptions.DesiredState)
+	m["desired_state"] = aws.ToString(autoTuneOptions.DesiredState)
 
 	if v := autoTuneOptions.MaintenanceSchedules; v != nil {
 		m["maintenance_schedule"] = flattenAutoTuneMaintenanceSchedules(v)
 	}
 
-	m["rollback_on_disable"] = aws.StringValue(autoTuneOptions.RollbackOnDisable)
+	m["rollback_on_disable"] = string(autoTuneOptions.RollbackOnDisable)
 
 	return m
 }
@@ -218,7 +218,7 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*elastic
 
 		m[names.AttrDuration] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
 
-		m["cron_expression_for_recurrence"] = aws.StringValue(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
+		m["cron_expression_for_recurrence"] = aws.ToString(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
 
 		tfList = append(tfList, m)
 	}
@@ -229,8 +229,8 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*elastic
 func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDuration *elasticsearch.Duration) map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m[names.AttrValue] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
-	m[names.AttrUnit] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
+	m[names.AttrValue] = aws.ToInt64(autoTuneMaintenanceScheduleDuration.Value)
+	m[names.AttrUnit] = aws.ToString(autoTuneMaintenanceScheduleDuration.Unit)
 
 	return m
 }
@@ -241,13 +241,13 @@ func flattenESSAMLOptions(d *schema.ResourceData, samlOptions *elasticsearch.SAM
 	}
 
 	m := map[string]interface{}{
-		names.AttrEnabled: aws.BoolValue(samlOptions.Enabled),
+		names.AttrEnabled: aws.ToBool(samlOptions.Enabled),
 		"idp":             flattenESSAMLIdpOptions(samlOptions.Idp),
 	}
 
-	m["roles_key"] = aws.StringValue(samlOptions.RolesKey)
-	m["session_timeout_minutes"] = aws.Int64Value(samlOptions.SessionTimeoutMinutes)
-	m["subject_key"] = aws.StringValue(samlOptions.SubjectKey)
+	m["roles_key"] = aws.ToString(samlOptions.RolesKey)
+	m["session_timeout_minutes"] = aws.ToInt64(samlOptions.SessionTimeoutMinutes)
+	m["subject_key"] = aws.ToString(samlOptions.SubjectKey)
 
 	// samlOptions.master_backend_role and samlOptions.master_user_name will be added to the
 	// all_access role in kibana's security manager.  These values cannot be read or
@@ -265,8 +265,8 @@ func flattenESSAMLIdpOptions(SAMLIdp *elasticsearch.SAMLIdp) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"entity_id":        aws.StringValue(SAMLIdp.EntityId),
-		"metadata_content": aws.StringValue(SAMLIdp.MetadataContent),
+		"entity_id":        aws.ToString(SAMLIdp.EntityId),
+		"metadata_content": aws.ToString(SAMLIdp.MetadataContent),
 	}
 
 	return []interface{}{m}
@@ -317,11 +317,11 @@ func flattenLogPublishingOptions(o map[string]*elasticsearch.LogPublishingOption
 	for logType, val := range o {
 		mm := map[string]interface{}{
 			"log_type":        logType,
-			names.AttrEnabled: aws.BoolValue(val.Enabled),
+			names.AttrEnabled: aws.ToBool(val.Enabled),
 		}
 
 		if val.CloudWatchLogsLogGroupArn != nil {
-			mm[names.AttrCloudWatchLogGroupARN] = aws.StringValue(val.CloudWatchLogsLogGroupArn)
+			mm[names.AttrCloudWatchLogGroupARN] = aws.ToString(val.CloudWatchLogsLogGroupArn)
 		}
 
 		m = append(m, mm)

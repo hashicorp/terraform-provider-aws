@@ -6,9 +6,9 @@ package elasticsearch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -21,7 +21,7 @@ const (
 
 func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := conn.GetUpgradeStatusWithContext(ctx, &elasticsearch.GetUpgradeStatusInput{
+		out, err := conn.GetUpgradeStatus(ctx, &elasticsearch.GetUpgradeStatusInput{
 			DomainName: aws.String(name),
 		})
 		if err != nil {
@@ -31,17 +31,17 @@ func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.ElasticsearchS
 		// Elasticsearch upgrades consist of multiple steps:
 		// https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-version-migration.html
 		// Prevent false positive completion where the UpgradeStep is not the final UPGRADE step.
-		if aws.StringValue(out.StepStatus) == elasticsearch.UpgradeStatusSucceeded && aws.StringValue(out.UpgradeStep) != elasticsearch.UpgradeStepUpgrade {
+		if aws.ToString(out.StepStatus) == elasticsearch.UpgradeStatusSucceeded && string(out.UpgradeStep) != elasticsearch.UpgradeStepUpgrade {
 			return out, elasticsearch.UpgradeStatusInProgress, nil
 		}
 
-		return out, aws.StringValue(out.StepStatus), nil
+		return out, aws.ToString(out.StepStatus), nil
 	}
 }
 
 func domainConfigStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
+		out, err := conn.DescribeElasticsearchDomainConfig(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
 			DomainName: aws.String(name),
 		})
 

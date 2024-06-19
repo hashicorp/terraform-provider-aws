@@ -6,9 +6,9 @@ package elasticsearch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -18,7 +18,7 @@ func FindDomainByName(ctx context.Context, conn *elasticsearch.ElasticsearchServ
 		DomainName: aws.String(name),
 	}
 
-	output, err := conn.DescribeElasticsearchDomainWithContext(ctx, input)
+	output, err := conn.DescribeElasticsearchDomain(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{

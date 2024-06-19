@@ -5,10 +5,10 @@ package elasticsearch
 import (
 	"context"
 
+	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"

@@ -8,8 +8,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -70,7 +70,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
+	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.ToString(ds.AccessPolicies))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain Policy (%s): %s", d.Id(), err)
@@ -94,7 +94,7 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 
 	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
+			return conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 				DomainName:     aws.String(domainName),
 				AccessPolicies: aws.String(policy),
 			})
@@ -119,7 +119,7 @@ func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
 
-	_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
+	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:     aws.String(d.Get(names.AttrDomainName).(string)),
 		AccessPolicies: aws.String(""),
 	})

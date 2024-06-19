@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -414,7 +414,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
-			_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
+			_, err := conn.DeleteElasticsearchDomain(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
 				DomainName: aws.String(rName),
 			})
 			return err
@@ -424,7 +424,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 				PreConfig: func() {
 					// Create duplicate
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
-					_, err := conn.CreateElasticsearchDomainWithContext(ctx, &elasticsearch.CreateElasticsearchDomainInput{
+					_, err := conn.CreateElasticsearchDomain(ctx, &elasticsearch.CreateElasticsearchDomainInput{
 						DomainName: aws.String(rName),
 						EBSOptions: &elasticsearch.EBSOptions{
 							EBSEnabled: aws.Bool(true),
@@ -1765,8 +1765,8 @@ func testAccCheckDomainEncrypted(encrypted bool, status *elasticsearch.Elasticse
 func testAccCheckNodeToNodeEncrypted(encrypted bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		options := status.NodeToNodeEncryptionOptions
-		if aws.BoolValue(options.Enabled) != encrypted {
-			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
+		if aws.ToBool(options.Enabled) != encrypted {
+			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.ToBool(options.Enabled), encrypted)
 		}
 		return nil
 	}
@@ -1776,19 +1776,19 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, statu
 	return func(s *terraform.State) error {
 		conf := status.AdvancedSecurityOptions
 
-		if aws.BoolValue(conf.Enabled) != enabled {
+		if aws.ToBool(conf.Enabled) != enabled {
 			return fmt.Errorf(
 				"AdvancedSecurityOptions.Enabled not set properly. Given: %t, Expected: %t",
-				aws.BoolValue(conf.Enabled),
+				aws.ToBool(conf.Enabled),
 				enabled,
 			)
 		}
 
-		if aws.BoolValue(conf.Enabled) {
-			if aws.BoolValue(conf.InternalUserDatabaseEnabled) != userDbEnabled {
+		if aws.ToBool(conf.Enabled) {
+			if aws.ToBool(conf.InternalUserDatabaseEnabled) != userDbEnabled {
 				return fmt.Errorf(
 					"AdvancedSecurityOptions.InternalUserDatabaseEnabled not set properly. Given: %t, Expected: %t",
-					aws.BoolValue(conf.InternalUserDatabaseEnabled),
+					aws.ToBool(conf.InternalUserDatabaseEnabled),
 					userDbEnabled,
 				)
 			}

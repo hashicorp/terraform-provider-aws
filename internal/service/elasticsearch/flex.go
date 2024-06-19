@@ -4,8 +4,8 @@
 package elasticsearch
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -53,7 +53,7 @@ func expandDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointO
 	}
 
 	if v, ok := m["tls_security_policy"].(string); ok {
-		domainEndpointOptions.TLSSecurityPolicy = aws.String(v)
+		domainEndpointOptions.TLSSecurityPolicy = awstypes.TLSSecurityPolicy(v)
 	}
 
 	if customEndpointEnabled, ok := m["custom_endpoint_enabled"]; ok {
@@ -86,7 +86,7 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 			var volumeType string
 			if v, ok := m[names.AttrVolumeType]; ok && v.(string) != "" {
 				volumeType = v.(string)
-				options.VolumeType = aws.String(volumeType)
+				options.VolumeType = awstypes.VolumeType(volumeType)
 			}
 			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
 				options.Iops = aws.Int64(int64(v.(int)))
@@ -133,12 +133,12 @@ func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
 func flattenCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m[names.AttrEnabled] = aws.BoolValue(c.Enabled)
+	m[names.AttrEnabled] = aws.ToBool(c.Enabled)
 
-	if aws.BoolValue(c.Enabled) {
-		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
-		m[names.AttrUserPoolID] = aws.StringValue(c.UserPoolId)
-		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
+	if aws.ToBool(c.Enabled) {
+		m["identity_pool_id"] = aws.ToString(c.IdentityPoolId)
+		m[names.AttrUserPoolID] = aws.ToString(c.UserPoolId)
+		m[names.AttrRoleARN] = aws.ToString(c.RoleArn)
 	}
 
 	return []map[string]interface{}{m}
@@ -150,16 +150,16 @@ func flattenDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainEnd
 	}
 
 	m := map[string]interface{}{
-		"enforce_https":           aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
-		"tls_security_policy":     aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
-		"custom_endpoint_enabled": aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled),
+		"enforce_https":           aws.ToBool(domainEndpointOptions.EnforceHTTPS),
+		"tls_security_policy":     string(domainEndpointOptions.TLSSecurityPolicy),
+		"custom_endpoint_enabled": aws.ToBool(domainEndpointOptions.CustomEndpointEnabled),
 	}
-	if aws.BoolValue(domainEndpointOptions.CustomEndpointEnabled) {
+	if aws.ToBool(domainEndpointOptions.CustomEndpointEnabled) {
 		if domainEndpointOptions.CustomEndpoint != nil {
-			m["custom_endpoint"] = aws.StringValue(domainEndpointOptions.CustomEndpoint)
+			m["custom_endpoint"] = aws.ToString(domainEndpointOptions.CustomEndpoint)
 		}
 		if domainEndpointOptions.CustomEndpointCertificateArn != nil {
-			m["custom_endpoint_certificate_arn"] = aws.StringValue(domainEndpointOptions.CustomEndpointCertificateArn)
+			m["custom_endpoint_certificate_arn"] = aws.ToString(domainEndpointOptions.CustomEndpointCertificateArn)
 		}
 	}
 
@@ -170,21 +170,21 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if o.EBSEnabled != nil {
-		m["ebs_enabled"] = aws.BoolValue(o.EBSEnabled)
+		m["ebs_enabled"] = aws.ToBool(o.EBSEnabled)
 	}
 
-	if aws.BoolValue(o.EBSEnabled) {
+	if aws.ToBool(o.EBSEnabled) {
 		if o.Iops != nil {
-			m[names.AttrIOPS] = aws.Int64Value(o.Iops)
+			m[names.AttrIOPS] = aws.ToInt64(o.Iops)
 		}
 		if o.Throughput != nil {
-			m[names.AttrThroughput] = aws.Int64Value(o.Throughput)
+			m[names.AttrThroughput] = aws.ToInt64(o.Throughput)
 		}
 		if o.VolumeSize != nil {
-			m[names.AttrVolumeSize] = aws.Int64Value(o.VolumeSize)
+			m[names.AttrVolumeSize] = aws.ToInt64(o.VolumeSize)
 		}
 		if o.VolumeType != nil {
-			m[names.AttrVolumeType] = aws.StringValue(o.VolumeType)
+			m[names.AttrVolumeType] = string(o.VolumeType)
 		}
 	}
 
@@ -199,10 +199,10 @@ func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
-		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.ToBool(o.Enabled)
 	}
 	if o.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.StringValue(o.KmsKeyId)
+		m[names.AttrKMSKeyID] = aws.ToString(o.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
@@ -214,7 +214,7 @@ func flattenSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []ma
 	}
 
 	m := map[string]interface{}{
-		"automated_snapshot_start_hour": int(aws.Int64Value(snapshotOptions.AutomatedSnapshotStartHour)),
+		"automated_snapshot_start_hour": int(aws.ToInt64(snapshotOptions.AutomatedSnapshotStartHour)),
 	}
 
 	return []map[string]interface{}{m}
@@ -237,7 +237,7 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface
 		m[names.AttrSubnetIDs] = flex.FlattenStringSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
-		m[names.AttrVPCID] = aws.StringValue(o.VPCId)
+		m[names.AttrVPCID] = aws.ToString(o.VPCId)
 	}
 
 	return m

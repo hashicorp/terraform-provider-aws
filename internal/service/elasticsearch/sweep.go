@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,7 +40,7 @@ func sweepDomains(region string) error {
 	input := &elasticsearchservice.ListDomainNamesInput{}
 
 	// ListDomainNames has no pagination support whatsoever
-	output, err := conn.ListDomainNamesWithContext(ctx, input)
+	output, err := conn.ListDomainNames(ctx, input)
 
 	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
@@ -62,9 +64,9 @@ func sweepDomains(region string) error {
 			continue
 		}
 
-		name := aws.StringValue(domainInfo.DomainName)
+		name := aws.ToString(domainInfo.DomainName)
 
-		if engineType := aws.StringValue(domainInfo.EngineType); engineType != elasticsearchservice.EngineTypeElasticsearch {
+		if engineType := string(domainInfo.EngineType); engineType != awstypes.EngineTypeElasticsearch {
 			log.Printf("[INFO] Skipping Elasticsearch Domain %s: EngineType = %s", name, engineType)
 			continue
 		}
@@ -81,7 +83,7 @@ func sweepDomains(region string) error {
 			continue
 		}
 
-		if output != nil && aws.BoolValue(output.Deleted) {
+		if output != nil && aws.ToBool(output.Deleted) {
 			log.Printf("[INFO] Skipping Elasticsearch Domain (%s) with deleted status", name)
 			continue
 		}

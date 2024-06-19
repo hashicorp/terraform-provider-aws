@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -55,7 +55,7 @@ func ResourceDomain() *schema.Resource {
 				domainName := d.Get(names.AttrDomainName).(string)
 
 				conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
-				resp, err := conn.GetCompatibleElasticsearchVersionsWithContext(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
+				resp, err := conn.GetCompatibleElasticsearchVersions(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
 				if err != nil {
@@ -66,7 +66,7 @@ func ResourceDomain() *schema.Resource {
 					return true
 				}
 				for _, targetVersion := range resp.CompatibleElasticsearchVersions[0].TargetVersions {
-					if aws.StringValue(targetVersion) == newVersion {
+					if aws.ToString(targetVersion) == newVersion {
 						return false
 					}
 				}
@@ -666,7 +666,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateElasticsearchDomainWithContext(ctx, input)
+			return conn.CreateElasticsearchDomain(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeInvalidTypeException, "Error setting policy") ||
@@ -688,7 +688,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "creating Elasticsearch Domain (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*elasticsearch.CreateElasticsearchDomainOutput).DomainStatus.ARN))
+	d.SetId(aws.ToString(outputRaw.(*elasticsearch.CreateElasticsearchDomainOutput).DomainStatus.ARN))
 
 	if err := WaitForDomainCreation(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) create: %s", d.Id(), err)
@@ -701,7 +701,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[DEBUG] Updating Elasticsearch Domain config: %s", input)
-		_, err = conn.UpdateElasticsearchDomainConfigWithContext(ctx, input)
+		_, err = conn.UpdateElasticsearchDomainConfig(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) config: %s", d.Id(), err)
@@ -732,7 +732,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s): %s", d.Id(), err)
 	}
 
-	output, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
+	output, err := conn.DescribeElasticsearchDomainConfig(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
 		DomainName: aws.String(name),
 	})
 
@@ -742,7 +742,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	dc := output.DomainConfig
 
-	if v := aws.StringValue(ds.AccessPolicies); v != "" {
+	if v := aws.ToString(ds.AccessPolicies); v != "" {
 		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), v)
 
 		if err != nil {
@@ -787,7 +787,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// from resource as they are not returned from the API
 	if ds.AdvancedSecurityOptions != nil {
 		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
-		if !aws.BoolValue(ds.AdvancedSecurityOptions.Enabled) {
+		if !aws.ToBool(ds.AdvancedSecurityOptions.Enabled) {
 			advSecOpts[0]["internal_user_database_enabled"] = getUserDBEnabled(d)
 		}
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
@@ -952,7 +952,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[DEBUG] Updating Elasticsearch Domain config: %s", input)
-		_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, input)
+		_, err := conn.UpdateElasticsearchDomainConfig(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) config: %s", d.Id(), err)
@@ -969,7 +969,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			log.Printf("[DEBUG] Upgrading Elasticsearch Domain: %s", input)
-			_, err := conn.UpgradeElasticsearchDomainWithContext(ctx, input)
+			_, err := conn.UpgradeElasticsearchDomain(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "upgrading Elasticsearch Domain (%s): %s", d.Id(), err)
@@ -991,7 +991,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get(names.AttrDomainName).(string)
 
 	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
-	_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
+	_, err := conn.DeleteElasticsearchDomain(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
 		DomainName: aws.String(name),
 	})
 
@@ -1021,7 +1021,7 @@ func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil, err
 	}
 
-	d.SetId(aws.StringValue(ds.ARN))
+	d.SetId(aws.ToString(ds.ARN))
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -1077,7 +1077,7 @@ func flattenNodeToNodeEncryptionOptions(o *elasticsearch.NodeToNodeEncryptionOpt
 
 	m := map[string]interface{}{}
 	if o.Enabled != nil {
-		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
+		m[names.AttrEnabled] = aws.ToBool(o.Enabled)
 	}
 
 	return []map[string]interface{}{m}
@@ -1173,35 +1173,35 @@ func expandZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConf
 func flattenClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
 	m := map[string]interface{}{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
-		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
+		"zone_awareness_enabled": aws.ToBool(c.ZoneAwarenessEnabled),
 	}
 
 	if c.ColdStorageOptions != nil {
 		m["cold_storage_options"] = flattenColdStorageOptions(c.ColdStorageOptions)
 	}
 	if c.DedicatedMasterCount != nil {
-		m["dedicated_master_count"] = aws.Int64Value(c.DedicatedMasterCount)
+		m["dedicated_master_count"] = aws.ToInt64(c.DedicatedMasterCount)
 	}
 	if c.DedicatedMasterEnabled != nil {
-		m["dedicated_master_enabled"] = aws.BoolValue(c.DedicatedMasterEnabled)
+		m["dedicated_master_enabled"] = aws.ToBool(c.DedicatedMasterEnabled)
 	}
 	if c.DedicatedMasterType != nil {
-		m["dedicated_master_type"] = aws.StringValue(c.DedicatedMasterType)
+		m["dedicated_master_type"] = aws.ToString(c.DedicatedMasterType)
 	}
 	if c.InstanceCount != nil {
-		m[names.AttrInstanceCount] = aws.Int64Value(c.InstanceCount)
+		m[names.AttrInstanceCount] = aws.ToInt64(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
-		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)
+		m[names.AttrInstanceType] = aws.ToString(c.InstanceType)
 	}
 	if c.WarmEnabled != nil {
-		m["warm_enabled"] = aws.BoolValue(c.WarmEnabled)
+		m["warm_enabled"] = aws.ToBool(c.WarmEnabled)
 	}
 	if c.WarmCount != nil {
-		m["warm_count"] = aws.Int64Value(c.WarmCount)
+		m["warm_count"] = aws.ToInt64(c.WarmCount)
 	}
 	if c.WarmType != nil {
-		m["warm_type"] = aws.StringValue(c.WarmType)
+		m["warm_type"] = aws.ToString(c.WarmType)
 	}
 
 	return []map[string]interface{}{m}
@@ -1213,7 +1213,7 @@ func flattenColdStorageOptions(coldStorageOptions *elasticsearch.ColdStorageOpti
 	}
 
 	m := map[string]interface{}{
-		names.AttrEnabled: aws.BoolValue(coldStorageOptions.Enabled),
+		names.AttrEnabled: aws.ToBool(coldStorageOptions.Enabled),
 	}
 
 	return []interface{}{m}
@@ -1225,7 +1225,7 @@ func flattenZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwareness
 	}
 
 	m := map[string]interface{}{
-		"availability_zone_count": aws.Int64Value(zoneAwarenessConfig.AvailabilityZoneCount),
+		"availability_zone_count": aws.ToInt64(zoneAwarenessConfig.AvailabilityZoneCount),
 	}
 
 	return []interface{}{m}

@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -48,7 +48,7 @@ func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Elasticsearc
 			return retry.NonRetryableError(err)
 		}
 
-		if !aws.BoolValue(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
+		if !aws.ToBool(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
 		}
 
@@ -60,7 +60,7 @@ func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Elasticsearc
 		if err != nil {
 			return fmt.Errorf("describing Elasticsearch domain: %w", err)
 		}
-		if !aws.BoolValue(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
+		if !aws.ToBool(out.Processing) && (out.Endpoint != nil || out.Endpoints != nil) {
 			return nil
 		}
 	}
@@ -77,7 +77,7 @@ func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchS
 			return retry.NonRetryableError(err)
 		}
 
-		if !aws.BoolValue(out.Processing) {
+		if !aws.ToBool(out.Processing) {
 			return nil
 		}
 
@@ -89,7 +89,7 @@ func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchS
 		if err != nil {
 			return fmt.Errorf("describing Elasticsearch domain: %w", err)
 		}
-		if !aws.BoolValue(out.Processing) {
+		if !aws.ToBool(out.Processing) {
 			return nil
 		}
 	}
@@ -110,7 +110,7 @@ func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchS
 			return retry.NonRetryableError(err)
 		}
 
-		if out != nil && !aws.BoolValue(out.Processing) {
+		if out != nil && !aws.ToBool(out.Processing) {
 			return nil
 		}
 
@@ -124,7 +124,7 @@ func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchS
 			}
 			return fmt.Errorf("describing Elasticsearch domain: %s", err)
 		}
-		if out != nil && !aws.BoolValue(out.Processing) {
+		if out != nil && !aws.ToBool(out.Processing) {
 			return nil
 		}
 	}

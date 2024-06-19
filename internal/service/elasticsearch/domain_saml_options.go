@@ -8,8 +8,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -154,7 +154,7 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Updating Elasticsearch domain SAML Options %s", config)
 
-	_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
+	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),
 		AdvancedSecurityOptions: &config,
 	})
@@ -180,7 +180,7 @@ func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
 	config.SetSAMLOptions(nil)
 
-	_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
+	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),
 		AdvancedSecurityOptions: &config,
 	})

@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
+	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/go-cty/cty"
