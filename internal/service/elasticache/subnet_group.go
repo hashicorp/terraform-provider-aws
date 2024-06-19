@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -85,19 +84,20 @@ func resourceSubnetGroup() *schema.Resource {
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 
 	name := d.Get(names.AttrName).(string)
 	input := &elasticache.CreateCacheSubnetGroupInput{
 		CacheSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		CacheSubnetGroupName:        aws.String(name),
-		SubnetIds:                   flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:                   flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                        getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateCacheSubnetGroup(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
 		output, err = conn.CreateCacheSubnetGroup(ctx, input)
@@ -118,7 +118,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		err := createTags(ctx, conn, aws.ToString(output.CacheSubnetGroup.ARN), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 		}
 
@@ -149,7 +149,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.CacheSubnetGroupDescription)
 	d.Set(names.AttrName, group.CacheSubnetGroupName)
-	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v *awstypes.Subnet) string {
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v awstypes.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
 	}))
 	d.Set(names.AttrVPCID, group.VpcId)
@@ -165,7 +165,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &elasticache.ModifyCacheSubnetGroupInput{
 			CacheSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			CacheSubnetGroupName:        aws.String(d.Get(names.AttrName).(string)),
-			SubnetIds:                   flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			SubnetIds:                   flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyCacheSubnetGroup(ctx, input)
@@ -189,7 +189,7 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		})
 	}, "DependencyViolation")
 
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeCacheSubnetGroupNotFoundFault) {
+	if errs.IsA[*awstypes.CacheSubnetGroupNotFoundFault](err) {
 		return diags
 	}
 
@@ -217,45 +217,43 @@ func findCacheSubnetGroupByName(ctx context.Context, conn *elasticache.Client, n
 		CacheSubnetGroupName: aws.String(name),
 	}
 
-	return findCacheSubnetGroup(ctx, conn, input, tfslices.PredicateTrue[*awstypes.CacheSubnetGroup]())
+	return findCacheSubnetGroup(ctx, conn, input, tfslices.PredicateTrue[awstypes.CacheSubnetGroup]())
 }
 
-func findCacheSubnetGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*awstypes.CacheSubnetGroup]) (*awstypes.CacheSubnetGroup, error) {
+func findCacheSubnetGroup(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[awstypes.CacheSubnetGroup]) (*awstypes.CacheSubnetGroup, error) {
 	output, err := findCacheSubnetGroups(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findCacheSubnetGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*awstypes.CacheSubnetGroup]) ([]*awstypes.CacheSubnetGroup, error) {
-	var output []*awstypes.CacheSubnetGroup
+func findCacheSubnetGroups(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[awstypes.CacheSubnetGroup]) ([]awstypes.CacheSubnetGroup, error) {
+	var output []awstypes.CacheSubnetGroup
 
-	err := conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := elasticache.NewDescribeCacheSubnetGroupsPaginator(conn, input)
 
-		for _, v := range page.CacheSubnetGroups {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.CacheSubnetGroupNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, awstypes.ErrCodeCacheSubnetGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.CacheSubnetGroups {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

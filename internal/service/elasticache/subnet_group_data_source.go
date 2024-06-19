@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -68,7 +67,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.CacheSubnetGroupDescription)
 	d.Set(names.AttrName, group.CacheSubnetGroupName)
-	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v *awstypes.Subnet) string {
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v awstypes.Subnet) string {
 		return aws.ToString(v.SubnetIdentifier)
 	}))
 	d.Set(names.AttrVPCID, group.VpcId)
