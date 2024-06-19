@@ -1,5 +1,9 @@
 ## 5.55.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_drs_replication_configuration_template` ([#26399](https://github.com/hashicorp/terraform-provider-aws/issues/26399))
+
 ENHANCEMENTS:
 
 * data-source/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` attribute ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
@@ -12,6 +16,7 @@ ENHANCEMENTS:
 * data-source/aws_networkmanager_core_network_policy_document: Add `when_sent_to` and `via` configuration blocks to `segment_actions` ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
 * resource/aws_api_gateway_integration: Increase maximum value of `timeout_milliseconds` from `29000` (29 seconds) to `300000` (5 minutes) ([#38010](https://github.com/hashicorp/terraform-provider-aws/issues/38010))
 * resource/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
+* resource/aws_autoscaling_group: Add plan-time validation of `warm_pool.max_group_prepared_capacity` and `warm_pool.min_size` ([#37174](https://github.com/hashicorp/terraform-provider-aws/issues/37174))
 * resource/aws_docdb_cluster: Add `restore_to_point_in_time` argument ([#37716](https://github.com/hashicorp/terraform-provider-aws/issues/37716))
 * resource/aws_dynamodb_table: Adds validation for `ttl` values. ([#37991](https://github.com/hashicorp/terraform-provider-aws/issues/37991))
 * resource/aws_ec2_fleet: Add `launch_template_config.override.instance_requirements.max_spot_price_as_percentage_of_optimal_on_demand_price` argument ([#38003](https://github.com/hashicorp/terraform-provider-aws/issues/38003))
@@ -20,9 +25,12 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_ami: Fix `interface conversion: interface {} is types.ProductCodeValues, not string` panic ([#37977](https://github.com/hashicorp/terraform-provider-aws/issues/37977))
 * data-source/aws_networkmanager_core_network_policy_document: Add correct `except` values to the returned JSON document when `segment_actions.share_with_except` is configured ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
+* resource/aws_autoscaling_group: Fix bug updating `warm_pool.max_group_prepared_capacity` to `0` ([#37174](https://github.com/hashicorp/terraform-provider-aws/issues/37174))
 * resource/aws_dynamodb_table: Fixes perpetual diff when `ttl.attribute_name` is set when `ttl.enabled` is not set. ([#37991](https://github.com/hashicorp/terraform-provider-aws/issues/37991))
 * resource/aws_ec2_network_insights_path: Mark `destination` as Optional ([#36966](https://github.com/hashicorp/terraform-provider-aws/issues/36966))
+* resource/aws_lambda_event_source_mapping: Remove the upper limit on `scaling_config.maximum_concurrency` ([#37980](https://github.com/hashicorp/terraform-provider-aws/issues/37980))
 * service/transitgateway: Fix resource Read pagination regression causing `NotFound` errors ([#38011](https://github.com/hashicorp/terraform-provider-aws/issues/38011))
 
 ## 5.54.1 (June 14, 2024)
