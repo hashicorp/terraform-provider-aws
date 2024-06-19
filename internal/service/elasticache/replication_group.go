@@ -1291,7 +1291,7 @@ func waitReplicationGroupDeleted(ctx context.Context, conn *elasticache.Client, 
 	return nil, err
 }
 
-func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticache.Client, id string) ([]awstypes.CacheCluster, error) {
+func findReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticache.Client, id string) ([]*awstypes.CacheCluster, error) {
 	rg, err := findReplicationGroupByID(ctx, conn, id)
 
 	if err != nil {

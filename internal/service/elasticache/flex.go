@@ -46,8 +46,8 @@ func flattenLogDeliveryConfigurations(logDeliveryConfiguration []awstypes.LogDel
 
 func expandEmptyLogDeliveryConfigurations(v map[string]interface{}) awstypes.LogDeliveryConfigurationRequest {
 	logDeliveryConfigurationRequest := awstypes.LogDeliveryConfigurationRequest{}
-	logDeliveryConfigurationRequest.SetEnabled(false)
-	logDeliveryConfigurationRequest.SetLogType(v["log_type"].(string))
+	logDeliveryConfigurationRequest.Enabled = aws.Bool(false)
+	logDeliveryConfigurationRequest.LogType = awstypes.LogType(v["log_type"].(string))
 
 	return logDeliveryConfigurationRequest
 }
@@ -61,11 +61,11 @@ func expandLogDeliveryConfigurations(v map[string]interface{}) awstypes.LogDeliv
 	destinationDetails := awstypes.DestinationDetails{}
 
 	switch v["destination_type"].(string) {
-	case awstypes.DestinationTypeCloudwatchLogs:
+	case string(awstypes.DestinationTypeCloudWatchLogs):
 		destinationDetails.CloudWatchLogsDetails = &awstypes.CloudWatchLogsDestinationDetails{
 			LogGroup: aws.String(v[names.AttrDestination].(string)),
 		}
-	case awstypes.DestinationTypeKinesisFirehose:
+	case string(awstypes.DestinationTypeKinesisFirehose):
 		destinationDetails.KinesisFirehoseDetails = &awstypes.KinesisFirehoseDestinationDetails{
 			DeliveryStream: aws.String(v[names.AttrDestination].(string)),
 		}

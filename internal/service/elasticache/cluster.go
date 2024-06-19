@@ -694,7 +694,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if requestUpdate {
-			log.Printf("[DEBUG] Modifying ElastiCache Cluster (%s), opts:\n%s", d.Id(), input)
+			log.Printf("[DEBUG] Modifying ElastiCache Cluster (%s), opts:\n%+v", d.Id(), input)
 			_, err := conn.ModifyCacheCluster(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache cluster (%s), error: %s", d.Id(), err)
@@ -767,7 +767,7 @@ func DeleteCacheCluster(ctx context.Context, conn *elasticache.Client, cacheClus
 		input.FinalSnapshotIdentifier = aws.String(finalSnapshotID)
 	}
 
-	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", input)
+	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %+v", input)
 	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 		_, err := conn.DeleteCacheCluster(ctx, input)
 		if err != nil {
@@ -815,11 +815,11 @@ func findCacheCluster(ctx context.Context, conn *elasticache.Client, input *elas
 		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*awstypes.CacheCluster]) ([]awstypes.CacheCluster, error) {
-	var output []awstypes.CacheCluster
+func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeCacheClustersInput, filter tfslices.Predicate[*awstypes.CacheCluster]) ([]*awstypes.CacheCluster, error) {
+	var output []*awstypes.CacheCluster
 
 	pages := elasticache.NewDescribeCacheClustersPaginator(conn, input)
 
@@ -837,7 +837,11 @@ func findCacheClusters(ctx context.Context, conn *elasticache.Client, input *ela
 			return nil, err
 		}
 
-		output = append(output, page.CacheClusters...)
+		for _, v := range page.CacheClusters {
+			if filter(&v) {
+				output = append(output, &v)
+			}
+		}
 	}
 
 	return output, nil
@@ -941,7 +945,7 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 
 	for _, node := range sortedCacheNodes {
 		if node.CacheNodeId == nil || node.Endpoint == nil || node.Endpoint.Address == nil || node.Endpoint.Port == nil || node.CustomerAvailabilityZone == nil {
-			return fmt.Errorf("Unexpected nil pointer in: %s", node)
+			return fmt.Errorf("Unexpected nil pointer in: %+v", node)
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
 			names.AttrID:               aws.ToString(node.CacheNodeId),
