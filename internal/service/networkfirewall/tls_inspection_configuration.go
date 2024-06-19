@@ -14,14 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -82,6 +84,20 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 					stringvalidator.LengthBetween(1, 512),
 				},
 			},
+			names.AttrEncryptionConfiguration: schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[encryptionConfigurationModel](ctx),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -90,7 +106,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "Must contain only alphanumeric characters and dash '-'"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "Must contain only a-z, A-Z, 0-9 and - (hyphen)"),
 				},
 			},
 			"number_of_associations": schema.Int64Attribute{
@@ -107,29 +123,6 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrKeyID: schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Optional:   true,
-							Computed:   true,
-						},
-						names.AttrType: schema.StringAttribute{
-							Optional: true,
-							Computed: true,
-							Default:  stringdefault.StaticString(networkfirewall.EncryptionTypeAwsOwnedKmsKey),
-							Validators: []validator.String{
-								stringvalidator.OneOf(networkfirewall.EncryptionType_Values()...),
-							},
-						},
-					},
-				},
-			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -139,12 +132,16 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 				CustomType: fwtypes.NewListNestedObjectTypeOf[tlsInspectionConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
-					listvalidator.SizeBetween(1, 1),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"server_certificate_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[serverCertificateConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"certificate_authority_arn": schema.StringAttribute{
@@ -177,10 +174,13 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 									},
 									names.AttrScope: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[serverCertificateScopeModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"protocols": schema.SetAttribute{
-													CustomType:  fwtypes.SetOfInt64Type,
+													CustomType:  fwtypes.NewSetTypeOf[types.Int64](ctx),
 													ElementType: types.Int64Type,
 													Required:    true,
 													Validators: []validator.Set{
@@ -210,6 +210,9 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 												},
 												names.AttrDestination: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[addressModel](ctx),
+													Validators: []validator.List{
+														listvalidator.IsRequired(),
+													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"address_definition": schema.StringAttribute{
@@ -241,7 +244,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 														},
 													},
 												},
-												"sources": schema.ListNestedBlock{
+												"source": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[addressModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
@@ -451,6 +454,15 @@ func (r *tlsInspectionConfigurationResource) Delete(ctx context.Context, request
 	}
 }
 
+func (r *tlsInspectionConfigurationResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.AtLeastOneOf(
+			path.MatchRoot("tls_inspection_configuration").AtListIndex(0).AtName("server_certificate_configuration").AtListIndex(0).AtName("certificate_authority_arn"),
+			path.MatchRoot("tls_inspection_configuration").AtListIndex(0).AtName("server_certificate_configuration").AtListIndex(0).AtName("server_certificate"),
+		),
+	}
+}
+
 func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	input := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),
@@ -576,25 +588,17 @@ func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfir
 func flattenDescribeTLSInspectionConfigurationOutput(ctx context.Context, data *tlsInspectionConfigurationResourceModel, apiObject *networkfirewall.DescribeTLSInspectionConfigurationOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	d := fwflex.Flatten(ctx, apiObject.TLSInspectionConfigurationResponse, &data)
+	d := fwflex.Flatten(ctx, apiObject.TLSInspectionConfigurationResponse, data)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
-	var tlsInspectionConfigurationData tlsInspectionConfigurationModel
-	d = fwflex.Flatten(ctx, apiObject.TLSInspectionConfiguration, &tlsInspectionConfigurationData)
+	d = fwflex.Flatten(ctx, apiObject.TLSInspectionConfiguration, &data.TLSInspectionConfiguration)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
-
-	tlsInspectionConfiguration, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &tlsInspectionConfigurationData)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-	data.TLSInspectionConfiguration = tlsInspectionConfiguration
 
 	return diags
 }
@@ -627,7 +631,7 @@ func (model *tlsInspectionConfigurationResourceModel) setID() {
 }
 
 type encryptionConfigurationModel struct {
-	KeyID fwtypes.ARN  `tfsdk:"key_id"`
+	KeyID types.String `tfsdk:"key_id"`
 	Type  types.String `tfsdk:"type"`
 }
 
@@ -638,7 +642,7 @@ type tlsInspectionConfigurationModel struct {
 type serverCertificateConfigurationModel struct {
 	CertificateAuthorityARN           fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
 	CheckCertificateRevocationsStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
-	Scope                             fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
+	Scopes                            fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
 	ServerCertificates                fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
 }
 

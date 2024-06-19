@@ -25,7 +25,6 @@ type setTypeOf[T attr.Value] struct {
 }
 
 var (
-	SetOfInt64Type  = setTypeOf[basetypes.Int64Value]{basetypes.SetType{ElemType: basetypes.Int64Type{}}}
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
 )
 
