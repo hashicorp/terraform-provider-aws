@@ -195,7 +195,7 @@ func apiKeyCreateResourceID(apiID, keyID string) string {
 	return id
 }
 
-func apiKeyParseResourceID(id string) (string, string, error) { //nolint:unparam
+func apiKeyParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, apiKeyResourceIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
