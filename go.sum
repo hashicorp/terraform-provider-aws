@@ -88,8 +88,8 @@ github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.21.0 h1:thL+4Wxgd+D4VWr
 github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.21.0/go.mod h1:xBZfNNPlWOEfS9s6uh8DFk/qeRrEFWxUdersMay5Tt4=
 github.com/aws/aws-sdk-go-v2/service/backup v1.35.0 h1:Rslqrh+EzDX0dZIfgCZ61TEoN0wuksFmvS+MyO3LKvI=
 github.com/aws/aws-sdk-go-v2/service/backup v1.35.0/go.mod h1:eNW1wQTY8Fy+Sl0meiqzuE0IKKbN3vBN6H8st2K8msU=
-github.com/aws/aws-sdk-go-v2/service/batch v1.39.0 h1:FyH4JWKkSQQKAUxI07i0CorhKoHjcYevWN5MtvswmPA=
-github.com/aws/aws-sdk-go-v2/service/batch v1.39.0/go.mod h1:Kp/cLSYxfA3Fen8dVuIt14eWiX6vRst2h2rSIaqg3KQ=
+github.com/aws/aws-sdk-go-v2/service/batch v1.40.0 h1:jel/D32IZ/GID2mCCWOcvS5q9j+rzbR8flyOmgus5wI=
+github.com/aws/aws-sdk-go-v2/service/batch v1.40.0/go.mod h1:Q4rnVSoW0d1+ayvXY9yyAtVCHYz8yXBys2PJmPFQeCA=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.11 h1:85YMJ9Ato34WIKDnt6qH7ccpTYsm2KeJV+tvtCBJs+w=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.11/go.mod h1:ijZyRj5Gy6HiKcGher8tZiE7bBkuFvZC6dinnqN/Sj0=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.9 h1:R0cptuMO5BID5VZzj3D6oVImUK2/7F3sNv9eoG2k/ZA=
