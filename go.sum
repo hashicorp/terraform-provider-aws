@@ -348,8 +348,8 @@ github.com/aws/aws-sdk-go-v2/service/s3 v1.56.0 h1:NZIFz15bhrWwewGU0tdUGsisKPQxv
 github.com/aws/aws-sdk-go-v2/service/s3 v1.56.0/go.mod h1:ha/DkVoeDtS0XwRKyOiXP2J4Vzo3zpiE0yGi7Ej0X3o=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.45.0 h1:pY/fn04jwUb3WfjWNNGdt3uAT7ZwBx/qz4S5gKWvfpc=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.45.0/go.mod h1:6cnOOx7AsrCBX6NlwKmGYi5fz385yqFJxQwBGMDyc6A=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.11 h1:zUivMB7F3PR8c0+S3Hq2bmqjCd29QPLjVvU05Jlo2/E=
-github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.11/go.mod h1:LwDwOHGMEB+yci4OfDz3HMz4DptDUhDvcHxlAPb37Ns=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.9.0 h1:rS3lP/TQoPU2rnw3edOtSkvTtOQox64KAeTuArky5cg=
+github.com/aws/aws-sdk-go-v2/service/scheduler v1.9.0/go.mod h1:iq8U67MA8PgyLvjYbALIXJTtEazl1nnlJOlfxKx7VkA=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.24.11 h1:Xa6GxJwAkIMUg5rbpqrvmvSCgcZpaakMzrzDV5OpeVY=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.24.11/go.mod h1:jf27glWbDklLh4EpVUcAMWNjzB9Gk07pFcFs1nggiGU=
 github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.30.1 h1:2CTrhkwgDn3i2dZ4+XdBV2IsIOzlL1wfGR91rkBRKc0=
