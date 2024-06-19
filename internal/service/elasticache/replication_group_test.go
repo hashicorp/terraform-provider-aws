@@ -570,21 +570,21 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 			{
 				// When adding an auth_token to a previously passwordless replication
 				// group, the SET strategy can be used.
-				Config: testAccReplicationGroupConfig_authToken(rName, token1, awstypes.AuthTokenUpdateStrategyTypeSet),
+				Config: testAccReplicationGroupConfig_authToken(rName, token1, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", token1),
-					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", awstypes.AuthTokenUpdateStrategyTypeSet),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_authToken(rName, token2, awstypes.AuthTokenUpdateStrategyTypeRotate),
+				Config: testAccReplicationGroupConfig_authToken(rName, token2, string(awstypes.AuthTokenUpdateStrategyTypeRotate)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", token2),
-					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", awstypes.AuthTokenUpdateStrategyTypeRotate),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeRotate)),
 				),
 			},
 			{
@@ -592,12 +592,12 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 				// should include the auth_token to be kept and the SET auth_token_update_strategy.
 				//
 				// Ref: https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html#auth-modifyng-token
-				Config: testAccReplicationGroupConfig_authToken(rName, token2, awstypes.AuthTokenUpdateStrategyTypeSet),
+				Config: testAccReplicationGroupConfig_authToken(rName, token2, string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", token2),
-					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", awstypes.AuthTokenUpdateStrategyTypeSet),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_update_strategy", string(awstypes.AuthTokenUpdateStrategyTypeSet)),
 				),
 			},
 		},
@@ -1469,11 +1469,11 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, awstypes.TransitEncryptionModePreferred),
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, string(awstypes.TransitEncryptionModePreferred)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", awstypes.TransitEncryptionModePreferred),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModePreferred)),
 				),
 			},
 			{
@@ -1484,22 +1484,22 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 			},
 			{
 				// With Redis engine versions >= 7.0.5, transit_encryption_mode can be modified in-place.
-				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, awstypes.TransitEncryptionModeRequired),
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, string(awstypes.TransitEncryptionModeRequired)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
 					testAccCheckReplicationGroupNotRecreated(&rg1, &rg2),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", awstypes.TransitEncryptionModeRequired),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModeRequired)),
 				),
 			},
 			{
 				// Before disabling transit encryption, mode must be transitioned back to "preferred" first.
-				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, awstypes.TransitEncryptionModePreferred),
+				Config: testAccReplicationGroupConfig_transitEncryptionEnabled7x(rName, string(awstypes.TransitEncryptionModePreferred)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg3),
 					testAccCheckReplicationGroupNotRecreated(&rg2, &rg3),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", awstypes.TransitEncryptionModePreferred),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModePreferred)),
 				),
 			},
 			{
@@ -2532,7 +2532,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2558,7 +2558,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				},
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2574,7 +2574,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson, false, "", ""),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, false, true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson), false, "", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2635,7 +2635,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2662,7 +2662,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				},
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, awstypes.DestinationTypeCloudwatchLogs, awstypes.LogFormatText, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, string(awstypes.DestinationTypeCloudWatchLogs), string(awstypes.LogFormatText), true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2679,7 +2679,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson, false, "", ""),
+				Config: testAccReplicationGroupConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, true, string(awstypes.DestinationTypeKinesisFirehose), string(awstypes.LogFormatJson), false, "", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -2834,7 +2834,7 @@ func testAccCheckReplicationGroupUserGroup(ctx context.Context, n, userGroupID s
 			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any User Groups", id)
 		}
 
-		if v := aws.ToString(output.UserGroupIds[0]); v != userGroupID {
+		if v := output.UserGroupIds[0]; v != userGroupID {
 			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned User Group (%s), User Group was (%s) instead", n, userGroupID, v)
 		}
 
@@ -2844,7 +2844,7 @@ func testAccCheckReplicationGroupUserGroup(ctx context.Context, n, userGroupID s
 
 func testAccCheckReplicationGroupRecreated(i, j *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ReplicationGroupCreateTime).Equal(aws.TimeValue(j.ReplicationGroupCreateTime)) {
+		if aws.ToTime(i.ReplicationGroupCreateTime).Equal(aws.ToTime(j.ReplicationGroupCreateTime)) {
 			return errors.New("ElastiCache Replication Group not recreated")
 		}
 
@@ -2854,7 +2854,7 @@ func testAccCheckReplicationGroupRecreated(i, j *awstypes.ReplicationGroup) reso
 
 func testAccCheckReplicationGroupNotRecreated(i, j *awstypes.ReplicationGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.ReplicationGroupCreateTime).Equal(aws.TimeValue(j.ReplicationGroupCreateTime)) {
+		if !aws.ToTime(i.ReplicationGroupCreateTime).Equal(aws.ToTime(j.ReplicationGroupCreateTime)) {
 			return errors.New("ElastiCache Replication Group recreated")
 		}
 
@@ -2903,7 +2903,7 @@ func testCheckRedisEngineVersionLatest(ctx context.Context, v *awstypes.CacheEng
 			return fmt.Errorf("too many results: %d", l)
 		}
 
-		*v = *(versions.CacheEngineVersions[0])
+		*v = versions.CacheEngineVersions[0]
 
 		return nil
 	}
@@ -2914,10 +2914,10 @@ func testCheckRedisParameterGroupDefault(ctx context.Context, version *awstypes.
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
-			func(v *awstypes.CacheParameterGroup) bool {
+			func(v awstypes.CacheParameterGroup) bool {
 				return aws.ToString(v.CacheParameterGroupFamily) == aws.ToString(version.CacheParameterGroupFamily)
 			},
-			func(v *awstypes.CacheParameterGroup) bool {
+			func(v awstypes.CacheParameterGroup) bool {
 				name := aws.ToString(v.CacheParameterGroupName)
 				return strings.HasPrefix(name, "default.") && !strings.HasSuffix(name, ".cluster.on")
 			},
@@ -2961,10 +2961,10 @@ func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, vers
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
-			func(v *awstypes.CacheParameterGroup) bool {
+			func(v awstypes.CacheParameterGroup) bool {
 				return aws.ToString(v.CacheParameterGroupFamily) == aws.ToString(version.CacheParameterGroupFamily)
 			},
-			func(v *awstypes.CacheParameterGroup) bool {
+			func(v awstypes.CacheParameterGroup) bool {
 				name := aws.ToString(v.CacheParameterGroupName)
 				return strings.HasPrefix(name, "default.") && strings.HasSuffix(name, ".cluster.on")
 			},

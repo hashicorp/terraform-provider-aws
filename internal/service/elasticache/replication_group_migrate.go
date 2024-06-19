@@ -7,7 +7,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -122,10 +121,10 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				},
 			},
 			"ip_discovery": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: enum.Validate[awstypes.IpDiscovery](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IpDiscovery](),
 			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
@@ -134,23 +133,23 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"destination_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.DestinationType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.DestinationType](),
 						},
 						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"log_format": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.LogFormat](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogFormat](),
 						},
 						"log_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: enum.Validate[awstypes.LogType](),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.LogType](),
 						},
 					},
 				},
@@ -177,11 +176,11 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Default:  false,
 			},
 			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: enum.Validate[awstypes.NetworkType](),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NetworkType](),
 			},
 			"node_type": {
 				Type:     schema.TypeString,

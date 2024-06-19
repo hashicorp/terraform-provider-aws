@@ -6,10 +6,8 @@ package elasticache
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -140,24 +138,20 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, rg.ARN)
 	d.Set("auth_token_enabled", rg.AuthTokenEnabled)
 
-	if rg.AutomaticFailover != nil {
-		switch aws.ToString(rg.AutomaticFailover) {
-		case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
-			d.Set("automatic_failover_enabled", false)
-		case awstypes.AutomaticFailoverStatusEnabled, awstypes.AutomaticFailoverStatusEnabling:
-			d.Set("automatic_failover_enabled", true)
-		}
+	switch rg.AutomaticFailover {
+	case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
+		d.Set("automatic_failover_enabled", false)
+	case awstypes.AutomaticFailoverStatusEnabled, awstypes.AutomaticFailoverStatusEnabling:
+		d.Set("automatic_failover_enabled", true)
 	}
 
-	if rg.MultiAZ != nil {
-		switch strings.ToLower(aws.ToString(rg.MultiAZ)) {
-		case awstypes.MultiAZStatusEnabled:
-			d.Set("multi_az_enabled", true)
-		case awstypes.MultiAZStatusDisabled:
-			d.Set("multi_az_enabled", false)
-		default:
-			log.Printf("Unknown MultiAZ state %q", aws.ToString(rg.MultiAZ))
-		}
+	switch rg.MultiAZ {
+	case awstypes.MultiAZStatusEnabled:
+		d.Set("multi_az_enabled", true)
+	case awstypes.MultiAZStatusDisabled:
+		d.Set("multi_az_enabled", false)
+	default:
+		log.Printf("Unknown MultiAZ state %q", string(rg.MultiAZ))
 	}
 
 	if rg.ConfigurationEndpoint != nil {
@@ -174,7 +168,7 @@ func dataSourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("num_cache_clusters", len(rg.MemberClusters))
-	if err := d.Set("member_clusters", flex.FlattenStringList(rg.MemberClusters)); err != nil {
+	if err := d.Set("member_clusters", flex.FlattenStringValueList(rg.MemberClusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting member_clusters: %s", err)
 	}
 	d.Set("node_type", rg.CacheNodeType)
