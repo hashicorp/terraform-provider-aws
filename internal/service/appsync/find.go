@@ -13,30 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAPICacheByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.ApiCache, error) {
-	input := &appsync.GetApiCacheInput{
-		ApiId: aws.String(id),
-	}
-	out, err := conn.GetApiCacheWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return out.ApiCache, nil
-}
-
 func FindDomainNameByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.DomainNameConfig, error) {
 	input := &appsync.GetDomainNameInput{
 		DomainName: aws.String(id),

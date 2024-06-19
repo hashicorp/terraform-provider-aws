@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAPICache,
+			Factory:  resourceAPICache,
 			TypeName: "aws_appsync_api_cache",
+			Name:     "API Cache",
 		},
 		{
 			Factory:  ResourceAPIKey,
