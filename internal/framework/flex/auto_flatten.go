@@ -398,6 +398,77 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 	var diags diag.Diagnostics
 
 	switch tSliceElem := vFrom.Type().Elem(); tSliceElem.Kind() {
+	case reflect.Int64:
+		switch tTo := tTo.(type) {
+		case basetypes.ListTypable:
+			//
+			// []int64 -> types.List(OfInt64).
+			//
+			if vFrom.IsNil() {
+				to, d := tTo.ValueFromList(ctx, types.ListNull(types.Int64Type))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
+			elements := make([]attr.Value, vFrom.Len())
+			for i := 0; i < vFrom.Len(); i++ {
+				elements[i] = types.Int64Value(vFrom.Index(i).Int())
+			}
+			list, d := types.ListValue(types.Int64Type, elements)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			to, d := tTo.ValueFromList(ctx, list)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
+			return diags
+
+		case basetypes.SetTypable:
+			//
+			// []int64 -> types.Set(OfInt64).
+			//
+			if vFrom.IsNil() {
+				to, d := tTo.ValueFromSet(ctx, types.SetNull(types.Int64Type))
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
+			elements := make([]attr.Value, vFrom.Len())
+			for i := 0; i < vFrom.Len(); i++ {
+				elements[i] = types.Int64Value(vFrom.Index(i).Int())
+			}
+			set, d := types.SetValue(types.Int64Type, elements)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			to, d := tTo.ValueFromSet(ctx, set)
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(to))
+			return diags
+		}
+
 	case reflect.String:
 		switch tTo := tTo.(type) {
 		case basetypes.ListTypable:
@@ -471,6 +542,79 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 
 	case reflect.Ptr:
 		switch tSliceElem.Elem().Kind() {
+		case reflect.Int64:
+			switch tTo := tTo.(type) {
+			case basetypes.ListTypable:
+				//
+				// []*int64 -> types.List(OfInt64).
+				//
+				if vFrom.IsNil() {
+					to, d := tTo.ValueFromList(ctx, types.ListNull(types.Int64Type))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				from := vFrom.Interface().([]*int64)
+				elements := make([]attr.Value, len(from))
+				for i, v := range from {
+					elements[i] = types.Int64PointerValue(v)
+				}
+				list, d := types.ListValue(types.Int64Type, elements)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				to, d := tTo.ValueFromList(ctx, list)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+
+			case basetypes.SetTypable:
+				//
+				// []*int64 -> types.Set(OfInt64).
+				//
+				if vFrom.IsNil() {
+					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.Int64Type))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				from := vFrom.Interface().([]*int64)
+				elements := make([]attr.Value, len(from))
+				for i, v := range from {
+					elements[i] = types.Int64PointerValue(v)
+				}
+				set, d := types.SetValue(types.Int64Type, elements)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				to, d := tTo.ValueFromSet(ctx, set)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.ListTypable:
@@ -510,7 +654,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 
 			case basetypes.SetTypable:
 				//
-				// []string -> types.Set(OfString).
+				// []*string -> types.Set(OfString).
 				//
 				if vFrom.IsNil() {
 					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.StringType))

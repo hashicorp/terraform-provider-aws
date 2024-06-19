@@ -61,6 +61,38 @@ func ExpandFrameworkStringValueList(ctx context.Context, v basetypes.ListValuabl
 	return output
 }
 
+// FlattenFrameworkInt64List converts a slice of int64 pointers to a framework List value.
+//
+// A nil slice is converted to a null List.
+// An empty slice is converted to a null List.
+func FlattenFrameworkInt64List(ctx context.Context, v []*int64) types.List {
+	if len(v) == 0 {
+		return types.ListNull(types.Int64Type)
+	}
+
+	var output types.List
+
+	must(Flatten(ctx, v, &output))
+
+	return output
+}
+
+// FlattenFrameworkInt64ValueList converts a slice of int64 values to a framework List value.
+//
+// A nil slice is converted to a null List.
+// An empty slice is converted to a null List.
+func FlattenFrameworkInt64ValueList[T ~int64](ctx context.Context, v []T) types.List {
+	if len(v) == 0 {
+		return types.ListNull(types.Int64Type)
+	}
+
+	var output types.List
+
+	must(Flatten(ctx, v, &output))
+
+	return output
+}
+
 // FlattenFrameworkStringList converts a slice of string pointers to a framework List value.
 //
 // A nil slice is converted to a null List.
