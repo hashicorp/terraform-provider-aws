@@ -8,28 +8,27 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var association appsync.ApiAssociation
-	appsyncCertDomain := getCertDomain(t)
+	var association awstypes.ApiAssociation
+	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy(ctx),
@@ -61,14 +60,14 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 
 func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var association appsync.ApiAssociation
-	appsyncCertDomain := getCertDomain(t)
+	var association awstypes.ApiAssociation
+	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy(ctx),
@@ -87,48 +86,46 @@ func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 
 func testAccCheckDomainNameAPIAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_domain_name" {
 				continue
 			}
 
-			association, err := tfappsync.FindDomainNameAPIAssociationByID(ctx, conn, rs.Primary.ID)
-			if err == nil {
-				if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-					return nil
-				}
+			_, err := tfappsync.FindDomainNameAPIAssociationByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
 				return err
 			}
 
-			if association != nil && aws.StringValue(association.DomainName) == rs.Primary.ID {
-				return fmt.Errorf("Appsync Domain Name ID %q still exists", rs.Primary.ID)
-			}
-
-			return nil
+			return fmt.Errorf("Appsync Domain Name API Association %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckDomainNameAPIAssociationExists(ctx context.Context, resourceName string, DomainNameAPIAssociation *appsync.ApiAssociation) resource.TestCheckFunc {
+func testAccCheckDomainNameAPIAssociationExists(ctx context.Context, n string, v *awstypes.ApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Appsync Domain Name Not found in state: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
 
-		association, err := tfappsync.FindDomainNameAPIAssociationByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+
+		output, err := tfappsync.FindDomainNameAPIAssociationByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if association == nil || association.DomainName == nil {
-			return fmt.Errorf("Appsync Domain Name %q not found", rs.Primary.ID)
-		}
-
-		*DomainNameAPIAssociation = *association
+		*v = *output
 
 		return nil
 	}

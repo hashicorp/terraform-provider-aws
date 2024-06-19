@@ -5,13 +5,15 @@ package appsync
 
 // Exports for use in tests only.
 var (
-	ResourceAPICache   = resourceAPICache
-	ResourceAPIKey     = resourceAPIKey
-	ResourceDataSource = resourceDataSource
-	ResourceDomainName = resourceDomainName
+	ResourceAPICache                 = resourceAPICache
+	ResourceAPIKey                   = resourceAPIKey
+	ResourceDataSource               = resourceDataSource
+	ResourceDomainName               = resourceDomainName
+	ResourceDomainNameAPIAssociation = resourceDomainNameAPIAssociation
 
-	FindAPICacheByID           = findAPICacheByID
-	FindAPIKeyByTwoPartKey     = findAPIKeyByTwoPartKey
-	FindDataSourceByTwoPartKey = findDataSourceByTwoPartKey
-	FindDomainNameByID         = findDomainNameByID
+	FindAPICacheByID                 = findAPICacheByID
+	FindAPIKeyByTwoPartKey           = findAPIKeyByTwoPartKey
+	FindDataSourceByTwoPartKey       = findDataSourceByTwoPartKey
+	FindDomainNameAPIAssociationByID = findDomainNameAPIAssociationByID
+	FindDomainNameByID               = findDomainNameByID
 )

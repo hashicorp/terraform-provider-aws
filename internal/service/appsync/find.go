@@ -13,30 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.ApiAssociation, error) {
-	input := &appsync.GetApiAssociationInput{
-		DomainName: aws.String(id),
-	}
-	out, err := conn.GetApiAssociationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return out.ApiAssociation, nil
-}
-
 func FindTypeByThreePartKey(ctx context.Context, conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
 	input := &appsync.GetTypeInput{
 		ApiId:    aws.String(apiID),
