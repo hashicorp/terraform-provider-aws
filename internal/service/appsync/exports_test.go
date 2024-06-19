@@ -6,6 +6,8 @@ package appsync
 // Exports for use in tests only.
 var (
 	ResourceAPICache = resourceAPICache
+	ResourceAPIKey   = resourceAPIKey
 
-	FindAPICacheByID = findAPICacheByID
+	FindAPICacheByID       = findAPICacheByID
+	FindAPIKeyByTwoPartKey = findAPIKeyByTwoPartKey
 )

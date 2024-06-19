@@ -35,8 +35,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "API Cache",
 		},
 		{
-			Factory:  ResourceAPIKey,
+			Factory:  resourceAPIKey,
 			TypeName: "aws_appsync_api_key",
+			Name:     "API Key",
 		},
 		{
 			Factory:  ResourceDataSource,
