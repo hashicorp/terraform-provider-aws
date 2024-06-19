@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.20.0
-	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.22.11
+	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.11
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.24.11
