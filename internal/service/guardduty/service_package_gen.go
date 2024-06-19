@@ -8,7 +8,6 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	guardduty_sdkv2 "github.com/aws/aws-sdk-go-v2/service/guardduty"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -132,11 +131,8 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*g
 			"tf_aws.endpoint": endpoint,
 		})
 		cfg.Endpoint = aws_sdkv1.String(endpoint)
-
-		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
-		}
+	} else {
+		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
 	}
 
 	return guardduty_sdkv1.New(sess.Copy(&cfg)), nil

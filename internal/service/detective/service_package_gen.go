@@ -6,7 +6,6 @@ import (
 	"context"
 
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -73,11 +72,8 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*d
 			"tf_aws.endpoint": endpoint,
 		})
 		cfg.Endpoint = aws_sdkv1.String(endpoint)
-
-		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
-			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
-		}
+	} else {
+		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
 	}
 
 	return detective_sdkv1.New(sess.Copy(&cfg)), nil
