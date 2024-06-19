@@ -5,14 +5,7 @@ page_title: "AWS: aws_glue_catalog_table_optimizer"
 description: |-
   Terraform resource for managing an AWS Glue Catalog Table Optimizer.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_glue_catalog_table_optimizer
 
 Terraform resource for managing an AWS Glue Catalog Table Optimizer.
@@ -23,47 +16,30 @@ Terraform resource for managing an AWS Glue Catalog Table Optimizer.
 
 ```terraform
 resource "aws_glue_catalog_table_optimizer" "example" {
+  catalog_id     = "123456789012"
+  database_name  = "test_database"
+  table_name     = "test_table"
+  configuration  = {
+    role_arn = "arn:aws:iam::123456789012:role/example-role"
+    enabled  = true
+  }
+  type = "compaction"
 }
-```
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `catalog_id` - (Required) The Catalog ID of the table.
 
-The following arguments are optional:
+* `database_name` - (Required) The name of the database in the catalog in which the table resides.
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `table_name` - (Required) The name of the table.
 
-## Attribute Reference
+* `type` - (Required) The type of table optimizer. Currently, the only valid value is compaction.
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN of the Catalog Table Optimizer. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Catalog Table Optimizer using the `example_id_arg`. For example:
-
-```terraform
-import {
-  to = aws_glue_catalog_table_optimizer.example
-  id = "catalog_table_optimizer-id-12345678"
-}
-```
-
-Using `terraform import`, import Glue Catalog Table Optimizer using the `example_id_arg`. For example:
-
-```console
-% terraform import aws_glue_catalog_table_optimizer.example catalog_table_optimizer-id-12345678
-```
+* `configuration` - (Required) A configuration block that defines the table optimizer settings. The block contains:
+  
+    * `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
+  
+    * `enabled` - (Required) Indicates whether the table optimizer is enabled.
