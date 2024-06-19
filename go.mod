@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.21.0
-	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.25.11
+	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.9
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.11
