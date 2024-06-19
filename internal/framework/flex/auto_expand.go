@@ -379,6 +379,10 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 	}
 
 	switch v.ElementType(ctx).(type) {
+	case basetypes.Int64Typable:
+		diags.Append(expander.listOfInt64(ctx, v, vTo)...)
+		return diags
+
 	case basetypes.StringTypable:
 		diags.Append(expander.listOfString(ctx, v, vTo)...)
 		return diags
@@ -392,6 +396,69 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
 		"from list[%s]": v.ElementType(ctx),
+		"to":            vTo.Kind(),
+	})
+
+	return diags
+}
+
+// listOfString copies a Plugin Framework ListOfInt64(ish) value to a compatible AWS API value.
+func (expander autoExpander) listOfInt64(ctx context.Context, vFrom basetypes.ListValue, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch vTo.Kind() {
+	case reflect.Slice:
+		switch tSliceElem := vTo.Type().Elem(); tSliceElem.Kind() {
+		case reflect.Int32, reflect.Int64:
+			//
+			// types.List(OfInt64) -> []int64 or []int32
+			//
+			var to []int64
+			diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
+			for i := 0; i < len(to); i++ {
+				vals.Index(i).SetInt(to[i])
+			}
+			vTo.Set(vals)
+			return diags
+
+		case reflect.Ptr:
+			switch tSliceElem.Elem().Kind() {
+			case reflect.Int32:
+				//
+				// types.List(OfInt64) -> []*int32.
+				//
+				var to []*int32
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+
+			case reflect.Int64:
+				//
+				// types.List(OfInt64) -> []*int64.
+				//
+				var to []*int64
+				diags.Append(vFrom.ElementsAs(ctx, &to, false)...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+		}
+	}
+
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from list[%s]": vFrom.ElementType(ctx),
 		"to":            vTo.Kind(),
 	})
 
@@ -576,6 +643,11 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 	}
 
 	switch v.ElementType(ctx).(type) {
+	case basetypes.Int64Typable:
+		// TODO
+		// diags.Append(expander.setOfInt64(ctx, v, vTo)...)
+		return diags
+
 	case basetypes.StringTypable:
 		diags.Append(expander.setOfString(ctx, v, vTo)...)
 		return diags
