@@ -2636,7 +2636,7 @@ resource "aws_lakeformation_data_lake_settings" "test" {
 }
 
 resource "aws_lakeformation_permissions" "test" {
-  permissions = ["ALL", "ALTER", "DELETE", "DESCRIBE", "DROP", "INSERT", "SELECT"]
+  permissions = ["SELECT", "ALTER", "DELETE", "DESCRIBE", "DROP", "INSERT", "ALL"]
   principal   = aws_iam_role.test.arn
 
   table_with_columns {
