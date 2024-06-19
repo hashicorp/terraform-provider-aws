@@ -14,6 +14,104 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
+func TestExpandFrameworkInt64List(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.List
+		expected []*int64
+	}
+	tests := map[string]testCase{
+		"null": {
+			input:    types.ListNull(types.Int64Type),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.ListUnknown(types.Int64Type),
+			expected: nil,
+		},
+		"two elements": {
+			input: types.ListValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+			expected: []*int64{aws.Int64(1), aws.Int64(-1)},
+		},
+		"zero elements": {
+			input:    types.ListValueMust(types.Int64Type, []attr.Value{}),
+			expected: []*int64{},
+		},
+		"invalid element type": {
+			input: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+			}),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.ExpandFrameworkInt64List(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestExpandFrameworkInt64ValueList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.List
+		expected []int64
+	}
+	tests := map[string]testCase{
+		"null": {
+			input:    types.ListNull(types.Int64Type),
+			expected: nil,
+		},
+		"unknown": {
+			input:    types.ListUnknown(types.Int64Type),
+			expected: nil,
+		},
+		"two elements": {
+			input: types.ListValueMust(types.Int64Type, []attr.Value{
+				types.Int64Value(1),
+				types.Int64Value(-1),
+			}),
+			expected: []int64{1, -1},
+		},
+		"zero elements": {
+			input:    types.ListValueMust(types.Int64Type, []attr.Value{}),
+			expected: []int64{},
+		},
+		"invalid element type": {
+			input: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("GET"),
+			}),
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.ExpandFrameworkInt64ValueList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestExpandFrameworkStringList(t *testing.T) {
 	t.Parallel()
 
