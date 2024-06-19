@@ -404,14 +404,14 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			//
 			// []int64 -> types.List(OfInt64).
 			//
-			diags.Append(flattener.sliceToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementValue)...)
+			diags.Append(sliceToList(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementFromReflectValue)...)
 			return diags
 
 		case basetypes.SetTypable:
 			//
 			// []int64 -> types.Set(OfInt64).
 			//
-			diags.Append(flattener.sliceToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementValue)...)
+			diags.Append(sliceToSet(ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementFromReflectValue)...)
 			return diags
 		}
 
@@ -421,14 +421,14 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			//
 			// []string -> types.List(OfString).
 			//
-			diags.Append(flattener.sliceToList(ctx, vFrom, tTo, vTo, types.StringType, newStringElementValue)...)
+			diags.Append(sliceToList(ctx, vFrom, tTo, vTo, types.StringType, newStringElementFromReflectValue)...)
 			return diags
 
 		case basetypes.SetTypable:
 			//
 			// []string -> types.Set(OfString).
 			//
-			diags.Append(flattener.sliceToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringElementValue)...)
+			diags.Append(sliceToSet(ctx, vFrom, tTo, vTo, types.StringType, newStringElementFromReflectValue)...)
 			return diags
 		}
 
@@ -440,70 +440,14 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				//
 				// []*int32 -> types.List(OfInt64).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromList(ctx, types.ListNull(types.Int64Type))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*int32)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = newInt32PointerValue(v)
-				}
-				list, d := types.ListValue(types.Int64Type, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromList(ctx, list)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(sliceOfPtrToList[[]*int32](ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementFromGoInt32PtrValue)...)
 				return diags
 
 			case basetypes.SetTypable:
 				//
 				// []*int32 -> types.Set(OfInt64).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.Int64Type))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*int32)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = newInt32PointerValue(v)
-				}
-				set, d := types.SetValue(types.Int64Type, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromSet(ctx, set)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(sliceOfPtrToSet[[]*int32](ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementFromGoInt32PtrValue)...)
 				return diags
 			}
 
@@ -513,70 +457,14 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				//
 				// []*int64 -> types.List(OfInt64).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromList(ctx, types.ListNull(types.Int64Type))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*int64)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = types.Int64PointerValue(v)
-				}
-				list, d := types.ListValue(types.Int64Type, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromList(ctx, list)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(sliceOfPtrToList[[]*int64](ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementFromGoInt64PtrValue)...)
 				return diags
 
 			case basetypes.SetTypable:
 				//
 				// []*int64 -> types.Set(OfInt64).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.Int64Type))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*int64)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = types.Int64PointerValue(v)
-				}
-				set, d := types.SetValue(types.Int64Type, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromSet(ctx, set)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(sliceOfPtrToSet[[]*int64](ctx, vFrom, tTo, vTo, types.Int64Type, newInt64ElementFromGoInt64PtrValue)...)
 				return diags
 			}
 
@@ -586,70 +474,14 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 				//
 				// []*string -> types.List(OfString).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromList(ctx, types.ListNull(types.StringType))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*string)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = types.StringPointerValue(v)
-				}
-				list, d := types.ListValue(types.StringType, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromList(ctx, list)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(sliceOfPtrToList[[]*string](ctx, vFrom, tTo, vTo, types.StringType, newStringElementFromGoStringPtrValue)...)
 				return diags
 
 			case basetypes.SetTypable:
 				//
 				// []*string -> types.Set(OfString).
 				//
-				if vFrom.IsNil() {
-					to, d := tTo.ValueFromSet(ctx, types.SetNull(types.StringType))
-					diags.Append(d...)
-					if diags.HasError() {
-						return diags
-					}
-
-					vTo.Set(reflect.ValueOf(to))
-					return diags
-				}
-
-				from := vFrom.Interface().([]*string)
-				elements := make([]attr.Value, len(from))
-				for i, v := range from {
-					elements[i] = types.StringPointerValue(v)
-				}
-				set, d := types.SetValue(types.StringType, elements)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				to, d := tTo.ValueFromSet(ctx, set)
-				diags.Append(d...)
-				if diags.HasError() {
-					return diags
-				}
-
-				vTo.Set(reflect.ValueOf(to))
+				diags.Append(sliceOfPtrToSet[[]*string](ctx, vFrom, tTo, vTo, types.StringType, newStringElementFromGoStringPtrValue)...)
 				return diags
 			}
 
@@ -1093,7 +925,7 @@ func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
 	return diags
 }
 
-func (flattener autoFlattener) sliceToList(ctx context.Context, vFrom reflect.Value, tTo basetypes.ListTypable, vTo reflect.Value, elementType attr.Type, f func(reflect.Value) attr.Value) diag.Diagnostics {
+func sliceToList(ctx context.Context, vFrom reflect.Value, tTo basetypes.ListTypable, vTo reflect.Value, elementType attr.Type, f elementFromReflectValueFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -1127,7 +959,42 @@ func (flattener autoFlattener) sliceToList(ctx context.Context, vFrom reflect.Va
 	return diags
 }
 
-func (flattener autoFlattener) sliceToSet(ctx context.Context, vFrom reflect.Value, tTo basetypes.SetTypable, vTo reflect.Value, elementType attr.Type, f func(reflect.Value) attr.Value) diag.Diagnostics {
+func sliceOfPtrToList[S []E, E any](ctx context.Context, vFrom reflect.Value, tTo basetypes.ListTypable, vTo reflect.Value, elementType attr.Type, f elementFromGoValueFunc[E]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		to, d := tTo.ValueFromList(ctx, types.ListNull(elementType))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(to))
+		return diags
+	}
+
+	from := vFrom.Interface().(S)
+	elements := make([]attr.Value, len(from))
+	for i, v := range from {
+		elements[i] = f(v)
+	}
+	list, d := types.ListValue(elementType, elements)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	to, d := tTo.ValueFromList(ctx, list)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(to))
+	return diags
+}
+
+func sliceToSet(ctx context.Context, vFrom reflect.Value, tTo basetypes.SetTypable, vTo reflect.Value, elementType attr.Type, f elementFromReflectValueFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -1145,13 +1012,13 @@ func (flattener autoFlattener) sliceToSet(ctx context.Context, vFrom reflect.Val
 	for i := 0; i < vFrom.Len(); i++ {
 		elements[i] = f(vFrom.Index(i))
 	}
-	list, d := types.SetValue(elementType, elements)
+	set, d := types.SetValue(elementType, elements)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
-	to, d := tTo.ValueFromSet(ctx, list)
+	to, d := tTo.ValueFromSet(ctx, set)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -1161,18 +1028,65 @@ func (flattener autoFlattener) sliceToSet(ctx context.Context, vFrom reflect.Val
 	return diags
 }
 
-func newInt64ElementValue(vElem reflect.Value) attr.Value {
+func sliceOfPtrToSet[S []E, E any](ctx context.Context, vFrom reflect.Value, tTo basetypes.SetTypable, vTo reflect.Value, elementType attr.Type, f elementFromGoValueFunc[E]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if vFrom.IsNil() {
+		to, d := tTo.ValueFromSet(ctx, types.SetNull(elementType))
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(to))
+		return diags
+	}
+
+	from := vFrom.Interface().(S)
+	elements := make([]attr.Value, len(from))
+	for i, v := range from {
+		elements[i] = f(v)
+	}
+	set, d := types.SetValue(elementType, elements)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	to, d := tTo.ValueFromSet(ctx, set)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	vTo.Set(reflect.ValueOf(to))
+	return diags
+}
+
+type elementFromReflectValueFunc func(reflect.Value) attr.Value
+
+func newInt64ElementFromReflectValue(vElem reflect.Value) attr.Value {
 	return types.Int64Value(vElem.Int())
 }
 
-func newStringElementValue(vElem reflect.Value) attr.Value {
+func newStringElementFromReflectValue(vElem reflect.Value) attr.Value {
 	return types.StringValue(vElem.String())
 }
 
-func newInt32PointerValue(value *int32) basetypes.Int64Value {
+type elementFromGoValueFunc[T any] func(T) attr.Value
+
+func newInt64ElementFromGoInt32PtrValue(value *int32) attr.Value {
 	if value == nil {
 		return basetypes.NewInt64Null()
 	}
 
 	return basetypes.NewInt64Value(int64(*value))
+}
+
+func newInt64ElementFromGoInt64PtrValue(value *int64) attr.Value {
+	return basetypes.NewInt64PointerValue(value)
+}
+
+func newStringElementFromGoStringPtrValue(value *string) attr.Value {
+	return basetypes.NewStringPointerValue(value)
 }
