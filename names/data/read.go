@@ -383,7 +383,7 @@ type EndpointInfo struct {
 }
 
 type Service struct {
-	Label                 string           `hcl:"CLIV2Command,label"`
+	Label                 string           `hcl:",label"`
 	ServiceCli            []CLIV2Command   `hcl:"cli_v2_command,block"`
 	ServiceGoPackages     []GoPackages     `hcl:"go_packages,block"`
 	ServiceSDK            []SDK            `hcl:"sdk,block"`
