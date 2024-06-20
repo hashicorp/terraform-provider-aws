@@ -10,11 +10,13 @@ import (
 	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -23,7 +25,21 @@ import (
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*ec2_sdkv1.EC2, error) {
 	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return ec2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	cfg := aws_sdkv1.Config{}
+
+	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		tflog.Debug(ctx, "setting endpoint", map[string]any{
+			"tf_aws.endpoint": endpoint,
+		})
+		cfg.Endpoint = aws_sdkv1.String(endpoint)
+
+		if sess.Config.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled {
+			tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+			cfg.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+		}
+	}
+
+	return ec2_sdkv1.New(sess.Copy(&cfg)), nil
 }
 
 // CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
@@ -47,7 +63,15 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			tflog.Debug(ctx, "setting endpoint", map[string]any{
+				"tf_aws.endpoint": endpoint,
+			})
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+
+			if o.EndpointOptions.UseFIPSEndpoint == aws_sdkv2.FIPSEndpointStateEnabled {
+				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
+				o.EndpointOptions.UseFIPSEndpoint = aws_sdkv2.FIPSEndpointStateDisabled
+			}
 		}
 
 		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {

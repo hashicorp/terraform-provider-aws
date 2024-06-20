@@ -47,7 +47,7 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_rules.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", string(awstypes.FeatureEvaluationStrategyAllRules)),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.FeatureStatusAvailable)),

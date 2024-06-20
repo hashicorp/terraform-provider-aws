@@ -39,6 +39,7 @@ nav:
       - Dependency Updates: dependency-updates.md
       - Design Decision Log: design-decision-log.md
       - Error Handling: error-handling.md
+      - Makefile Cheat Sheet: makefile-cheat-sheet.md
       - Naming Standards: naming.md
       - Provider Design: provider-design.md
       - Provider Scaffolding (skaff): skaff.md

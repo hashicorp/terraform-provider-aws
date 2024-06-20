@@ -171,6 +171,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
   <li><code>docdbelastic</code></li>
+  <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
@@ -315,6 +316,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>
@@ -427,4 +429,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-33219424028f45c9e2ed28967515af232f39e03a40b4aed53df508d425304ab8 -->
+<!-- cache-key: cdktf-0.20.1 input-28568d63602252f93a7bf5c1c81b4800aae1f6e0c52b0a21222f9ee702daf47d -->

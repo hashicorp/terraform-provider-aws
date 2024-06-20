@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,7 +19,7 @@ import (
 
 func TestAccEC2AMICopy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
@@ -48,7 +48,7 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 
 func TestAccEC2AMICopy_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
@@ -78,7 +78,7 @@ func TestAccEC2AMICopy_description(t *testing.T) {
 
 func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
 
@@ -101,7 +101,7 @@ func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 
 func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_ami_copy.test"
@@ -125,7 +125,7 @@ func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 
 func TestAccEC2AMICopy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ami ec2.Image
+	var ami awstypes.Image
 	resourceName := "aws_ami_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -167,16 +167,16 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAMICopyAttributes(image *ec2.Image, expectedName string) resource.TestCheckFunc {
+func testAccCheckAMICopyAttributes(image *awstypes.Image, expectedName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if expected := ec2.ImageStateAvailable; aws.StringValue(image.State) != expected {
-			return fmt.Errorf("invalid image state; expected %s, got %s", expected, aws.StringValue(image.State))
+		if expected := awstypes.ImageStateAvailable; image.State != expected {
+			return fmt.Errorf("invalid image state; expected %s, got %s", expected, string(image.State))
 		}
-		if expected := ec2.ImageTypeValuesMachine; aws.StringValue(image.ImageType) != expected {
-			return fmt.Errorf("wrong image type; expected %s, got %s", expected, aws.StringValue(image.ImageType))
+		if expected := awstypes.ImageTypeValuesMachine; image.ImageType != expected {
+			return fmt.Errorf("wrong image type; expected %s, got %s", expected, string(image.ImageType))
 		}
-		if expected := expectedName; aws.StringValue(image.Name) != expected {
-			return fmt.Errorf("wrong name; expected %s, got %s", expected, aws.StringValue(image.Name))
+		if expected := expectedName; aws.ToString(image.Name) != expected {
+			return fmt.Errorf("wrong name; expected %s, got %s", expected, aws.ToString(image.Name))
 		}
 
 		snapshots := []string{}
@@ -185,7 +185,7 @@ func testAccCheckAMICopyAttributes(image *ec2.Image, expectedName string) resour
 			// even for a block device that is an
 			// EBS volume.
 			if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-				snapshots = append(snapshots, aws.StringValue(bdm.Ebs.SnapshotId))
+				snapshots = append(snapshots, aws.ToString(bdm.Ebs.SnapshotId))
 			}
 		}
 

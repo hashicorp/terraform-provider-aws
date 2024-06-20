@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_verifiedaccess_trust_provider", name="Verified Access Trust Provider")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessTrustProviderCreate,
@@ -187,7 +188,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := FindVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Trust Provider (%s) not found, removing from state", d.Id())

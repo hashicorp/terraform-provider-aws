@@ -15,6 +15,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceCapacityBlockOffering,
+			Name:    "Capacity Block Offering",
+		},
+		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
 		},
@@ -47,6 +51,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
+			Factory: newResourceCapacityBlockReservation,
+			Name:    "Capacity Block Reservation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory: newResourceEndpointPrivateDNS,
 			Name:    "Endpoint Private DNS",
 		},
@@ -74,20 +85,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAMI,
+			Factory:  dataSourceAMI,
 			TypeName: "aws_ami",
+			Name:     "AMI",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceAMIIDs,
+			Factory:  dataSourceAMIIDs,
 			TypeName: "aws_ami_ids",
+			Name:     "AMI IDs",
 		},
 		{
-			Factory:  DataSourceAvailabilityZone,
+			Factory:  dataSourceAvailabilityZone,
 			TypeName: "aws_availability_zone",
+			Name:     "Availability Zone",
 		},
 		{
-			Factory:  DataSourceAvailabilityZones,
+			Factory:  dataSourceAvailabilityZones,
 			TypeName: "aws_availability_zones",
+			Name:     "Availability Zones",
 		},
 		{
 			Factory:  dataSourceCustomerGateway,
@@ -96,28 +112,36 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEBSDefaultKMSKey,
+			Factory:  dataSourceEBSDefaultKMSKey,
 			TypeName: "aws_ebs_default_kms_key",
+			Name:     "EBS Default KMS Key",
 		},
 		{
-			Factory:  DataSourceEBSEncryptionByDefault,
+			Factory:  dataSourceEBSEncryptionByDefault,
 			TypeName: "aws_ebs_encryption_by_default",
+			Name:     "EBS Encryption By Default",
 		},
 		{
-			Factory:  DataSourceEBSSnapshot,
+			Factory:  dataSourceEBSSnapshot,
 			TypeName: "aws_ebs_snapshot",
+			Name:     "EBS Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEBSSnapshotIDs,
+			Factory:  dataSourceEBSSnapshotIDs,
 			TypeName: "aws_ebs_snapshot_ids",
+			Name:     "EBS Snapshot IDs",
 		},
 		{
-			Factory:  DataSourceEBSVolume,
+			Factory:  dataSourceEBSVolume,
 			TypeName: "aws_ebs_volume",
+			Name:     "EBS Volume",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEBSVolumes,
+			Factory:  dataSourceEBSVolumes,
 			TypeName: "aws_ebs_volumes",
+			Name:     "EBS Volumes",
 		},
 		{
 			Factory:  dataSourceClientVPNEndpoint,
@@ -134,24 +158,30 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_coip_pools",
 		},
 		{
-			Factory:  DataSourceHost,
+			Factory:  dataSourceHost,
 			TypeName: "aws_ec2_host",
+			Name:     "Host",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceInstanceType,
+			Factory:  dataSourceInstanceType,
 			TypeName: "aws_ec2_instance_type",
+			Name:     "Instance Type",
 		},
 		{
-			Factory:  DataSourceInstanceTypeOffering,
+			Factory:  dataSourceInstanceTypeOffering,
 			TypeName: "aws_ec2_instance_type_offering",
+			Name:     "Instance Type Offering",
 		},
 		{
-			Factory:  DataSourceInstanceTypeOfferings,
+			Factory:  dataSourceInstanceTypeOfferings,
 			TypeName: "aws_ec2_instance_type_offerings",
+			Name:     "Instance Type Offering",
 		},
 		{
-			Factory:  DataSourceInstanceTypes,
+			Factory:  dataSourceInstanceTypes,
 			TypeName: "aws_ec2_instance_types",
+			Name:     "Instance Types",
 		},
 		{
 			Factory:  DataSourceLocalGateway,
@@ -190,56 +220,77 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_managed_prefix_lists",
 		},
 		{
-			Factory:  DataSourceNetworkInsightsAnalysis,
+			Factory:  dataSourceNetworkInsightsAnalysis,
 			TypeName: "aws_ec2_network_insights_analysis",
+			Name:     "Network Insights Analysis",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceNetworkInsightsPath,
+			Factory:  dataSourceNetworkInsightsPath,
 			TypeName: "aws_ec2_network_insights_path",
+			Name:     "Network Insights Path",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourcePublicIPv4Pool,
+			Factory:  dataSourcePublicIPv4Pool,
 			TypeName: "aws_ec2_public_ipv4_pool",
+			Name:     "Public IPv4 Pool",
 		},
 		{
-			Factory:  DataSourcePublicIPv4Pools,
+			Factory:  dataSourcePublicIPv4Pools,
 			TypeName: "aws_ec2_public_ipv4_pools",
+			Name:     "Public IPv4 Pools",
 		},
 		{
-			Factory:  DataSourceSerialConsoleAccess,
+			Factory:  dataSourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
+			Name:     "Serial Console Access",
 		},
 		{
-			Factory:  DataSourceSpotPrice,
+			Factory:  dataSourceSpotPrice,
 			TypeName: "aws_ec2_spot_price",
+			Name:     "Spot Price",
 		},
 		{
-			Factory:  DataSourceTransitGateway,
+			Factory:  dataSourceTransitGateway,
 			TypeName: "aws_ec2_transit_gateway",
+			Name:     "Transit Gateway",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayAttachment,
+			Factory:  dataSourceTransitGatewayAttachment,
 			TypeName: "aws_ec2_transit_gateway_attachment",
+			Name:     "Transit Gateway Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayAttachments,
+			Factory:  dataSourceTransitGatewayAttachments,
 			TypeName: "aws_ec2_transit_gateway_attachments",
+			Name:     "Transit Gateway Attachments",
 		},
 		{
-			Factory:  DataSourceTransitGatewayConnect,
+			Factory:  dataSourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
+			Name:     "Transit Gateway Connect",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayConnectPeer,
+			Factory:  dataSourceTransitGatewayConnectPeer,
 			TypeName: "aws_ec2_transit_gateway_connect_peer",
+			Name:     "Transit Gateway Connect Peer",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayDxGatewayAttachment,
+			Factory:  dataSourceTransitGatewayDxGatewayAttachment,
 			TypeName: "aws_ec2_transit_gateway_dx_gateway_attachment",
+			Name:     "Transit Gateway Direct Connect Gateway Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayMulticastDomain,
+			Factory:  dataSourceTransitGatewayMulticastDomain,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
+			Name:     "Transit Gateway Multicast Domain",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceTransitGatewayPeeringAttachment,
@@ -248,36 +299,47 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTable,
+			Factory:  dataSourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
+			Name:     "Transit Gateway Route Table",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTableAssociations,
+			Factory:  dataSourceTransitGatewayRouteTableAssociations,
 			TypeName: "aws_ec2_transit_gateway_route_table_associations",
+			Name:     "Transit Gateway Route Table Associations",
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTablePropagations,
+			Factory:  dataSourceTransitGatewayRouteTablePropagations,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
+			Name:     "Transit Gateway Route Table Propagations",
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTableRoutes,
+			Factory:  dataSourceTransitGatewayRouteTableRoutes,
 			TypeName: "aws_ec2_transit_gateway_route_table_routes",
+			Name:     "Transit Gateway Route Table Routes",
 		},
 		{
-			Factory:  DataSourceTransitGatewayRouteTables,
+			Factory:  dataSourceTransitGatewayRouteTables,
 			TypeName: "aws_ec2_transit_gateway_route_tables",
+			Name:     "Transit Gateway Route Tables",
 		},
 		{
-			Factory:  DataSourceTransitGatewayVPCAttachment,
+			Factory:  dataSourceTransitGatewayVPCAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment",
+			Name:     "Transit Gateway VPC Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceTransitGatewayVPCAttachments,
+			Factory:  dataSourceTransitGatewayVPCAttachments,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachments",
+			Name:     "Transit Gateway VPC Attachments",
 		},
 		{
-			Factory:  DataSourceTransitGatewayVPNAttachment,
+			Factory:  dataSourceTransitGatewayVPNAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpn_attachment",
+			Name:     "Transit Gateway VPN Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceEIP,
@@ -291,12 +353,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "EIPs",
 		},
 		{
-			Factory:  DataSourceInstance,
+			Factory:  dataSourceInstance,
 			TypeName: "aws_instance",
+			Name:     "Instance",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceInstances,
+			Factory:  dataSourceInstances,
 			TypeName: "aws_instances",
+			Name:     "Instances",
 		},
 		{
 			Factory:  DataSourceInternetGateway,
@@ -309,8 +374,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceLaunchTemplate,
+			Factory:  dataSourceLaunchTemplate,
 			TypeName: "aws_launch_template",
+			Name:     "Launch Template",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceNATGateway,
@@ -353,6 +420,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSecurityGroup,
 			TypeName: "aws_security_group",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceSecurityGroups,
@@ -429,7 +497,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAMI,
+			Factory:  resourceAMI,
 			TypeName: "aws_ami",
 			Name:     "AMI",
 			Tags: &types.ServicePackageResourceTags{
@@ -437,7 +505,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAMICopy,
+			Factory:  resourceAMICopy,
 			TypeName: "aws_ami_copy",
 			Name:     "AMI",
 			Tags: &types.ServicePackageResourceTags{
@@ -445,7 +513,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAMIFromInstance,
+			Factory:  resourceAMIFromInstance,
 			TypeName: "aws_ami_from_instance",
 			Name:     "AMI",
 			Tags: &types.ServicePackageResourceTags{
@@ -453,8 +521,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAMILaunchPermission,
+			Factory:  resourceAMILaunchPermission,
 			TypeName: "aws_ami_launch_permission",
+			Name:     "AMI Launch Permission",
 		},
 		{
 			Factory:  resourceCustomerGateway,
@@ -513,15 +582,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEBSDefaultKMSKey,
+			Factory:  resourceEBSDefaultKMSKey,
 			TypeName: "aws_ebs_default_kms_key",
+			Name:     "EBS Default KMS Key",
 		},
 		{
-			Factory:  ResourceEBSEncryptionByDefault,
+			Factory:  resourceEBSEncryptionByDefault,
 			TypeName: "aws_ebs_encryption_by_default",
+			Name:     "EBS Encryption By Default",
 		},
 		{
-			Factory:  ResourceEBSSnapshot,
+			Factory:  resourceEBSSnapshot,
 			TypeName: "aws_ebs_snapshot",
 			Name:     "EBS Snapshot",
 			Tags: &types.ServicePackageResourceTags{
@@ -529,23 +600,23 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEBSSnapshotCopy,
+			Factory:  resourceEBSSnapshotCopy,
 			TypeName: "aws_ebs_snapshot_copy",
-			Name:     "EBS Snapshot",
+			Name:     "EBS Snapshot Copy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory:  ResourceEBSSnapshotImport,
+			Factory:  resourceEBSSnapshotImport,
 			TypeName: "aws_ebs_snapshot_import",
-			Name:     "EBS Snapshot",
+			Name:     "EBS Snapshot Import",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory:  ResourceEBSVolume,
+			Factory:  resourceEBSVolume,
 			TypeName: "aws_ebs_volume",
 			Name:     "EBS Volume",
 			Tags: &types.ServicePackageResourceTags{
@@ -553,11 +624,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAvailabilityZoneGroup,
+			Factory:  resourceAvailabilityZoneGroup,
 			TypeName: "aws_ec2_availability_zone_group",
+			Name:     "Availability Zone Group",
 		},
 		{
-			Factory:  ResourceCapacityReservation,
+			Factory:  resourceCapacityReservation,
 			TypeName: "aws_ec2_capacity_reservation",
 			Name:     "Capacity Reservation",
 			Tags: &types.ServicePackageResourceTags{
@@ -596,7 +668,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Client VPN Route",
 		},
 		{
-			Factory:  ResourceFleet,
+			Factory:  resourceFleet,
 			TypeName: "aws_ec2_fleet",
 			Name:     "Fleet",
 			Tags: &types.ServicePackageResourceTags{
@@ -604,7 +676,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHost,
+			Factory:  resourceHost,
 			TypeName: "aws_ec2_host",
 			Name:     "Host",
 			Tags: &types.ServicePackageResourceTags{
@@ -612,13 +684,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceImageBlockPublicAccess,
+			Factory:  resourceImageBlockPublicAccess,
 			TypeName: "aws_ec2_image_block_public_access",
 			Name:     "Image Block Public Access",
 		},
 		{
-			Factory:  ResourceInstanceState,
+			Factory:  resourceInstanceState,
 			TypeName: "aws_ec2_instance_state",
+			Name:     "Instance State",
 		},
 		{
 			Factory:  ResourceLocalGatewayRoute,
@@ -645,7 +718,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ec2_managed_prefix_list_entry",
 		},
 		{
-			Factory:  ResourceNetworkInsightsAnalysis,
+			Factory:  resourceNetworkInsightsAnalysis,
 			TypeName: "aws_ec2_network_insights_analysis",
 			Name:     "Network Insights Analysis",
 			Tags: &types.ServicePackageResourceTags{
@@ -653,7 +726,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNetworkInsightsPath,
+			Factory:  resourceNetworkInsightsPath,
 			TypeName: "aws_ec2_network_insights_path",
 			Name:     "Network Insights Path",
 			Tags: &types.ServicePackageResourceTags{
@@ -661,8 +734,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSerialConsoleAccess,
+			Factory:  resourceSerialConsoleAccess,
 			TypeName: "aws_ec2_serial_console_access",
+			Name:     "Serial Console Access",
 		},
 		{
 			Factory:  ResourceSubnetCIDRReservation,
@@ -674,7 +748,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "EC2 Resource Tag",
 		},
 		{
-			Factory:  ResourceTrafficMirrorFilter,
+			Factory:  resourceTrafficMirrorFilter,
 			TypeName: "aws_ec2_traffic_mirror_filter",
 			Name:     "Traffic Mirror Filter",
 			Tags: &types.ServicePackageResourceTags{
@@ -682,12 +756,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTrafficMirrorFilterRule,
+			Factory:  resourceTrafficMirrorFilterRule,
 			TypeName: "aws_ec2_traffic_mirror_filter_rule",
 			Name:     "Traffic Mirror Filter Rule",
 		},
 		{
-			Factory:  ResourceTrafficMirrorSession,
+			Factory:  resourceTrafficMirrorSession,
 			TypeName: "aws_ec2_traffic_mirror_session",
 			Name:     "Traffic Mirror Session",
 			Tags: &types.ServicePackageResourceTags{
@@ -695,7 +769,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTrafficMirrorTarget,
+			Factory:  resourceTrafficMirrorTarget,
 			TypeName: "aws_ec2_traffic_mirror_target",
 			Name:     "Traffic Mirror Target",
 			Tags: &types.ServicePackageResourceTags{
@@ -703,7 +777,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGateway,
+			Factory:  resourceTransitGateway,
 			TypeName: "aws_ec2_transit_gateway",
 			Name:     "Transit Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -711,7 +785,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayConnect,
+			Factory:  resourceTransitGatewayConnect,
 			TypeName: "aws_ec2_transit_gateway_connect",
 			Name:     "Transit Gateway Connect",
 			Tags: &types.ServicePackageResourceTags{
@@ -719,7 +793,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayConnectPeer,
+			Factory:  resourceTransitGatewayConnectPeer,
 			TypeName: "aws_ec2_transit_gateway_connect_peer",
 			Name:     "Transit Gateway Connect Peer",
 			Tags: &types.ServicePackageResourceTags{
@@ -727,7 +801,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastDomain,
+			Factory:  resourceTransitGatewayMulticastDomain,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
 			Name:     "Transit Gateway Multicast Domain",
 			Tags: &types.ServicePackageResourceTags{
@@ -735,16 +809,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastDomainAssociation,
+			Factory:  resourceTransitGatewayMulticastDomainAssociation,
 			TypeName: "aws_ec2_transit_gateway_multicast_domain_association",
+			Name:     "Transit Gateway Multicast Domain Association",
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastGroupMember,
+			Factory:  resourceTransitGatewayMulticastGroupMember,
 			TypeName: "aws_ec2_transit_gateway_multicast_group_member",
+			Name:     "Transit Gateway Multicast Group Member",
 		},
 		{
-			Factory:  ResourceTransitGatewayMulticastGroupSource,
+			Factory:  resourceTransitGatewayMulticastGroupSource,
 			TypeName: "aws_ec2_transit_gateway_multicast_group_source",
+			Name:     "Transit Gateway Multicast Group Source",
 		},
 		{
 			Factory:  resourceTransitGatewayPeeringAttachment,
@@ -755,15 +832,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayPeeringAttachmentAccepter,
+			Factory:  resourceTransitGatewayPeeringAttachmentAccepter,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment_accepter",
-			Name:     "Transit Gateway Peering Attachment",
+			Name:     "Transit Gateway Peering Attachment Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayPolicyTable,
+			Factory:  resourceTransitGatewayPolicyTable,
 			TypeName: "aws_ec2_transit_gateway_policy_table",
 			Name:     "Transit Gateway Policy Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -771,19 +848,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayPolicyTableAssociation,
+			Factory:  resourceTransitGatewayPolicyTableAssociation,
 			TypeName: "aws_ec2_transit_gateway_policy_table_association",
+			Name:     "Transit Gateway Policy Table Association",
 		},
 		{
-			Factory:  ResourceTransitGatewayPrefixListReference,
+			Factory:  resourceTransitGatewayPrefixListReference,
 			TypeName: "aws_ec2_transit_gateway_prefix_list_reference",
+			Name:     "Transit Gateway Prefix List Reference",
 		},
 		{
-			Factory:  ResourceTransitGatewayRoute,
+			Factory:  resourceTransitGatewayRoute,
 			TypeName: "aws_ec2_transit_gateway_route",
+			Name:     "Transit Gateway Route",
 		},
 		{
-			Factory:  ResourceTransitGatewayRouteTable,
+			Factory:  resourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
 			Name:     "Transit Gateway Route Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -791,15 +871,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayRouteTableAssociation,
+			Factory:  resourceTransitGatewayRouteTableAssociation,
 			TypeName: "aws_ec2_transit_gateway_route_table_association",
+			Name:     "Transit Gateway Route Table Association",
 		},
 		{
-			Factory:  ResourceTransitGatewayRouteTablePropagation,
+			Factory:  resourceTransitGatewayRouteTablePropagation,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagation",
+			Name:     "Transit Gateway Route Table Propagation",
 		},
 		{
-			Factory:  ResourceTransitGatewayVPCAttachment,
+			Factory:  resourceTransitGatewayVPCAttachment,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment",
 			Name:     "Transit Gateway VPC Attachment",
 			Tags: &types.ServicePackageResourceTags{
@@ -807,9 +889,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitGatewayVPCAttachmentAccepter,
+			Factory:  resourceTransitGatewayVPCAttachmentAccepter,
 			TypeName: "aws_ec2_transit_gateway_vpc_attachment_accepter",
-			Name:     "Transit Gateway VPC Attachment",
+			Name:     "Transit Gateway VPC Attachment Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
@@ -817,7 +899,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceEgressOnlyInternetGateway,
 			TypeName: "aws_egress_only_internet_gateway",
-			Name:     "Egress-only Internet Gateway",
+			Name:     "Egress-Only Internet Gateway",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
@@ -844,7 +926,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstance,
+			Factory:  resourceInstance,
 			TypeName: "aws_instance",
 			Name:     "Instance",
 			Tags: &types.ServicePackageResourceTags{
@@ -872,7 +954,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLaunchTemplate,
+			Factory:  resourceLaunchTemplate,
 			TypeName: "aws_launch_template",
 			Name:     "Launch Template",
 			Tags: &types.ServicePackageResourceTags{
@@ -926,7 +1008,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_network_interface_sg_attachment",
 		},
 		{
-			Factory:  ResourcePlacementGroup,
+			Factory:  resourcePlacementGroup,
 			TypeName: "aws_placement_group",
 			Name:     "Placement Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -963,15 +1045,17 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_security_group_rule",
 		},
 		{
-			Factory:  ResourceSnapshotCreateVolumePermission,
+			Factory:  resourceSnapshotCreateVolumePermission,
 			TypeName: "aws_snapshot_create_volume_permission",
+			Name:     "EBS Snapshot CreateVolume Permission",
 		},
 		{
-			Factory:  ResourceSpotDataFeedSubscription,
+			Factory:  resourceSpotDataFeedSubscription,
 			TypeName: "aws_spot_datafeed_subscription",
+			Name:     "Spot Datafeed Subscription",
 		},
 		{
-			Factory:  ResourceSpotFleetRequest,
+			Factory:  resourceSpotFleetRequest,
 			TypeName: "aws_spot_fleet_request",
 			Name:     "Spot Fleet Request",
 			Tags: &types.ServicePackageResourceTags{
@@ -979,7 +1063,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSpotInstanceRequest,
+			Factory:  resourceSpotInstanceRequest,
 			TypeName: "aws_spot_instance_request",
 			Name:     "Spot Instance Request",
 			Tags: &types.ServicePackageResourceTags{
@@ -1037,8 +1121,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVolumeAttachment,
+			Factory:  resourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
+			Name:     "EBS Volume Attachment",
 		},
 		{
 			Factory:  ResourceVPC,
@@ -1061,7 +1146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_vpc_dhcp_options_association",
 		},
 		{
-			Factory:  ResourceVPCEndpoint,
+			Factory:  resourceVPCEndpoint,
 			TypeName: "aws_vpc_endpoint",
 			Name:     "VPC Endpoint",
 			Tags: &types.ServicePackageResourceTags{

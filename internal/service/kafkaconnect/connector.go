@@ -245,7 +245,7 @@ func ResourceConnector() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cloudwatch_logs": {
+									names.AttrCloudWatchLogs: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
@@ -907,7 +907,7 @@ func expandWorkerLogDelivery(tfMap map[string]interface{}) *kafkaconnect.WorkerL
 
 	apiObject := &kafkaconnect.WorkerLogDelivery{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		apiObject.CloudWatchLogs = expandCloudWatchLogsLogDelivery(v[0].(map[string]interface{}))
 	}
 
@@ -1242,7 +1242,7 @@ func flattenWorkerLogDeliveryDescription(apiObject *kafkaconnect.WorkerLogDelive
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
+		tfMap[names.AttrCloudWatchLogs] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
 	}
 
 	if v := apiObject.Firehose; v != nil {

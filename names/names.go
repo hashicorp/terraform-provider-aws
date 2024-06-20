@@ -18,6 +18,7 @@ package names
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -30,14 +31,17 @@ const (
 	AMPEndpointID                        = "aps"
 	AppStreamEndpointID                  = "appstream2"
 	ApplicationAutoscalingEndpointID     = "application-autoscaling"
+	AppFabricEndpointID                  = "appfabric"
 	AppIntegrationsEndpointID            = "app-integrations"
 	AppConfigEndpointID                  = "appconfig"
 	AmplifyEndpointID                    = "amplify"
 	APIGatewayID                         = "apigateway"
 	APIGatewayV2EndpointID               = "apigateway"
+	ApplicationInsightsEndpointID        = "applicationinsights"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	AutoScalingPlansEndpointID           = "autoscaling-plans"
+	BackupEndpointID                     = "backup"
 	BatchEndpointID                      = "batch"
 	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
@@ -79,6 +83,7 @@ const (
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
 	OpenSearchIngestionEndpointID        = "osis"
+	PaymentCryptographyEndpointID        = "paymentcryptography"
 	PipesEndpointID                      = "pipes"
 	PollyEndpointID                      = "polly"
 	QLDBEndpointID                       = "qldb"
@@ -88,15 +93,19 @@ const (
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
+	RUMEndpointID                        = "rum"
+	SchemasEndpointID                    = "schemas"
 	SchedulerEndpointID                  = "scheduler"
-	ServiceQuotasEndpointID              = "servicequotas"
 	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
+	ServiceDiscoveryEndpointID           = "servicediscovery"
+	ServiceQuotasEndpointID              = "servicequotas"
 	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
 	SSMIncidentsEndpointID               = "ssm-incidents"
 	SSOAdminEndpointID                   = "sso"
 	STSEndpointID                        = "sts"
 	TranscribeEndpointID                 = "transcribe"
+	TransferEndpointID                   = "transfer"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	WAFEndpointID                        = "waf"
@@ -163,7 +172,54 @@ const (
 
 	// AWS ISOB (US) partition's regions.
 	USISOBEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
+
+	// AWS ISOF partition's regions.
+	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
+
+var allRegionIDs = []string{
+	AFSouth1RegionID,
+	APEast1RegionID,
+	APNortheast1RegionID,
+	APNortheast2RegionID,
+	APNortheast3RegionID,
+	APSouth1RegionID,
+	APSouth2RegionID,
+	APSoutheast1RegionID,
+	APSoutheast2RegionID,
+	APSoutheast3RegionID,
+	APSoutheast4RegionID,
+	CACentral1RegionID,
+	CAWest1RegionID,
+	EUCentral1RegionID,
+	EUCentral2RegionID,
+	EUNorth1RegionID,
+	EUSouth1RegionID,
+	EUSouth2RegionID,
+	EUWest1RegionID,
+	EUWest2RegionID,
+	EUWest3RegionID,
+	ILCentral1RegionID,
+	MECentral1RegionID,
+	MESouth1RegionID,
+	SAEast1RegionID,
+	USEast1RegionID,
+	USEast2RegionID,
+	USWest1RegionID,
+	USWest2RegionID,
+	CNNorth1RegionID,
+	CNNorthwest1RegionID,
+	USGovEast1RegionID,
+	USGovWest1RegionID,
+	USISOEast1RegionID,
+	USISOWest1RegionID,
+	USISOBEast1RegionID,
+	EUISOEWest1RegionID,
+}
+
+func Regions() []string {
+	return slices.Clone(allRegionIDs)
+}
 
 func DNSSuffixForPartition(partition string) string {
 	switch partition {
@@ -211,6 +267,8 @@ func PartitionForRegion(region string) string {
 		return ISOPartitionID
 	case USISOBEast1RegionID:
 		return ISOBPartitionID
+	case EUISOEWest1RegionID:
+		return ISOEPartitionID
 	case USGovEast1RegionID, USGovWest1RegionID:
 		return USGovCloudPartitionID
 	default:

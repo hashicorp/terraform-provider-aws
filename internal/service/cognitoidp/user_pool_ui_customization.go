@@ -67,7 +67,7 @@ func resourceUserPoolUICustomization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -83,7 +83,7 @@ func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	userPoolID, clientID := d.Get("user_pool_id").(string), d.Get(names.AttrClientID).(string)
+	userPoolID, clientID := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrClientID).(string)
 	id := errs.Must(flex.FlattenResourceId([]string{userPoolID, clientID}, userPoolUICustomizationResourceIDPartCount, false))
 	input := &cognitoidentityprovider.SetUICustomizationInput{
 		ClientId:   aws.String(clientID),
@@ -141,7 +141,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 	d.Set("css_version", uiCustomization.CSSVersion)
 	d.Set("image_url", uiCustomization.ImageUrl)
 	d.Set("last_modified_date", aws.TimeValue(uiCustomization.LastModifiedDate).Format(time.RFC3339))
-	d.Set("user_pool_id", uiCustomization.UserPoolId)
+	d.Set(names.AttrUserPoolID, uiCustomization.UserPoolId)
 
 	return diags
 }

@@ -208,7 +208,7 @@ The following arguments are optional:
 
 * `badge_enabled` - (Optional) Generates a publicly-accessible URL for the projects build badge. Available as `badge_url` attribute when enabled.
 * `build_batch_config` - (Optional) Defines the batch build options for the project.
-* `build_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes. The `build_timeout` property is not available on the `Lambda` compute type.
+* `build_timeout` - (Optional) Number of minutes, from 5 to 2160 (36 hours), for AWS CodeBuild to wait until timing out any related build that does not get marked as completed. The default is 60 minutes. The `build_timeout` property is not available on the `Lambda` compute type.
 * `cache` - (Optional) Configuration block. Detailed below.
 * `concurrent_build_limit` - (Optional) Specify a maximum number of concurrent builds for the project. The value specified must be greater than 0 and less than the account concurrent running builds limit.
 * `description` - (Optional) Short description of the project.
@@ -412,4 +412,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d24e55e597e710bcc4ba1d53cf8186ec803f1c93b8b23b0f7b037f760d5c6670 -->
+<!-- cache-key: cdktf-0.20.1 input-41cbebfacaf2bc3f06a75ecb5f97b39d7e7067f99d727eb6449f1645411cf564 -->

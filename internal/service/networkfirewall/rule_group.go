@@ -230,7 +230,7 @@ func ResourceRuleGroup() *schema.Resource {
 																Required: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"actions": {
+																		names.AttrActions: {
 																			Type:     schema.TypeSet,
 																			Required: true,
 																			Elem:     &schema.Schema{Type: schema.TypeString},
@@ -1036,7 +1036,7 @@ func expandRuleDefinition(l []interface{}) *networkfirewall.RuleDefinition {
 		return nil
 	}
 	rd := &networkfirewall.RuleDefinition{}
-	if v, ok := tfMap["actions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrActions].(*schema.Set); ok && v.Len() > 0 {
 		rd.Actions = flex.ExpandStringSet(v)
 	}
 	if v, ok := tfMap["match_attributes"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1322,7 +1322,7 @@ func flattenRuleDefinition(r *networkfirewall.RuleDefinition) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"actions":          flex.FlattenStringSet(r.Actions),
+		names.AttrActions:  flex.FlattenStringSet(r.Actions),
 		"match_attributes": flattenMatchAttributes(r.MatchAttributes),
 	}
 
