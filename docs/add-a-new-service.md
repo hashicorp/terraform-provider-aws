@@ -93,14 +93,22 @@ If an AWS service must be created in a non-standard way, for example, the servic
     func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costoptimizationhub.Client, error) {
         cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-        return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
-            if endpoint := config["endpoint"].(string); endpoint != "" {
-                o.BaseEndpoint = aws.String(endpoint)
-            } else if config["partition"].(string) == names.StandardPartitionID {
-                // Cost Optimization Hub endpoint is available only in us-east-1 Region.
-                o.Region = names.USEast1RegionID
-            }
-        }), nil
+        return costoptimizationhub.NewFromConfig(cfg,
+            costoptimizationhub.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+            withBaseEndpoint(config[names.AttrEndpoint].(string)),
+            func(o *costoptimizationhub.Options) {
+                if config["partition"].(string) == names.StandardPartitionID {
+                    // Cost Optimization Hub endpoint is available only in us-east-1 Region.
+                    if cfg.Region != names.USEast1RegionID {
+                        tflog.Info(ctx, "overriding region", map[string]any{
+                            "original_region": cfg.Region,
+                            "override_region": names.USEast1RegionID,
+                        })
+                        o.Region = names.USEast1RegionID
+                    }
+                }
+            },
+        ), nil
     }
     ```
 
@@ -121,11 +129,27 @@ If an AWS service must be created in a non-standard way, for example, the servic
     // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
     func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
         sess := p.config["session"].(*session_sdkv1.Session)
-        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
+
+        cfg := aws.Config{}
+
+        if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+            tflog.Debug(ctx, "setting endpoint", map[string]any{
+                "tf_aws.endpoint": endpoint,
+            })
+            cfg.Endpoint = aws.String(endpoint)
+        } else {
+            cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
+        }
     
         // Force "global" services to correct Regions.
-        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
+        if config["partition"].(string) == endpoints.AwsPartitionID {
+            if aws.StringValue(cfg.Region) != endpoints.UsWest2RegionID {
+                tflog.Info(ctx, "overriding region", map[string]any{
+                    "original_region": aws.StringValue(cfg.Region),
+                    "override_region": endpoints.UsWest2RegionID,
+                })
+                cfg.Region = aws.String(endpoints.UsWest2RegionID)
+            }
         }
     
         return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
