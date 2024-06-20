@@ -1,0 +1,3 @@
+```release-note:bug
+service/lakeformation: Fix resource Permission when refreshing state so order is not considered
+```
