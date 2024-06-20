@@ -294,8 +294,8 @@ github.com/aws/aws-sdk-go-v2/service/mwaa v1.28.1 h1:fzBc0gfOfrlcyP/COVDt8iGVUnQ
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.28.1/go.mod h1:a46hMp6jog7U6rhMxmp0wwcGvPTJINQkc6EevZb7SNs=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.9.1 h1:UjByGYRBlhjY4l8Lun62K3Z62Wks84q3UasnDDJoz5I=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.9.1/go.mod h1:5q3YTQennpO1/KB7rU71vW/9PjLC4PuosEi2xDEw5OY=
-github.com/aws/aws-sdk-go-v2/service/oam v1.12.0 h1:NyYwBx/auaIYoPvHUPHUpE4p5jzaFqhL1qmxfk9+HhA=
-github.com/aws/aws-sdk-go-v2/service/oam v1.12.0/go.mod h1:QmR858iis15nB1JSbLooR6zK+ZC3zZfwW9bDdv/taAM=
+github.com/aws/aws-sdk-go-v2/service/oam v1.12.1 h1:LZrULRkfrmZVE8OHqwI8tKFEFxpjZl6ll7Bn2MCCVwg=
+github.com/aws/aws-sdk-go-v2/service/oam v1.12.1/go.mod h1:yiUaEYA1zVxtz/EGgf8NE7rT56sLKGqQwQrWg/GhGu8=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.12.0 h1:K7v/cjRbKXWy4qJDtrZ9D+N7Bcv1YYgiV0u8p8a++jc=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.12.0/go.mod h1:BUJisSmzHH8bDzBUuS8oibm+tTkabL1edIok+oaXwrA=
 github.com/aws/aws-sdk-go-v2/service/organizations v1.28.0 h1:tm2U9o4/Pj6Sj1WYshqyTr3eF0sZviLn/UIElhyeBTA=
