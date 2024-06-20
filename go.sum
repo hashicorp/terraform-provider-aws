@@ -360,8 +360,8 @@ github.com/aws/aws-sdk-go-v2/service/securityhub v1.50.1 h1:kT/0nz4Fgb7/xZpIUubX
 github.com/aws/aws-sdk-go-v2/service/securityhub v1.50.1/go.mod h1:0eCNhMYahG4Yj7uBDm9BTq8KoLmBmhxt4d36PfZ/uPU=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.15.1 h1:vTyA6riZZ7n7qI0vlNHaXgqv8D5oiRCuHwEj1gd1soM=
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.15.1/go.mod h1:GPJabMy3AdBJjL6YRzu3LNbw+11OuvzZwjmMpmZhkjg=
-github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.27.0 h1:McGMz1MxHynEh00FRagW/NbSf6JjW6XtSBky4DWSeWg=
-github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.27.0/go.mod h1:LpcM0C8kqecwfaNeK7yRlyOt0gLuzCYwKcnK39ADOsI=
+github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.27.1 h1:WJR9PhUdNULh+L+C/ByCFFB8ldkTfj4c9HKiWV+esgk=
+github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.27.1/go.mod h1:VHl0eZ8oYU2D0/BeBYTO5bJ6V1riuxCBQGEAjF+6Jx0=
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.30.0 h1:FCRBlq0ym8/3kr5/tQKLg7tsz5nTOmdqtArNWdvAdNA=
 github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.30.0/go.mod h1:w6z+TqchBg7RF3FtvUGs08faCSYfwlbGf7x5ipuWDKU=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.22.0 h1:J1RxKkbJvOydBLiNGR1T5HUjJ+Qjmh+n4p+V7Cpkhn8=
