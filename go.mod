@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.39.1
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.10.0
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/dax v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.31.0
