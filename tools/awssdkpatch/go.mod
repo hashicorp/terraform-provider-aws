@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
 
-go 1.22.2
+go 1.22.4
 
 require (
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
