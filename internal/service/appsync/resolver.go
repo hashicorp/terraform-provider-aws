@@ -406,7 +406,7 @@ func resolverParseResourceID(id string) (string, string, string, error) {
 	return parts[0], parts[1], parts[2], nil
 }
 
-func retryResolverOp(ctx context.Context, apiID string, f func() (interface{}, error)) (interface{}, error) {
+func retryResolverOp(ctx context.Context, apiID string, f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
 	mutexKey := "appsync-schema-" + apiID
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)

@@ -183,7 +183,7 @@ func statusDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, i
 	}
 }
 
-func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiAssociation, error) {
+func waitDomainNameAPIAssociation(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiAssociation, error) { //nolint:unparam
 	const (
 		domainNameAPIAssociationTimeout = 60 * time.Minute
 	)

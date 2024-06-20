@@ -226,7 +226,7 @@ func statusAPICache(ctx context.Context, conn *appsync.Client, name string) retr
 	}
 }
 
-func waitAPICacheAvailable(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiCache, error) {
+func waitAPICacheAvailable(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiCache, error) { //nolint:unparam
 	const (
 		timeout = 60 * time.Minute
 	)
