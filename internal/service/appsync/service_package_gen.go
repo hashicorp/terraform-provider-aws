@@ -73,8 +73,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Resolver",
 		},
 		{
-			Factory:  ResourceType,
+			Factory:  resourceType,
 			TypeName: "aws_appsync_type",
+			Name:     "Type",
 		},
 	}
 }

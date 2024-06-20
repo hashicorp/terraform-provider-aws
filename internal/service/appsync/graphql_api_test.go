@@ -1351,7 +1351,7 @@ func testAccCheckGraphQLAPITypeExists(ctx context.Context, n, typeName string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
-		_, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.ID, awstypes.OutputTypeSdl, typeName)
+		_, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.ID, awstypes.TypeDefinitionFormatSdl, typeName)
 
 		return err
 	}
