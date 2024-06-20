@@ -298,6 +298,8 @@ func (r *tlsInspectionConfigurationResource) Create(ctx context.Context, request
 		return
 	}
 
+	input.Tags = getTagsIn(ctx)
+
 	outputC, err := conn.CreateTLSInspectionConfigurationWithContext(ctx, input)
 
 	if err != nil {
@@ -364,6 +366,8 @@ func (r *tlsInspectionConfigurationResource) Read(ctx context.Context, request r
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	setTagsOut(ctx, output.TLSInspectionConfigurationResponse.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -461,6 +465,10 @@ func (r *tlsInspectionConfigurationResource) ConfigValidators(context.Context) [
 			path.MatchRoot("tls_inspection_configuration").AtListIndex(0).AtName("server_certificate_configuration").AtListIndex(0).AtName("server_certificate"),
 		),
 	}
+}
+
+func (r *tlsInspectionConfigurationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
