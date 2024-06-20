@@ -60,7 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Function",
 		},
 		{
-			Factory:  ResourceGraphQLAPI,
+			Factory:  resourceGraphQLAPI,
 			TypeName: "aws_appsync_graphql_api",
 			Name:     "GraphQL API",
 			Tags: &types.ServicePackageResourceTags{

@@ -11,11 +11,14 @@ var (
 	ResourceDomainName               = resourceDomainName
 	ResourceDomainNameAPIAssociation = resourceDomainNameAPIAssociation
 	ResourceFunction                 = resourceFunction
+	ResourceGraphQLAPI               = resourceGraphQLAPI
 
-	FindAPICacheByID                 = findAPICacheByID
-	FindAPIKeyByTwoPartKey           = findAPIKeyByTwoPartKey
-	FindDataSourceByTwoPartKey       = findDataSourceByTwoPartKey
-	FindDomainNameAPIAssociationByID = findDomainNameAPIAssociationByID
-	FindDomainNameByID               = findDomainNameByID
-	FindFunctionByTwoPartKey         = findFunctionByTwoPartKey
+	DefaultAuthorizerResultTTLInSeconds = defaultAuthorizerResultTTLInSeconds
+	FindAPICacheByID                    = findAPICacheByID
+	FindAPIKeyByTwoPartKey              = findAPIKeyByTwoPartKey
+	FindDataSourceByTwoPartKey          = findDataSourceByTwoPartKey
+	FindDomainNameAPIAssociationByID    = findDomainNameAPIAssociationByID
+	FindDomainNameByID                  = findDomainNameByID
+	FindFunctionByTwoPartKey            = findFunctionByTwoPartKey
+	FindGraphQLAPIByID                  = findGraphQLAPIByID
 )
