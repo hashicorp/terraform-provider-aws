@@ -330,8 +330,8 @@ github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.19.1 h1:VRAjP3iJ684rh
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.19.1/go.mod h1:+b6LJEQpqKMBA7Jw1fgpWngaZWiJtYGHtW4mm3awuos=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.41.1 h1:BsFFOLs6CTuzC8dxiAtrdtw8sjCoJydGiLXKPVjK1bg=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.41.1/go.mod h1:Tjh59zYOtIXSVQpJMxIWqkj/SONo8Crc0s6Z6CjBG1w=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.11.0 h1:FdTAqyJJEQNaLv+gQqSWHmcY8vysdcMy9fOhOIRaaSQ=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.11.0/go.mod h1:P7I9alD1m2weZzSd6C55oS5bb3IB4ou1XqEhE1W5pug=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.11.1 h1:o2MkvVZAahZX3ttqVmJJeCRAmIHQ98iJsLlmHXFjuCM=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.11.1/go.mod h1:Hq2k/Ovak4zs70o1r39jzn+jOfwsBaWYq79KY5ntvH4=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.23.0 h1:joVrhKXPEIDeFoF+QDwGpv7VTRoDuMLCEs/u/u+ctBI=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.23.0/go.mod h1:yYz0Ti5szl4rvf7hiI9FsYPf22Vjy0No4k7v7H4Ms28=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.22.0 h1:8zPwiUeRAMzLU5dZ+jL23bTVoy0TdKJyZ6LH0lOKzZU=
