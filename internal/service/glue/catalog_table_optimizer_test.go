@@ -24,8 +24,7 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	dbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	tName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -34,15 +33,14 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCatalogTableOptimizerConfig_basic(dbName, tName),
+				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, dbName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, tName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "compaction"),
-					// resource.TestCheckResourceAttr(resourceName, "configuration.role_arn", "arn:aws:iam::123456789012:role/example-role"),
-					// resource.TestCheckResourceAttr(resourceName, "configuration.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.AccountID()),
 				),
 			},
 			{
@@ -60,8 +58,7 @@ func TestAccGlueCatalogTableOptimizer_disappears(t *testing.T) {
 
 	resourceName := "aws_glue_catalog_table_optimizer.test"
 
-	dbName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	tName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -70,7 +67,7 @@ func TestAccGlueCatalogTableOptimizer_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCatalogTableOptimizerConfig_basic(dbName, tName),
+				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTableOptimizer(), resourceName),
@@ -154,7 +151,7 @@ func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCatalogTableOptimizerConfig_basic(dbName string, tName string) string {
+func testAccCatalogTableOptimizerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
@@ -207,8 +204,8 @@ resource "aws_iam_role_policy" "glue_compaction_role_access" {
           "glue:GetTable"
         ]
         Resource = [
-          "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/*/*",
-          "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/*",
+          "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.test.name}/${aws_glue_catalog_table.test.name}",
+          "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.test.name}",
           "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
         ]
       },
@@ -235,8 +232,8 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
   database_name = aws_glue_catalog_database.test.name
-  name          = %[2]q
   table_type    = "EXTERNAL_TABLE"
 
   open_table_format_input {
@@ -252,7 +249,6 @@ resource "aws_glue_catalog_table" "test" {
     columns {
       name    = "my_column_1"
       type    = "int"
-      comment = %[2]q
     }
   }
 }
@@ -274,5 +270,5 @@ resource "aws_glue_catalog_table_optimizer" "test" {
     aws_iam_role_policy.glue_compaction_role_access
   ]
 }
-`, dbName, tName)
+`, rName)
 }

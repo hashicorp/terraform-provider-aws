@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -95,13 +94,21 @@ func resourceCatalogTableOptimizerCreate(ctx context.Context, d *schema.Resource
 		Type: aws.String(d.Get("type").(string)),
 	}
 
-	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateTableOptimizerWithContext(ctx, input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the correct trust policies and is unable to be assumed by our service") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the proper IAM permissions to call Glue APIs") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform: glue:GetTable") {
-				return retry.RetryableError(fmt.Errorf("creating Glue Catalog Table Optimizer: %s", err))
+			// Retry IAM propagation errors
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the correct trust policies and is unable to be assumed by our service") {
+				return retry.RetryableError(err)
 			}
-			return retry.NonRetryableError(fmt.Errorf("creating Glue Catalog Table Optimizer: %s", err))
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the proper IAM permissions to call Glue APIs") {
+				return retry.RetryableError(err)
+			}
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform") {
+				return retry.RetryableError(err)
+			}
+
+			return retry.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -131,27 +138,22 @@ func resourceCatalogTableOptimizerRead(ctx context.Context, d *schema.ResourceDa
 		Type:         aws.String(optimizerType),
 	}
 
-	output, err := conn.GetTableOptimizerWithContext(ctx, input)
-	if tfresource.NotFound(err) {
+	optimizer, err := conn.GetTableOptimizerWithContext(ctx, input)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Catalog Table Optimizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table Optimizer (%s): %s", d.Id(), err)
 	}
 
-	if output.TableOptimizer == nil {
-		log.Printf("[WARN] Glue Catalog Table Optimizer (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table Optimizer (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrTableName, tableName)
 	d.Set("type", optimizerType)
-	if err := d.Set("configuration", flattenConfiguration(output.TableOptimizer)); err != nil {
+	if err := d.Set("configuration", flattenConfiguration(optimizer.TableOptimizer)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
@@ -181,13 +183,21 @@ func resourceCatalogTableOptimizerUpdate(ctx context.Context, d *schema.Resource
 			Type: aws.String(optimizerType),
 		}
 
-		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+		err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateTableOptimizerWithContext(ctx, input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the correct trust policies and is unable to be assumed by our service") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the proper IAM permissions to call Glue APIs") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform: glue:GetTable") {
-					return retry.RetryableError(fmt.Errorf("updating Glue Catalog Table Optimizer: %s", err))
+				// Retry IAM propagation errors
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the correct trust policies and is unable to be assumed by our service") {
+					return retry.RetryableError(err)
 				}
-				return retry.NonRetryableError(fmt.Errorf("updating Glue Catalog Table Optimizer: %s", err))
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the proper IAM permissions to call Glue APIs") {
+					return retry.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform") {
+					return retry.RetryableError(err)
+				}
+
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
