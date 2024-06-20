@@ -697,7 +697,7 @@ service "appsync" {
 
   sdk {
     id             = "AppSync"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -707,6 +707,7 @@ service "appsync" {
 
   client {
     go_v1_client_typename = "AppSync"
+    skip_client_generate  = true
   }
 
   endpoint_info {
