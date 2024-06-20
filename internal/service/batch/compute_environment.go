@@ -53,20 +53,20 @@ func resourceComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"compute_environment_name": {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"compute_environment_name_prefix"},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validName,
 			},
-			"compute_environment_name_prefix": {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"compute_environment_name"},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validPrefix,
 			},
 			"compute_resources": {
@@ -278,7 +278,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
-	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
+	computeEnvironmentName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	computeEnvironmentType := awstypes.CEType(d.Get(names.AttrType).(string))
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
@@ -349,8 +349,8 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
-	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
-	d.Set("compute_environment_name_prefix", create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
+	d.Set("name", computeEnvironment.ComputeEnvironmentName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(computeEnvironment.ComputeEnvironmentName)))
 	if computeEnvironment.ComputeResources != nil {
 		if err := d.Set("compute_resources", []any{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)

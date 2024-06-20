@@ -23,6 +23,11 @@ func dataSourceComputeEnvironment() *schema.Resource {
 		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,
 
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
