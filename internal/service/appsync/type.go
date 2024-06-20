@@ -173,7 +173,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 const typeResourceIDSeparator = ":"
 
 func typeCreateResourceID(apiID string, format awstypes.TypeDefinitionFormat, name string) string {
-	parts := []string{apiID, string(format), name}
+	parts := []string{apiID, string(format), name} // nosemgrep:ci.typed-enum-conversion
 	id := strings.Join(parts, typeResourceIDSeparator)
 
 	return id
