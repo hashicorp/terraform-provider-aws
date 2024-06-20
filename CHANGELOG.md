@@ -1,4 +1,5 @@
-## 5.55.0 (Unreleased)
+## 5.56.0 (Unreleased)
+## 5.55.0 (June 20, 2024)
 
 FEATURES:
 
@@ -27,7 +28,6 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
-* data-source/aws_ami: Fix `interface conversion: interface {} is types.ProductCodeValues, not string` panic ([#37977](https://github.com/hashicorp/terraform-provider-aws/issues/37977))
 * data-source/aws_networkmanager_core_network_policy_document: Add correct `except` values to the returned JSON document when `segment_actions.share_with_except` is configured ([#38013](https://github.com/hashicorp/terraform-provider-aws/issues/38013))
 * provider: Now falls back to non-FIPS endpoint if `use_fips_endpoint` is set and no FIPS endpoint is available ([#38057](https://github.com/hashicorp/terraform-provider-aws/issues/38057))
 * resource/aws_autoscaling_group: Fix bug updating `warm_pool.max_group_prepared_capacity` to `0` ([#37174](https://github.com/hashicorp/terraform-provider-aws/issues/37174))
