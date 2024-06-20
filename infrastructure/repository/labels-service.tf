@@ -21,6 +21,7 @@ variable "service_labels" {
     "appintegrations",
     "applicationcostprofiler",
     "applicationinsights",
+    "applicationsignals",
     "appmesh",
     "apprunner",
     "appstream",

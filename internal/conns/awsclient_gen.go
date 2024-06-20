@@ -18,12 +18,15 @@ import (
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	applicationinsights_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationinsights"
+	applicationsignals_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationsignals"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
+	appsync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appsync"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	autoscalingplans_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
+	backup_sdkv2 "github.com/aws/aws-sdk-go-v2/service/backup"
 	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
 	bcmdataexports_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
@@ -185,8 +188,6 @@ import (
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
-	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
-	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -319,12 +320,16 @@ func (c *AWSClient) AppStreamClient(ctx context.Context) *appstream_sdkv2.Client
 	return errs.Must(client[*appstream_sdkv2.Client](ctx, c, names.AppStream, make(map[string]any)))
 }
 
-func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
-	return errs.Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync, make(map[string]any)))
+func (c *AWSClient) AppSyncClient(ctx context.Context) *appsync_sdkv2.Client {
+	return errs.Must(client[*appsync_sdkv2.Client](ctx, c, names.AppSync, make(map[string]any)))
 }
 
 func (c *AWSClient) ApplicationInsightsClient(ctx context.Context) *applicationinsights_sdkv2.Client {
 	return errs.Must(client[*applicationinsights_sdkv2.Client](ctx, c, names.ApplicationInsights, make(map[string]any)))
+}
+
+func (c *AWSClient) ApplicationSignalsClient(ctx context.Context) *applicationsignals_sdkv2.Client {
+	return errs.Must(client[*applicationsignals_sdkv2.Client](ctx, c, names.ApplicationSignals, make(map[string]any)))
 }
 
 func (c *AWSClient) AthenaClient(ctx context.Context) *athena_sdkv2.Client {
@@ -347,8 +352,8 @@ func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports_sd
 	return errs.Must(client[*bcmdataexports_sdkv2.Client](ctx, c, names.BCMDataExports, make(map[string]any)))
 }
 
-func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
-	return errs.Must(conn[*backup_sdkv1.Backup](ctx, c, names.Backup, make(map[string]any)))
+func (c *AWSClient) BackupClient(ctx context.Context) *backup_sdkv2.Client {
+	return errs.Must(client[*backup_sdkv2.Client](ctx, c, names.Backup, make(map[string]any)))
 }
 
 func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {

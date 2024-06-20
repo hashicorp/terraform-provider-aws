@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationsignals"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -262,6 +263,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		appflow.ServicePackage(ctx),
 		appintegrations.ServicePackage(ctx),
 		applicationinsights.ServicePackage(ctx),
+		applicationsignals.ServicePackage(ctx),
 		appmesh.ServicePackage(ctx),
 		apprunner.ServicePackage(ctx),
 		appstream.ServicePackage(ctx),
