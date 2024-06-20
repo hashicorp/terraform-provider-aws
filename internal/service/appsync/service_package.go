@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/appsync"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,24 +19,15 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appsync.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return appsync.NewFromConfig(cfg, func(o *appsync.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws.String(endpoint)
-
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
-			}
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*awstypes.ConcurrentModificationException](err, "a GraphQL API creation is already in progress") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return appsync.NewFromConfig(cfg,
+		appsync.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *appsync.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if errs.IsAErrorMessageContains[*awstypes.ConcurrentModificationException](err, "a GraphQL API creation is already in progress") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		}), nil
 }
