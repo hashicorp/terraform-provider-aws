@@ -446,7 +446,7 @@ resource "aws_appsync_datasource" "test" {
 }
 
 func testAccResolverConfig_basic(rName string) string {
-	return testAccResolverConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), `
 resource "aws_appsync_resolver" "test" {
   api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
@@ -472,11 +472,11 @@ EOF
 #end
 EOF
 }
-`
+`)
 }
 
 func testAccResolverConfig_dataSource(rName string) string {
-	return testAccResolverConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), `
 resource "aws_appsync_datasource" "test2" {
   api_id = aws_appsync_graphql_api.test.id
   name   = "test_ds_2"
@@ -512,14 +512,14 @@ EOF
 #end
 EOF
 }
-`
+`)
 }
 
 func testAccResolverConfig_dataSourceLambda(rName string) string {
-	return testAccDatasourceConfig_baseLambda(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDatasourceConfig_baseLambda(rName), fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name                = %q
+  name                = %[1]q
 
   schema = <<EOF
 type Mutation {
@@ -544,7 +544,7 @@ EOF
 
 resource "aws_appsync_datasource" "test" {
   api_id           = aws_appsync_graphql_api.test.id
-  name             = %q
+  name             = %[1]q
   service_role_arn = aws_iam_role.test.arn
   type             = "AWS_LAMBDA"
 
@@ -559,11 +559,11 @@ resource "aws_appsync_resolver" "test" {
   type        = "Query"
   data_source = aws_appsync_datasource.test.name
 }
-`, rName, rName)
+`, rName))
 }
 
 func testAccResolverConfig_requestTemplate(rName, resourcePath string) string {
-	return testAccResolverConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), fmt.Sprintf(`
 resource "aws_appsync_resolver" "test" {
   api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
@@ -589,11 +589,11 @@ EOF
 #end
 EOF
 }
-`, resourcePath)
+`, resourcePath))
 }
 
 func testAccResolverConfig_responseTemplate(rName string, statusCode int) string {
-	return testAccResolverConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), fmt.Sprintf(`
 resource "aws_appsync_resolver" "test" {
   api_id      = aws_appsync_graphql_api.test.id
   field       = "singlePost"
@@ -620,7 +620,7 @@ EOF
 #end
 EOF
 }
-`, statusCode)
+`, statusCode))
 }
 
 func testAccResolverConfig_multiple(rName string) string {
@@ -630,10 +630,10 @@ func testAccResolverConfig_multiple(rName string) string {
 		queryFields = queryFields + fmt.Sprintf(`
 	singlePost%d(id: ID!): Post
 `, i)
-		resolverResources = resolverResources + fmt.Sprintf(`
-resource "aws_appsync_resolver" "test%d" {
+		resolverResources = acctest.ConfigCompose(resolverResources, fmt.Sprintf(`
+resource "aws_appsync_resolver" "test%[1]d" {
   api_id      = aws_appsync_graphql_api.test.id
-  field       = "singlePost%d"
+  field       = "singlePost%[1]d"
   type        = "Query"
   data_source = aws_appsync_datasource.test.name
 
@@ -656,13 +656,13 @@ EOF
 #end
 EOF
 }
-`, i, i)
+`, i))
 	}
 
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
-  name                = %q
+  name                = %[1]q
 
   schema = <<EOF
 type Mutation {
@@ -675,7 +675,7 @@ type Post {
 }
 
 type Query {
-%s
+%[2]s
 }
 
 schema {
@@ -687,7 +687,7 @@ EOF
 
 resource "aws_appsync_datasource" "test" {
   api_id = aws_appsync_graphql_api.test.id
-  name   = %q
+  name   = %[1]q
   type   = "HTTP"
 
   http_config {
@@ -695,13 +695,13 @@ resource "aws_appsync_datasource" "test" {
   }
 }
 
-%s
+%[3]s
 
-`, rName, queryFields, rName, resolverResources)
+`, rName, queryFields, resolverResources)
 }
 
 func testAccResolverConfig_pipeline(rName string) string {
-	return testAccResolverConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), fmt.Sprintf(`
 resource "aws_appsync_function" "test" {
   api_id                   = aws_appsync_graphql_api.test.id
   data_source              = aws_appsync_datasource.test.name
@@ -755,11 +755,11 @@ EOF
   }
 }
 
-`, rName)
+`, rName))
 }
 
 func testAccResolverConfig_caching(rName string) string {
-	return testAccResolverConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), `
 resource "aws_appsync_resolver" "test" {
   api_id           = aws_appsync_graphql_api.test.id
   field            = "singlePost"
@@ -793,11 +793,11 @@ EOF
     ttl = 60
   }
 }
-`
+`)
 }
 
 func testAccResolverConfig_sync(rName string) string {
-	return testAccDatasourceConfig_baseDynamoDB(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDatasourceConfig_baseDynamoDB(rName) + fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %[1]q
@@ -872,11 +872,11 @@ EOF
 #end
 EOF
 }
-`, rName)
+`, rName))
 }
 
 func testAccResolverConfig_code(rName, code string) string {
-	return testAccResolverConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccResolverConfig_base(rName), fmt.Sprintf(`
 resource "aws_appsync_function" "test" {
   api_id      = aws_appsync_graphql_api.test.id
   data_source = aws_appsync_datasource.test.name
@@ -905,5 +905,5 @@ resource "aws_appsync_resolver" "test" {
     runtime_version = "1.0.0"
   }
 }
-`, rName, code)
+`, rName, code))
 }

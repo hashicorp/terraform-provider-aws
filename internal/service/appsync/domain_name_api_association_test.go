@@ -23,14 +23,13 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var association awstypes.ApiAssociation
 	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -62,14 +61,13 @@ func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var association awstypes.ApiAssociation
 	appsyncCertDomain := acctest.SkipIfEnvVarNotSet(t, "AWS_APPSYNC_DOMAIN_NAME_CERTIFICATE_DOMAIN")
-
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -131,10 +129,9 @@ func testAccCheckDomainNameAPIAssociationExists(ctx context.Context, n string, v
 	}
 }
 
-func testAccDomainNameAPIAssociationBaseConfig(domain, rName string) string {
-	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
+func testAccDomainNameAPIAssociationConfig_base(domain, rName string) string {
+	return fmt.Sprintf(`
 data "aws_acm_certificate" "test" {
-  provider    = "awsalternate"
   domain      = "*.%[1]s"
   most_recent = true
 }
@@ -152,16 +149,16 @@ resource "aws_appsync_graphql_api" "test" {
 }
 
 func testAccDomainNameAPIAssociationConfig_basic(domain, rName string) string {
-	return testAccDomainNameAPIAssociationBaseConfig(domain, rName) + `
+	return acctest.ConfigCompose(testAccDomainNameAPIAssociationConfig_base(domain, rName), `
 resource "aws_appsync_domain_name_api_association" "test" {
   api_id      = aws_appsync_graphql_api.test.id
   domain_name = aws_appsync_domain_name.test.domain_name
 }
-`
+`)
 }
 
 func testAccDomainNameAPIAssociationConfig_updated(domain, rName string) string {
-	return testAccDomainNameAPIAssociationBaseConfig(domain, rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDomainNameAPIAssociationConfig_base(domain, rName), `
 resource "aws_appsync_graphql_api" "test2" {
   authentication_type = "API_KEY"
   name                = "%[1]s-2"
