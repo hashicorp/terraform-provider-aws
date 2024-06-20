@@ -40,7 +40,7 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "compaction"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", acctest.AccountID()),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.enabled", "true"),
 				),
 			},
 			{
