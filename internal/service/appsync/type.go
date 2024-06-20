@@ -153,6 +153,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	log.Printf("[INFO] Deleting Appsync Type: %s", d.Id())
 	_, err = conn.DeleteType(ctx, &appsync.DeleteTypeInput{
 		ApiId:    aws.String(apiID),
 		TypeName: aws.String(name),

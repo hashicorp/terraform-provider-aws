@@ -12,6 +12,7 @@ var (
 	ResourceDomainNameAPIAssociation = resourceDomainNameAPIAssociation
 	ResourceFunction                 = resourceFunction
 	ResourceGraphQLAPI               = resourceGraphQLAPI
+	ResourceResolver                 = resourceResolver
 	ResourceType                     = resourceType
 
 	DefaultAuthorizerResultTTLInSeconds = defaultAuthorizerResultTTLInSeconds
@@ -22,5 +23,6 @@ var (
 	FindDomainNameByID                  = findDomainNameByID
 	FindFunctionByTwoPartKey            = findFunctionByTwoPartKey
 	FindGraphQLAPIByID                  = findGraphQLAPIByID
+	FindResolverByThreePartKey          = findResolverByThreePartKey
 	FindTypeByThreePartKey              = findTypeByThreePartKey
 )
