@@ -55,8 +55,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Domain Name API Association",
 		},
 		{
-			Factory:  ResourceFunction,
+			Factory:  resourceFunction,
 			TypeName: "aws_appsync_function",
+			Name:     "Function",
 		},
 		{
 			Factory:  ResourceGraphQLAPI,

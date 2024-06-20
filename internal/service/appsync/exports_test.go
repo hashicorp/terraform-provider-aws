@@ -10,10 +10,12 @@ var (
 	ResourceDataSource               = resourceDataSource
 	ResourceDomainName               = resourceDomainName
 	ResourceDomainNameAPIAssociation = resourceDomainNameAPIAssociation
+	ResourceFunction                 = resourceFunction
 
 	FindAPICacheByID                 = findAPICacheByID
 	FindAPIKeyByTwoPartKey           = findAPIKeyByTwoPartKey
 	FindDataSourceByTwoPartKey       = findDataSourceByTwoPartKey
 	FindDomainNameAPIAssociationByID = findDomainNameAPIAssociationByID
 	FindDomainNameByID               = findDomainNameByID
+	FindFunctionByTwoPartKey         = findFunctionByTwoPartKey
 )
