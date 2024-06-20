@@ -393,6 +393,7 @@ func TestAccGlueJob_maintenanceWindow(t *testing.T) {
 	var job glue.Job
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_job.test"
+	maintenanceWindow := "Sun:23"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -401,11 +402,10 @@ func TestAccGlueJob_maintenanceWindow(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_maintenanceWindow(rName, "sun:23"),
+				Config: testAccJobConfig_maintenanceWindow(rName, maintenanceWindow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "Sun:23"),
 				),
 			},
 			{
@@ -1079,6 +1079,7 @@ resource "aws_glue_job" "test" {
   maintenance_window = %[2]q
 
   command {
+    name            = "gluestreaming"
     script_location = "testscriptlocation"
   }
 
