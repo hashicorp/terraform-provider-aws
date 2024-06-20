@@ -717,7 +717,7 @@ func expandAuthorizationConfig(tfList []interface{}) *awstypes.AuthorizationConf
 	}
 
 	if v, ok := tfMap["aws_iam_config"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AwsIamConfig = expandAWSIAMConfig(v)
+		apiObject.AwsIamConfig = expandIAMConfig(v)
 	}
 
 	return apiObject
@@ -733,13 +733,13 @@ func flattenAuthorizationConfig(apiObject *awstypes.AuthorizationConfig) []inter
 	}
 
 	if apiObject.AwsIamConfig != nil {
-		tfMap["aws_iam_config"] = flattenAWSIAMConfig(apiObject.AwsIamConfig)
+		tfMap["aws_iam_config"] = flattenIAMConfig(apiObject.AwsIamConfig)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func expandAWSIAMConfig(tfList []interface{}) *awstypes.AwsIamConfig {
+func expandIAMConfig(tfList []interface{}) *awstypes.AwsIamConfig {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -758,7 +758,7 @@ func expandAWSIAMConfig(tfList []interface{}) *awstypes.AwsIamConfig {
 	return apiObject
 }
 
-func flattenAWSIAMConfig(apiObject *awstypes.AwsIamConfig) []interface{} {
+func flattenIAMConfig(apiObject *awstypes.AwsIamConfig) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
