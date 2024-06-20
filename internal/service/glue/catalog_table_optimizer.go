@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -93,8 +95,16 @@ func resourceCatalogTableOptimizerCreate(ctx context.Context, d *schema.Resource
 		Type: aws.String(d.Get("type").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating Glue Catalog Table Optimizer: %s", input)
-	_, err := conn.CreateTableOptimizerWithContext(ctx, input)
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+		_, err := conn.CreateTableOptimizerWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the correct trust policies and is unable to be assumed by our service") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the proper IAM permissions to call Glue APIs") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform: glue:GetTable") {
+				return retry.RetryableError(fmt.Errorf("creating Glue Catalog Table Optimizer: %s", err))
+			}
+			return retry.NonRetryableError(fmt.Errorf("creating Glue Catalog Table Optimizer: %s", err))
+		}
+		return nil
+	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Table Optimizer: %s", err)
 	}
@@ -171,8 +181,16 @@ func resourceCatalogTableOptimizerUpdate(ctx context.Context, d *schema.Resource
 			Type: aws.String(optimizerType),
 		}
 
-		log.Printf("[DEBUG] Updating Glue Catalog Table Optimizer: %#v", input)
-		_, err := conn.UpdateTableOptimizerWithContext(ctx, input)
+		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+			_, err := conn.UpdateTableOptimizerWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the correct trust policies and is unable to be assumed by our service") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "does not have the proper IAM permissions to call Glue APIs") || tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized to perform: glue:GetTable") {
+					return retry.RetryableError(fmt.Errorf("updating Glue Catalog Table Optimizer: %s", err))
+				}
+				return retry.NonRetryableError(fmt.Errorf("updating Glue Catalog Table Optimizer: %s", err))
+			}
+			return nil
+		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table Optimizer (%s): %s", d.Id(), err)
 		}
@@ -210,13 +228,15 @@ func resourceCatalogTableOptimizerDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func flattenConfiguration(optimizer *glue.TableOptimizer) map[string]interface{} {
+func flattenConfiguration(optimizer *glue.TableOptimizer) []interface{} {
 	if optimizer == nil {
 		return nil
 	}
 
-	return map[string]interface{}{
-		"role_arn": aws.StringValue(optimizer.Configuration.RoleArn),
-		"enabled":  aws.BoolValue(optimizer.Configuration.Enabled),
+	return []interface{}{
+		map[string]interface{}{
+			"role_arn": aws.StringValue(optimizer.Configuration.RoleArn),
+			"enabled":  aws.BoolValue(optimizer.Configuration.Enabled),
+		},
 	}
 }
