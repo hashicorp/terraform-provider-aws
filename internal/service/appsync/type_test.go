@@ -84,7 +84,7 @@ func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], awstypes.TypeDefinitionFormat(rs.Primary.Attributes["format"]), rs.Primary.Attributes["name"])
+			_, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], awstypes.TypeDefinitionFormat(rs.Primary.Attributes[names.AttrFormat]), rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -110,7 +110,7 @@ func testAccCheckTypeExists(ctx context.Context, n string, v *awstypes.Type) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
-		output, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], awstypes.TypeDefinitionFormat(rs.Primary.Attributes["format"]), rs.Primary.Attributes["name"])
+		output, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], awstypes.TypeDefinitionFormat(rs.Primary.Attributes[names.AttrFormat]), rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
