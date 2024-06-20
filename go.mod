@@ -112,7 +112,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.51.0
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.34.0
