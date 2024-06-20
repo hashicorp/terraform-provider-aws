@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -51,10 +52,21 @@ func ResourceCatalogTableOptimizer() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{"compaction"}, false),
 			},
 			"configuration": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Required: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
 				},
 			},
 		},
@@ -68,13 +80,15 @@ func resourceCatalogTableOptimizerCreate(ctx context.Context, d *schema.Resource
 	dbName := d.Get(names.AttrDatabaseName).(string)
 	tableName := d.Get(names.AttrTableName).(string)
 
+	config := d.Get("configuration").([]interface{})[0].(map[string]interface{})
+
 	input := &glue.CreateTableOptimizerInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		TableName:    aws.String(tableName),
 		TableOptimizerConfiguration: &glue.TableOptimizerConfiguration{
-			RoleArn: aws.String(d.Get("configuration.role_arn").(string)),
-			Enabled: aws.Bool(d.Get("configuration.enabled").(bool)),
+			RoleArn: aws.String(config["role_arn"].(string)),
+			Enabled: aws.Bool(config["enabled"].(bool)),
 		},
 		Type: aws.String(d.Get("type").(string)),
 	}
@@ -144,13 +158,15 @@ func resourceCatalogTableOptimizerUpdate(ctx context.Context, d *schema.Resource
 	optimizerType := d.Get("type").(string)
 
 	if d.HasChanges("configuration") {
+		config := d.Get("configuration").([]interface{})[0].(map[string]interface{})
+
 		input := &glue.UpdateTableOptimizerInput{
 			CatalogId:    aws.String(catalogID),
 			DatabaseName: aws.String(dbName),
 			TableName:    aws.String(tableName),
 			TableOptimizerConfiguration: &glue.TableOptimizerConfiguration{
-				RoleArn: aws.String(d.Get("configuration.role_arn").(string)),
-				Enabled: aws.Bool(d.Get("configuration.enabled").(bool)),
+				RoleArn: aws.String(config["role_arn"].(string)),
+				Enabled: aws.Bool(config["enabled"].(bool)),
 			},
 			Type: aws.String(optimizerType),
 		}
