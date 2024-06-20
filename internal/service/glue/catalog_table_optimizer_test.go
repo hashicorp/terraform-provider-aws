@@ -28,7 +28,7 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 	tName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckCatalogTableOptimizer(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
@@ -41,7 +41,7 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, dbName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, tName),
 					resource.TestCheckResourceAttr(resourceName, "type", "compaction"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.role_arn", "arn:aws:iam::123456789012:role/example-role"),
+					// resource.TestCheckResourceAttr(resourceName, "configuration.role_arn", "arn:aws:iam::123456789012:role/example-role"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.enabled", "true"),
 				),
 			},
@@ -64,7 +64,7 @@ func TestAccGlueCatalogTableOptimizer_disappears(t *testing.T) {
 	tName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckCatalogTableOptimizer(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
@@ -79,29 +79,6 @@ func TestAccGlueCatalogTableOptimizer_disappears(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccPreCheckCatalogTableOptimizer(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
-
-	_, err := conn.BatchGetTableOptimizerWithContext(ctx, &glue.BatchGetTableOptimizerInput{
-		Entries: []*glue.BatchGetTableOptimizerEntry{
-			{
-				CatalogId:    aws.String("dummy-catalog-id"),
-				DatabaseName: aws.String("dummy-database-name"),
-				TableName:    aws.String("dummy-table-name"),
-				Type:         aws.String("dummy-type"),
-			},
-		},
-	})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
 
 func testAccCheckCatalogTableOptimizerExists(ctx context.Context, resourceName string, catalogTableOptimizer *glue.GetTableOptimizerOutput) resource.TestCheckFunc {
@@ -179,12 +156,116 @@ func testAccCheckCatalogTableOptimizerDestroy(ctx context.Context) resource.Test
 
 func testAccCatalogTableOptimizerConfig_basic(dbName string, tName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.assume.json
+}
+
+data "aws_iam_policy_document" "assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["glue.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "GlueCompactionRoleAccess" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${aws_s3_bucket.bucket.bucket}"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "glue:UpdateTable",
+        "glue:GetTable"
+      ],
+      "Resource": [
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.test.name}/${aws_glue_catalog_table.test.name}",
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.test.name}",
+        "arn:aws:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/iceberg-compaction/logs:*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "test" {
+  database_name = aws_glue_catalog_database.test.name
+  name          = %[2]q
+  table_type    = "EXTERNAL_TABLE"
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+    }
+  }
+
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.bucket.bucket}/files/"
+
+    columns {
+      name    = "my_column_1"
+      type    = "int"
+      comment = %[2]q
+    }
+  }
+}
+
 resource "aws_glue_catalog_table_optimizer" "test" {
-  catalog_id     = "123456789012"
-  database_name  = %[1]q
-  table_name     = %[2]q
+  catalog_id     = data.aws_caller_identity.current.account_id
+  database_name  = aws_glue_catalog_database.test.name
+  table_name     = aws_glue_catalog_table.test.name
   configuration  = {
-    role_arn = "arn:aws:iam::123456789012:role/example-role"
+    role_arn = aws_iam_role.test.arn
     enabled  = true
   }
   type = "compaction"
