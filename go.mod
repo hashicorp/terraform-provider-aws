@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/drs v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.165.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.24.0
@@ -255,7 +255,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.12 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.25.1 // indirect
