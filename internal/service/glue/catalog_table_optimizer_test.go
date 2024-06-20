@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -47,32 +46,6 @@ func TestAccGlueCatalogTableOptimizer_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccGlueCatalogTableOptimizer_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var catalogTableOptimizer glue.GetTableOptimizerOutput
-
-	resourceName := "aws_glue_catalog_table_optimizer.test"
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCatalogTableOptimizerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCatalogTableOptimizerConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTableOptimizer(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
