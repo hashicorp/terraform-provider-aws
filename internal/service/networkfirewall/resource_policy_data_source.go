@@ -14,10 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_networkfirewall_resource_policy")
-func DataSourceFirewallResourcePolicy() *schema.Resource {
+// @SDKDataSource("aws_networkfirewall_resource_policy", name="Resource Policy")
+func dataSourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceFirewallResourcePolicyRead,
+		ReadWithoutTimeout: dataSourceResourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrPolicy: {
@@ -27,27 +27,21 @@ func DataSourceFirewallResourcePolicy() *schema.Resource {
 			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
 }
 
-func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
+	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	resourceARN := d.Get(names.AttrResourceARN).(string)
-	policy, err := FindResourcePolicyByARN(ctx, conn, resourceARN)
+	policy, err := findResourcePolicyByARN(ctx, conn, resourceARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (%s): %s", resourceARN, err)
-	}
-
-	if policy == nil {
-		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (%s): empty output", resourceARN)
 	}
 
 	d.SetId(resourceARN)
