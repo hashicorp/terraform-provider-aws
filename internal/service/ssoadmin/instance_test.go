@@ -184,7 +184,7 @@ func testAccCheckInstanceExists(ctx context.Context, name string, instance *ssoa
 func testAccInstanceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssoadmin_instance" "test" {
-  instance_name             = %[1]q
+  name             = %[1]q
 }
 `, rName)
 }
@@ -192,7 +192,7 @@ resource "aws_ssoadmin_instance" "test" {
 func testAccInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssoadmin_instance" "test" {
-  instance_name             = %[1]q
+  name             = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -204,7 +204,7 @@ resource "aws_ssoadmin_instance" "test" {
 func testAccInstanceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_ssoadmin_instance" "test" {
-  instance_name             = %[1]q
+  name             = %[1]q
 
   %[2]q = %[3]q
   %[4]q = %[5]q

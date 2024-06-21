@@ -54,7 +54,10 @@ func (r *resourceInstance) Metadata(_ context.Context, req resource.MetadataRequ
 func (r *resourceInstance) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"client_token": schema.StringAttribute{
+				Optional: true,
+			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
