@@ -1,3 +1,3 @@
 ```release-note:bug
-data-source/aws_ecs_service: Fix fetching of tags
+data-source/aws_ecs_service: Correctly set `tags`
 ```
