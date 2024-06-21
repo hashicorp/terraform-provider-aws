@@ -844,35 +844,6 @@ func expandRuleGroup(tfMap map[string]interface{}) *networkfirewall.RuleGroup {
 	return ruleGroup
 }
 
-func expandIPSets(l []interface{}) map[string]*networkfirewall.IPSet {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := make(map[string]*networkfirewall.IPSet)
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		if key, ok := tfMap[names.AttrKey].(string); ok && key != "" {
-			if tfList, ok := tfMap["ip_set"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
-				tfMap, ok := tfList[0].(map[string]interface{})
-				if ok {
-					if tfSet, ok := tfMap["definition"].(*schema.Set); ok && tfSet.Len() > 0 {
-						ipSet := &networkfirewall.IPSet{
-							Definition: flex.ExpandStringSet(tfSet),
-						}
-						m[key] = ipSet
-					}
-				}
-			}
-		}
-	}
-
-	return m
-}
 func expandIPSetReferences(l []interface{}) map[string]*networkfirewall.IPSetReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1153,22 +1124,6 @@ func flattenRuleVariables(rv *networkfirewall.RuleVariables) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenIPSets(m map[string]*networkfirewall.IPSet) []interface{} {
-	if m == nil {
-		return []interface{}{}
-	}
-	sets := make([]interface{}, 0, len(m))
-	for k, v := range m {
-		tfMap := map[string]interface{}{
-			names.AttrKey: k,
-			"ip_set":      flattenIPSet(v),
-		}
-		sets = append(sets, tfMap)
-	}
-
-	return sets
-}
-
 func flattenPortSets(m map[string]*networkfirewall.PortSet) []interface{} {
 	if m == nil {
 		return []interface{}{}
@@ -1183,17 +1138,6 @@ func flattenPortSets(m map[string]*networkfirewall.PortSet) []interface{} {
 	}
 
 	return sets
-}
-
-func flattenIPSet(i *networkfirewall.IPSet) []interface{} {
-	if i == nil {
-		return []interface{}{}
-	}
-	m := map[string]interface{}{
-		"definition": flex.FlattenStringSet(i.Definition),
-	}
-
-	return []interface{}{m}
 }
 
 func flattenPortSet(p *networkfirewall.PortSet) []interface{} {
