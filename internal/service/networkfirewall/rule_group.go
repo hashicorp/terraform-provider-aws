@@ -508,6 +508,10 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	output, err := findRuleGroupByARN(ctx, conn, d.Id())
 
+	if err == nil && output.RuleGroup == nil {
+		err = tfresource.NewEmptyResultError(d.Id())
+	}
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -633,7 +637,7 @@ func findRuleGroupByARN(ctx context.Context, conn *networkfirewall.Client, arn s
 		return nil, err
 	}
 
-	if output == nil || output.RuleGroup == nil || output.RuleGroupResponse == nil {
+	if output == nil || output.RuleGroupResponse == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
