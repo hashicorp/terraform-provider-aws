@@ -242,7 +242,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 														},
 													},
 												},
-												"source": schema.ListNestedBlock{
+												names.AttrSource: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[addressModel](ctx),
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
