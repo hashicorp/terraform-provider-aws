@@ -120,11 +120,11 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("block_response"); ok {
-		input.Qtype = aws.String(v.(string))
+		input.BlockResponse = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("q_type"); ok {
-		input.BlockResponse = aws.String(v.(string))
+		input.Qtype = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateFirewallRuleWithContext(ctx, input)
