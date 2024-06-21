@@ -36,7 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
+// @FrameworkResource("aws_m2_application", name="Application")
 // @Tags(identifierAttribute="arn")
 func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationResource{}
@@ -149,8 +149,8 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().M2Client(ctx)
 
 	name := data.Name.ValueString()
-	input := &m2.CreateApplicationInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	input := m2.CreateApplicationInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -171,7 +171,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	input.Tags = getTagsIn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateApplication(ctx, input)
+		return conn.CreateApplication(ctx, &input)
 	}, "does not have proper Trust Policy for M2 service")
 
 	if err != nil {
@@ -396,11 +396,11 @@ func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, f
 }
 
 func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetApplicationOutput, error) {
-	input := &m2.GetApplicationInput{
+	input := m2.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
-	output, err := conn.GetApplication(ctx, input)
+	output, err := conn.GetApplication(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -421,12 +421,12 @@ func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 }
 
 func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id string, version int32) (*m2.GetApplicationVersionOutput, error) {
-	input := &m2.GetApplicationVersionInput{
+	input := m2.GetApplicationVersionInput{
 		ApplicationId:      aws.String(id),
 		ApplicationVersion: aws.Int32(version),
 	}
 
-	output, err := conn.GetApplicationVersion(ctx, input)
+	output, err := conn.GetApplicationVersion(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
