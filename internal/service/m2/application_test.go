@@ -12,7 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
@@ -20,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccM2Application_basic(t *testing.T) {
+func TestAccM2Application_basic_Content(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -40,7 +43,7 @@ func TestAccM2Application_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_basic(rName, "bluage"),
+				Config: testAccApplicationConfig_basic_Content(rName, "bluage"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
@@ -61,6 +64,66 @@ func TestAccM2Application_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+func TestAccM2Application_basic_S3Location(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var application m2.GetApplicationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_application.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_basic_S3Location(rName, "bluage"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
+					resource.TestCheckNoResourceAttr(resourceName, "definition.0.content"),
+					resource.TestMatchResourceAttr(resourceName, "definition.0.s3_location", regexache.MustCompile(`s3://[-a-z0-9]+/definition.json`)),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "bluage"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition").AtSliceIndex(0).AtMapKey("content"), knownvalue.Null()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("definition").AtSliceIndex(0).AtMapKey("s3_location"), knownvalue.StringRegexp(regexache.MustCompile(`s3://[-a-z0-9]+/definition.json`))),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"definition"},
 			},
 		},
 	})
@@ -86,7 +149,7 @@ func TestAccM2Application_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_basic(rName, "bluage"),
+				Config: testAccApplicationConfig_basic_Content(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceApplication, resourceName),
@@ -295,7 +358,7 @@ func testAccApplicationPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccApplicationConfig_basic(rName, engineType string) string {
+func testAccApplicationConfig_basic_Content(rName, engineType string) string {
 	return testAccApplicationConfig_versioned(rName, engineType, 1, 1)
 }
 
@@ -321,6 +384,42 @@ resource "aws_m2_application" "test" {
   }
 
   depends_on = [aws_s3_object.test]
+}
+`, rName, engineType, version, versions)
+}
+
+func testAccApplicationConfig_basic_S3Location(rName, engineType string) string {
+	return testAccApplicationConfig_S3Location_versioned(rName, engineType, 1, 1)
+}
+
+func testAccApplicationConfig_S3Location_versioned(rName, engineType string, version, versions int) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "application" {
+  count = %[4]d
+
+  bucket = aws_s3_bucket.test.id
+  key    = "v${count.index + 1}/PlanetsDemo-v${count.index + 1}.zip"
+  source = "test-fixtures/PlanetsDemo-v1.zip"
+}
+
+resource "aws_s3_object" "definition" {
+  bucket  = aws_s3_bucket.test.id
+  key     = "definition.json"
+  content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]d })
+}
+
+resource "aws_m2_application" "test" {
+  name        = %[1]q
+  engine_type = %[2]q
+  definition {
+    s3_location = "s3://${aws_s3_object.definition.bucket}/${aws_s3_object.definition.key}"
+  }
+
+  depends_on = [aws_s3_object.application]
 }
 `, rName, engineType, version, versions)
 }
