@@ -298,12 +298,12 @@ func testAccUserProfile_codeEditorAppSettings_customImage(t *testing.T) {
 				Config: testAccUserProfileConfig_codeEditorAppSettingsImage(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.lifecycle_config_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.lifecycle_config_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_settings.0.code_editor_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", names.AttrARN),
 				),
 			},
 			{
