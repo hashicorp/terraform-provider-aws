@@ -32,6 +32,7 @@ func resourceControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceControlCreate,
 		ReadWithoutTimeout:   resourceControlRead,
+		UpdateWithoutTimeout: resourceControlUpdate,
 		DeleteWithoutTimeout: resourceControlDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -57,6 +58,7 @@ func resourceControl() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
@@ -159,6 +161,31 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("target_identifier", output.TargetIdentifier)
 
 	return diags
+}
+
+func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
+
+	if d.HasChange(names.AttrParameters) {
+		input := &controltower.UpdateEnabledControlInput{
+			EnabledControlIdentifier: aws.String(d.Get(names.AttrARN).(string)),
+			Parameters:               expandControlParameters(d.Get(names.AttrParameters).(*schema.Set).List()),
+		}
+
+		output, err := conn.UpdateEnabledControl(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ControlTower Control (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ControlTower Control (%s) delete: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceControlRead(ctx, d, meta)...)
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
