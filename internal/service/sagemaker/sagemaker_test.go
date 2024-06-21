@@ -49,6 +49,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
 			"codeEditorAppSettings":                                  testAccDomain_codeEditorAppSettings,
+			"codeEditorAppSettings_customImage":                      testAccDomain_codeEditorAppSettings_customImage,
 			"jupyterLabAppSettings":                                  testAccDomain_jupyterLabAppSettings,
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
@@ -98,6 +99,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings":                 testAccUserProfile_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig,
 			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
+			"codeEditorAppSettings_customImage":        testAccUserProfile_codeEditorAppSettings_customImage,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
 		},
 		"Workforce": {

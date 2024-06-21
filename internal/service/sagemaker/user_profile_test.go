@@ -277,7 +277,7 @@ func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 	})
 }
 
-func testAccUserProfile_codeEditorAppSettings_imageconfig(t *testing.T) {
+func testAccUserProfile_codeEditorAppSettings_customImage(t *testing.T) {
 	ctx := acctest.Context(t)
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
@@ -653,7 +653,6 @@ resource "aws_sagemaker_user_profile" "test" {
 }
 `, rName, baseImage))
 }
-
 
 func testAccUserProfileConfig_codeEditorAppSettingsImage(rName, baseImage string) string {
 	return acctest.ConfigCompose(testAccUserProfileConfig_base(rName), fmt.Sprintf(`
