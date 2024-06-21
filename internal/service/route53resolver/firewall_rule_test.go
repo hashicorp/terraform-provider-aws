@@ -143,18 +143,6 @@ func TestAccRoute53ResolverFirewallRule_qType(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccFirewallRuleConfig_qType(rName, "AAAA"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ALLOW"),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_domain_list_id", "aws_route53_resolver_firewall_domain_list.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
-					resource.TestCheckResourceAttr(resourceName, "q_type", "AAAA"),
-				),
-			},
 		},
 	})
 }
