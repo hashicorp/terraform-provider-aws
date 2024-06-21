@@ -114,6 +114,51 @@ func TestAccRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverFirewallRule_qType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v route53resolver.FirewallRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53_resolver_firewall_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallRuleConfig_qType(rName, "A"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ALLOW"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_domain_list_id", "aws_route53_resolver_firewall_domain_list.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "q_type", "A"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallRuleConfig_qType(rName, "AAAA"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ALLOW"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_domain_list_id", "aws_route53_resolver_firewall_domain_list.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "q_type", "AAAA"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRoute53ResolverFirewallRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v route53resolver.FirewallRule
@@ -264,4 +309,25 @@ resource "aws_route53_resolver_firewall_rule" "test" {
   priority                = 100
 }
 `, rName)
+}
+
+func testAccFirewallRuleConfig_qType(rName, qType string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_firewall_rule_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_resolver_firewall_domain_list" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_resolver_firewall_rule" "test" {
+  name                    = %[1]q
+  action                  = "ALLOW"
+  firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.test.id
+  firewall_domain_list_id = aws_route53_resolver_firewall_domain_list.test.id
+  priority                = 100
+  q_type                  = %[2]q
+}
+`, rName, qType)
 }

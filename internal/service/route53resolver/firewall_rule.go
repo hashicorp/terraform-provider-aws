@@ -82,6 +82,10 @@ func ResourceFirewallRule() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			"q_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -116,6 +120,10 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("block_response"); ok {
+		input.Qtype = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("q_type"); ok {
 		input.BlockResponse = aws.String(v.(string))
 	}
 
@@ -159,6 +167,7 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("block_response", firewallRule.BlockResponse)
 	d.Set("firewall_rule_group_id", firewallRule.FirewallRuleGroupId)
 	d.Set("firewall_domain_list_id", firewallRule.FirewallDomainListId)
+	d.Set("q_type", firewallRule.Qtype)
 	d.Set(names.AttrName, firewallRule.Name)
 	d.Set(names.AttrPriority, firewallRule.Priority)
 
@@ -197,6 +206,10 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("block_response"); ok {
 		input.BlockResponse = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
 	}
 
 	_, err = conn.UpdateFirewallRuleWithContext(ctx, input)
