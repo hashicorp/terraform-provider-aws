@@ -652,23 +652,13 @@ func CheckResourceAttrRFC3339(resourceName, attributeName string) resource.TestC
 	return resource.TestMatchResourceAttr(resourceName, attributeName, regexache.MustCompile(RFC3339RegexPattern))
 }
 
-// CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value. Both JSON
-// values are normalized before being compared.
-func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := PrimaryInstanceState(s, resourceName)
+// CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value.
+// Both JSON values are normalized before being compared.
+func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		vNormal, err := structure.NormalizeJsonString(value)
 		if err != nil {
-			return err
-		}
-
-		v, ok := is.Attributes[attributeName]
-		if !ok {
-			return fmt.Errorf("%s: No attribute %q found", resourceName, attributeName)
-		}
-
-		vNormal, err := structure.NormalizeJsonString(v)
-		if err != nil {
-			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", resourceName, attributeName, err)
+			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", n, key, err)
 		}
 
 		expectedNormal, err := structure.NormalizeJsonString(expectedJSON)
@@ -677,10 +667,10 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 		}
 
 		if vNormal != expectedNormal {
-			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", resourceName, attributeName, expectedJSON, v)
+			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", n, key, expectedJSON, value)
 		}
 		return nil
-	}
+	})
 }
 
 func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheckFunc {

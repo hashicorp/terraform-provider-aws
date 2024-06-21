@@ -43,7 +43,7 @@ var (
 	waitForPropagation       = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
 
 	createTagsFunc             = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
-	getTagFunc                 = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	getTagFunc                 = flag.String("GetTagFunc", "findTag", "getTagFunc")
 	getTagsInFunc              = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
 	keyValueTagsFunc           = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
 	listTagsFunc               = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")

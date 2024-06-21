@@ -37,7 +37,7 @@ func resourceUserPoolDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"aws_account_id": {
+			names.AttrAWSAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func resourceUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -94,7 +94,7 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 	timeout := 1 * time.Minute
 	input := &cognitoidentityprovider.CreateUserPoolDomainInput{
 		Domain:     aws.String(domain),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
@@ -135,7 +135,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Domain (%s): %s", d.Id(), err)
 	}
 
-	d.Set("aws_account_id", desc.AWSAccountId)
+	d.Set(names.AttrAWSAccountID, desc.AWSAccountId)
 	d.Set(names.AttrCertificateARN, "")
 	if desc.CustomDomainConfig != nil {
 		d.Set(names.AttrCertificateARN, desc.CustomDomainConfig.CertificateArn)
@@ -145,7 +145,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomain, d.Id())
 	d.Set(names.AttrS3Bucket, desc.S3Bucket)
-	d.Set("user_pool_id", desc.UserPoolId)
+	d.Set(names.AttrUserPoolID, desc.UserPoolId)
 	d.Set(names.AttrVersion, desc.Version)
 
 	return diags
@@ -160,7 +160,7 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 		},
 		Domain:     aws.String(d.Id()),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	}
 
 	_, err := conn.UpdateUserPoolDomainWithContext(ctx, input)
@@ -186,7 +186,7 @@ func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
 	_, err := conn.DeleteUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DeleteUserPoolDomainInput{
 		Domain:     aws.String(d.Id()),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+		UserPoolId: aws.String(d.Get(names.AttrUserPoolID).(string)),
 	})
 
 	if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "No such domain") {

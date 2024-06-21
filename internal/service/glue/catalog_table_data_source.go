@@ -117,6 +117,11 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"additional_locations": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
 						"bucket_columns": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -157,7 +162,7 @@ func DataSourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

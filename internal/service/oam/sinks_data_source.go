@@ -35,6 +35,7 @@ const (
 )
 
 func dataSourceSinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 	listSinksInput := &oam.ListSinksInput{}
 
@@ -45,7 +46,7 @@ func dataSourceSinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
-			return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, DSNameSinks, "", err)
+			return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameSinks, "", err)
 		}
 
 		for _, listSinksItem := range page.Items {

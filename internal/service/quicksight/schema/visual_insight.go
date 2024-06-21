@@ -21,7 +21,7 @@ func insightVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
 				"visual_id":           idSchema(),
-				"actions":             visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -269,7 +269,7 @@ func expandInsightVisual(tfList []interface{}) *quicksight.InsightVisual {
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["insight_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -725,7 +725,7 @@ func flattenInsightVisual(apiObject *quicksight.InsightVisual) []interface{} {
 		"data_set_identifier": aws.StringValue(apiObject.DataSetIdentifier),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.InsightConfiguration != nil {
 		tfMap["insight_configuration"] = flattenInsightConfiguration(apiObject.InsightConfiguration)

@@ -35,7 +35,7 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_basic(engine, licenseModel, storageType),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStorageType, storageType),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
@@ -160,7 +160,7 @@ func TestAccRDSOrderableInstanceDataSource_latestVersion(t *testing.T) {
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_latestVersion(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtFalse),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
 				),
@@ -168,7 +168,7 @@ func TestAccRDSOrderableInstanceDataSource_latestVersion(t *testing.T) {
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_latestVersion(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
 				),
@@ -195,7 +195,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsGlobalDatabases(t *testing.T)
 				Config: testAccOrderableInstanceDataSourceConfig_supportsGlobalDatabases(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_global_databases", acctest.CtTrue),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrEngineVersion, regexache.MustCompile(`^8\.0\.mysql_aurora\..*`)),
 				),
@@ -218,7 +218,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsClusters(t *testing.T) {
 				Config: testAccOrderableInstanceDataSourceConfig_supportsClusters(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_clusters", acctest.CtTrue),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineMySQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestMatchResourceAttr(dataSourceName, "instance_class", regexache.MustCompile(`^db\..*large$`)),
 				),
@@ -241,7 +241,7 @@ func TestAccRDSOrderableInstanceDataSource_readReplicaCapable(t *testing.T) {
 				Config: testAccOrderableInstanceDataSourceConfig_readReplicaCapable(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "read_replica_capable", acctest.CtTrue),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.InstanceEngineOracleEnterprise),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.InstanceEngineOracleEnterprise),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(dataSourceName, "instance_class"),
 				),
@@ -264,7 +264,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsMultiAZ(t *testing.T) {
 				Config: testAccOrderableInstanceDataSourceConfig_supportsMultiAZ(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_multi_az", acctest.CtTrue),
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineMySQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 				),
 			},
@@ -285,7 +285,7 @@ func TestAccRDSOrderableInstanceDataSource_supportedEngineModes(t *testing.T) {
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportedEngineModes(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, "supported_engine_modes.0", "provisioned"),
 				),
@@ -307,7 +307,7 @@ func TestAccRDSOrderableInstanceDataSource_supportedNetworkTypes(t *testing.T) {
 			{
 				Config: testAccOrderableInstanceDataSourceConfig_supportedNetworkTypes(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, tfrds.ClusterEngineAuroraPostgreSQL),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", acctest.CtTrue),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "supported_network_types.*", "DUAL"),
 				),

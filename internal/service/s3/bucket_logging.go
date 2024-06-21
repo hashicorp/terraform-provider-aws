@@ -42,7 +42,7 @@ func resourceBucketLogging() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -141,7 +141,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketLoggingInput{
 		Bucket: aws.String(bucket),
 		BucketLoggingStatus: &types.BucketLoggingStatus{
@@ -182,10 +182,10 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Logging (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Logging (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketLoggingRead(ctx, d, meta)
+	return append(diags, resourceBucketLoggingRead(ctx, d, meta)...)
 }
 
 func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -210,7 +210,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
 	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
@@ -263,7 +263,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Logging (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketLoggingRead(ctx, d, meta)
+	return append(diags, resourceBucketLoggingRead(ctx, d, meta)...)
 }
 
 func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -286,7 +286,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 	_, err = conn.PutBucketLogging(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -295,7 +295,7 @@ func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, me
 
 	// Don't wait for the logging to disappear as it still exists after update.
 
-	return nil
+	return diags
 }
 
 func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expectedBucketOwner string) (*types.LoggingEnabled, error) {

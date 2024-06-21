@@ -79,7 +79,7 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-			"capacity_provider_strategy": {
+			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -566,7 +566,7 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(0, 1000),
@@ -600,7 +600,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get(names.AttrName).(string)
 	schedulingStrategy := d.Get("scheduling_strategy").(string)
 	input := ecs.CreateServiceInput{
-		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set)),
+		CapacityProviderStrategy: expandCapacityProviderStrategy(d.Get(names.AttrCapacityProviderStrategy).(*schema.Set)),
 		ClientToken:              aws.String(id.UniqueId()),
 		DeploymentConfiguration:  &ecs.DeploymentConfiguration{},
 		DeploymentController:     deploymentController,
@@ -866,7 +866,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
+	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
 
@@ -916,8 +916,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("capacity_provider_strategy") {
-			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+		if d.HasChange(names.AttrCapacityProviderStrategy) {
+			input.CapacityProviderStrategy = expandCapacityProviderStrategy(d.Get(names.AttrCapacityProviderStrategy).(*schema.Set))
 		}
 
 		if d.HasChange("deployment_circuit_breaker") {
@@ -1193,7 +1193,7 @@ func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.Resource
 		return capacityProviderStrategyForceNew(d)
 	}
 
-	old, new := d.GetChange("capacity_provider_strategy")
+	old, new := d.GetChange(names.AttrCapacityProviderStrategy)
 
 	ol := old.(*schema.Set).Len()
 	nl := new.(*schema.Set).Len()
@@ -1206,7 +1206,7 @@ func capacityProviderStrategyCustomizeDiff(_ context.Context, d *schema.Resource
 }
 
 func capacityProviderStrategyForceNew(d *schema.ResourceDiff) error {
-	for _, key := range d.GetChangedKeysPrefix("capacity_provider_strategy") {
+	for _, key := range d.GetChangedKeysPrefix(names.AttrCapacityProviderStrategy) {
 		if d.HasChange(key) {
 			if err := d.ForceNew(key); err != nil {
 				return fmt.Errorf("while attempting to force a new ECS service for capacity_provider_strategy: %w", err)
@@ -1588,7 +1588,7 @@ func expandManagedEBSVolume(ebs []interface{}) *ecs.ServiceManagedEBSVolumeConfi
 	if v, ok := raw[names.AttrSnapshotID].(string); ok && v != "" {
 		config.SnapshotId = aws.String(v)
 	}
-	if v, ok := raw["throughput"].(int); ok && v != 0 {
+	if v, ok := raw[names.AttrThroughput].(int); ok && v != 0 {
 		config.Throughput = aws.Int64(int64(v))
 	}
 	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {

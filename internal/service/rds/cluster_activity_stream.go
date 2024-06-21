@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,6 +65,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 }
 
 func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	arn := d.Get(names.AttrResourceARN).(string)
@@ -76,20 +78,22 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 	}
 
 	_, err := conn.StartActivityStreamWithContext(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("creating RDS Cluster Activity Stream (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster Activity Stream (%s): %s", arn, err)
 	}
 
 	d.SetId(arn)
 
 	if err := waitActivityStreamStarted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for RDS Cluster Activity Stream (%s) start: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Activity Stream (%s) start: %s", d.Id(), err)
 	}
 
-	return resourceClusterActivityStreamRead(ctx, d, meta)
+	return append(diags, resourceClusterActivityStreamRead(ctx, d, meta)...)
 }
 
 func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	output, err := FindDBClusterWithActivityStream(ctx, conn, d.Id())
@@ -97,11 +101,11 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster Activity Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading RDS Cluster Activity Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Activity Stream (%s): %s", d.Id(), err)
 	}
 
 	d.Set("kinesis_stream_name", output.ActivityStreamKinesisStreamName)
@@ -109,10 +113,11 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrMode, output.ActivityStreamMode)
 	d.Set(names.AttrResourceARN, output.DBClusterArn)
 
-	return nil
+	return diags
 }
 
 func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Activity Stream: %s", d.Id())
@@ -121,14 +126,14 @@ func resourceClusterActivityStreamDelete(ctx context.Context, d *schema.Resource
 		ResourceArn:      aws.String(d.Id()),
 	})
 	if err != nil {
-		return diag.Errorf("stopping RDS Cluster Activity Stream (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "stopping RDS Cluster Activity Stream (%s): %s", d.Id(), err)
 	}
 
 	if err := waitActivityStreamStopped(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for RDS Cluster Activity Stream (%s) stop: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Activity Stream (%s) stop: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBCluster, error) {

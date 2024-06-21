@@ -84,7 +84,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -170,7 +170,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -204,7 +204,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(instanceID),
-		Engine:                  aws.String(d.Get("engine").(string)),
+		Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                    getTagsIn(ctx),
@@ -274,7 +274,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrClusterIdentifier, clusterID)
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	d.Set(names.AttrEngineVersion, db.EngineVersion)
-	d.Set("engine", db.Engine)
+	d.Set(names.AttrEngine, db.Engine)
 	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
@@ -289,7 +289,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
-	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
 	d.Set(names.AttrStorageType, db.StorageType)
 
 	if db.Endpoint != nil {

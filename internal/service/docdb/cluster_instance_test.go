@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccDocDBClusterInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -47,7 +47,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_performance_insights"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "docdb"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
@@ -59,7 +59,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPubliclyAccessible),
-					resource.TestCheckResourceAttrSet(resourceName, "storage_encrypted"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStorageEncrypted),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "writer", acctest.CtTrue),
 				),
@@ -87,7 +87,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 
 func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -111,7 +111,7 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 
 func TestAccDocDBClusterInstance_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -143,7 +143,7 @@ func TestAccDocDBClusterInstance_identifierGenerated(t *testing.T) {
 
 func TestAccDocDBClusterInstance_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -176,7 +176,7 @@ func TestAccDocDBClusterInstance_identifierPrefix(t *testing.T) {
 
 func TestAccDocDBClusterInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -225,7 +225,7 @@ func TestAccDocDBClusterInstance_tags(t *testing.T) {
 
 func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rNamePrefix := acctest.ResourcePrefix
 	rName := sdkacctest.RandomWithPrefix(rNamePrefix)
@@ -261,7 +261,7 @@ func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
 
 func TestAccDocDBClusterInstance_az(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -293,7 +293,7 @@ func TestAccDocDBClusterInstance_az(t *testing.T) {
 
 func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -325,7 +325,7 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 
 func TestAccDocDBClusterInstance_copyTagsToSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBInstance
+	var v awstypes.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -364,7 +364,7 @@ func TestAccDocDBClusterInstance_copyTagsToSnapshot(t *testing.T) {
 
 func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster_instance" {
@@ -388,14 +388,14 @@ func testAccCheckClusterInstanceDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *docdb.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *awstypes.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 

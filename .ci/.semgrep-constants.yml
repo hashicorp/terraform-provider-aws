@@ -10,8 +10,9 @@ rules:
     patterns:
       - pattern: '"arn"'
       - pattern-not-regex: '"arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrARN"
 
@@ -24,10 +25,26 @@ rules:
     patterns:
       - pattern: '"arns"'
       - pattern-not-regex: '"arns":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrARNs"
+
+  - id: literal-aws_account_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAWSAccountID` for the string literal "aws_account_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"aws_account_id"'
+      - pattern-not-regex: '"aws_account_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrAWSAccountID"
 
   - id: literal-access_key-string-constant
     languages: [go]
@@ -38,8 +55,9 @@ rules:
     patterns:
       - pattern: '"access_key"'
       - pattern-not-regex: '"access_key":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAccessKey"
 
@@ -52,8 +70,9 @@ rules:
     patterns:
       - pattern: '"account_id"'
       - pattern-not-regex: '"account_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAccountID"
 
@@ -66,10 +85,26 @@ rules:
     patterns:
       - pattern: '"action"'
       - pattern-not-regex: '"action":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAction"
+
+  - id: literal-actions-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrActions` for the string literal "actions"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"actions"'
+      - pattern-not-regex: '"actions":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrActions"
 
   - id: literal-address-string-constant
     languages: [go]
@@ -80,8 +115,9 @@ rules:
     patterns:
       - pattern: '"address"'
       - pattern-not-regex: '"address":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAddress"
 
@@ -94,10 +130,56 @@ rules:
     patterns:
       - pattern: '"alias"'
       - pattern-not-regex: '"alias":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAlias"
+
+  - id: literal-allocated_storage-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAllocatedStorage` for the string literal "allocated_storage"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"allocated_storage"'
+      - pattern-not-regex: '"allocated_storage":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrAllocatedStorage"
+
+  - id: literal-allow_major_version_upgrade-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAllowMajorVersionUpgrade` for the string literal "allow_major_version_upgrade"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"allow_major_version_upgrade"'
+      - pattern-not-regex: '"allow_major_version_upgrade":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrAllowMajorVersionUpgrade"
+
+  - id: literal-application_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrApplicationID` for the string literal "application_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"application_id"'
+      - pattern-not-regex: '"application_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrApplicationID"
 
   - id: literal-apply_immediately-string-constant
     languages: [go]
@@ -108,10 +190,26 @@ rules:
     patterns:
       - pattern: '"apply_immediately"'
       - pattern-not-regex: '"apply_immediately":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrApplyImmediately"
+
+  - id: literal-association_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAssociationID` for the string literal "association_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"association_id"'
+      - pattern-not-regex: '"association_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrAssociationID"
 
   - id: literal-attributes-string-constant
     languages: [go]
@@ -122,8 +220,9 @@ rules:
     patterns:
       - pattern: '"attributes"'
       - pattern-not-regex: '"attributes":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAttributes"
 
@@ -136,8 +235,9 @@ rules:
     patterns:
       - pattern: '"auto_minor_version_upgrade"'
       - pattern-not-regex: '"auto_minor_version_upgrade":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAutoMinorVersionUpgrade"
 
@@ -150,8 +250,9 @@ rules:
     patterns:
       - pattern: '"availability_zone"'
       - pattern-not-regex: '"availability_zone":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAvailabilityZone"
 
@@ -164,8 +265,9 @@ rules:
     patterns:
       - pattern: '"availability_zones"'
       - pattern-not-regex: '"availability_zones":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrAvailabilityZones"
 
@@ -178,8 +280,9 @@ rules:
     patterns:
       - pattern: '"bucket"'
       - pattern-not-regex: '"bucket":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrBucket"
 
@@ -192,8 +295,9 @@ rules:
     patterns:
       - pattern: '"bucket_name"'
       - pattern-not-regex: '"bucket_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrBucketName"
 
@@ -206,10 +310,41 @@ rules:
     patterns:
       - pattern: '"bucket_prefix"'
       - pattern-not-regex: '"bucket_prefix":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrBucketPrefix"
+
+  - id: literal-cidr_block-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCIDRBlock` for the string literal "cidr_block"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cidr_block"'
+      - pattern-not-regex: '"cidr_block":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrCIDRBlock"
+
+  - id: literal-capacity_provider_strategy-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCapacityProviderStrategy` for the string literal "capacity_provider_strategy"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"capacity_provider_strategy"'
+      - pattern-not-regex: '"capacity_provider_strategy":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrCapacityProviderStrategy"
 
   - id: literal-catalog_id-string-constant
     languages: [go]
@@ -220,8 +355,9 @@ rules:
     patterns:
       - pattern: '"catalog_id"'
       - pattern-not-regex: '"catalog_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCatalogID"
 
@@ -234,8 +370,9 @@ rules:
     patterns:
       - pattern: '"certificate"'
       - pattern-not-regex: '"certificate":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCertificate"
 
@@ -248,8 +385,9 @@ rules:
     patterns:
       - pattern: '"certificate_arn"'
       - pattern-not-regex: '"certificate_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCertificateARN"
 
@@ -262,8 +400,9 @@ rules:
     patterns:
       - pattern: '"certificate_chain"'
       - pattern-not-regex: '"certificate_chain":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCertificateChain"
 
@@ -276,8 +415,9 @@ rules:
     patterns:
       - pattern: '"client_id"'
       - pattern-not-regex: '"client_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrClientID"
 
@@ -290,10 +430,41 @@ rules:
     patterns:
       - pattern: '"client_secret"'
       - pattern-not-regex: '"client_secret":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrClientSecret"
+
+  - id: literal-cloudwatch_log_group_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCloudWatchLogGroupARN` for the string literal "cloudwatch_log_group_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cloudwatch_log_group_arn"'
+      - pattern-not-regex: '"cloudwatch_log_group_arn":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrCloudWatchLogGroupARN"
+
+  - id: literal-cloudwatch_logs-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCloudWatchLogs` for the string literal "cloudwatch_logs"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"cloudwatch_logs"'
+      - pattern-not-regex: '"cloudwatch_logs":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrCloudWatchLogs"
 
   - id: literal-cluster_identifier-string-constant
     languages: [go]
@@ -304,8 +475,9 @@ rules:
     patterns:
       - pattern: '"cluster_identifier"'
       - pattern-not-regex: '"cluster_identifier":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrClusterIdentifier"
 
@@ -318,8 +490,9 @@ rules:
     patterns:
       - pattern: '"cluster_name"'
       - pattern-not-regex: '"cluster_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrClusterName"
 
@@ -332,8 +505,9 @@ rules:
     patterns:
       - pattern: '"comment"'
       - pattern-not-regex: '"comment":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrComment"
 
@@ -346,8 +520,9 @@ rules:
     patterns:
       - pattern: '"condition"'
       - pattern-not-regex: '"condition":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCondition"
 
@@ -360,10 +535,26 @@ rules:
     patterns:
       - pattern: '"configuration"'
       - pattern-not-regex: '"configuration":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrConfiguration"
+
+  - id: literal-connection_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrConnectionID` for the string literal "connection_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"connection_id"'
+      - pattern-not-regex: '"connection_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrConnectionID"
 
   - id: literal-content-string-constant
     languages: [go]
@@ -374,8 +565,9 @@ rules:
     patterns:
       - pattern: '"content"'
       - pattern-not-regex: '"content":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrContent"
 
@@ -388,8 +580,9 @@ rules:
     patterns:
       - pattern: '"content_type"'
       - pattern-not-regex: '"content_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrContentType"
 
@@ -402,8 +595,9 @@ rules:
     patterns:
       - pattern: '"create_time"'
       - pattern-not-regex: '"create_time":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCreateTime"
 
@@ -416,8 +610,9 @@ rules:
     patterns:
       - pattern: '"created_at"'
       - pattern-not-regex: '"created_at":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCreatedAt"
 
@@ -430,8 +625,9 @@ rules:
     patterns:
       - pattern: '"created_date"'
       - pattern-not-regex: '"created_date":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCreatedDate"
 
@@ -444,8 +640,9 @@ rules:
     patterns:
       - pattern: '"created_time"'
       - pattern-not-regex: '"created_time":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCreatedTime"
 
@@ -458,8 +655,9 @@ rules:
     patterns:
       - pattern: '"creation_date"'
       - pattern-not-regex: '"creation_date":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCreationDate"
 
@@ -472,8 +670,9 @@ rules:
     patterns:
       - pattern: '"creation_time"'
       - pattern-not-regex: '"creation_time":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrCreationTime"
 
@@ -486,8 +685,9 @@ rules:
     patterns:
       - pattern: '"dns_name"'
       - pattern-not-regex: '"dns_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDNSName"
 
@@ -500,8 +700,9 @@ rules:
     patterns:
       - pattern: '"database"'
       - pattern-not-regex: '"database":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDatabase"
 
@@ -514,8 +715,9 @@ rules:
     patterns:
       - pattern: '"database_name"'
       - pattern-not-regex: '"database_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDatabaseName"
 
@@ -528,8 +730,9 @@ rules:
     patterns:
       - pattern: '"default_action"'
       - pattern-not-regex: '"default_action":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDefaultAction"
 
@@ -542,8 +745,9 @@ rules:
     patterns:
       - pattern: '"default_value"'
       - pattern-not-regex: '"default_value":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDefaultValue"
 
@@ -556,10 +760,26 @@ rules:
     patterns:
       - pattern: '"delete_on_termination"'
       - pattern-not-regex: '"delete_on_termination":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDeleteOnTermination"
+
+  - id: literal-deletion_protection-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDeletionProtection` for the string literal "deletion_protection"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"deletion_protection"'
+      - pattern-not-regex: '"deletion_protection":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrDeletionProtection"
 
   - id: literal-description-string-constant
     languages: [go]
@@ -570,8 +790,9 @@ rules:
     patterns:
       - pattern: '"description"'
       - pattern-not-regex: '"description":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDescription"
 
@@ -584,8 +805,9 @@ rules:
     patterns:
       - pattern: '"destination"'
       - pattern-not-regex: '"destination":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDestination"
 
@@ -598,8 +820,9 @@ rules:
     patterns:
       - pattern: '"destination_arn"'
       - pattern-not-regex: '"destination_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDestinationARN"
 
@@ -612,8 +835,9 @@ rules:
     patterns:
       - pattern: '"device_name"'
       - pattern-not-regex: '"device_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDeviceName"
 
@@ -626,8 +850,9 @@ rules:
     patterns:
       - pattern: '"display_name"'
       - pattern-not-regex: '"display_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDisplayName"
 
@@ -640,8 +865,9 @@ rules:
     patterns:
       - pattern: '"domain"'
       - pattern-not-regex: '"domain":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDomain"
 
@@ -654,8 +880,9 @@ rules:
     patterns:
       - pattern: '"domain_name"'
       - pattern-not-regex: '"domain_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDomainName"
 
@@ -668,8 +895,9 @@ rules:
     patterns:
       - pattern: '"duration"'
       - pattern-not-regex: '"duration":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrDuration"
 
@@ -682,8 +910,9 @@ rules:
     patterns:
       - pattern: '"email"'
       - pattern-not-regex: '"email":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEmail"
 
@@ -696,8 +925,9 @@ rules:
     patterns:
       - pattern: '"enabled"'
       - pattern-not-regex: '"enabled":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEnabled"
 
@@ -710,8 +940,9 @@ rules:
     patterns:
       - pattern: '"encrypted"'
       - pattern-not-regex: '"encrypted":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEncrypted"
 
@@ -724,8 +955,9 @@ rules:
     patterns:
       - pattern: '"encryption_configuration"'
       - pattern-not-regex: '"encryption_configuration":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEncryptionConfiguration"
 
@@ -738,8 +970,9 @@ rules:
     patterns:
       - pattern: '"endpoint"'
       - pattern-not-regex: '"endpoint":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEndpoint"
 
@@ -752,8 +985,9 @@ rules:
     patterns:
       - pattern: '"endpoint_type"'
       - pattern-not-regex: '"endpoint_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEndpointType"
 
@@ -766,10 +1000,26 @@ rules:
     patterns:
       - pattern: '"endpoints"'
       - pattern-not-regex: '"endpoints":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEndpoints"
+
+  - id: literal-engine-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEngine` for the string literal "engine"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"engine"'
+      - pattern-not-regex: '"engine":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrEngine"
 
   - id: literal-engine_version-string-constant
     languages: [go]
@@ -780,8 +1030,9 @@ rules:
     patterns:
       - pattern: '"engine_version"'
       - pattern-not-regex: '"engine_version":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEngineVersion"
 
@@ -794,8 +1045,9 @@ rules:
     patterns:
       - pattern: '"environment"'
       - pattern-not-regex: '"environment":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrEnvironment"
 
@@ -808,10 +1060,26 @@ rules:
     patterns:
       - pattern: '"execution_role_arn"'
       - pattern-not-regex: '"execution_role_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrExecutionRoleARN"
+
+  - id: literal-expected_bucket_owner-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrExpectedBucketOwner` for the string literal "expected_bucket_owner"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"expected_bucket_owner"'
+      - pattern-not-regex: '"expected_bucket_owner":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrExpectedBucketOwner"
 
   - id: literal-expression-string-constant
     languages: [go]
@@ -822,8 +1090,9 @@ rules:
     patterns:
       - pattern: '"expression"'
       - pattern-not-regex: '"expression":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrExpression"
 
@@ -836,8 +1105,9 @@ rules:
     patterns:
       - pattern: '"external_id"'
       - pattern-not-regex: '"external_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrExternalID"
 
@@ -850,8 +1120,9 @@ rules:
     patterns:
       - pattern: '"family"'
       - pattern-not-regex: '"family":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrFamily"
 
@@ -864,8 +1135,9 @@ rules:
     patterns:
       - pattern: '"field"'
       - pattern-not-regex: '"field":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrField"
 
@@ -878,8 +1150,9 @@ rules:
     patterns:
       - pattern: '"file_system_id"'
       - pattern-not-regex: '"file_system_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrFileSystemID"
 
@@ -892,10 +1165,26 @@ rules:
     patterns:
       - pattern: '"filter"'
       - pattern-not-regex: '"filter":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrFilter"
+
+  - id: literal-final_snapshot_identifier-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrFinalSnapshotIdentifier` for the string literal "final_snapshot_identifier"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"final_snapshot_identifier"'
+      - pattern-not-regex: '"final_snapshot_identifier":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrFinalSnapshotIdentifier"
 
   - id: literal-force_delete-string-constant
     languages: [go]
@@ -906,8 +1195,9 @@ rules:
     patterns:
       - pattern: '"force_delete"'
       - pattern-not-regex: '"force_delete":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrForceDelete"
 
@@ -920,8 +1210,9 @@ rules:
     patterns:
       - pattern: '"force_destroy"'
       - pattern-not-regex: '"force_destroy":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrForceDestroy"
 
@@ -934,8 +1225,9 @@ rules:
     patterns:
       - pattern: '"format"'
       - pattern-not-regex: '"format":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrFormat"
 
@@ -948,8 +1240,9 @@ rules:
     patterns:
       - pattern: '"function_arn"'
       - pattern-not-regex: '"function_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrFunctionARN"
 
@@ -962,8 +1255,9 @@ rules:
     patterns:
       - pattern: '"group_name"'
       - pattern-not-regex: '"group_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrGroupName"
 
@@ -976,8 +1270,9 @@ rules:
     patterns:
       - pattern: '"header"'
       - pattern-not-regex: '"header":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrHeader"
 
@@ -990,8 +1285,9 @@ rules:
     patterns:
       - pattern: '"health_check"'
       - pattern-not-regex: '"health_check":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrHealthCheck"
 
@@ -1004,8 +1300,9 @@ rules:
     patterns:
       - pattern: '"hosted_zone_id"'
       - pattern-not-regex: '"hosted_zone_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrHostedZoneID"
 
@@ -1018,8 +1315,9 @@ rules:
     patterns:
       - pattern: '"iam_role_arn"'
       - pattern-not-regex: '"iam_role_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrIAMRoleARN"
 
@@ -1032,8 +1330,9 @@ rules:
     patterns:
       - pattern: '"id"'
       - pattern-not-regex: '"id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrID"
 
@@ -1046,8 +1345,9 @@ rules:
     patterns:
       - pattern: '"ids"'
       - pattern-not-regex: '"ids":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrIDs"
 
@@ -1060,8 +1360,9 @@ rules:
     patterns:
       - pattern: '"iops"'
       - pattern-not-regex: '"iops":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrIOPS"
 
@@ -1074,8 +1375,9 @@ rules:
     patterns:
       - pattern: '"ip_address"'
       - pattern-not-regex: '"ip_address":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrIPAddress"
 
@@ -1088,10 +1390,26 @@ rules:
     patterns:
       - pattern: '"ip_address_type"'
       - pattern-not-regex: '"ip_address_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrIPAddressType"
+
+  - id: literal-ip_addresses-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrIPAddresses` for the string literal "ip_addresses"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"ip_addresses"'
+      - pattern-not-regex: '"ip_addresses":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrIPAddresses"
 
   - id: literal-identifier-string-constant
     languages: [go]
@@ -1102,8 +1420,9 @@ rules:
     patterns:
       - pattern: '"identifier"'
       - pattern-not-regex: '"identifier":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrIdentifier"
 
@@ -1116,8 +1435,9 @@ rules:
     patterns:
       - pattern: '"instance_count"'
       - pattern-not-regex: '"instance_count":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrInstanceCount"
 
@@ -1130,8 +1450,9 @@ rules:
     patterns:
       - pattern: '"instance_id"'
       - pattern-not-regex: '"instance_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrInstanceID"
 
@@ -1144,8 +1465,9 @@ rules:
     patterns:
       - pattern: '"instance_type"'
       - pattern-not-regex: '"instance_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrInstanceType"
 
@@ -1158,8 +1480,9 @@ rules:
     patterns:
       - pattern: '"interval"'
       - pattern-not-regex: '"interval":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrInterval"
 
@@ -1172,8 +1495,9 @@ rules:
     patterns:
       - pattern: '"issuer"'
       - pattern-not-regex: '"issuer":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrIssuer"
 
@@ -1186,8 +1510,9 @@ rules:
     patterns:
       - pattern: '"json"'
       - pattern-not-regex: '"json":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrJSON"
 
@@ -1200,8 +1525,9 @@ rules:
     patterns:
       - pattern: '"kms_key"'
       - pattern-not-regex: '"kms_key":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrKMSKey"
 
@@ -1214,8 +1540,9 @@ rules:
     patterns:
       - pattern: '"kms_key_arn"'
       - pattern-not-regex: '"kms_key_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrKMSKeyARN"
 
@@ -1228,8 +1555,9 @@ rules:
     patterns:
       - pattern: '"kms_key_id"'
       - pattern-not-regex: '"kms_key_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrKMSKeyID"
 
@@ -1242,8 +1570,9 @@ rules:
     patterns:
       - pattern: '"key"'
       - pattern-not-regex: '"key":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrKey"
 
@@ -1256,8 +1585,9 @@ rules:
     patterns:
       - pattern: '"key_id"'
       - pattern-not-regex: '"key_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrKeyID"
 
@@ -1270,8 +1600,9 @@ rules:
     patterns:
       - pattern: '"language_code"'
       - pattern-not-regex: '"language_code":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrLanguageCode"
 
@@ -1284,10 +1615,26 @@ rules:
     patterns:
       - pattern: '"last_updated_date"'
       - pattern-not-regex: '"last_updated_date":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrLastUpdatedDate"
+
+  - id: literal-last_updated_time-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLastUpdatedTime` for the string literal "last_updated_time"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"last_updated_time"'
+      - pattern-not-regex: '"last_updated_time":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrLastUpdatedTime"
 
   - id: literal-launch_template-string-constant
     languages: [go]
@@ -1298,10 +1645,26 @@ rules:
     patterns:
       - pattern: '"launch_template"'
       - pattern-not-regex: '"launch_template":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrLaunchTemplate"
+
+  - id: literal-location-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLocation` for the string literal "location"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"location"'
+      - pattern-not-regex: '"location":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrLocation"
 
   - id: literal-log_group_name-string-constant
     languages: [go]
@@ -1312,8 +1675,9 @@ rules:
     patterns:
       - pattern: '"log_group_name"'
       - pattern-not-regex: '"log_group_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrLogGroupName"
 
@@ -1326,8 +1690,9 @@ rules:
     patterns:
       - pattern: '"logging_configuration"'
       - pattern-not-regex: '"logging_configuration":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrLoggingConfiguration"
 
@@ -1340,8 +1705,9 @@ rules:
     patterns:
       - pattern: '"max"'
       - pattern-not-regex: '"max":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrMax"
 
@@ -1354,8 +1720,9 @@ rules:
     patterns:
       - pattern: '"max_capacity"'
       - pattern-not-regex: '"max_capacity":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrMaxCapacity"
 
@@ -1368,8 +1735,9 @@ rules:
     patterns:
       - pattern: '"message"'
       - pattern-not-regex: '"message":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrMessage"
 
@@ -1382,8 +1750,9 @@ rules:
     patterns:
       - pattern: '"metric_name"'
       - pattern-not-regex: '"metric_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrMetricName"
 
@@ -1396,8 +1765,9 @@ rules:
     patterns:
       - pattern: '"min"'
       - pattern-not-regex: '"min":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrMin"
 
@@ -1410,8 +1780,9 @@ rules:
     patterns:
       - pattern: '"mode"'
       - pattern-not-regex: '"mode":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrMode"
 
@@ -1424,8 +1795,9 @@ rules:
     patterns:
       - pattern: '"most_recent"'
       - pattern-not-regex: '"most_recent":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrMostRecent"
 
@@ -1438,8 +1810,9 @@ rules:
     patterns:
       - pattern: '"name"'
       - pattern-not-regex: '"name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrName"
 
@@ -1452,8 +1825,9 @@ rules:
     patterns:
       - pattern: '"name_prefix"'
       - pattern-not-regex: '"name_prefix":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrNamePrefix"
 
@@ -1466,8 +1840,9 @@ rules:
     patterns:
       - pattern: '"names"'
       - pattern-not-regex: '"names":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrNames"
 
@@ -1480,8 +1855,9 @@ rules:
     patterns:
       - pattern: '"namespace"'
       - pattern-not-regex: '"namespace":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrNamespace"
 
@@ -1494,8 +1870,9 @@ rules:
     patterns:
       - pattern: '"network_configuration"'
       - pattern-not-regex: '"network_configuration":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrNetworkConfiguration"
 
@@ -1508,8 +1885,9 @@ rules:
     patterns:
       - pattern: '"network_interface_id"'
       - pattern-not-regex: '"network_interface_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrNetworkInterfaceID"
 
@@ -1522,10 +1900,26 @@ rules:
     patterns:
       - pattern: '"owner"'
       - pattern-not-regex: '"owner":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrOwner"
+
+  - id: literal-owner_account_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrOwnerAccountID` for the string literal "owner_account_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"owner_account_id"'
+      - pattern-not-regex: '"owner_account_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrOwnerAccountID"
 
   - id: literal-owner_id-string-constant
     languages: [go]
@@ -1536,8 +1930,9 @@ rules:
     patterns:
       - pattern: '"owner_id"'
       - pattern-not-regex: '"owner_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrOwnerID"
 
@@ -1550,10 +1945,26 @@ rules:
     patterns:
       - pattern: '"parameter"'
       - pattern-not-regex: '"parameter":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrParameter"
+
+  - id: literal-parameter_group_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrParameterGroupName` for the string literal "parameter_group_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"parameter_group_name"'
+      - pattern-not-regex: '"parameter_group_name":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrParameterGroupName"
 
   - id: literal-parameters-string-constant
     languages: [go]
@@ -1564,8 +1975,9 @@ rules:
     patterns:
       - pattern: '"parameters"'
       - pattern-not-regex: '"parameters":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrParameters"
 
@@ -1578,8 +1990,9 @@ rules:
     patterns:
       - pattern: '"password"'
       - pattern-not-regex: '"password":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPassword"
 
@@ -1592,8 +2005,9 @@ rules:
     patterns:
       - pattern: '"path"'
       - pattern-not-regex: '"path":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPath"
 
@@ -1606,8 +2020,9 @@ rules:
     patterns:
       - pattern: '"permissions"'
       - pattern-not-regex: '"permissions":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPermissions"
 
@@ -1620,8 +2035,9 @@ rules:
     patterns:
       - pattern: '"policy"'
       - pattern-not-regex: '"policy":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPolicy"
 
@@ -1634,8 +2050,9 @@ rules:
     patterns:
       - pattern: '"port"'
       - pattern-not-regex: '"port":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPort"
 
@@ -1648,8 +2065,9 @@ rules:
     patterns:
       - pattern: '"preferred_maintenance_window"'
       - pattern-not-regex: '"preferred_maintenance_window":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPreferredMaintenanceWindow"
 
@@ -1662,8 +2080,9 @@ rules:
     patterns:
       - pattern: '"prefix"'
       - pattern-not-regex: '"prefix":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPrefix"
 
@@ -1676,8 +2095,9 @@ rules:
     patterns:
       - pattern: '"principal"'
       - pattern-not-regex: '"principal":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPrincipal"
 
@@ -1690,8 +2110,9 @@ rules:
     patterns:
       - pattern: '"priority"'
       - pattern-not-regex: '"priority":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPriority"
 
@@ -1704,8 +2125,9 @@ rules:
     patterns:
       - pattern: '"private_key"'
       - pattern-not-regex: '"private_key":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPrivateKey"
 
@@ -1718,8 +2140,9 @@ rules:
     patterns:
       - pattern: '"profile"'
       - pattern-not-regex: '"profile":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrProfile"
 
@@ -1732,8 +2155,9 @@ rules:
     patterns:
       - pattern: '"propagate_tags"'
       - pattern-not-regex: '"propagate_tags":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPropagateTags"
 
@@ -1746,8 +2170,9 @@ rules:
     patterns:
       - pattern: '"properties"'
       - pattern-not-regex: '"properties":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrProperties"
 
@@ -1760,8 +2185,9 @@ rules:
     patterns:
       - pattern: '"protocol"'
       - pattern-not-regex: '"protocol":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrProtocol"
 
@@ -1774,8 +2200,9 @@ rules:
     patterns:
       - pattern: '"provider_name"'
       - pattern-not-regex: '"provider_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrProviderName"
 
@@ -1788,8 +2215,9 @@ rules:
     patterns:
       - pattern: '"public_key"'
       - pattern-not-regex: '"public_key":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPublicKey"
 
@@ -1802,8 +2230,9 @@ rules:
     patterns:
       - pattern: '"publicly_accessible"'
       - pattern-not-regex: '"publicly_accessible":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrPubliclyAccessible"
 
@@ -1816,8 +2245,9 @@ rules:
     patterns:
       - pattern: '"region"'
       - pattern-not-regex: '"region":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrRegion"
 
@@ -1830,8 +2260,9 @@ rules:
     patterns:
       - pattern: '"repository_name"'
       - pattern-not-regex: '"repository_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrRepositoryName"
 
@@ -1844,8 +2275,9 @@ rules:
     patterns:
       - pattern: '"resource_arn"'
       - pattern-not-regex: '"resource_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrResourceARN"
 
@@ -1858,10 +2290,26 @@ rules:
     patterns:
       - pattern: '"resource_id"'
       - pattern-not-regex: '"resource_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrResourceID"
+
+  - id: literal-resource_owner-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrResourceOwner` for the string literal "resource_owner"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"resource_owner"'
+      - pattern-not-regex: '"resource_owner":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrResourceOwner"
 
   - id: literal-resource_tags-string-constant
     languages: [go]
@@ -1872,8 +2320,9 @@ rules:
     patterns:
       - pattern: '"resource_tags"'
       - pattern-not-regex: '"resource_tags":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrResourceTags"
 
@@ -1886,8 +2335,9 @@ rules:
     patterns:
       - pattern: '"resource_type"'
       - pattern-not-regex: '"resource_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrResourceType"
 
@@ -1900,8 +2350,9 @@ rules:
     patterns:
       - pattern: '"resources"'
       - pattern-not-regex: '"resources":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrResources"
 
@@ -1914,8 +2365,9 @@ rules:
     patterns:
       - pattern: '"retention_period"'
       - pattern-not-regex: '"retention_period":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrRetentionPeriod"
 
@@ -1928,8 +2380,9 @@ rules:
     patterns:
       - pattern: '"role"'
       - pattern-not-regex: '"role":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrRole"
 
@@ -1942,8 +2395,9 @@ rules:
     patterns:
       - pattern: '"role_arn"'
       - pattern-not-regex: '"role_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrRoleARN"
 
@@ -1956,8 +2410,9 @@ rules:
     patterns:
       - pattern: '"rule"'
       - pattern-not-regex: '"rule":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrRule"
 
@@ -1970,8 +2425,9 @@ rules:
     patterns:
       - pattern: '"s3_bucket"'
       - pattern-not-regex: '"s3_bucket":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrS3Bucket"
 
@@ -1984,8 +2440,9 @@ rules:
     patterns:
       - pattern: '"s3_bucket_name"'
       - pattern-not-regex: '"s3_bucket_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrS3BucketName"
 
@@ -1998,8 +2455,9 @@ rules:
     patterns:
       - pattern: '"s3_key_prefix"'
       - pattern-not-regex: '"s3_key_prefix":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrS3KeyPrefix"
 
@@ -2012,8 +2470,9 @@ rules:
     patterns:
       - pattern: '"sns_topic_arn"'
       - pattern-not-regex: '"sns_topic_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSNSTopicARN"
 
@@ -2026,8 +2485,9 @@ rules:
     patterns:
       - pattern: '"schedule"'
       - pattern-not-regex: '"schedule":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSchedule"
 
@@ -2040,8 +2500,9 @@ rules:
     patterns:
       - pattern: '"schedule_expression"'
       - pattern-not-regex: '"schedule_expression":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrScheduleExpression"
 
@@ -2054,8 +2515,9 @@ rules:
     patterns:
       - pattern: '"schema"'
       - pattern-not-regex: '"schema":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSchema"
 
@@ -2068,8 +2530,9 @@ rules:
     patterns:
       - pattern: '"scope"'
       - pattern-not-regex: '"scope":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrScope"
 
@@ -2082,8 +2545,9 @@ rules:
     patterns:
       - pattern: '"secret_key"'
       - pattern-not-regex: '"secret_key":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSecretKey"
 
@@ -2096,8 +2560,9 @@ rules:
     patterns:
       - pattern: '"security_group_ids"'
       - pattern-not-regex: '"security_group_ids":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSecurityGroupIDs"
 
@@ -2110,8 +2575,9 @@ rules:
     patterns:
       - pattern: '"security_groups"'
       - pattern-not-regex: '"security_groups":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSecurityGroups"
 
@@ -2124,8 +2590,9 @@ rules:
     patterns:
       - pattern: '"service_name"'
       - pattern-not-regex: '"service_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrServiceName"
 
@@ -2138,8 +2605,9 @@ rules:
     patterns:
       - pattern: '"service_role"'
       - pattern-not-regex: '"service_role":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrServiceRole"
 
@@ -2152,8 +2620,9 @@ rules:
     patterns:
       - pattern: '"service_role_arn"'
       - pattern-not-regex: '"service_role_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrServiceRoleARN"
 
@@ -2166,8 +2635,9 @@ rules:
     patterns:
       - pattern: '"session"'
       - pattern-not-regex: '"session":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSession"
 
@@ -2180,8 +2650,9 @@ rules:
     patterns:
       - pattern: '"shared_config_files"'
       - pattern-not-regex: '"shared_config_files":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSharedConfigFiles"
 
@@ -2194,8 +2665,9 @@ rules:
     patterns:
       - pattern: '"size"'
       - pattern-not-regex: '"size":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSize"
 
@@ -2208,8 +2680,9 @@ rules:
     patterns:
       - pattern: '"skip_credentials_validation"'
       - pattern-not-regex: '"skip_credentials_validation":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSkipCredentialsValidation"
 
@@ -2222,8 +2695,9 @@ rules:
     patterns:
       - pattern: '"skip_destroy"'
       - pattern-not-regex: '"skip_destroy":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSkipDestroy"
 
@@ -2236,8 +2710,9 @@ rules:
     patterns:
       - pattern: '"skip_requesting_account_id"'
       - pattern-not-regex: '"skip_requesting_account_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSkipRequestingAccountID"
 
@@ -2250,8 +2725,9 @@ rules:
     patterns:
       - pattern: '"snapshot_id"'
       - pattern-not-regex: '"snapshot_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSnapshotID"
 
@@ -2264,8 +2740,9 @@ rules:
     patterns:
       - pattern: '"source"'
       - pattern-not-regex: '"source":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSource"
 
@@ -2278,8 +2755,9 @@ rules:
     patterns:
       - pattern: '"source_type"'
       - pattern-not-regex: '"source_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSourceType"
 
@@ -2292,8 +2770,9 @@ rules:
     patterns:
       - pattern: '"stage"'
       - pattern-not-regex: '"stage":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStage"
 
@@ -2306,8 +2785,9 @@ rules:
     patterns:
       - pattern: '"start_time"'
       - pattern-not-regex: '"start_time":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStartTime"
 
@@ -2320,8 +2800,9 @@ rules:
     patterns:
       - pattern: '"state"'
       - pattern-not-regex: '"state":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrState"
 
@@ -2334,8 +2815,9 @@ rules:
     patterns:
       - pattern: '"status"'
       - pattern-not-regex: '"status":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStatus"
 
@@ -2348,8 +2830,9 @@ rules:
     patterns:
       - pattern: '"status_code"'
       - pattern-not-regex: '"status_code":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStatusCode"
 
@@ -2362,8 +2845,9 @@ rules:
     patterns:
       - pattern: '"status_message"'
       - pattern-not-regex: '"status_message":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStatusMessage"
 
@@ -2376,10 +2860,41 @@ rules:
     patterns:
       - pattern: '"status_reason"'
       - pattern-not-regex: '"status_reason":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStatusReason"
+
+  - id: literal-storage_class-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStorageClass` for the string literal "storage_class"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"storage_class"'
+      - pattern-not-regex: '"storage_class":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrStorageClass"
+
+  - id: literal-storage_encrypted-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStorageEncrypted` for the string literal "storage_encrypted"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"storage_encrypted"'
+      - pattern-not-regex: '"storage_encrypted":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrStorageEncrypted"
 
   - id: literal-storage_type-string-constant
     languages: [go]
@@ -2390,8 +2905,9 @@ rules:
     patterns:
       - pattern: '"storage_type"'
       - pattern-not-regex: '"storage_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStorageType"
 
@@ -2404,8 +2920,9 @@ rules:
     patterns:
       - pattern: '"stream_arn"'
       - pattern-not-regex: '"stream_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrStreamARN"
 
@@ -2418,8 +2935,9 @@ rules:
     patterns:
       - pattern: '"subnet_id"'
       - pattern-not-regex: '"subnet_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSubnetID"
 
@@ -2432,8 +2950,9 @@ rules:
     patterns:
       - pattern: '"subnet_ids"'
       - pattern-not-regex: '"subnet_ids":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSubnetIDs"
 
@@ -2446,8 +2965,9 @@ rules:
     patterns:
       - pattern: '"subnets"'
       - pattern-not-regex: '"subnets":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrSubnets"
 
@@ -2460,8 +2980,9 @@ rules:
     patterns:
       - pattern: '"table_name"'
       - pattern-not-regex: '"table_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTableName"
 
@@ -2474,8 +2995,9 @@ rules:
     patterns:
       - pattern: '"tags"'
       - pattern-not-regex: '"tags":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTags"
 
@@ -2488,8 +3010,9 @@ rules:
     patterns:
       - pattern: '"tags_all"'
       - pattern-not-regex: '"tags_all":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTagsAll"
 
@@ -2502,8 +3025,9 @@ rules:
     patterns:
       - pattern: '"target"'
       - pattern-not-regex: '"target":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTarget"
 
@@ -2516,10 +3040,26 @@ rules:
     patterns:
       - pattern: '"target_arn"'
       - pattern-not-regex: '"target_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTargetARN"
+
+  - id: literal-throughput-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrThroughput` for the string literal "throughput"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"throughput"'
+      - pattern-not-regex: '"throughput":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrThroughput"
 
   - id: literal-timeout-string-constant
     languages: [go]
@@ -2530,8 +3070,9 @@ rules:
     patterns:
       - pattern: '"timeout"'
       - pattern-not-regex: '"timeout":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTimeout"
 
@@ -2544,8 +3085,9 @@ rules:
     patterns:
       - pattern: '"timeouts"'
       - pattern-not-regex: '"timeouts":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTimeouts"
 
@@ -2558,8 +3100,9 @@ rules:
     patterns:
       - pattern: '"topic_arn"'
       - pattern-not-regex: '"topic_arn":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTopicARN"
 
@@ -2572,8 +3115,9 @@ rules:
     patterns:
       - pattern: '"transit_gateway_attachment_id"'
       - pattern-not-regex: '"transit_gateway_attachment_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTransitGatewayAttachmentID"
 
@@ -2586,8 +3130,9 @@ rules:
     patterns:
       - pattern: '"transit_gateway_id"'
       - pattern-not-regex: '"transit_gateway_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTransitGatewayID"
 
@@ -2600,8 +3145,9 @@ rules:
     patterns:
       - pattern: '"triggers"'
       - pattern-not-regex: '"triggers":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrTriggers"
 
@@ -2614,8 +3160,9 @@ rules:
     patterns:
       - pattern: '"type"'
       - pattern-not-regex: '"type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrType"
 
@@ -2628,8 +3175,9 @@ rules:
     patterns:
       - pattern: '"uri"'
       - pattern-not-regex: '"uri":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrURI"
 
@@ -2642,8 +3190,9 @@ rules:
     patterns:
       - pattern: '"url"'
       - pattern-not-regex: '"url":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrURL"
 
@@ -2656,8 +3205,9 @@ rules:
     patterns:
       - pattern: '"unit"'
       - pattern-not-regex: '"unit":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrUnit"
 
@@ -2670,10 +3220,26 @@ rules:
     patterns:
       - pattern: '"user_name"'
       - pattern-not-regex: '"user_name":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrUserName"
+
+  - id: literal-user_pool_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrUserPoolID` for the string literal "user_pool_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"user_pool_id"'
+      - pattern-not-regex: '"user_pool_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrUserPoolID"
 
   - id: literal-username-string-constant
     languages: [go]
@@ -2684,8 +3250,9 @@ rules:
     patterns:
       - pattern: '"username"'
       - pattern-not-regex: '"username":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrUsername"
 
@@ -2698,8 +3265,9 @@ rules:
     patterns:
       - pattern: '"vpc_config"'
       - pattern-not-regex: '"vpc_config":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVPCConfig"
 
@@ -2712,8 +3280,9 @@ rules:
     patterns:
       - pattern: '"vpc_configuration"'
       - pattern-not-regex: '"vpc_configuration":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVPCConfiguration"
 
@@ -2726,8 +3295,9 @@ rules:
     patterns:
       - pattern: '"vpc_endpoint_id"'
       - pattern-not-regex: '"vpc_endpoint_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVPCEndpointID"
 
@@ -2740,8 +3310,9 @@ rules:
     patterns:
       - pattern: '"vpc_id"'
       - pattern-not-regex: '"vpc_id":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVPCID"
 
@@ -2754,8 +3325,9 @@ rules:
     patterns:
       - pattern: '"vpc_security_group_ids"'
       - pattern-not-regex: '"vpc_security_group_ids":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVPCSecurityGroupIDs"
 
@@ -2768,8 +3340,9 @@ rules:
     patterns:
       - pattern: '"value"'
       - pattern-not-regex: '"value":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrValue"
 
@@ -2782,8 +3355,9 @@ rules:
     patterns:
       - pattern: '"values"'
       - pattern-not-regex: '"values":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrValues"
 
@@ -2796,10 +3370,26 @@ rules:
     patterns:
       - pattern: '"version"'
       - pattern-not-regex: '"version":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVersion"
+
+  - id: literal-virtual_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrVirtualName` for the string literal "virtual_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"virtual_name"'
+      - pattern-not-regex: '"virtual_name":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrVirtualName"
 
   - id: literal-volume_size-string-constant
     languages: [go]
@@ -2810,8 +3400,9 @@ rules:
     patterns:
       - pattern: '"volume_size"'
       - pattern-not-regex: '"volume_size":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVolumeSize"
 
@@ -2824,8 +3415,9 @@ rules:
     patterns:
       - pattern: '"volume_type"'
       - pattern-not-regex: '"volume_type":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrVolumeType"
 
@@ -2838,7 +3430,8 @@ rules:
     patterns:
       - pattern: '"weight"'
       - pattern-not-regex: '"weight":\s+test\w+,'
-      - pattern-not-inside: |
-          config.Variables{ ... }
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrWeight"
