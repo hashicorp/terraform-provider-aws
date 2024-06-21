@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -28,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -158,16 +160,12 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"revoked_status_action": schema.StringAttribute{
-													Optional: true,
-													Validators: []validator.String{
-														stringvalidator.OneOf(networkfirewall.RevocationCheckAction_Values()...),
-													},
+													CustomType: fwtypes.StringEnumType[awstypes.RevocationCheckAction](),
+													Optional:   true,
 												},
 												"unknown_status_action": schema.StringAttribute{
-													Optional: true,
-													Validators: []validator.String{
-														stringvalidator.OneOf(networkfirewall.RevocationCheckAction_Values()...),
-													},
+													CustomType: fwtypes.StringEnumType[awstypes.RevocationCheckAction](),
+													Optional:   true,
 												},
 											},
 										},
@@ -289,7 +287,7 @@ func (r *tlsInspectionConfigurationResource) Create(ctx context.Context, request
 		return
 	}
 
-	conn := r.Meta().NetworkFirewallConn(ctx)
+	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	name := data.TLSInspectionConfigurationName.ValueString()
 	input := &networkfirewall.CreateTLSInspectionConfigurationInput{}
@@ -300,7 +298,7 @@ func (r *tlsInspectionConfigurationResource) Create(ctx context.Context, request
 
 	input.Tags = getTagsIn(ctx)
 
-	outputC, err := conn.CreateTLSInspectionConfigurationWithContext(ctx, input)
+	outputC, err := conn.CreateTLSInspectionConfiguration(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating NetworkFirewall TLS Inspection Configuration (%s)", name), err.Error())
@@ -344,7 +342,7 @@ func (r *tlsInspectionConfigurationResource) Read(ctx context.Context, request r
 		return
 	}
 
-	conn := r.Meta().NetworkFirewallConn(ctx)
+	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	output, err := findTLSInspectionConfigurationByARN(ctx, conn, data.ID.ValueString())
 
@@ -383,7 +381,7 @@ func (r *tlsInspectionConfigurationResource) Update(ctx context.Context, request
 		return
 	}
 
-	conn := r.Meta().NetworkFirewallConn(ctx)
+	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	if !new.Description.Equal(old.Description) ||
 		!new.EncryptionConfiguration.Equal(old.EncryptionConfiguration) ||
@@ -396,7 +394,7 @@ func (r *tlsInspectionConfigurationResource) Update(ctx context.Context, request
 
 		input.UpdateToken = aws.String(old.UpdateToken.ValueString())
 
-		output, err := conn.UpdateTLSInspectionConfigurationWithContext(ctx, input)
+		output, err := conn.UpdateTLSInspectionConfiguration(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating NetworkFirewall TLS Inspection Configuration (%s)", new.ID.ValueString()), err.Error())
@@ -435,13 +433,13 @@ func (r *tlsInspectionConfigurationResource) Delete(ctx context.Context, request
 		return
 	}
 
-	conn := r.Meta().NetworkFirewallConn(ctx)
+	conn := r.Meta().NetworkFirewallClient(ctx)
 
-	_, err := conn.DeleteTLSInspectionConfigurationWithContext(ctx, &networkfirewall.DeleteTLSInspectionConfigurationInput{
+	_, err := conn.DeleteTLSInspectionConfiguration(ctx, &networkfirewall.DeleteTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(data.ID.ValueString()),
 	})
 
-	if errs.IsA[*networkfirewall.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
@@ -471,14 +469,14 @@ func (r *tlsInspectionConfigurationResource) ModifyPlan(ctx context.Context, req
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
+func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	input := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeTLSInspectionConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeTLSInspectionConfiguration(ctx, input)
 
-	if errs.IsA[*networkfirewall.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -496,7 +494,7 @@ func findTLSInspectionConfigurationByARN(ctx context.Context, conn *networkfirew
 	return output, nil
 }
 
-func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
+func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
@@ -508,7 +506,7 @@ func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus), nil
+		return output, string(output.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus), nil
 	}
 }
 
@@ -516,7 +514,7 @@ const (
 	resourceStatusPending = "PENDING"
 )
 
-func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
+func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTLSInspectionConfigurationByARN(ctx, conn, arn)
 
@@ -534,18 +532,18 @@ func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *net
 		// The API does not immediately return data for certificates and certificate authority even when the resource status is "ACTIVE",
 		// which causes unexpected diffs when reading. This sets the status to "PENDING" until either the certificates or the certificate
 		// authority is populated (the API will always return at least one of the two).
-		if status := aws.StringValue(output.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus); status == networkfirewall.ResourceStatusActive && (certificates != nil || certificateAuthority != nil) {
-			return output, status, nil
+		if status := output.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus; status == awstypes.ResourceStatusActive && (certificates != nil || certificateAuthority != nil) {
+			return output, string(status), nil
 		}
 
 		return output, resourceStatusPending, nil
 	}
 }
 
-func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
+func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
-		Target:  []string{networkfirewall.ResourceStatusActive},
+		Target:  enum.Slice(awstypes.ResourceStatusActive),
 		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
 		Timeout: timeout,
 	}
@@ -559,10 +557,10 @@ func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfir
 	return nil, err
 }
 
-func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
+func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{resourceStatusPending},
-		Target:  []string{networkfirewall.ResourceStatusActive},
+		Target:  enum.Slice(awstypes.ResourceStatusActive),
 		Refresh: statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
 		Timeout: timeout,
 	}
@@ -576,9 +574,9 @@ func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfir
 	return nil, err
 }
 
-func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
+func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkfirewall.ResourceStatusActive, networkfirewall.ResourceStatusDeleting},
+		Pending: enum.Slice(awstypes.ResourceStatusActive, awstypes.ResourceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusTLSInspectionConfiguration(ctx, conn, arn),
 		Timeout: timeout,
@@ -655,8 +653,8 @@ type serverCertificateConfigurationModel struct {
 }
 
 type checkCertificateRevocationStatusActionsModel struct {
-	RevokedStatusAction types.String `tfsdk:"revoked_status_action"`
-	UnknownStatusAction types.String `tfsdk:"unknown_status_action"`
+	RevokedStatusAction fwtypes.StringEnum[awstypes.RevocationCheckAction] `tfsdk:"revoked_status_action"`
+	UnknownStatusAction fwtypes.StringEnum[awstypes.RevocationCheckAction] `tfsdk:"unknown_status_action"`
 }
 
 type serverCertificateScopeModel struct {
