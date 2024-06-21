@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,13 +65,21 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	clusterArn := d.Get("cluster_arn").(string)
 	serviceName := d.Get(names.AttrServiceName).(string)
 
-	params := &ecs.DescribeServicesInput{
+	input := &ecs.DescribeServicesInput{
 		Cluster:  aws.String(clusterArn),
-		Services: []*string{aws.String(serviceName)},
+		Services: aws.StringSlice([]string{serviceName}),
+		Include:  aws.StringSlice([]string{ecs.ServiceFieldTags}),
 	}
 
-	log.Printf("[DEBUG] Reading ECS Service: %s", params)
-	desc, err := conn.DescribeServicesWithContext(ctx, params)
+	log.Printf("[DEBUG] Reading ECS Service: %s", input)
+	desc, err := conn.DescribeServicesWithContext(ctx, input)
+
+	// Some partitions (e.g. ISO) may not support tagging.
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		input.Include = nil
+
+		desc, err = conn.DescribeServicesWithContext(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", serviceName, err)
