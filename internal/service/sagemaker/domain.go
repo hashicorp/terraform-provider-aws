@@ -389,6 +389,27 @@ func ResourceDomain() *schema.Resource {
 											ValidateFunc: verify.ValidARN,
 										},
 									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 200,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -1373,6 +1394,10 @@ func expandDomainCodeEditorAppSettings(l []interface{}) *sagemaker.CodeEditorApp
 
 	config := &sagemaker.CodeEditorAppSettings{}
 
+	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+		config.CustomImages = expandDomainCustomImages(v)
+	}
+
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
@@ -1948,6 +1973,10 @@ func flattenDomainCodeEditorAppSettings(config *sagemaker.CodeEditorAppSettings)
 	}
 
 	m := map[string]interface{}{}
+
+	if config.CustomImages != nil {
+		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
+	}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
