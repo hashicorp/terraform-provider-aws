@@ -173,7 +173,7 @@ func dataSourceFirewall() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
