@@ -27,20 +27,3 @@ func FindFirewallPolicyByNameAndARN(ctx context.Context, conn *networkfirewall.N
 	}
 	return output, nil
 }
-
-// FindResourcePolicy returns the Policy string from a call to DescribeResourcePolicyWithContext
-// given the context and resource ARN.
-// Returns nil if the FindResourcePolicy is not found.
-func FindResourcePolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*string, error) {
-	input := &networkfirewall.DescribeResourcePolicyInput{
-		ResourceArn: aws.String(arn),
-	}
-	output, err := conn.DescribeResourcePolicyWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-	if output == nil {
-		return nil, nil
-	}
-	return output.Policy, nil
-}

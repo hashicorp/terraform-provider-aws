@@ -40,7 +40,7 @@ func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	resourceARN := d.Get(names.AttrResourceARN).(string)
-	policy, err := FindResourcePolicy(ctx, conn, resourceARN)
+	policy, err := FindResourcePolicyByARN(ctx, conn, resourceARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (%s): %s", resourceARN, err)

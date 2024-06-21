@@ -6,8 +6,10 @@ package networkfirewall
 // Exports for use in tests only.
 var (
 	ResourceLoggingConfiguration       = resourceLoggingConfiguration
+	ResourceResourcePolicy             = resourceResourcePolicy
 	ResourceTLSInspectionConfiguration = newTLSInspectionConfigurationResource
 
 	FindLoggingConfigurationByARN       = findLoggingConfigurationByARN
+	FindResourcePolicyByARN             = findResourcePolicyByARN
 	FindTLSInspectionConfigurationByARN = findTLSInspectionConfigurationByARN
 )
