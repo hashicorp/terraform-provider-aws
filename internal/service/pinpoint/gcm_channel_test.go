@@ -23,6 +23,7 @@ import (
  Before running this test, the following ENV variable must be set:
 
  GCM_API_KEY - Google Cloud Messaging Api Key
+ GCM_SERVICE_JSON - Google Cloud Messaging Token Json
 **/
 
 func TestAccPinpointGCMChannel_basic(t *testing.T) {
@@ -35,6 +36,7 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 	}
 
 	apiKey := os.Getenv("GCM_API_KEY")
+	serviceJson := os.Getenv("GCM_SERVICE_JSON")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
@@ -43,7 +45,14 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGCMChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGCMChannelConfig_basic(apiKey),
+				Config: testAccGCMChannelConfigApiKey_basic(apiKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccGCMChannelConfigServiceJson_basic(serviceJson),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -53,10 +62,10 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"api_key"},
+				ImportStateVerifyIgnore: []string{"api_key", "service_json"},
 			},
 			{
-				Config: testAccGCMChannelConfig_basic(apiKey),
+				Config: testAccGCMChannelConfigApiKey_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
@@ -117,14 +126,27 @@ func testAccCheckGCMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccGCMChannelConfig_basic(apiKey string) string {
+func testAccGCMChannelConfigApiKey_basic(apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
-resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
+resource "aws_pinpoint_gcm_channel" "test_gcm_channel_api_key" {
   application_id = aws_pinpoint_app.test_app.application_id
   enabled        = "false"
   api_key        = "%s"
 }
 `, apiKey)
+}
+
+func testAccGCMChannelConfigServiceJson_basic(serviceJson string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test_app" {}
+
+resource "aws_pinpoint_gcm_channel" "test_gcm_channel_service_json" {
+  application_id 								= aws_pinpoint_app.test_app.application_id
+  enabled        								= "false"
+	default_authentication_method = "TOKEN"
+  service_json        					= "%s"
+}
+`, serviceJson)
 }
