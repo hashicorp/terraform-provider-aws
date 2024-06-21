@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_sms_channel")
@@ -28,12 +29,12 @@ func ResourceSMSChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -62,10 +63,10 @@ func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.SMSChannelRequest{
-		Enabled: aws.Bool(d.Get("enabled").(bool)),
+		Enabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 	}
 
 	if v, ok := d.GetOk("sender_id"); ok {
@@ -111,8 +112,8 @@ func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	res := output.SMSChannelResponse
-	d.Set("application_id", res.ApplicationId)
-	d.Set("enabled", res.Enabled)
+	d.Set(names.AttrApplicationID, res.ApplicationId)
+	d.Set(names.AttrEnabled, res.Enabled)
 	d.Set("sender_id", res.SenderId)
 	d.Set("short_code", res.ShortCode)
 	d.Set("promotional_messages_per_second", res.PromotionalMessagesPerSecond)

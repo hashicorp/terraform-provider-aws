@@ -323,6 +323,7 @@ The following arguments are optional:
 * `efsVolumeConfiguration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
 * `fsxWindowsFileServerVolumeConfiguration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
 * `hostPath` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `configureAtLaunch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
 
@@ -430,4 +431,4 @@ Using `terraform import`, import ECS Task Definitions using their ARNs. For exam
 % terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f93bc3e065742c353f4207a2027fa3e40044e53bcb4f3ea8e603e0c8ea6098e6 -->
+<!-- cache-key: cdktf-0.20.1 input-b14aef6b5100e58ceabb1d1f37e57b6a6faf94694a9917772b4d89629bae701b -->

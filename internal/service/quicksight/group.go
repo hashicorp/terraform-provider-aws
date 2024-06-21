@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -38,30 +39,30 @@ func ResourceGroup() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
 
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
 					ForceNew: true,
 				},
 
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
 
-				"group_name": {
+				names.AttrGroupName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
 				},
 
-				"namespace": {
+				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
@@ -81,19 +82,19 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
-	namespace := d.Get("namespace").(string)
+	namespace := d.Get(names.AttrNamespace).(string)
 
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
 
 	createOpts := &quicksight.CreateGroupInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
-		GroupName:    aws.String(d.Get("group_name").(string)),
+		GroupName:    aws.String(d.Get(names.AttrGroupName).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		createOpts.Description = aws.String(v.(string))
 	}
 
@@ -132,11 +133,11 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.Group.Arn)
-	d.Set("aws_account_id", awsAccountID)
-	d.Set("group_name", resp.Group.GroupName)
-	d.Set("description", resp.Group.Description)
-	d.Set("namespace", namespace)
+	d.Set(names.AttrARN, resp.Group.Arn)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
+	d.Set(names.AttrGroupName, resp.Group.GroupName)
+	d.Set(names.AttrDescription, resp.Group.Description)
+	d.Set(names.AttrNamespace, namespace)
 
 	return diags
 }
@@ -156,7 +157,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		GroupName:    aws.String(groupName),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		updateOpts.Description = aws.String(v.(string))
 	}
 

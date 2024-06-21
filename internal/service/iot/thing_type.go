@@ -33,13 +33,13 @@ func ResourceThingType() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
+				d.Set(names.AttrName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,20 +48,20 @@ func ResourceThingType() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validThingTypeName,
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -93,13 +93,13 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateThingTypeInput{
 		Tags:          getTagsIn(ctx),
 		ThingTypeName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("properties"); ok {
+	if v, ok := d.GetOk(names.AttrProperties); ok {
 		configs := v.([]interface{})
 		if config, ok := configs[0].(map[string]interface{}); ok && config != nil {
 			input.ThingTypeProperties = expandThingTypeProperties(config)
@@ -146,11 +146,11 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Type (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ThingTypeArn)
+	d.Set(names.AttrARN, output.ThingTypeArn)
 	if output.ThingTypeMetadata != nil {
 		d.Set("deprecated", output.ThingTypeMetadata.Deprecated)
 	}
-	if err := d.Set("properties", flattenThingTypeProperties(output.ThingTypeProperties)); err != nil {
+	if err := d.Set(names.AttrProperties, flattenThingTypeProperties(output.ThingTypeProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
 	}
 

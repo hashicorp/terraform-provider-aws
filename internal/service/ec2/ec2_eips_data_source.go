@@ -33,7 +33,7 @@ func dataSourceEIPs() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"public_ips": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -50,13 +50,13 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	input := &ec2.DescribeAddressesInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterListV2(
 			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
 			newCustomFilterListV2(filters.(*schema.Set))...)
 	}

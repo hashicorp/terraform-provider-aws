@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_portfolio_share")
@@ -84,7 +85,7 @@ func ResourcePortfolioShare() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -109,7 +110,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		AcceptLanguage:  aws.String(d.Get("accept_language").(string)),
 	}
 
-	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
 		orgNode := &servicecatalog.OrganizationNode{}
@@ -119,7 +120,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
 			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
 		} else {
-			orgNode.Type = aws.String(d.Get("type").(string))
+			orgNode.Type = aws.String(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
@@ -158,7 +159,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio Share: empty response")
 	}
 
-	d.SetId(PortfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string)))
+	d.SetId(PortfolioShareCreateResourceID(d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string)))
 
 	waitForAcceptance := false
 	if v, ok := d.GetOk("wait_for_acceptance"); ok {
@@ -171,7 +172,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareReady(ctx, conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := WaitPortfolioShareReady(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), waitForAcceptance, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be ready: %s", d.Id(), err)
 		}
 	}
@@ -211,7 +212,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("principal_id", output.PrincipalId)
 	d.Set("share_principals", output.SharePrincipals)
 	d.Set("share_tag_options", output.ShareTagOptions)
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 	d.Set("wait_for_acceptance", waitForAcceptance)
 
 	return diags
@@ -234,7 +235,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 		input.ShareTagOptions = aws.Bool(d.Get("share_tag_options").(bool))
 	}
 
-	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
 		orgNode := &servicecatalog.OrganizationNode{}
@@ -244,7 +245,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
 			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
 		} else {
-			orgNode.Type = aws.String(d.Get("type").(string))
+			orgNode.Type = aws.String(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
@@ -287,7 +288,7 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+	if v, ok := d.GetOk(names.AttrType); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
 		input.AccountId = aws.String(d.Get("principal_id").(string))
 	} else {
 		orgNode := &servicecatalog.OrganizationNode{}
@@ -297,7 +298,7 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
 			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
 		} else {
-			orgNode.Type = aws.String(d.Get("type").(string))
+			orgNode.Type = aws.String(d.Get(names.AttrType).(string))
 		}
 
 		input.OrganizationNode = orgNode
@@ -319,7 +320,7 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := WaitPortfolioShareDeleted(ctx, conn, d.Get("portfolio_id").(string), d.Get("type").(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if _, err := WaitPortfolioShareDeleted(ctx, conn, d.Get("portfolio_id").(string), d.Get(names.AttrType).(string), d.Get("principal_id").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Portfolio Share (%s) to be deleted: %s", d.Id(), err)
 		}
 	}
