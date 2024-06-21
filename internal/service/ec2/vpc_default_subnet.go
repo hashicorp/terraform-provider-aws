@@ -23,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -76,7 +77,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

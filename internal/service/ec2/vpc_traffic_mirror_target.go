@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,7 +26,8 @@ import (
 
 // @SDKResource("aws_ec2_traffic_mirror_target", name="Traffic Mirror Target")
 // @Tags(identifierAttribute="id")
-func ResourceTrafficMirrorTarget() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceTrafficMirrorTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorTargetCreate,
 		ReadWithoutTimeout:   resourceTrafficMirrorTargetRead,
@@ -91,11 +93,11 @@ func ResourceTrafficMirrorTarget() *schema.Resource {
 
 func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateTrafficMirrorTargetInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorTarget),
+		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTrafficMirrorTarget),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -114,22 +116,22 @@ func resourceTrafficMirrorTargetCreate(ctx context.Context, d *schema.ResourceDa
 		input.NetworkLoadBalancerArn = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateTrafficMirrorTargetWithContext(ctx, input)
+	output, err := conn.CreateTrafficMirrorTarget(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Traffic Mirror Target: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.TrafficMirrorTarget.TrafficMirrorTargetId))
+	d.SetId(aws.ToString(output.TrafficMirrorTarget.TrafficMirrorTargetId))
 
 	return append(diags, resourceTrafficMirrorTargetRead(ctx, d, meta)...)
 }
 
 func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	target, err := FindTrafficMirrorTargetByID(ctx, conn, d.Id())
+	target, err := findTrafficMirrorTargetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Traffic Mirror Target %s not found, removing from state", d.Id())
@@ -141,10 +143,10 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Traffic Mirror Target (%s): %s", d.Id(), err)
 	}
 
-	ownerID := aws.StringValue(target.OwnerId)
+	ownerID := aws.ToString(target.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   "ec2",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("traffic-mirror-target/%s", d.Id()),
@@ -156,7 +158,7 @@ func resourceTrafficMirrorTargetRead(ctx context.Context, d *schema.ResourceData
 	d.Set("network_load_balancer_arn", target.NetworkLoadBalancerArn)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	setTagsOut(ctx, target.Tags)
+	setTagsOutV2(ctx, target.Tags)
 
 	return diags
 }
@@ -171,10 +173,10 @@ func resourceTrafficMirrorTargetUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceTrafficMirrorTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Traffic Mirror Target: %s", d.Id())
-	_, err := conn.DeleteTrafficMirrorTargetWithContext(ctx, &ec2.DeleteTrafficMirrorTargetInput{
+	_, err := conn.DeleteTrafficMirrorTarget(ctx, &ec2.DeleteTrafficMirrorTargetInput{
 		TrafficMirrorTargetId: aws.String(d.Id()),
 	})
 

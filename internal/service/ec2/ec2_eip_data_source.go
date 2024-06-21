@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_eip", name="EIP)
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceEIP() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPRead,
@@ -34,7 +35,7 @@ func dataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -155,7 +156,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set(names.AttrARN, nil)
 		d.Set("ptr_record", nil)
 	}
-	d.Set("association_id", eip.AssociationId)
+	d.Set(names.AttrAssociationID, eip.AssociationId)
 	d.Set("carrier_ip", eip.CarrierIp)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)

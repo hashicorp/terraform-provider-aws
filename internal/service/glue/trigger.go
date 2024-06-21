@@ -46,7 +46,7 @@ func ResourceTrigger() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"actions": {
+			names.AttrActions: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -215,7 +215,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get(names.AttrName).(string)
 	triggerType := d.Get(names.AttrType).(string)
 	input := &glue.CreateTriggerInput{
-		Actions:         expandActions(d.Get("actions").([]interface{})),
+		Actions:         expandActions(d.Get(names.AttrActions).([]interface{})),
 		Name:            aws.String(name),
 		Tags:            getTagsIn(ctx),
 		Type:            aws.String(triggerType),
@@ -330,7 +330,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diags
 	}
 
-	if err := d.Set("actions", flattenActions(trigger.Actions)); err != nil {
+	if err := d.Set(names.AttrActions, flattenActions(trigger.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting actions: %s", err)
 	}
 
@@ -376,9 +376,9 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges("actions", names.AttrDescription, "predicate", names.AttrSchedule, "event_batching_condition") {
+	if d.HasChanges(names.AttrActions, names.AttrDescription, "predicate", names.AttrSchedule, "event_batching_condition") {
 		triggerUpdate := &glue.TriggerUpdate{
-			Actions: expandActions(d.Get("actions").([]interface{})),
+			Actions: expandActions(d.Get(names.AttrActions).([]interface{})),
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {

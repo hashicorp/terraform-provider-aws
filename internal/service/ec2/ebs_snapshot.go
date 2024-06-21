@@ -28,7 +28,8 @@ import (
 
 // @SDKResource("aws_ebs_snapshot", name="EBS Snapshot")
 // @Tags(identifierAttribute="id")
-func ResourceEBSSnapshot() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotCreate,
 		ReadWithoutTimeout:   resourceEBSSnapshotRead,
@@ -176,7 +177,7 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Snapshot %s not found, removing from state", d.Id())

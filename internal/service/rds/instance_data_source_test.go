@@ -32,7 +32,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
-					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
@@ -77,7 +77,7 @@ func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_managedMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
-					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
@@ -104,7 +104,7 @@ func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstanceDataSource_tags(t *testing.T) {
+func TestAccRDSInstanceDataSource_matchTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -120,10 +120,10 @@ func TestAccRDSInstanceDataSource_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_tags(rName),
+				Config: testAccInstanceDataSourceConfig_matchTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
-					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAllocatedStorage, resourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
@@ -213,7 +213,7 @@ data "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceDataSourceConfig_tags(rName string) string {
+func testAccInstanceDataSourceConfig_matchTags(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
 		testAccInstanceConfig_baseVPC(rName),

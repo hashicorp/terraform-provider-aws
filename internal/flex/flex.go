@@ -212,6 +212,10 @@ func ExpandStringValueSet(configured *schema.Set) []string {
 	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
+func ExpandStringValueEmptySet(configured *schema.Set) []string {
+	return ExpandStringValueListEmpty(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
+}
+
 func ExpandStringyValueSet[E ~string](configured *schema.Set) []E {
 	return ExpandStringyValueList[E](configured.List())
 }
@@ -249,6 +253,11 @@ func ExpandInt64Set(configured *schema.Set) []*int64 {
 	return ExpandInt64List(configured.List())
 }
 
+// Takes the result of schema.Set of strings and returns a []int64
+func ExpandInt64ValueSet(configured *schema.Set) []int64 {
+	return ExpandInt64ValueList(configured.List())
+}
+
 func FlattenInt64Set(list []*int64) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
 }
@@ -272,6 +281,14 @@ func FlattenInt32Set(set []*int32) *schema.Set {
 
 func FlattenInt32ValueSet(set []int32) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt32ValueList(set))
+}
+
+// Takes the result of flatmap.Expand for an array of int64
+// and returns a []int64
+func ExpandInt64ValueList(configured []interface{}) []int64 {
+	return tfslices.ApplyToAll(configured, func(v any) int64 {
+		return int64(v.(int))
+	})
 }
 
 // Takes the result of flatmap.Expand for an array of int64
