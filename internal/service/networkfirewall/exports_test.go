@@ -9,11 +9,13 @@ var (
 	ResourceFirewallPolicy             = resourceFirewallPolicy
 	ResourceLoggingConfiguration       = resourceLoggingConfiguration
 	ResourceResourcePolicy             = resourceResourcePolicy
+	ResourceRuleGroup                  = resourceRuleGroup
 	ResourceTLSInspectionConfiguration = newTLSInspectionConfigurationResource
 
 	FindFirewallByARN                   = findFirewallByARN
 	FindFirewallPolicyByARN             = findFirewallPolicyByARN
 	FindLoggingConfigurationByARN       = findLoggingConfigurationByARN
 	FindResourcePolicyByARN             = findResourcePolicyByARN
+	FindRuleGroupByARN                  = findRuleGroupByARN
 	FindTLSInspectionConfigurationByARN = findTLSInspectionConfigurationByARN
 )

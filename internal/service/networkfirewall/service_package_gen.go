@@ -82,7 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Resource Policy",
 		},
 		{
-			Factory:  ResourceRuleGroup,
+			Factory:  resourceRuleGroup,
 			TypeName: "aws_networkfirewall_rule_group",
 			Name:     "Rule Group",
 			Tags: &types.ServicePackageResourceTags{
