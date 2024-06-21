@@ -320,6 +320,16 @@ func testAccApplicationConfig_basic_Content(rName, engineType string) string {
 
 func testAccApplicationConfig_versioned(rName, engineType string, version, versions int) string {
 	return fmt.Sprintf(`
+resource "aws_m2_application" "test" {
+  name        = %[1]q
+  engine_type = %[2]q
+  definition {
+    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]d })
+  }
+
+  depends_on = [aws_s3_object.test]
+}
+
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -331,16 +341,6 @@ resource "aws_s3_object" "test" {
   key    = "v${count.index + 1}/PlanetsDemo-v${count.index + 1}.zip"
   source = "test-fixtures/PlanetsDemo-v1.zip"
 }
-
-resource "aws_m2_application" "test" {
-  name        = %[1]q
-  engine_type = %[2]q
-  definition {
-    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]d })
-  }
-
-  depends_on = [aws_s3_object.test]
-}
 `, rName, engineType, version, versions)
 }
 
@@ -350,6 +350,19 @@ func testAccApplicationConfig_basic_S3Location(rName, engineType string) string 
 
 func testAccApplicationConfig_S3Location_versioned(rName, engineType string, version, versions int) string {
 	return fmt.Sprintf(`
+resource "aws_m2_application" "test" {
+  name        = %[1]q
+  engine_type = %[2]q
+  definition {
+    s3_location = "s3://${aws_s3_object.definition.bucket}/${aws_s3_object.definition.key}"
+  }
+
+  depends_on = [
+    aws_s3_object.application,
+    aws_s3_object.definition,
+  ]
+}
+
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -367,31 +380,11 @@ resource "aws_s3_object" "definition" {
   key     = "definition.json"
   content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]d })
 }
-
-resource "aws_m2_application" "test" {
-  name        = %[1]q
-  engine_type = %[2]q
-  definition {
-    s3_location = "s3://${aws_s3_object.definition.bucket}/${aws_s3_object.definition.key}"
-  }
-
-  depends_on = [aws_s3_object.application]
-}
 `, rName, engineType, version, versions)
 }
 
 func testAccApplicationConfig_full(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = "v1/PlanetsDemo-v1.zip"
-  source = "test-fixtures/PlanetsDemo-v1.zip"
-}
-
 resource "aws_m2_application" "test" {
   name        = %[1]q
   engine_type = "bluage"
@@ -403,6 +396,16 @@ resource "aws_m2_application" "test" {
   }
 
   depends_on = [aws_s3_object.test, aws_iam_role_policy.test]
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "v1/PlanetsDemo-v1.zip"
+  source = "test-fixtures/PlanetsDemo-v1.zip"
 }
 
 resource "aws_kms_key" "test" {
