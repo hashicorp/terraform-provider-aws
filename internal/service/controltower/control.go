@@ -71,16 +71,16 @@ func resourceControl() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -111,7 +111,7 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 		TargetIdentifier:  aws.String(targetIdentifier),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrParameters); ok && v.(*schema.Set).Len() > 0 {
 		input.Parameters = expandControlParameters(v.(*schema.Set).List())
 	}
 
@@ -155,7 +155,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "flattening ControlTower Control (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set("parameters", parameters)
+	d.Set(names.AttrParameters, parameters)
 	d.Set("target_identifier", output.TargetIdentifier)
 
 	return diags
@@ -204,8 +204,8 @@ func expandControlParameters(input []any) []types.EnabledControlParameter {
 	for _, v := range input {
 		val := v.(map[string]any)
 		e := types.EnabledControlParameter{
-			Key:   aws.String(val["key"].(string)),
-			Value: document.NewLazyDocument(val["value"].(*schema.Set).List()),
+			Key:   aws.String(val[names.AttrKey].(string)),
+			Value: document.NewLazyDocument(val[names.AttrValue].(*schema.Set).List()),
 		}
 
 		output = append(output, e)
@@ -221,11 +221,11 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 
 	res := &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -237,7 +237,7 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 
 	for _, v := range input {
 		val := map[string]any{
-			"key": aws.ToString(v.Key),
+			names.AttrKey: aws.ToString(v.Key),
 		}
 
 		var va []any
@@ -248,7 +248,7 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 			return nil, err
 		}
 
-		val["value"] = schema.NewSet(schema.HashString, va)
+		val[names.AttrValue] = schema.NewSet(schema.HashString, va)
 		output = append(output, val)
 	}
 
