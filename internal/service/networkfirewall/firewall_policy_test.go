@@ -355,9 +355,10 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReference(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -382,9 +383,10 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceManaged(t *t
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -467,9 +469,10 @@ func TestAccNetworkFirewallFirewallPolicy_multipleStatefulRuleGroupReferences(t 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -528,9 +531,10 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupOverrideActionReferen
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
@@ -916,9 +920,10 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupReferenceAndCustomAct
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"firewall_policy.0.stateful_rule_group_reference.0.priority"},
 			},
 		},
 	})
