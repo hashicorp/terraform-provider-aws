@@ -55,6 +55,13 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccGCMChannelConfigApiKey_full(apiKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+				),
+			},
+			{
 				Config: testAccGCMChannelConfigServiceJson_fromFile(serviceJsonFile),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
@@ -130,6 +137,18 @@ func testAccCheckGCMChannelDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccGCMChannelConfigApiKey_basic(apiKey string) string {
+	return fmt.Sprintf(`
+resource "aws_pinpoint_app" "test_app" {}
+
+resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
+  application_id = aws_pinpoint_app.test_app.application_id
+  enabled        = "false"
+  api_key        = "%s"
+}
+`, apiKey)
+}
+
+func testAccGCMChannelConfigApiKey_full(apiKey string) string {
 	return fmt.Sprintf(`
 resource "aws_pinpoint_app" "test_app" {}
 
