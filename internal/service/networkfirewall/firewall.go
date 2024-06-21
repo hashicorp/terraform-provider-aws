@@ -87,10 +87,6 @@ func resourceFirewall() *schema.Resource {
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										names.AttrAvailabilityZone: {
-											Type:     schema.TypeString,
-											Computed: true,
-										},
 										"attachment": {
 											Type:     schema.TypeList,
 											Computed: true,
@@ -106,6 +102,10 @@ func resourceFirewall() *schema.Resource {
 													},
 												},
 											},
+										},
+										names.AttrAvailabilityZone: {
+											Type:     schema.TypeString,
+											Computed: true,
 										},
 									},
 								},
@@ -426,11 +426,7 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	input := &networkfirewall.DescribeFirewallInput{
-		FirewallArn: aws.String(arn),
-	}
-
+func findFirewall(ctx context.Context, conn *networkfirewall.Client, input *networkfirewall.DescribeFirewallInput) (*networkfirewall.DescribeFirewallOutput, error) {
 	output, err := conn.DescribeFirewall(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -449,6 +445,14 @@ func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn st
 	}
 
 	return output, nil
+}
+
+func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
+	input := &networkfirewall.DescribeFirewallInput{
+		FirewallArn: aws.String(arn),
+	}
+
+	return findFirewall(ctx, conn, input)
 }
 
 func statusFirewall(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
@@ -583,8 +587,8 @@ func flattenSyncStates(apiObject map[string]awstypes.SyncState) []interface{} {
 
 	for k, v := range apiObject {
 		tfMap := map[string]interface{}{
+			"attachment":               flattenAttachment(v.Attachment),
 			names.AttrAvailabilityZone: k,
-			"attachment":               flattenSyncStateAttachment(v.Attachment),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -593,7 +597,7 @@ func flattenSyncStates(apiObject map[string]awstypes.SyncState) []interface{} {
 	return tfList
 }
 
-func flattenSyncStateAttachment(apiObject *awstypes.Attachment) []interface{} {
+func flattenAttachment(apiObject *awstypes.Attachment) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

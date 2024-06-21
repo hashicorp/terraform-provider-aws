@@ -34,8 +34,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceFirewall,
+			Factory:  dataSourceFirewall,
 			TypeName: "aws_networkfirewall_firewall",
+			Name:     "Firewall",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceFirewallPolicy,
