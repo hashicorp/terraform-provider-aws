@@ -386,13 +386,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.DisassociateSubnets(ctx, input)
 
 			if err == nil {
-				output, err := waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
+				/*output*/ _, err := waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
 				}
 
-				updateToken = aws.ToString(output.UpdateToken)
+				// updateToken = aws.ToString(output.UpdateToken)
 			} else if !errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "inaccessible") {
 				return sdkdiag.AppendErrorf(diags, "disassociating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
 			}
