@@ -5,7 +5,9 @@ package networkfirewall
 
 // Exports for use in tests only.
 var (
+	ResourceLoggingConfiguration       = resourceLoggingConfiguration
 	ResourceTLSInspectionConfiguration = newTLSInspectionConfigurationResource
 
+	FindLoggingConfigurationByARN       = findLoggingConfigurationByARN
 	FindTLSInspectionConfigurationByARN = findTLSInspectionConfigurationByARN
 )

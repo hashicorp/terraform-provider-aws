@@ -67,8 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLoggingConfiguration,
+			Factory:  resourceLoggingConfiguration,
 			TypeName: "aws_networkfirewall_logging_configuration",
+			Name:     "Logging Configuration",
 		},
 		{
 			Factory:  ResourceResourcePolicy,
