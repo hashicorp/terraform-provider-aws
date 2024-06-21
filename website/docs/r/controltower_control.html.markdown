@@ -28,7 +28,7 @@ resource "aws_controltower_control" "example" {
     for x in data.aws_organizations_organizational_units.example.children :
     x.arn if x.name == "Infrastructure"
   ][0]
-  
+
   parameters {
     key   = "AllowedRegions"
     value = ["us-east-1"]
