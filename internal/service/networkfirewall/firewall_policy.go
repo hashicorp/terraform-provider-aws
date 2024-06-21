@@ -335,11 +335,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func findFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
-	input := &networkfirewall.DescribeFirewallPolicyInput{
-		FirewallPolicyArn: aws.String(arn),
-	}
-
+func findFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, input *networkfirewall.DescribeFirewallPolicyInput) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
 	output, err := conn.DescribeFirewallPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -358,6 +354,14 @@ func findFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.Client, 
 	}
 
 	return output, nil
+}
+
+func findFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.Client, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+	input := &networkfirewall.DescribeFirewallPolicyInput{
+		FirewallPolicyArn: aws.String(arn),
+	}
+
+	return findFirewallPolicy(ctx, conn, input)
 }
 
 func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
