@@ -37,8 +37,8 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
 				),
 			},
@@ -46,7 +46,7 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"tags", "tags_all"},
+				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
 			},
 		},
 	})
@@ -68,7 +68,7 @@ func TestAccNetworkMonitorMonitor_updates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccNetworkMonitorMonitor_updates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 				),
 			},
 		},

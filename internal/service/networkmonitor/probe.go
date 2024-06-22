@@ -59,7 +59,7 @@ func (r *resourceNetworkMonitorProbe) Schema(ctx context.Context, request resour
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"arn":        framework.ARNAttributeComputedOnly(),
+			names.AttrARN:        framework.ARNAttributeComputedOnly(),
 			"monitor_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -79,10 +79,10 @@ func (r *resourceNetworkMonitorProbe) Schema(ctx context.Context, request resour
 					"address_family": schema.StringAttribute{
 						Computed: true,
 					},
-					"created_at": schema.Int64Attribute{
+					names.AttrCreatedAt: schema.Int64Attribute{
 						Computed: true,
 					},
-					"destination": schema.StringAttribute{
+					names.AttrDestination: schema.StringAttribute{
 						Required: true,
 						Validators: []validator.String{
 							stringvalidator.LengthBetween(1, 255),
@@ -109,7 +109,7 @@ func (r *resourceNetworkMonitorProbe) Schema(ctx context.Context, request resour
 					"probe_id": schema.StringAttribute{
 						Computed: true,
 					},
-					"protocol": schema.StringAttribute{
+					names.AttrProtocol: schema.StringAttribute{
 						Required: true,
 					},
 					"source_arn": schema.StringAttribute{
@@ -119,14 +119,14 @@ func (r *resourceNetworkMonitorProbe) Schema(ctx context.Context, request resour
 							stringvalidator.RegexMatches(regexache.MustCompile("arn:.*"), "Must match pattern arn:*"),
 						},
 					},
-					"tags": schema.MapAttribute{
+					names.AttrTags: schema.MapAttribute{
 						ElementType: types.StringType,
 						Computed:    true,
 					},
-					"state": schema.StringAttribute{
+					names.AttrState: schema.StringAttribute{
 						Computed: true,
 					},
-					"vpc_id": schema.StringAttribute{
+					names.AttrVPCID: schema.StringAttribute{
 						Computed: true,
 					},
 				},
@@ -363,7 +363,7 @@ func (r *resourceNetworkMonitorProbe) ModifyPlan(ctx context.Context, req resour
 }
 
 func (r *resourceNetworkMonitorProbe) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func statusProbe(ctx context.Context, conn *networkmonitor.Client, id string) retry.StateRefreshFunc {
@@ -456,18 +456,18 @@ func probeParseID(id string) (string, string, error) {
 
 var probeConfigTypes = map[string]attr.Type{
 	"address_family":   types.StringType,
-	"created_at":       types.Int64Type,
-	"destination":      types.StringType,
+	names.AttrCreatedAt:       types.Int64Type,
+	names.AttrDestination:      types.StringType,
 	"destination_port": types.Int64Type,
 	"modified_at":      types.Int64Type,
 	"packet_size":      types.Int64Type,
 	"probe_arn":        types.StringType,
 	"probe_id":         types.StringType,
-	"protocol":         types.StringType,
+	names.AttrProtocol:         types.StringType,
 	"source_arn":       types.StringType,
-	"state":            types.StringType,
-	"tags":             types.MapType{ElemType: types.StringType},
-	"vpc_id":           types.StringType,
+	names.AttrState:            types.StringType,
+	names.AttrTags:             types.MapType{ElemType: types.StringType},
+	names.AttrVPCID:           types.StringType,
 }
 
 type resourceNetworkMonitorProbeModel struct {
@@ -500,18 +500,18 @@ func flattenProbeConfig(ctx context.Context, object networkmonitor.GetProbeOutpu
 
 	t := map[string]attr.Value{
 		"address_family":   flex.StringToFramework(ctx, (*string)(&object.AddressFamily)),
-		"created_at":       flex.Int64ToFramework(ctx, aws.Int64(object.CreatedAt.Unix())),
-		"destination":      flex.StringToFramework(ctx, object.Destination),
+		names.AttrCreatedAt:       flex.Int64ToFramework(ctx, aws.Int64(object.CreatedAt.Unix())),
+		names.AttrDestination:      flex.StringToFramework(ctx, object.Destination),
 		"destination_port": flex.Int64ToFramework(ctx, aws.Int64(int64(*object.DestinationPort))),
 		"modified_at":      flex.Int64ToFramework(ctx, aws.Int64(object.ModifiedAt.Unix())),
 		"packet_size":      flex.Int64ToFramework(ctx, aws.Int64(int64(*object.PacketSize))),
 		"probe_arn":        flex.StringToFramework(ctx, object.ProbeArn),
 		"probe_id":         flex.StringToFramework(ctx, object.ProbeId),
-		"protocol":         flex.StringToFramework(ctx, (*string)(&object.Protocol)),
+		names.AttrProtocol:         flex.StringToFramework(ctx, (*string)(&object.Protocol)),
 		"source_arn":       flex.StringToFramework(ctx, object.SourceArn),
-		"state":            flex.StringToFramework(ctx, (*string)(&object.State)),
-		"tags":             flex.FlattenFrameworkStringValueMap(ctx, object.Tags),
-		"vpc_id":           flex.StringToFramework(ctx, object.VpcId),
+		names.AttrState:            flex.StringToFramework(ctx, (*string)(&object.State)),
+		names.AttrTags:             flex.FlattenFrameworkStringValueMap(ctx, object.Tags),
+		names.AttrVPCID:           flex.StringToFramework(ctx, object.VpcId),
 	}
 	objVal, d := types.ObjectValue(probeConfigTypes, t)
 	diags.Append(d...)

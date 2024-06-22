@@ -54,14 +54,14 @@ func (r *resourceNetworkMonitorMonitor) Metadata(_ context.Context, request reso
 func (r *resourceNetworkMonitorMonitor) Schema(ctx context.Context, request resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"aggregation_period": schema.Int64Attribute{
 				Optional: true,
 				Validators: []validator.Int64{
 					int64validator.OneOf(30, 60),
 				},
 			},
-			"created_at": schema.Int64Attribute{
+			names.AttrCreatedAt: schema.Int64Attribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
@@ -83,7 +83,7 @@ func (r *resourceNetworkMonitorMonitor) Schema(ctx context.Context, request reso
 			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -339,7 +339,7 @@ func (r *resourceNetworkMonitorMonitor) ModifyPlan(ctx context.Context, req reso
 }
 
 func (r *resourceNetworkMonitorMonitor) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceNetworkMonitorMonitorModel struct {
