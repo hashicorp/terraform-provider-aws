@@ -144,7 +144,7 @@ resource "aws_appfabric_app_bundle" "test" {
 resource "aws_appfabric_app_authorization" "test" {
   app_bundle_arn = aws_appfabric_app_bundle.test.arn
   app            = "TERRAFORMCLOUD"
-  auth_type      = "apiKey"
+  auth_type      = "Key"
 
   credential {
     api_key_credential {
