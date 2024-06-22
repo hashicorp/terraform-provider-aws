@@ -454,7 +454,7 @@ resource "aws_sagemaker_workforce" "test" {
     logout_endpoint        = %[2]q
     token_endpoint         = %[2]q
     user_info_endpoint     = %[2]q
-	scope                  = %[2]q
+    scope                  = %[2]q
 
     authentication_request_extra_params = {
       test = %[2]q
