@@ -5,6 +5,8 @@ package grafana
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
@@ -21,7 +23,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceWorkspaceServiceAccount,
+			Name:    "ServiceAccount",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "Id",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -82,6 +92,16 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*m
 	}
 
 	return managedgrafana_sdkv1.New(sess.Copy(&cfg)), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*grafana_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return grafana_sdkv2.NewFromConfig(cfg,
+		grafana_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

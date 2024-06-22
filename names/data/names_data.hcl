@@ -5864,7 +5864,7 @@ service "grafana" {
 
   sdk {
     id             = "grafana"
-    client_version = [1]
+    client_version = [1, 2]
   }
 
   names {

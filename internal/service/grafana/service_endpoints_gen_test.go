@@ -4,18 +4,24 @@ package grafana_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
 	"net"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
+	"github.com/aws/smithy-go/middleware"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/go-cty/cty"
@@ -343,52 +349,88 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
+	t.Run("v1", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
 
-		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, providerRegion, testcase, callService)
-		})
-	}
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, providerRegion, testcase, callServiceV1)
+			})
+		}
+	})
+
+	t.Run("v2", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
+
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, providerRegion, testcase, callServiceV2)
+			})
+		}
+	})
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-	r := endpoints.DefaultResolver()
+	r := grafana_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(managedgrafana_sdkv1.EndpointsID, region)
-	if err != nil {
-		return url.URL{}, err
-	}
-
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
-	}
-
-	return *url, nil
-}
-
-func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := endpoints.DefaultResolver()
-
-	ep, err := r.EndpointFor(managedgrafana_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
-		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
+	ep, err := r.ResolveEndpoint(context.Background(), grafana_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return *url, nil
+	return ep.URI, nil
 }
 
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+func defaultFIPSEndpoint(region string) (url.URL, error) {
+	r := grafana_sdkv2.NewDefaultEndpointResolverV2()
+
+	ep, err := r.ResolveEndpoint(context.Background(), grafana_sdkv2.EndpointParameters{
+		Region:  aws_sdkv2.String(region),
+		UseFIPS: aws_sdkv2.Bool(true),
+	})
+	if err != nil {
+		return url.URL{}, err
+	}
+
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
+	}
+
+	return ep.URI, nil
+}
+
+func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+	t.Helper()
+
+	client := meta.GrafanaClient(ctx)
+
+	var result apiCallParams
+
+	_, err := client.ListWorkspaces(ctx, &grafana_sdkv2.ListWorkspacesInput{},
+		func(opts *grafana_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
+				addRetrieveRegionMiddleware(&result.region),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	return result
+}
+
+func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.GrafanaConn(ctx)
@@ -621,6 +663,89 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	if e, a := testcase.expected.region, callParams.region; e != a {
 		t.Errorf("expected region %q, got %q", e, a)
 	}
+}
+
+func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Finalize.Add(
+			retrieveEndpointURLMiddleware(t, endpoint),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.FinalizeMiddleware {
+	return middleware.FinalizeMiddlewareFunc(
+		"Test: Retrieve Endpoint",
+		func(ctx context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
+			t.Helper()
+
+			request, ok := in.Request.(*smithyhttp.Request)
+			if !ok {
+				t.Fatalf("Expected *github.com/aws/smithy-go/transport/http.Request, got %s", fullTypeName(in.Request))
+			}
+
+			url := request.URL
+			url.RawQuery = ""
+			url.Path = "/"
+
+			*endpoint = url.String()
+
+			return next.HandleFinalize(ctx, in)
+		})
+}
+
+func addRetrieveRegionMiddleware(region *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Serialize.Add(
+			retrieveRegionMiddleware(region),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
+	return middleware.SerializeMiddlewareFunc(
+		"Test: Retrieve Region",
+		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+			*region = awsmiddleware.GetRegion(ctx)
+
+			return next.HandleSerialize(ctx, in)
+		},
+	)
+}
+
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
+
+func addCancelRequestMiddleware() func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Finalize.Add(
+			cancelRequestMiddleware(),
+			middleware.After,
+		)
+	}
+}
+
+// cancelRequestMiddleware creates a Smithy middleware that intercepts the request before sending and cancels it
+func cancelRequestMiddleware() middleware.FinalizeMiddleware {
+	return middleware.FinalizeMiddlewareFunc(
+		"Test: Cancel Requests",
+		func(_ context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
+			return middleware.FinalizeOutput{}, middleware.Metadata{}, errCancelOperation
+		})
+}
+
+func fullTypeName(i interface{}) string {
+	return fullValueTypeName(reflect.ValueOf(i))
+}
+
+func fullValueTypeName(v reflect.Value) string {
+	if v.Kind() == reflect.Ptr {
+		return "*" + fullValueTypeName(reflect.Indirect(v))
+	}
+
+	requestType := v.Type()
+	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
 }
 
 func generateSharedConfigFile(config configFile) string {
