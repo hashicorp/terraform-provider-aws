@@ -92,7 +92,7 @@ func (r *resourceProject) Schema(ctx context.Context, req resource.SchemaRequest
 
 func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
-	
+
 	var plan resourceProjectData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -100,9 +100,9 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	in := &databrew.CreateProjectInput{
-		ProjectName: aws.String(plan.Name.ValueString()),
+		ProjectName:        aws.String(plan.Name.ValueString()),
 		ProjectDatasetName: aws.String(plan.DatasetName.ValueString()),
-		ProjectRecipeName: aws.String(plan.RecipeName.ValueString()),
+		ProjectRecipeName:  aws.String(plan.RecipeName.ValueString()),
 	}
 
 	if !plan.Sample.IsNull() {
@@ -124,14 +124,14 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		)
 		return
 	}
-	
+
 	plan.ARN = flex.StringToFramework(ctx, out.Project.Arn)
 	plan.ID = flex.StringToFramework(ctx, out.Project.ProjectId)
 	plan.DatasetName = flex.StringToFramework(ctx, out.Project.DatasetName)
 	plan.RecipeName = flex.StringToFramework(ctx, out.Project.RecipeName)
 	plan.Sample = flex.Int64ToFramework(ctx, out.Project.Sample)
 	plan.RoleARN = flex.StringToFramework(ctx, out.Project.RoleARN)
-	
+
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitProjectCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
@@ -141,7 +141,7 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		)
 		return
 	}
-	
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -149,7 +149,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	// 5. Set the arguments and attributes
 	// 6. Set the state
 	conn := r.Meta().DataBrewClient(ctx)
-	
+
 	var state resourceProjectData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -169,7 +169,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		)
 		return
 	}
-	
+
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
 	state.ID = flex.StringToFramework(ctx, out.ProjectId)
 	state.Name = flex.StringToFramework(ctx, out.ProjectName)
@@ -177,33 +177,33 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	state.RecipeName = flex.StringToFramework(ctx, out.Project.RecipeName)
 	state.Sample = flex.Int64ToFramework(ctx, out.Project.Sample)
 	state.RoleARN = flex.StringToFramework(ctx, out.Project.RoleARN)
-	
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
-	
+
 	var plan, state resourceProjectData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	if !plan.RoleARN.Equal(state.RoleARN) ||
-	!plan.RecipeName.Equal(state.RecipeName) ||
-	!plan.DatasetName.Equal(state.DatasetName) ||
-	!plan.Sample.Equal(state.Sample) ||
-	!!plan.Name.Equal(state.Name) {
+		!plan.RecipeName.Equal(state.RecipeName) ||
+		!plan.DatasetName.Equal(state.DatasetName) ||
+		!plan.Sample.Equal(state.Sample) ||
+		!!plan.Name.Equal(state.Name) {
 
 		in := &databrew.UpdateProjectInput{
-			ProjectId:   aws.String(plan.ID.ValueString()),
-			ProjectName: aws.String(plan.Name.ValueString()),
-			ProjectRecipeName: aws.String(plan.RecipeName.ValueString()),
+			ProjectId:          aws.String(plan.ID.ValueString()),
+			ProjectName:        aws.String(plan.Name.ValueString()),
+			ProjectRecipeName:  aws.String(plan.RecipeName.ValueString()),
 			ProjectDatasetName: aws.String(plan.DatasetName.ValueString()),
-			ProjectSample: aws.Int64(plan.Sample.ValueInt64()),
-			ProjectRoleARN: aws.String(plan.RoleARN.ValueString()),
+			ProjectSample:      aws.Int64(plan.Sample.ValueInt64()),
+			ProjectRoleARN:     aws.String(plan.RoleARN.ValueString()),
 		}
 
 		if !plan.Sample.IsNull() {
@@ -225,7 +225,7 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 			)
 			return
 		}
-		
+
 		plan.ARN = flex.StringToFramework(ctx, out.Project.Arn)
 		plan.ID = flex.StringToFramework(ctx, out.Project.ProjectId)
 	}
@@ -245,17 +245,17 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 
 func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
-	
+
 	var state resourceProjectData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	in := &databrew.DeleteProjectInput{
 		ProjectId: aws.String(state.ID.ValueString()),
 	}
-	
+
 	_, err := conn.DeleteProject(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -267,7 +267,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 		)
 		return
 	}
-	
+
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitProjectDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
@@ -328,10 +328,10 @@ func waitProjectUpdated(ctx context.Context, conn *databrew.Client, id string, t
 
 func waitProjectDeleted(ctx context.Context, conn *databrew.Client, id string, timeout time.Duration) (*awstypes.Project, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   statusProject(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: statusProject(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -361,7 +361,7 @@ func findProjectByID(ctx context.Context, conn *databrew.Client, id string) (*aw
 	in := &databrew.GetProjectInput{
 		Id: aws.String(id),
 	}
-	
+
 	out, err := conn.GetProject(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -382,12 +382,12 @@ func findProjectByID(ctx context.Context, conn *databrew.Client, id string) (*aw
 }
 
 type resourceProjectData struct {
-	ARN             types.String   `tfsdk:"arn"`
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
-	ID              types.String   `tfsdk:"id"`
-	Name            types.String   `tfsdk:"name"`
-	DatasetName            types.String   `tfsdk:"dataset_name"`
-	RecipeName            types.String   `tfsdk:"recipe_name"`
-	Sample            types.Int64   `tfsdk:"sample"`
-	RoleARN             types.String   `tfsdk:"role_arn"`
+	ARN         types.String   `tfsdk:"arn"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+	ID          types.String   `tfsdk:"id"`
+	Name        types.String   `tfsdk:"name"`
+	DatasetName types.String   `tfsdk:"dataset_name"`
+	RecipeName  types.String   `tfsdk:"recipe_name"`
+	Sample      types.Int64    `tfsdk:"sample"`
+	RoleARN     types.String   `tfsdk:"role_arn"`
 }
