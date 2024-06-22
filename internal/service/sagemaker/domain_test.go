@@ -328,10 +328,10 @@ func testAccDomain_generativeAiSettings(t *testing.T) {
 				Config: testAccDomainConfig_generativeAiSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.0.amazon_bedrock_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.generative_ai_settings.0.amazon_bedrock_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
