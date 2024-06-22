@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_ec2_local_gateway_virtual_interface")
-func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
+func dataSourceLocalGatewayVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayVirtualInterfaceRead,
 
@@ -69,20 +69,20 @@ func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
 
 func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfacesInput{}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.LocalGatewayVirtualInterfaceIds = []*string{aws.String(v.(string))}
+		input.LocalGatewayVirtualInterfaceIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -91,7 +91,7 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 		input.Filters = nil
 	}
 
-	output, err := conn.DescribeLocalGatewayVirtualInterfacesWithContext(ctx, input)
+	output, err := conn.DescribeLocalGatewayVirtualInterfaces(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing EC2 Local Gateway Virtual Interfaces: %s", err)
@@ -107,14 +107,14 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 
 	localGatewayVirtualInterface := output.LocalGatewayVirtualInterfaces[0]
 
-	d.SetId(aws.StringValue(localGatewayVirtualInterface.LocalGatewayVirtualInterfaceId))
+	d.SetId(aws.ToString(localGatewayVirtualInterface.LocalGatewayVirtualInterfaceId))
 	d.Set("local_address", localGatewayVirtualInterface.LocalAddress)
 	d.Set("local_bgp_asn", localGatewayVirtualInterface.LocalBgpAsn)
 	d.Set("local_gateway_id", localGatewayVirtualInterface.LocalGatewayId)
 	d.Set("peer_address", localGatewayVirtualInterface.PeerAddress)
 	d.Set("peer_bgp_asn", localGatewayVirtualInterface.PeerBgpAsn)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, localGatewayVirtualInterface.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, localGatewayVirtualInterface.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
