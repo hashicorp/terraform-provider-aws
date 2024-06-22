@@ -150,11 +150,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceCoIPPool,
+			Factory:  dataSourceCoIPPool,
 			TypeName: "aws_ec2_coip_pool",
 		},
 		{
-			Factory:  DataSourceCoIPPools,
+			Factory:  dataSourceCoIPPools,
 			TypeName: "aws_ec2_coip_pools",
 		},
 		{
@@ -184,31 +184,31 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Instance Types",
 		},
 		{
-			Factory:  DataSourceLocalGateway,
+			Factory:  dataSourceLocalGateway,
 			TypeName: "aws_ec2_local_gateway",
 		},
 		{
-			Factory:  DataSourceLocalGatewayRouteTable,
+			Factory:  dataSourceLocalGatewayRouteTable,
 			TypeName: "aws_ec2_local_gateway_route_table",
 		},
 		{
-			Factory:  DataSourceLocalGatewayRouteTables,
+			Factory:  dataSourceLocalGatewayRouteTables,
 			TypeName: "aws_ec2_local_gateway_route_tables",
 		},
 		{
-			Factory:  DataSourceLocalGatewayVirtualInterface,
+			Factory:  dataSourceLocalGatewayVirtualInterface,
 			TypeName: "aws_ec2_local_gateway_virtual_interface",
 		},
 		{
-			Factory:  DataSourceLocalGatewayVirtualInterfaceGroup,
+			Factory:  dataSourceLocalGatewayVirtualInterfaceGroup,
 			TypeName: "aws_ec2_local_gateway_virtual_interface_group",
 		},
 		{
-			Factory:  DataSourceLocalGatewayVirtualInterfaceGroups,
+			Factory:  dataSourceLocalGatewayVirtualInterfaceGroups,
 			TypeName: "aws_ec2_local_gateway_virtual_interface_groups",
 		},
 		{
-			Factory:  DataSourceLocalGateways,
+			Factory:  dataSourceLocalGateways,
 			TypeName: "aws_ec2_local_gateways",
 		},
 		{
@@ -694,11 +694,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Instance State",
 		},
 		{
-			Factory:  ResourceLocalGatewayRoute,
+			Factory:  resourceLocalGatewayRoute,
 			TypeName: "aws_ec2_local_gateway_route",
 		},
 		{
-			Factory:  ResourceLocalGatewayRouteTableVPCAssociation,
+			Factory:  resourceLocalGatewayRouteTableVPCAssociation,
 			TypeName: "aws_ec2_local_gateway_route_table_vpc_association",
 			Name:     "Local Gateway Route Table VPC Association",
 			Tags: &types.ServicePackageResourceTags{
