@@ -1753,6 +1753,50 @@ func waitIPAMScopeDeleted(ctx context.Context, conn *ec2.Client, id string, time
 }
 
 const (
+	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Associated
+	LocalGatewayRouteTableVPCAssociationAssociatedTimeout = 5 * time.Minute
+
+	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Disassociated
+	LocalGatewayRouteTableVPCAssociationDisassociatedTimeout = 5 * time.Minute
+)
+
+// waitLocalGatewayRouteTableVPCAssociationAssociated waits for a LocalGatewayRouteTableVpcAssociation to return Associated
+func waitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, conn *ec2.Client, localGatewayRouteTableVpcAssociationID string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
+		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeAssociated),
+		Refresh: statusLocalGatewayRouteTableVPCAssociationState(ctx, conn, localGatewayRouteTableVpcAssociationID),
+		Timeout: LocalGatewayRouteTableVPCAssociationAssociatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVpcAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitLocalGatewayRouteTableVPCAssociationDisassociated waits for a LocalGatewayRouteTableVpcAssociation to return Disassociated
+func waitLocalGatewayRouteTableVPCAssociationDisassociated(ctx context.Context, conn *ec2.Client, localGatewayRouteTableVpcAssociationID string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociating),
+		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociated),
+		Refresh: statusLocalGatewayRouteTableVPCAssociationState(ctx, conn, localGatewayRouteTableVpcAssociationID),
+		Timeout: LocalGatewayRouteTableVPCAssociationAssociatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.LocalGatewayRouteTableVpcAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	TransitGatewayIncorrectStateTimeout = 5 * time.Minute
 )
 
