@@ -31,12 +31,12 @@ func newWorkspaceServiceAccountResource(_ context.Context) (resource.ResourceWit
 }
 
 const (
-	ResNameServiceAccount = "ServiceAccount"
+	ResNameServiceAccount = "WorkspaceServiceAccount"
 )
 
 type resourceWorkspaceServiceAccount struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[workspaceServiceAccountResourceModel]
+	framework.WithNoOpUpdate[resourceWorkspaceServiceAccountData]
 	framework.WithImportByID
 }
 
@@ -71,7 +71,7 @@ func (r *resourceWorkspaceServiceAccount) Schema(ctx context.Context, req resour
 }
 
 func (r *resourceWorkspaceServiceAccount) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data workspaceServiceAccountResourceModel
+	var data resourceWorkspaceServiceAccountData
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -102,7 +102,7 @@ func (r *resourceWorkspaceServiceAccount) Create(ctx context.Context, req resour
 }
 
 func (r *resourceWorkspaceServiceAccount) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data workspaceServiceAccountResourceModel
+	var data resourceWorkspaceServiceAccountData
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -134,7 +134,7 @@ func (r *resourceWorkspaceServiceAccount) Read(ctx context.Context, req resource
 }
 
 func (r *resourceWorkspaceServiceAccount) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data workspaceServiceAccountResourceModel
+	var data resourceWorkspaceServiceAccountData
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +185,7 @@ func findWorkspaceServiceAccountByID(ctx context.Context, conn *grafana.Client, 
 	return nil, errs.NewErrorWithMessage(fmt.Errorf("service account %s on workspaceId %s not found", id, workspaceID))
 }
 
-type workspaceServiceAccountResourceModel struct {
+type resourceWorkspaceServiceAccountData struct {
 	ID                 types.String `tfsdk:"id"`
 	ServiceAccountName types.String `tfsdk:"service_account_name"`
 	ServiceAccountRole types.String `tfsdk:"service_account_role"`
