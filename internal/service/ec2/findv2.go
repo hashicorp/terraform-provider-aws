@@ -137,6 +137,40 @@ func findCapacityReservationByID(ctx context.Context, conn *ec2.Client, id strin
 	return output, nil
 }
 
+func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) ([]awstypes.CoipPool, error) {
+	var output []awstypes.CoipPool
+
+	pages := ec2.NewDescribeCoipPoolsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidPoolIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.CoipPools...)
+	}
+
+	return output, nil
+}
+
+func findCOIPPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) (*awstypes.CoipPool, error) {
+	output, err := findCOIPPools(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
 func findFleet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFleetsInput) (*awstypes.FleetData, error) {
 	output, err := findFleets(ctx, conn, input)
 
@@ -616,6 +650,87 @@ func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client
 	}
 
 	return output, nil
+}
+
+func findLocalGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]awstypes.LocalGatewayRouteTable, error) {
+	var output []awstypes.LocalGatewayRouteTable
+
+	pages := ec2.NewDescribeLocalGatewayRouteTablesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTables...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) (*awstypes.LocalGatewayRouteTable, error) {
+	output, err := findLocalGatewayRouteTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) ([]awstypes.LocalGatewayVirtualInterfaceGroup, error) {
+	var output []awstypes.LocalGatewayVirtualInterfaceGroup
+
+	pages := ec2.NewDescribeLocalGatewayVirtualInterfaceGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayVirtualInterfaceGroups...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayVirtualInterfaceGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) (*awstypes.LocalGatewayVirtualInterfaceGroup, error) {
+	output, err := findLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) ([]awstypes.LocalGateway, error) {
+	var output []awstypes.LocalGateway
+
+	pages := ec2.NewDescribeLocalGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGateways...)
+	}
+
+	return output, nil
+}
+
+func findLocalGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) (*awstypes.LocalGateway, error) {
+	output, err := findLocalGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findPlacementGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribePlacementGroupsInput) (*awstypes.PlacementGroup, error) {
