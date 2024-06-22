@@ -42,10 +42,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `arn` - The ARN of the attachment.
-- `monitor_name` - The name of the monitor.
-- `aggregation_period` - The time, in seconds, that metrics are aggregated and sent to Amazon CloudWatch.
-- `state` - The state of the monitor.
+- `arn` - The ARN of the monitor.
 - `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
