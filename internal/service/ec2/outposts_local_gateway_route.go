@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -28,7 +29,7 @@ const (
 )
 
 // @SDKResource("aws_ec2_local_gateway_route")
-func ResourceLocalGatewayRoute() *schema.Resource {
+func resourceLocalGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteCreate,
 		ReadWithoutTimeout:   resourceLocalGatewayRouteRead,
@@ -60,7 +61,7 @@ func ResourceLocalGatewayRoute() *schema.Resource {
 
 func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	destination := d.Get("destination_cidr_block").(string)
 	localGatewayRouteTableID := d.Get("local_gateway_route_table_id").(string)
@@ -71,7 +72,7 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 		LocalGatewayVirtualInterfaceGroupId: aws.String(d.Get("local_gateway_virtual_interface_group_id").(string)),
 	}
 
-	_, err := conn.CreateLocalGatewayRouteWithContext(ctx, input)
+	_, err := conn.CreateLocalGatewayRoute(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Local Gateway Route: %s", err)
@@ -84,14 +85,14 @@ func resourceLocalGatewayRouteCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	var localGatewayRoute *ec2.LocalGatewayRoute
+	var localGatewayRoute *awstypes.LocalGatewayRoute
 	err = retry.RetryContext(ctx, localGatewayRouteEventualConsistencyTimeout, func() *retry.RetryError {
 		var err error
 		localGatewayRoute, err = GetLocalGatewayRoute(ctx, conn, localGatewayRouteTableID, destination)
@@ -133,8 +134,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 
-	state := aws.StringValue(localGatewayRoute.State)
-	if state == ec2.LocalGatewayRouteStateDeleted || state == ec2.LocalGatewayRouteStateDeleting {
+	if localGatewayRoute.State == awstypes.LocalGatewayRouteStateDeleted || localGatewayRoute.State == awstypes.LocalGatewayRouteStateDeleting {
 		log.Printf("[WARN] EC2 Local Gateway Route (%s) deleted, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -149,7 +149,7 @@ func resourceLocalGatewayRouteRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	localGatewayRouteTableID, destination, err := DecodeLocalGatewayRouteID(d.Id())
 	if err != nil {
@@ -162,7 +162,7 @@ func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route (%s): %s", d.Id(), input)
-	_, err = conn.DeleteLocalGatewayRouteWithContext(ctx, input)
+	_, err = conn.DeleteLocalGatewayRoute(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, "InvalidRoute.NotFound") || tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
 		return diags
@@ -185,18 +185,18 @@ func DecodeLocalGatewayRouteID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func GetLocalGatewayRoute(ctx context.Context, conn *ec2.EC2, localGatewayRouteTableID, destination string) (*ec2.LocalGatewayRoute, error) {
+func GetLocalGatewayRoute(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destination string) (*awstypes.LocalGatewayRoute, error) {
 	input := &ec2.SearchLocalGatewayRoutesInput{
-		Filters: []*ec2.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String(names.AttrType),
-				Values: aws.StringSlice([]string{"static"}),
+				Values: []string{"static"},
 			},
 		},
 		LocalGatewayRouteTableId: aws.String(localGatewayRouteTableID),
 	}
 
-	output, err := conn.SearchLocalGatewayRoutesWithContext(ctx, input)
+	output, err := conn.SearchLocalGatewayRoutes(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -207,12 +207,8 @@ func GetLocalGatewayRoute(ctx context.Context, conn *ec2.EC2, localGatewayRouteT
 	}
 
 	for _, route := range output.Routes {
-		if route == nil {
-			continue
-		}
-
-		if aws.StringValue(route.DestinationCidrBlock) == destination {
-			return route, nil
+		if aws.ToString(route.DestinationCidrBlock) == destination {
+			return &route, nil
 		}
 	}
 
