@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
@@ -21,15 +21,14 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.#", resourceName, "cookies_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.0.cookie_behavior", resourceName, "cookies_config.0.cookie_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.0.cookies.#", resourceName, "cookies_config.0.cookies.#"),
@@ -40,7 +39,7 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "query_strings_config.0.query_string_behavior", resourceName, "query_strings_config.0.query_string_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "query_strings_config.0.query_strings.#", resourceName, "query_strings_config.0.query_strings.#"),
 
-					resource.TestCheckResourceAttrPair(dataSource2Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.#", resourceName, "cookies_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.0.cookie_behavior", resourceName, "cookies_config.0.cookie_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.0.cookies.#", resourceName, "cookies_config.0.cookies.#"),

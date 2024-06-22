@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccInstanceStorageConfig_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,12 +38,12 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeChatTranscripts),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAssociationID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeChatTranscripts),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
@@ -67,7 +68,7 @@ func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,10 +76,10 @@ func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T
 				Config: testAccInstanceStorageConfigConfig_kinesisFirehoseConfig_firehoseARN(rName, rName2, rName3, rName4, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", "aws_kinesis_firehose_delivery_stream.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeContactTraceRecords),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", "aws_kinesis_firehose_delivery_stream.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisFirehose),
 				),
 			},
@@ -91,10 +92,10 @@ func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T
 				Config: testAccInstanceStorageConfigConfig_kinesisFirehoseConfig_firehoseARN(rName, rName2, rName3, rName4, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", "aws_kinesis_firehose_delivery_stream.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeContactTraceRecords),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", "aws_kinesis_firehose_delivery_stream.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisFirehose),
 				),
 			},
@@ -112,7 +113,7 @@ func testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,10 +121,10 @@ func testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_kinesisStreamConfig_streamARN(rName, rName2, rName3, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_stream_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_stream_config.0.stream_arn", "aws_kinesis_stream.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeContactTraceRecords),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_stream_config.0.stream_arn", "aws_kinesis_stream.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisStream),
 				),
 			},
@@ -136,10 +137,10 @@ func testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_kinesisStreamConfig_streamARN(rName, rName2, rName3, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_stream_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_stream_config.0.stream_arn", "aws_kinesis_stream.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeContactTraceRecords),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_stream_config.0.stream_arn", "aws_kinesis_stream.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisStream),
 				),
 			},
@@ -160,7 +161,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -168,12 +169,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) 
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, originalPrefix, retention),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", fmt.Sprintf("%s-connect-%s-contact-", originalPrefix, rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", strconv.Itoa(retention)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
@@ -188,12 +189,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) 
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, updatedPrefix, retention),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", fmt.Sprintf("%s-connect-%s-contact-", updatedPrefix, rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", strconv.Itoa(retention)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
@@ -216,7 +217,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -224,12 +225,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, prefix, originalRetention),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", fmt.Sprintf("%s-connect-%s-contact-", prefix, rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", strconv.Itoa(originalRetention)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
@@ -244,12 +245,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, prefix, updatedRetention),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", fmt.Sprintf("%s-connect-%s-contact-", prefix, rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", strconv.Itoa(updatedRetention)),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
@@ -267,7 +268,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig(t *t
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -275,12 +276,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig(t *t
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_encryptionConfig(rName, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
 				),
 			},
@@ -293,12 +294,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig(t *t
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_encryptionConfig(rName, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, connect.InstanceStorageResourceTypeMediaStreams),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", "aws_kms_key.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeKinesisVideoStream),
 				),
 			},
@@ -316,7 +317,7 @@ func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -324,9 +325,9 @@ func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
@@ -340,9 +341,9 @@ func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test2", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test2", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
@@ -363,7 +364,7 @@ func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -371,9 +372,9 @@ func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketPrefix(rName, rName2, originalBucketPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", originalBucketPrefix),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
@@ -387,9 +388,9 @@ func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketPrefix(rName, rName2, updatedBucketPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", updatedBucketPrefix),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
@@ -407,7 +408,7 @@ func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -415,13 +416,13 @@ func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_S3Config_encryptionConfig(rName, rName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.encryption_config.0.key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.encryption_config.0.key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
 			},
@@ -434,13 +435,13 @@ func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
 				Config: testAccInstanceStorageConfigConfig_S3Config_encryptionConfig(rName, rName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.bucket_prefix", "tf-test-Chat-Transcripts"),
-					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.0.encryption_config.0.encryption_type", connect.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.encryption_config.0.key_id", "aws_kms_key.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.encryption_config.0.key_id", "aws_kms_key.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.storage_type", connect.StorageTypeS3),
 				),
 			},
@@ -457,7 +458,7 @@ func testAccInstanceStorageConfig_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{

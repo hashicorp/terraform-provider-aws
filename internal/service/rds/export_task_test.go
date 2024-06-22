@@ -34,7 +34,7 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,11 +43,11 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,13 +80,13 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportTaskExists(ctx, resourceName, &exportTask),
 					resource.TestCheckResourceAttr(resourceName, "export_task_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "id", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_db_snapshot.test", "db_snapshot_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "export_only.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "export_only.0", "database"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3BucketName, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "export_only.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export_only.0", names.AttrDatabase),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 				),
 			},

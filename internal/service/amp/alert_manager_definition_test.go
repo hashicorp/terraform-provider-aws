@@ -26,7 +26,7 @@ func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccAMPAlertManagerDefinition_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccContactFlow_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func testAccContactFlow_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,14 +37,14 @@ func testAccContactFlow_basic(t *testing.T) {
 				Config: testAccContactFlowConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrSet(resourceName, "content"),
-					resource.TestCheckResourceAttr(resourceName, "type", connect.ContactFlowTypeContactFlow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, connect.ContactFlowTypeContactFlow),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 				),
 			},
 			{
@@ -55,14 +56,14 @@ func testAccContactFlow_basic(t *testing.T) {
 				Config: testAccContactFlowConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttrSet(resourceName, "content"),
-					resource.TestCheckResourceAttr(resourceName, "type", connect.ContactFlowTypeContactFlow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, connect.ContactFlowTypeContactFlow),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 				),
 			},
 		},
@@ -78,7 +79,7 @@ func testAccContactFlow_filename(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,13 +87,13 @@ func testAccContactFlow_filename(t *testing.T) {
 				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttr(resourceName, "type", connect.ContactFlowTypeContactFlow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, connect.ContactFlowTypeContactFlow),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 				),
 			},
 			{
@@ -108,13 +109,13 @@ func testAccContactFlow_filename(t *testing.T) {
 				Config: testAccContactFlowConfig_filename(rName, rName2, "Updated", "test-fixtures/connect_contact_flow_updated.json"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "contact_flow_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "type", connect.ContactFlowTypeContactFlow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, connect.ContactFlowTypeContactFlow),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 				),
 			},
 		},
@@ -131,7 +132,7 @@ func testAccContactFlow_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactFlowDestroy(ctx),
 		Steps: []resource.TestStep{

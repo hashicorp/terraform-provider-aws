@@ -124,15 +124,15 @@ The following arguments are optional:
 
 ### Encoder Settings
 
-* `audio_descriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 * `output_groups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecode_config` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `video_descriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
+* `audio_descriptions` - (Optional) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
+* `avail_blanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 * `caption_descriptions` - (Optional) Caption Descriptions. See [Caption Descriptions](#caption-descriptions) for more details.
 * `global_configuration` - (Optional) Configuration settings that apply to the event as a whole. See [Global Configuration](#global-configuration) for more details.
 * `motion_graphics_configuration` - (Optional) Settings for motion graphics. See [Motion Graphics Configuration](#motion-graphics-configuration) for more details.
 * `nielsen_configuration` - (Optional) Nielsen configuration settings. See [Nielsen Configuration](#nielsen-configuration) for more details.
-* `avail_blanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 
 ### Input Attachments
 
@@ -143,8 +143,8 @@ The following arguments are optional:
 
 ### Input Settings
 
-* `audio_selectors` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
-* `caption_selectors` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
+* `audio_selector` - (Optional) Used to select the audio stream to decode for inputs that have multiple. See [Audio Selectors](#audio-selectors) for more details.
+* `caption_selector` - (Optional) Used to select the caption input to use for inputs that have multiple available. See [Caption Selectors](#caption-selectors) for more details.
 * `deblock_filter` - (Optional) Enable or disable the deblock filter when filtering.
 * `denoise_filter` - (Optional) Enable or disable the denoise filter when filtering.
 * `filter_strength` - (Optional) Adjusts the magnitude of filtering from 1 (minimal) to 5 (strongest).

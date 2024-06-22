@@ -28,7 +28,7 @@ func TestAccSESV2EmailIdentityPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccSESV2EmailIdentityPolicy_basic(t *testing.T) {
 					testAccCheckEmailIdentityPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", emailIdentity),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
@@ -58,7 +58,7 @@ func TestAccSESV2EmailIdentityPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{

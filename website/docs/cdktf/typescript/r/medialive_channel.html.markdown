@@ -145,15 +145,15 @@ The following arguments are optional:
 
 ### Encoder Settings
 
-* `audioDescriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 * `outputGroups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecodeConfig` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `videoDescriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
+* `audioDescriptions` - (Optional) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
+* `availBlanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 * `captionDescriptions` - (Optional) Caption Descriptions. See [Caption Descriptions](#caption-descriptions) for more details.
 * `globalConfiguration` - (Optional) Configuration settings that apply to the event as a whole. See [Global Configuration](#global-configuration) for more details.
 * `motionGraphicsConfiguration` - (Optional) Settings for motion graphics. See [Motion Graphics Configuration](#motion-graphics-configuration) for more details.
 * `nielsenConfiguration` - (Optional) Nielsen configuration settings. See [Nielsen Configuration](#nielsen-configuration) for more details.
-* `availBlanking` - (Optional) Settings for ad avail blanking. See [Avail Blanking](#avail-blanking) for more details.
 
 ### Input Attachments
 
@@ -826,4 +826,4 @@ Using `terraform import`, import MediaLive Channel using the `channelId`. For ex
 % terraform import aws_medialive_channel.example 1234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a4f8ed36d9a40b67d83751eb52d40e4ee7062eb8cc84b486580e02a165d373f2 -->
+<!-- cache-key: cdktf-0.20.1 input-74341f1b3001e468e6237cff5071e851800520aa41a122d507a8a2dfa13afb15 -->

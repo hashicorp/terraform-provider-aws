@@ -150,6 +150,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the new scraper.
+* `role_arn` - The Amazon Resource Name (ARN) of the IAM role that provides permissions for the scraper to discover, collect, and produce metrics
 * `status` - Status of the scraper. One of ACTIVE, CREATING, DELETING, CREATION_FAILED, DELETION_FAILED
 
 ## Timeouts
@@ -186,4 +187,4 @@ For example:
 % terraform import aws_prometheus_scraper.example s-0123abc-0000-0123-a000-000000000000
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-23e61d8904e4b052740b6bfeb6844fd895e6c28ae89ebd0c2e5fce49746a5f97 -->
+<!-- cache-key: cdktf-0.20.1 input-5ba79328054772ce8673fb1f5c2bb61b9edab57d3b5063875b389e42fb5fecb4 -->

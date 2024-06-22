@@ -32,14 +32,18 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	input := &{{ .AWSService }}.{{ .TagOp }}Input{
 		{{- if not ( .TagTypeIDElem ) }}
 		{{- if .TagInIDNeedSlice }}
-		{{ .TagInIDElem }}:   aws.StringSlice(tfslices.Of(identifier)),
+		{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
 		{{- else if .TagInIDNeedValueSlice }}
-		{{ .TagInIDElem }}: tfslices.Of(identifier),
+		{{ .TagInIDElem }}: []string{identifier},
 		{{- else }}
 		{{ .TagInIDElem }}:   aws.String(identifier),
 		{{- end }}
 		{{- if .TagResTypeElem }}
+		{{- if .TagResTypeElemType }}
+		{{ .TagResTypeElem }}:      awstypes.{{ .TagResTypeElemType }}(resourceType),
+		{{- else }}
 		{{ .TagResTypeElem }}:      aws.String(resourceType),
+		{{- end }}
 		{{- end }}
 		{{- end }}
 	}
@@ -56,7 +60,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
-		input.{{ .UntagInTagsElem }} = aws.StringSlice(removedTags.Keys())
+		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
 
@@ -79,14 +83,18 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input := &{{ .TagPackage }}.{{ .UntagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
-			{{ .TagInIDElem }}:   aws.StringSlice(tfslices.Of(identifier)),
+			{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
 			{{- else if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: tfslices.Of(identifier),
+			{{ .TagInIDElem }}: []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}:   aws.String(identifier),
 			{{- end }}
 			{{- if .TagResTypeElem }}
+		    {{- if .TagResTypeElemType }}
+			{{ .TagResTypeElem }}: awstypes.{{ .TagResTypeElemType }}(resourceType),
+		    {{- else }}
 			{{ .TagResTypeElem }}: aws.String(resourceType),
+			{{- end }}
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
@@ -121,14 +129,18 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input := &{{ .TagPackage }}.{{ .TagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
-			{{ .TagInIDElem }}: aws.StringSlice(tfslices.Of(identifier)),
+			{{ .TagInIDElem }}: aws.StringSlice([]string{identifier}),
 			{{- else if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: tfslices.Of(identifier),
+			{{ .TagInIDElem }}: []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}: aws.String(identifier),
 			{{- end }}
 			{{- if .TagResTypeElem }}
+		    {{- if .TagResTypeElemType }}
+			{{ .TagResTypeElem }}:    awstypes.{{ .TagResTypeElemType }}(resourceType),
+		    {{- else }}
 			{{ .TagResTypeElem }}:    aws.String(resourceType),
+			{{- end }}
 			{{- end }}
 			{{- end }}
 			{{- if .TagInCustomVal }}

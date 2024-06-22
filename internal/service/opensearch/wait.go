@@ -44,6 +44,9 @@ func WaitForDomainCreation(ctx context.Context, conn *opensearchservice.OpenSear
 	err := tfresource.Retry(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)
+		if tfresource.NotFound(err) {
+			return retry.RetryableError(err)
+		}
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}

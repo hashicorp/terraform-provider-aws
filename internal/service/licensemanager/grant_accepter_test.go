@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccGrantAccepter_basic(t *testing.T) {
@@ -36,7 +36,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             acctest.CheckWithNamedProviders(testAccCheckGrantAccepterDestroyWithProvider(ctx), providers),
 		Steps: []resource.TestStep{
@@ -44,15 +44,15 @@ func testAccGrantAccepter_basic(t *testing.T) {
 				Config: testAccGrantAccepterConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantAccepterExists(ctx, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
-					resource.TestCheckResourceAttrPair(resourceName, "grant_arn", resourceGrantName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "grant_arn", resourceGrantName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "allowed_operations.0"),
 					resource.TestCheckResourceAttrPair(resourceName, "home_region", resourceGrantName, "home_region"),
 					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseARN),
-					resource.TestCheckResourceAttrPair(resourceName, "name", resourceGrantName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, resourceGrantName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_arn", resourceGrantName, "parent_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", resourceGrantName, "principal"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, resourceGrantName, names.AttrPrincipal),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
 			{
@@ -79,7 +79,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             acctest.CheckWithNamedProviders(testAccCheckGrantAccepterDestroyWithProvider(ctx), providers),
 		Steps: []resource.TestStep{

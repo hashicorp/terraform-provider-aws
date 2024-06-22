@@ -33,7 +33,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,8 +41,8 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_basic(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", acctest.CtFalse),
 				),
 			},
 		},
@@ -60,7 +60,7 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,8 +95,8 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_basic(true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", acctest.CtTrue),
 				),
 			},
 		},
@@ -114,7 +114,7 @@ func testAccOrganizationConfiguration_lambda(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,10 +122,10 @@ func testAccOrganizationConfiguration_lambda(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_lambda(false, false, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", acctest.CtFalse),
 				),
 			},
 		},
@@ -143,7 +143,7 @@ func testAccOrganizationConfiguration_lambdaCode(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,10 +151,10 @@ func testAccOrganizationConfiguration_lambdaCode(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_lambda(false, false, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ec2", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.ecr", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable.0.lambda_code", acctest.CtTrue),
 				),
 			},
 		},

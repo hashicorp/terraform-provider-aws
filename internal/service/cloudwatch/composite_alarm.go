@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,7 +89,7 @@ func resourceCompositeAlarm() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 10240),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -193,7 +192,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
 	d.Set("alarm_rule", alarm.AlarmRule)
-	d.Set("arn", alarm.AlarmArn)
+	d.Set(names.AttrARN, alarm.AlarmArn)
 	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
 	d.Set("ok_actions", alarm.OKActions)
 
@@ -204,7 +203,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := expandPutCompositeAlarmInput(ctx, d)
 
 		_, err := conn.PutCompositeAlarm(ctx, input)
@@ -223,7 +222,7 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
 	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
-		AlarmNames: tfslices.Of(d.Id()),
+		AlarmNames: []string{d.Id()},
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -239,8 +238,8 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 
 func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.CompositeAlarm, error) {
 	input := &cloudwatch.DescribeAlarmsInput{
-		AlarmNames: tfslices.Of(name),
-		AlarmTypes: tfslices.Of(types.AlarmTypeCompositeAlarm),
+		AlarmNames: []string{name},
+		AlarmTypes: []types.AlarmType{types.AlarmTypeCompositeAlarm},
 	}
 
 	output, err := conn.DescribeAlarms(ctx, input)

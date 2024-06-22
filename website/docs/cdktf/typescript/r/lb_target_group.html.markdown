@@ -252,6 +252,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Target Group (matches `id`).
 * `id` - ARN of the Target Group (matches `arn`).
 * `name` - Name of the Target Group.
+* `loadBalancerArns` - ARNs of the Load Balancers associated with the Target Group.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -286,4 +287,4 @@ Using `terraform import`, import Target Groups using their ARN. For example:
 % terraform import aws_lb_target_group.app_front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:targetgroup/app-front-end/20cfe21448b66314
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-42e4c332c3ef80a10fba8e50545421d5c3f2c2be5e835cdc3641af11eff5d987 -->
+<!-- cache-key: cdktf-0.20.1 input-72215abde32702c7031f79b2f09a997d191fe69f8d2dccebe38eab7601067ae9 -->

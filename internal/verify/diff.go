@@ -6,7 +6,6 @@ package verify
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -60,8 +59,8 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 		}
 
 		if len(allTags) == 0 {
-			if err := diff.SetNewComputed("tags_all"); err != nil {
-				return fmt.Errorf("setting tags_all to computed: %w", err)
+			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+				return fmt.Errorf("setting new tags_all diff: %w", err)
 			}
 		}
 	} else if !diff.HasChange("tags") {
@@ -102,12 +101,6 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 	}
 
 	return nil
-}
-
-// SuppressEquivalentStringCaseInsensitive provides custom difference suppression
-// for strings that are equal under case-insensitivity.
-func SuppressEquivalentStringCaseInsensitive(k, old, new string, d *schema.ResourceData) bool {
-	return strings.EqualFold(old, new)
 }
 
 // SuppressEquivalentRoundedTime returns a difference suppression function that compares

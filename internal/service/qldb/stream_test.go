@@ -28,7 +28,7 @@ func TestAccQLDBStream_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,16 +36,16 @@ func TestAccQLDBStream_basic(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexache.MustCompile(`stream/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "qldb", regexache.MustCompile(`stream/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "exclusive_end_time", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "inclusive_start_time"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.0.aggregation_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.0.aggregation_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_configuration.0.stream_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "ledger_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "stream_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -60,7 +60,7 @@ func TestAccQLDBStream_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,33 +84,33 @@ func TestAccQLDBStream_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamConfig_tags1(rName, "key1", "value1"),
+				Config: testAccStreamConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccStreamConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStreamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccStreamConfig_tags1(rName, "key2", "value2"),
+				Config: testAccStreamConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -125,7 +125,7 @@ func TestAccQLDBStream_withEndTime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,8 +135,8 @@ func TestAccQLDBStream_withEndTime(t *testing.T) {
 					testAccCheckStreamExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "exclusive_end_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "inclusive_start_time"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.0.aggregation_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.0.aggregation_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_configuration.0.stream_arn"),
 				),
 			},

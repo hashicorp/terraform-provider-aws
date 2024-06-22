@@ -27,7 +27,7 @@ func TestAccControlTowerControlsDataSource_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

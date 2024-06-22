@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,6 +65,7 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 		endpoints        map[string]string
 		expectedService  string
 		expectedEndpoint string
+		expectedDiags    diag.Diagnostics
 	}{
 		{
 			endpoints: map[string]string{
@@ -86,6 +88,11 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 			},
 			expectedService:  names.Transcribe,
 			expectedEndpoint: "https://transcribe.fake.test",
+			expectedDiags: diag.Diagnostics{ConflictingEndpointsWarningDiag(
+				cty.GetAttrPath("endpoints").IndexInt(0),
+				"transcribe",
+				"transcribeservice",
+			)},
 		},
 	}
 
@@ -101,10 +108,8 @@ func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 			endpoints[k] = v
 		}
 
-		var expectedDiags diag.Diagnostics
-
 		results, diags := expandEndpoints(ctx, []interface{}{endpoints})
-		if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
+		if diff := cmp.Diff(diags, testcase.expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 			t.Errorf("unexpected diagnostics difference: %s", diff)
 		}
 

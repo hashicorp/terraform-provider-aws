@@ -47,5 +47,5 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the {{ .HumanDataSourceName }}. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 {{- if .IncludeTags }}
-* `tags` - Mapping of Key-Value tags for the resource.
+* `tags` - Map of tags assigned to the resource.
 {{- end }}

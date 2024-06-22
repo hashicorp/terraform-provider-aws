@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
@@ -23,7 +23,7 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -33,17 +33,17 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReportPlanDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(datasourceName, "deployment_status"), // CREATE_IN_PROGRESS | UPDATE_IN_PROGRESS | DELETE_IN_PROGRESS | COMPLETED
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.#", resourceName, "report_delivery_channel.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.formats.#", resourceName, "report_delivery_channel.0.formats.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.formats.0", resourceName, "report_delivery_channel.0.formats.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.s3_bucket_name", resourceName, "report_delivery_channel.0.s3_bucket_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_setting.#", resourceName, "report_setting.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_setting.0.report_template", resourceName, "report_setting.0.report_template"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key2", resourceName, "tags.Key2"),
 				),
@@ -61,27 +61,27 @@ func TestAccBackupReportPlanDataSource_reportSettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccReportPlanPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportPlanDataSourceConfig_reportSettings(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(datasourceName, "deployment_status"), // CREATE_IN_PROGRESS | UPDATE_IN_PROGRESS | DELETE_IN_PROGRESS | COMPLETED
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.#", resourceName, "report_delivery_channel.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.formats.#", resourceName, "report_delivery_channel.0.formats.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.formats.0", resourceName, "report_delivery_channel.0.formats.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.0.s3_bucket_name", resourceName, "report_delivery_channel.0.s3_bucket_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_setting.#", resourceName, "report_setting.#"),
-					resource.TestCheckResourceAttr(resourceName, "report_setting.0.accounts.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.accounts.0", "data.aws_caller_identity.current", "id"),
-					resource.TestCheckResourceAttr(resourceName, "report_setting.0.regions.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.regions.0", "data.aws_region.current", "name"),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.accounts.0", "data.aws_caller_identity.current", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "report_setting.0.regions.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "report_setting.0.regions.0", "data.aws_region.current", names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_setting.0.report_template", resourceName, "report_setting.0.report_template"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key2", resourceName, "tags.Key2"),
 				),

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -38,15 +39,29 @@ func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 }
 
 // tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
-func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t string) []*ec2.TagSpecification {
+func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t awstypes.ResourceType) []awstypes.TagSpecification {
 	if len(m) == 0 {
 		return nil
 	}
 
-	return []*ec2.TagSpecification{
+	return []awstypes.TagSpecification{
 		{
-			ResourceType: aws.String(t),
-			Tags:         Tags(tftags.New(ctx, m).IgnoreAWS()),
+			ResourceType: t,
+			Tags:         TagsV2(tftags.New(ctx, m).IgnoreAWS()),
+		},
+	}
+}
+
+// tagSpecificationsFromKeyValue returns the tag specifications for the given tag key/value tags and resource type.
+func tagSpecificationsFromKeyValue(tags tftags.KeyValueTags, resourceType string) []awstypes.TagSpecification {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return []awstypes.TagSpecification{
+		{
+			ResourceType: awstypes.ResourceType(resourceType),
+			Tags:         TagsV2(tags.IgnoreAWS()),
 		},
 	}
 }
@@ -70,14 +85,14 @@ func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.Tag
 
 // tagsFromTagDescriptions returns the tags from the given tag descriptions.
 // No attempt is made to remove duplicates.
-func tagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
+func tagsFromTagDescriptions(tds []awstypes.TagDescription) []awstypes.Tag {
 	if len(tds) == 0 {
 		return nil
 	}
 
-	tags := []*ec2.Tag{}
+	tags := []awstypes.Tag{}
 	for _, td := range tds {
-		tags = append(tags, &ec2.Tag{
+		tags = append(tags, awstypes.Tag{
 			Key:   td.Key,
 			Value: td.Value,
 		})

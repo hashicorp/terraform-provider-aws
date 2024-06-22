@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cognito_user_pool_clients")
-func DataSourceUserPoolClients() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pool_clients", name="User Pool Clients")
+func dataSourceUserPoolClients() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceuserPoolClientsRead,
 		Schema: map[string]*schema.Schema{
@@ -33,7 +34,7 @@ func DataSourceUserPoolClients() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -45,7 +46,7 @@ func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	userPoolID := d.Get("user_pool_id").(string)
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
 		UserPoolId: aws.String(userPoolID),
 	}

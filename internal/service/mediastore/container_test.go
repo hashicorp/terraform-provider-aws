@@ -29,7 +29,7 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,7 +65,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Config: testAccContainerConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
 				),
@@ -74,7 +74,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Config: testAccContainerConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
 				),
@@ -88,7 +88,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -104,7 +104,7 @@ func TestAccMediaStoreContainer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerDestroy(ctx),
 		Steps: []resource.TestStep{

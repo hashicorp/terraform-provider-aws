@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMDocumentDataSource_basic(t *testing.T) {
@@ -21,29 +21,29 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentDataSourceConfig_basic(rName, "JSON"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_format", resourceName, "document_format"),
-					resource.TestCheckResourceAttr(dataSourceName, "document_version", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "document_version", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_type", resourceName, "document_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "content", resourceName, "content"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContent, resourceName, names.AttrContent),
 				),
 			},
 			{
 				Config: testAccDocumentDataSourceConfig_basic(rName, "YAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "document_format", "YAML"),
-					resource.TestCheckResourceAttr(dataSourceName, "document_version", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "document_version", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_type", resourceName, "document_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "content"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrContent),
 				),
 			},
 		},
@@ -56,14 +56,14 @@ func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentDataSourceConfig_managed(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", "AWS-StartEC2Instance"),
-					resource.TestCheckResourceAttr(dataSourceName, "arn", "AWS-StartEC2Instance"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "AWS-StartEC2Instance"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrARN, "AWS-StartEC2Instance"),
 				),
 			},
 		},

@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cognito_user_pool_client")
-func DataSourceUserPoolClient() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pool_client", name="User Pool Client")
+func dataSourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolClientRead,
 
@@ -48,7 +49,7 @@ func DataSourceUserPoolClient() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"application_id": {
+						names.AttrApplicationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -56,11 +57,11 @@ func DataSourceUserPoolClient() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"external_id": {
+						names.AttrExternalID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -78,11 +79,11 @@ func DataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"client_id": {
+			names.AttrClientID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"client_secret": {
+			names.AttrClientSecret: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -121,7 +122,7 @@ func DataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -167,7 +168,7 @@ func DataSourceUserPoolClient() *schema.Resource {
 					},
 				},
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -186,24 +187,24 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	clientId := d.Get("client_id").(string)
+	clientId := d.Get(names.AttrClientID).(string)
 	d.SetId(clientId)
 
-	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
+	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get(names.AttrUserPoolID).(string), d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientId, err)
 	}
 
-	d.Set("user_pool_id", userPoolClient.UserPoolId)
-	d.Set("name", userPoolClient.ClientName)
+	d.Set(names.AttrUserPoolID, userPoolClient.UserPoolId)
+	d.Set(names.AttrName, userPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
 	d.Set("read_attributes", flex.FlattenStringSet(userPoolClient.ReadAttributes))
 	d.Set("write_attributes", flex.FlattenStringSet(userPoolClient.WriteAttributes))
 	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
 	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
 	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
-	d.Set("client_secret", userPoolClient.ClientSecret)
+	d.Set(names.AttrClientSecret, userPoolClient.ClientSecret)
 	d.Set("allowed_oauth_flows", flex.FlattenStringSet(userPoolClient.AllowedOAuthFlows))
 	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
 	d.Set("allowed_oauth_scopes", flex.FlattenStringSet(userPoolClient.AllowedOAuthScopes))
@@ -236,15 +237,15 @@ func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovid
 	}
 
 	if analyticsConfig.ExternalId != nil {
-		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
+		m[names.AttrExternalID] = aws.StringValue(analyticsConfig.ExternalId)
 	}
 
 	if analyticsConfig.RoleArn != nil {
-		m["role_arn"] = aws.StringValue(analyticsConfig.RoleArn)
+		m[names.AttrRoleARN] = aws.StringValue(analyticsConfig.RoleArn)
 	}
 
 	if analyticsConfig.ApplicationId != nil {
-		m["application_id"] = aws.StringValue(analyticsConfig.ApplicationId)
+		m[names.AttrApplicationID] = aws.StringValue(analyticsConfig.ApplicationId)
 	}
 
 	if analyticsConfig.ApplicationArn != nil {

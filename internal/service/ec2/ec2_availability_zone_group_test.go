@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
@@ -23,15 +23,15 @@ func TestAccEC2AvailabilityZoneGroup_optInStatus(t *testing.T) {
 	localZone := "us-west-2-lax-1" // lintignore:AWSAT003
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, names.USWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAvailabilityZoneGroupConfig_optInStatus(localZone, ec2.AvailabilityZoneOptInStatusOptedIn),
+				Config: testAccAvailabilityZoneGroupConfig_optInStatus(localZone, string(awstypes.AvailabilityZoneOptInStatusOptedIn)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
+					resource.TestCheckResourceAttr(resourceName, "opt_in_status", string(awstypes.AvailabilityZoneOptInStatusOptedIn)),
 				),
 			},
 			{

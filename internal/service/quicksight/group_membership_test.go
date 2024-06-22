@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightGroupMembership_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccQuickSightGroupMembership_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -64,9 +65,9 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 				Config: testAccGroupMembershipConfig_withNamespace(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", groupResourceName, "group_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_name", userResourceName, "user_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace", namespaceResourceName, "namespace"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrGroupName),
+					resource.TestCheckResourceAttrPair(resourceName, "member_name", userResourceName, names.AttrUserName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, namespaceResourceName, names.AttrNamespace),
 				),
 			},
 			{
@@ -85,7 +86,7 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{

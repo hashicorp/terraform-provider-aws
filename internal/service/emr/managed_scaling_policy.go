@@ -17,12 +17,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKResource("aws_emr_managed_scaling_policy")
-func ResourceManagedScalingPolicy() *schema.Resource {
+// @SDKResource("aws_emr_managed_scaling_policy", name="Managed Scaling Policy")
+func resourceManagedScalingPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedScalingPolicyCreate,
 		ReadWithoutTimeout:   resourceManagedScalingPolicyRead,
 		DeleteWithoutTimeout: resourceManagedScalingPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

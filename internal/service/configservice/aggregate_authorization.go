@@ -5,17 +5,18 @@ package configservice
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,9 +25,9 @@ import (
 
 // @SDKResource("aws_config_aggregate_authorization", name="Aggregate Authorization")
 // @Tags(identifierAttribute="arn")
-func ResourceAggregateAuthorization() *schema.Resource {
+func resourceAggregateAuthorization() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAggregateAuthorizationPut,
+		CreateWithoutTimeout: resourceAggregateAuthorizationCreate,
 		ReadWithoutTimeout:   resourceAggregateAuthorizationRead,
 		UpdateWithoutTimeout: resourceAggregateAuthorizationUpdate,
 		DeleteWithoutTimeout: resourceAggregateAuthorizationDelete,
@@ -36,17 +37,17 @@ func ResourceAggregateAuthorization() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"region": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,70 +60,53 @@ func ResourceAggregateAuthorization() *schema.Resource {
 	}
 }
 
-func resourceAggregateAuthorizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	accountId := d.Get("account_id").(string)
-	region := d.Get("region").(string)
+	accountID, region := d.Get(names.AttrAccountID).(string), d.Get(names.AttrRegion).(string)
+	id := aggregateAuthorizationCreateResourceID(accountID, region)
 	input := &configservice.PutAggregationAuthorizationInput{
-		AuthorizedAccountId: aws.String(accountId),
+		AuthorizedAccountId: aws.String(accountID),
 		AuthorizedAwsRegion: aws.String(region),
 		Tags:                getTagsIn(ctx),
 	}
 
-	_, err := conn.PutAggregationAuthorizationWithContext(ctx, input)
+	_, err := conn.PutAggregationAuthorization(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating aggregate authorization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "putting ConfigService Aggregate Authorization (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", accountId, region))
+	d.SetId(id)
 
 	return append(diags, resourceAggregateAuthorizationRead(ctx, d, meta)...)
 }
 
 func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	accountId, region, err := AggregateAuthorizationParseID(d.Id())
+	accountID, region, err := aggregateAuthorizationParseResourceID(d.Id())
 	if err != nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("account_id", accountId)
-	d.Set("region", region)
+	aggregationAuthorization, err := findAggregateAuthorizationByTwoPartKey(ctx, conn, accountID, region)
 
-	aggregateAuthorizations, err := DescribeAggregateAuthorizations(ctx, conn)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
+		log.Printf("[WARN] ConfigService Aggregate Authorization (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ConfigService Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
-	var aggregationAuthorization *configservice.AggregationAuthorization
-	// Check for existing authorization
-	for _, auth := range aggregateAuthorizations {
-		if accountId == aws.StringValue(auth.AuthorizedAccountId) && region == aws.StringValue(auth.AuthorizedAwsRegion) {
-			aggregationAuthorization = auth
-		}
-	}
-
-	if !d.IsNewResource() && aggregationAuthorization == nil {
-		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if d.IsNewResource() && aggregationAuthorization == nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
-	}
-
-	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
+	d.Set(names.AttrAccountID, aggregationAuthorization.AuthorizedAccountId)
+	d.Set(names.AttrARN, aggregationAuthorization.AggregationAuthorizationArn)
+	d.Set(names.AttrRegion, aggregationAuthorization.AuthorizedAwsRegion)
 
 	return diags
 }
@@ -137,51 +121,80 @@ func resourceAggregateAuthorizationUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceAggregateAuthorizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	accountId, region, err := AggregateAuthorizationParseID(d.Id())
+	accountID, region, err := aggregateAuthorizationParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Config Aggregate Authorization (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	req := &configservice.DeleteAggregationAuthorizationInput{
-		AuthorizedAccountId: aws.String(accountId),
+	log.Printf("[DEBUG] Deleting ConfigService Aggregate Authorization: %s", d.Id())
+	_, err = conn.DeleteAggregationAuthorization(ctx, &configservice.DeleteAggregationAuthorizationInput{
+		AuthorizedAccountId: aws.String(accountID),
 		AuthorizedAwsRegion: aws.String(region),
-	}
+	})
 
-	_, err = conn.DeleteAggregationAuthorizationWithContext(ctx, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Config Aggregate Authorization (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func DescribeAggregateAuthorizations(ctx context.Context, conn *configservice.ConfigService) ([]*configservice.AggregationAuthorization, error) {
-	aggregationAuthorizations := []*configservice.AggregationAuthorization{}
-	input := &configservice.DescribeAggregationAuthorizationsInput{}
+const aggregateAuthorizationResourceIDSeparator = ":"
 
-	for {
-		output, err := conn.DescribeAggregationAuthorizationsWithContext(ctx, input)
-		if err != nil {
-			return aggregationAuthorizations, err
-		}
-		aggregationAuthorizations = append(aggregationAuthorizations, output.AggregationAuthorizations...)
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
+func aggregateAuthorizationCreateResourceID(accountID, region string) string {
+	parts := []string{accountID, region}
+	id := strings.Join(parts, aggregateAuthorizationResourceIDSeparator)
 
-	return aggregationAuthorizations, nil
+	return id
 }
 
-func AggregateAuthorizationParseID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("Please make sure the ID is in the form account_id:region (i.e. 123456789012:us-east-1") // lintignore:AWSAT003
+func aggregateAuthorizationParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, aggregateAuthorizationResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
 	}
-	accountId := idParts[0]
-	region := idParts[1]
-	return accountId, region, nil
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account_id%[2]sregion", id, aggregateAuthorizationResourceIDSeparator)
+}
+
+func findAggregateAuthorizationByTwoPartKey(ctx context.Context, conn *configservice.Client, accountID, region string) (*types.AggregationAuthorization, error) {
+	input := &configservice.DescribeAggregationAuthorizationsInput{}
+
+	return findAggregateAuthorization(ctx, conn, input, func(v *types.AggregationAuthorization) bool {
+		return aws.ToString(v.AuthorizedAccountId) == accountID && aws.ToString(v.AuthorizedAwsRegion) == region
+	})
+}
+
+func findAggregateAuthorization(ctx context.Context, conn *configservice.Client, input *configservice.DescribeAggregationAuthorizationsInput, filter tfslices.Predicate[*types.AggregationAuthorization]) (*types.AggregationAuthorization, error) {
+	output, err := findAggregateAuthorizations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findAggregateAuthorizations(ctx context.Context, conn *configservice.Client, input *configservice.DescribeAggregationAuthorizationsInput, filter tfslices.Predicate[*types.AggregationAuthorization]) ([]types.AggregationAuthorization, error) {
+	var output []types.AggregationAuthorization
+
+	pages := configservice.NewDescribeAggregationAuthorizationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.AggregationAuthorizations {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

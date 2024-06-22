@@ -30,7 +30,7 @@ func testAccMemberAssociation_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,8 +38,8 @@ func testAccMemberAssociation_basic(t *testing.T) {
 				Config: testAccMemberAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", "data.aws_caller_identity.member", "account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "delegated_admin_account_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_caller_identity.member", names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "delegated_admin_account_id", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", string(types.RelationshipStatusEnabled)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
@@ -65,7 +65,7 @@ func testAccMemberAssociation_disappears(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

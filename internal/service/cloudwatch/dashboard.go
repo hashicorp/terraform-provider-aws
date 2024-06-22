@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -116,7 +115,7 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Deleting CloudWatch Dashboard: %s", d.Id())
 	_, err := conn.DeleteDashboards(ctx, &cloudwatch.DeleteDashboardsInput{
-		DashboardNames: tfslices.Of(d.Id()),
+		DashboardNames: []string{d.Id()},
 	})
 
 	if err != nil {

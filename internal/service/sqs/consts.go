@@ -3,6 +3,12 @@
 
 package sqs
 
+import "time"
+
+const (
+	propagationTimeout = 1 * time.Minute
+)
+
 const (
 	fifoQueueNameSuffix = ".fifo"
 )
@@ -41,6 +47,7 @@ func fifoThroughputLimit_Values() []string {
 }
 
 const (
-	errCodeQueueDoesNotExist    = "AWS.SimpleQueueService.NonExistentQueue"
-	errCodeQueueDeletedRecently = "AWS.SimpleQueueService.QueueDeletedRecently"
+	errCodeQueueDoesNotExist     = "AWS.SimpleQueueService.NonExistentQueue"
+	errCodeQueueDeletedRecently  = "AWS.SimpleQueueService.QueueDeletedRecently"
+	errCodeInvalidAttributeValue = "InvalidAttributeValue"
 )

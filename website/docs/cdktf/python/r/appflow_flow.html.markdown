@@ -144,8 +144,6 @@ This resource supports the following arguments:
 * `description` - (Optional) Description of the flow you want to create.
 * `kms_arn` - (Optional) ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `flow_status` - (Optional) Set the status of the flow ([`could be Active, Suspended, Draft` https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-appflow-flow.html ]  )
 
 ### Destination Flow Config
 
@@ -416,6 +414,8 @@ class MyConvertedCode(TerraformStack):
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Flow's ARN.
+* `flow_status` - The current status of the flow.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -442,4 +442,4 @@ Using `terraform import`, import AppFlow flows using the `arn`. For example:
 % terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4ca9fdaf96bd2b74a2fc9a8d9bbb3103ce7bfc35dff776410395697c472adf37 -->
+<!-- cache-key: cdktf-0.20.1 input-0b70032feb9b4bc2846b4d1c09cc18156c67303d01c69b123a45fe5f6c3c976c -->

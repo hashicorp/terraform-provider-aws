@@ -28,7 +28,7 @@ func TestAccQuickSightIAMPolicyAssignment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIAMPolicyAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccQuickSightIAMPolicyAssignment_basic(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", quicksight.AssignmentStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "namespace", tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
 				),
 			},
 			{
@@ -58,7 +58,7 @@ func TestAccQuickSightIAMPolicyAssignment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIAMPolicyAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccQuickSightIAMPolicyAssignment_assignmentStatus(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIAMPolicyAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccQuickSightIAMPolicyAssignment_assignmentStatus(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", quicksight.AssignmentStatusDraft),
-					resource.TestCheckResourceAttr(resourceName, "namespace", tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
 				),
 			},
 			{
@@ -106,7 +106,7 @@ func TestAccQuickSightIAMPolicyAssignment_assignmentStatus(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", quicksight.AssignmentStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "namespace", tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
 				),
 			},
 			{
@@ -115,7 +115,7 @@ func TestAccQuickSightIAMPolicyAssignment_assignmentStatus(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", quicksight.AssignmentStatusDisabled),
-					resource.TestCheckResourceAttr(resourceName, "namespace", tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
 				),
 			},
 		},
@@ -132,7 +132,7 @@ func TestAccQuickSightIAMPolicyAssignment_identities(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIAMPolicyAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,11 +142,11 @@ func TestAccQuickSightIAMPolicyAssignment_identities(t *testing.T) {
 					testAccCheckIAMPolicyAssignmentExists(ctx, resourceName, &assignment),
 					resource.TestCheckResourceAttr(resourceName, "assignment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "assignment_status", quicksight.AssignmentStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "namespace", tfquicksight.DefaultIAMPolicyAssignmentNamespace),
-					resource.TestCheckResourceAttr(resourceName, "identities.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "identities.0.user.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "identities.0.user.0", userResourceName, "user_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_arn", policyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, tfquicksight.DefaultIAMPolicyAssignmentNamespace),
+					resource.TestCheckResourceAttr(resourceName, "identities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "identities.0.user.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "identities.0.user.0", userResourceName, names.AttrUserName),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_arn", policyResourceName, names.AttrARN),
 				),
 			},
 			{

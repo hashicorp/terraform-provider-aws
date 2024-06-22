@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
@@ -21,15 +21,14 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResponseHeadersPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.#", resourceName, "cors_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.0.access_control_allow_credentials", resourceName, "cors_config.0.access_control_allow_credentials"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cors_config.0.access_control_allow_headers.#", resourceName, "cors_config.0.access_control_allow_headers.#"),
@@ -45,8 +44,8 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "custom_headers_config.#", resourceName, "custom_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "custom_headers_config.0.items.#", resourceName, "custom_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "etag", resourceName, "etag"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "remove_headers_config.#", resourceName, "remove_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "remove_headers_config.0.items.#", resourceName, "remove_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.#", resourceName, "security_headers_config.#"),
@@ -59,7 +58,7 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "server_timing_headers_config.0.enabled", resourceName, "server_timing_headers_config.0.enabled"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "server_timing_headers_config.0.sampling_rate", resourceName, "server_timing_headers_config.0.sampling_rate"),
 
-					resource.TestCheckResourceAttrPair(dataSource2Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cors_config.#", resourceName, "cors_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cors_config.0.access_control_allow_credentials", resourceName, "cors_config.0.access_control_allow_credentials"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cors_config.0.access_control_allow_headers.#", resourceName, "cors_config.0.access_control_allow_headers.#"),
@@ -75,8 +74,8 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource2Name, "custom_headers_config.#", resourceName, "custom_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "custom_headers_config.0.items.#", resourceName, "custom_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "etag", resourceName, "etag"),
-					resource.TestCheckResourceAttrPair(dataSource2Name, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSource2Name, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "remove_headers_config.#", resourceName, "remove_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "remove_headers_config.0.items.#", resourceName, "remove_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.#", resourceName, "security_headers_config.#"),

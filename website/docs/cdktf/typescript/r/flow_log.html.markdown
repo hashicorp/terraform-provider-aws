@@ -282,7 +282,7 @@ This argument supports the following arguments:
 * `transitGatewayId` - (Optional) Transit Gateway ID to attach to
 * `transitGatewayAttachmentId` - (Optional) Transit Gateway Attachment ID to attach to
 * `vpcId` - (Optional) VPC ID to attach to
-* `logFormat` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
+* `logFormat` - (Optional) The fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
 * `maxAggregationInterval` - (Optional) The maximum interval of time
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
@@ -334,4 +334,4 @@ Using `terraform import`, import Flow Logs using the `id`. For example:
 % terraform import aws_flow_log.test_flow_log fl-1a2b3c4d
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-379eebee0faf6ddc6b72192ea7791d99a401f706aaa6660a39aa2f4709546656 -->
+<!-- cache-key: cdktf-0.20.1 input-ba99115ba4c7445a82078abb9b916395973d9d2dc0bdb5b29e67695227dd0c49 -->

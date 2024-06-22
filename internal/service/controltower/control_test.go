@@ -23,8 +23,8 @@ func TestAccControlTowerControl_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Control": {
-			"basic":      testAccControl_basic,
-			"disappears": testAccControl_disappears,
+			acctest.CtBasic:      testAccControl_basic,
+			acctest.CtDisappears: testAccControl_disappears,
 		},
 	}
 
@@ -44,7 +44,7 @@ func testAccControl_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -72,7 +72,7 @@ func testAccControl_disappears(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{

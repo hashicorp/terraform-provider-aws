@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/route53resolver"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDNSSECConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,10 +34,10 @@ func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 				Config: testAccDNSSECConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSECConfigExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "route53resolver", regexache.MustCompile(`resolver-dnssec-config/.+$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "route53resolver", regexache.MustCompile(`resolver-dnssec-config/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttr(resourceName, "validation_status", "ENABLED"),
 				),
 			},
@@ -57,7 +57,7 @@ func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDNSSECConfigDestroy(ctx),
 		Steps: []resource.TestStep{

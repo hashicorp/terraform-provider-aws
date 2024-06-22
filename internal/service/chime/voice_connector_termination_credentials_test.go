@@ -29,7 +29,7 @@ func testAccVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func testAccVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
 				),
 			},
 			{
@@ -60,7 +60,7 @@ func testAccVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func testAccVoiceConnectorTerminationCredentials_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorTerminationCredentialsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,14 +94,14 @@ func testAccVoiceConnectorTerminationCredentials_update(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorTerminationCredentialsConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.Ct2),
 				),
 			},
 		},

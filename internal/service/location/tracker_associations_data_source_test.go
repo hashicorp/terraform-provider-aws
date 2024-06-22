@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/locationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLocationTrackerAssociationsDataSource_basic(t *testing.T) {
@@ -20,14 +20,14 @@ func TestAccLocationTrackerAssociationsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrackerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "consumer_arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "consumer_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "consumer_arns.0", "aws_location_tracker_association.test", "consumer_arn"),
 				),
 			},

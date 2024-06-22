@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,7 +42,7 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -55,13 +56,13 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validateS3MultiRegionAccessPointName,
 						},
-						"policy": {
+						names.AttrPolicy: {
 							Type:                  schema.TypeString,
 							Required:              true,
 							ValidateFunc:          validation.StringIsJSON,
@@ -88,10 +89,11 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 }
 
 func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	input := &s3control.PutMultiRegionAccessPointPolicyInput{
@@ -110,24 +112,25 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 	})
 
 	if err != nil {
-		return diag.Errorf("creating S3 Multi-Region Access Point (%s) Policy: %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Multi-Region Access Point (%s) Policy: %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.ToString(output.RequestTokenARN), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for S3 Multi-Region Access Point Policy (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Multi-Region Access Point Policy (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceMultiRegionAccessPointPolicyRead(ctx, d, meta)
+	return append(diags, resourceMultiRegionAccessPointPolicyRead(ctx, d, meta)...)
 }
 
 func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := MultiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyDocument, err := findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx, conn, accountID, name)
@@ -135,14 +138,14 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Multi-Region Access Point Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Multi-Region Access Point Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Multi-Region Access Point Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	if policyDocument != nil {
 		var oldDetails map[string]interface{}
 		if v, ok := d.GetOk("details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -150,7 +153,7 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 		}
 
 		if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointPolicyDocument(name, policyDocument, oldDetails)}); err != nil {
-			return diag.Errorf("setting details: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting details: %s", err)
 		}
 	} else {
 		d.Set("details", nil)
@@ -166,15 +169,16 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 		d.Set("proposed", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, _, err := MultiRegionAccessPointParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3control.PutMultiRegionAccessPointPolicyInput{
@@ -191,14 +195,14 @@ func resourceMultiRegionAccessPointPolicyUpdate(ctx context.Context, d *schema.R
 	})
 
 	if err != nil {
-		return diag.Errorf("updating S3 Multi-Region Access Point Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Multi-Region Access Point Policy (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMultiRegionAccessPointRequestSucceeded(ctx, conn, accountID, aws.ToString(output.RequestTokenARN), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for S3 Multi-Region Access Point Policy (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Multi-Region Access Point Policy (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceMultiRegionAccessPointPolicyRead(ctx, d, meta)
+	return append(diags, resourceMultiRegionAccessPointPolicyRead(ctx, d, meta)...)
 }
 
 func findMultiRegionAccessPointPolicyDocumentByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (*types.MultiRegionAccessPointPolicyDocument, error) {
@@ -237,11 +241,11 @@ func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]interface{}) *
 
 	apiObject := &types.PutMultiRegionAccessPointPolicyInput{}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["policy"].(string); ok {
+	if v, ok := tfMap[names.AttrPolicy].(string); ok {
 		policy, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			policy = v
@@ -260,13 +264,13 @@ func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *types.M
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["name"] = name
+	tfMap[names.AttrName] = name
 
 	if v := apiObject.Proposed; v != nil {
 		if v := v.Policy; v != nil {
 			policyToSet := aws.ToString(v)
 			if old != nil {
-				if w, ok := old["policy"].(string); ok {
+				if w, ok := old[names.AttrPolicy].(string); ok {
 					var err error
 					policyToSet, err = verify.PolicyToSet(w, aws.ToString(v))
 
@@ -275,7 +279,7 @@ func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *types.M
 					}
 				}
 			}
-			tfMap["policy"] = policyToSet
+			tfMap[names.AttrPolicy] = policyToSet
 		}
 	}
 

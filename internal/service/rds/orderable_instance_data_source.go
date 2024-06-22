@@ -5,13 +5,17 @@ package rds
 
 import (
 	"context"
+	"sort"
 
+	"github.com/YakDriver/go-version"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_orderable_db_instance")
@@ -25,18 +29,18 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -46,6 +50,11 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+
+			"engine_latest_version": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 
 			"license_model": {
@@ -108,10 +117,11 @@ func DataSourceOrderableInstance() *schema.Resource {
 
 			"read_replica_capable": {
 				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -120,13 +130,21 @@ func DataSourceOrderableInstance() *schema.Resource {
 			"supported_engine_modes": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"supported_network_types": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"supports_clusters": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
 			},
 
 			"supports_enhanced_monitoring": {
@@ -154,6 +172,12 @@ func DataSourceOrderableInstance() *schema.Resource {
 			},
 
 			"supports_kerberos_authentication": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+
+			"supports_multi_az": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -190,7 +214,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	input := &rds.DescribeOrderableDBInstanceOptionsInput{}
+	input := &rds.DescribeOrderableDBInstanceOptionsInput{
+		MaxRecords: aws.Int64(1000),
+	}
 
 	if v, ok := d.GetOk("availability_zone_group"); ok {
 		input.AvailabilityZoneGroup = aws.String(v.(string))
@@ -200,11 +226,11 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		input.DBInstanceClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -224,8 +250,20 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 				continue
 			}
 
-			if v, ok := d.GetOk("storage_type"); ok {
+			if v, ok := d.GetOk("read_replica_capable"); ok {
+				if aws.BoolValue(instanceOption.ReadReplicaCapable) != v.(bool) {
+					continue
+				}
+			}
+
+			if v, ok := d.GetOk(names.AttrStorageType); ok {
 				if aws.StringValue(instanceOption.StorageType) != v.(string) {
+					continue
+				}
+			}
+
+			if v, ok := d.GetOk("supports_clusters"); ok {
+				if aws.BoolValue(instanceOption.SupportsClusters) != v.(bool) {
 					continue
 				}
 			}
@@ -260,6 +298,12 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 				}
 			}
 
+			if v, ok := d.GetOk("supports_multi_az"); ok {
+				if aws.BoolValue(instanceOption.MultiAZCapable) != v.(bool) {
+					continue
+				}
+			}
+
 			if v, ok := d.GetOk("supports_performance_insights"); ok {
 				if aws.BoolValue(instanceOption.SupportsPerformanceInsights) != v.(bool) {
 					continue
@@ -282,6 +326,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		}
 		return !lastPage
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Orderable DB Instance Options: %s", err)
 	}
@@ -290,88 +335,131 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching criteria; try different search")
 	}
 
-	// preferred classes/versions
-	var found *rds.OrderableDBInstanceOption
-	l := d.Get("preferred_instance_classes").([]interface{})
-	v := d.Get("preferred_engine_versions").([]interface{})
-	if len(l) > 0 && len(v) > 0 {
-		for _, elem := range l {
-			preferredInstanceClass, ok := elem.(string)
+	if v, ok := d.GetOk("supported_engine_modes"); ok && len(v.([]interface{})) > 0 {
+		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
 
-			if !ok {
-				continue
-			}
-
-			for _, ver := range v {
-				preferredEngineVersion, ok := ver.(string)
-
-				if !ok {
-					continue
-				}
-
-				for _, instanceClassResult := range instanceClassResults {
-					if preferredInstanceClass == aws.StringValue(instanceClassResult.DBInstanceClass) &&
-						preferredEngineVersion == aws.StringValue(instanceClassResult.EngineVersion) {
-						found = instanceClassResult
-						break
+		for _, ic := range instanceClassResults {
+		searchedModes:
+			for _, s := range search {
+				for _, mode := range ic.SupportedEngineModes {
+					if aws.StringValue(mode) == s {
+						matches = append(matches, ic)
+						break searchedModes
 					}
 				}
-
-				if found != nil {
-					break
-				}
-			}
-
-			if found != nil {
-				break
 			}
 		}
-	} else if len(l) > 0 {
-		for _, elem := range l {
-			preferredInstanceClass, ok := elem.(string)
 
-			if !ok {
-				continue
-			}
-
-			for _, instanceClassResult := range instanceClassResults {
-				if preferredInstanceClass == aws.StringValue(instanceClassResult.DBInstanceClass) {
-					found = instanceClassResult
-					break
-				}
-			}
-
-			if found != nil {
-				break
-			}
+		if len(matches) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching supported_engine_modes: %#v", search)
 		}
-	} else if len(v) > 0 {
-		for _, ver := range v {
-			preferredEngineVersion, ok := ver.(string)
 
-			if !ok {
-				continue
-			}
-
-			for _, instanceClassResult := range instanceClassResults {
-				if preferredEngineVersion == aws.StringValue(instanceClassResult.EngineVersion) {
-					found = instanceClassResult
-					break
-				}
-			}
-
-			if found != nil {
-				break
-			}
-		}
+		instanceClassResults = matches
 	}
 
-	if found == nil && len(instanceClassResults) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple RDS DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
+	if v, ok := d.GetOk("supported_network_types"); ok && len(v.([]interface{})) > 0 {
+		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
+
+		for _, ic := range instanceClassResults {
+		searchedNetworks:
+			for _, s := range search {
+				for _, netType := range ic.SupportedNetworkTypes {
+					if aws.StringValue(netType) == s {
+						matches = append(matches, ic)
+						break searchedNetworks
+					}
+				}
+			}
+		}
+
+		if len(matches) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching supported_network_types: %#v", search)
+		}
+
+		instanceClassResults = matches
+	}
+
+	prefSearch := false
+
+	if v, ok := d.GetOk("preferred_engine_versions"); ok && len(v.([]interface{})) > 0 {
+		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
+
+		for _, s := range search {
+			for _, ic := range instanceClassResults {
+				if aws.StringValue(ic.EngineVersion) == s {
+					matches = append(matches, ic)
+				}
+				// keeping all the instance classes to ensure we can match any preferred instance classes
+			}
+		}
+
+		if len(matches) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching preferred_engine_versions: %#v", search)
+		}
+
+		prefSearch = true
+		instanceClassResults = matches
+	}
+
+	latestVersion := d.Get("engine_latest_version").(bool)
+
+	if v, ok := d.GetOk("preferred_instance_classes"); ok && len(v.([]interface{})) > 0 {
+		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
+
+		for _, s := range search {
+			for _, ic := range instanceClassResults {
+				if aws.StringValue(ic.DBInstanceClass) == s {
+					matches = append(matches, ic)
+				}
+
+				if !latestVersion && len(matches) > 0 {
+					break
+				}
+
+				// otherwise, get all the instance classes that match the *first* preferred class (and any other criteria)
+			}
+
+			// if we have a match, we can stop searching
+			if len(matches) > 0 {
+				break
+			}
+		}
+
+		if len(matches) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching preferred_instance_classes: %#v", search)
+		}
+
+		prefSearch = true
+		instanceClassResults = matches
+	}
+
+	var found *rds.OrderableDBInstanceOption
+
+	if latestVersion && prefSearch {
+		sortInstanceClassesByVersion(instanceClassResults)
+		found = instanceClassResults[len(instanceClassResults)-1]
+	}
+
+	if found == nil && len(instanceClassResults) > 0 && prefSearch {
+		found = instanceClassResults[0]
 	}
 
 	if found == nil && len(instanceClassResults) == 1 {
 		found = instanceClassResults[0]
+	}
+
+	if found == nil && len(instanceClassResults) > 4 {
+		// there can be a LOT(!!) of results, so if there are more than this, only include the search criteria
+		return sdkdiag.AppendErrorf(diags, "multiple (%d) RDS DB Instance Classes match the criteria; try a different search: %+v\nPreferred instance classes: %+v\nPreferred engine versions: %+v", len(instanceClassResults), input, d.Get("preferred_instance_classes"), d.Get("preferred_engine_versions"))
+	}
+
+	if found == nil && len(instanceClassResults) > 1 {
+		// there can be a lot of results, so if there are a few, include the results and search criteria
+		return sdkdiag.AppendErrorf(diags, "multiple (%d) RDS DB Instance Classes (%v) match the criteria; try a different search: %+v\nPreferred instance classes: %+v\nPreferred engine versions: %+v", len(instanceClassResults), instanceClassResults, input, d.Get("preferred_instance_classes"), d.Get("preferred_engine_versions"))
 	}
 
 	if found == nil {
@@ -384,9 +472,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	for _, v := range found.AvailabilityZones {
 		availabilityZones = append(availabilityZones, aws.StringValue(v.Name))
 	}
-	d.Set("availability_zones", availabilityZones)
-	d.Set("engine", found.Engine)
-	d.Set("engine_version", found.EngineVersion)
+	d.Set(names.AttrAvailabilityZones, availabilityZones)
+	d.Set(names.AttrEngine, found.Engine)
+	d.Set(names.AttrEngineVersion, found.EngineVersion)
 	d.Set("instance_class", found.DBInstanceClass)
 	d.Set("license_model", found.LicenseModel)
 	d.Set("max_iops_per_db_instance", found.MaxIopsPerDbInstance)
@@ -398,18 +486,30 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("multi_az_capable", found.MultiAZCapable)
 	d.Set("outpost_capable", found.OutpostCapable)
 	d.Set("read_replica_capable", found.ReadReplicaCapable)
-	d.Set("storage_type", found.StorageType)
+	d.Set(names.AttrStorageType, found.StorageType)
 	d.Set("supported_engine_modes", aws.StringValueSlice(found.SupportedEngineModes))
 	d.Set("supported_network_types", aws.StringValueSlice(found.SupportedNetworkTypes))
+	d.Set("supports_clusters", found.SupportsClusters)
 	d.Set("supports_enhanced_monitoring", found.SupportsEnhancedMonitoring)
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
 	d.Set("supports_iam_database_authentication", found.SupportsIAMDatabaseAuthentication)
 	d.Set("supports_iops", found.SupportsIops)
 	d.Set("supports_kerberos_authentication", found.SupportsKerberosAuthentication)
+	d.Set("supports_multi_az", found.MultiAZCapable)
 	d.Set("supports_performance_insights", found.SupportsPerformanceInsights)
 	d.Set("supports_storage_autoscaling", found.SupportsStorageAutoscaling)
 	d.Set("supports_storage_encryption", found.SupportsStorageEncryption)
 	d.Set("vpc", found.Vpc)
 
 	return diags
+}
+
+func sortInstanceClassesByVersion(ic []*rds.OrderableDBInstanceOption) {
+	if len(ic) < 2 {
+		return
+	}
+
+	sort.Slice(ic, func(i, j int) bool {
+		return version.LessThan(aws.StringValue(ic[i].EngineVersion), aws.StringValue(ic[j].EngineVersion))
+	})
 }

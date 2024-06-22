@@ -6,16 +6,18 @@ package cloudhsmv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudhsm_v2_cluster")
-func DataSourceCluster() *schema.Resource {
+// @SDKDataSource("aws_cloudhsm_v2_cluster", name="Cluster")
+func dataSourceCluster() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterRead,
 
@@ -61,12 +63,12 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,17 +78,17 @@ func DataSourceCluster() *schema.Resource {
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	input := &cloudhsmv2.DescribeClustersInput{
-		Filters: map[string][]*string{
-			"clusterIds": aws.StringSlice([]string{clusterID}),
+		Filters: map[string][]string{
+			"clusterIds": {clusterID},
 		},
-		MaxResults: aws.Int64(1),
+		MaxResults: aws.Int32(1),
 	}
 	if v, ok := d.GetOk("cluster_state"); ok {
-		input.Filters["states"] = aws.StringSlice([]string{v.(string)})
+		input.Filters["states"] = []string{v.(string)}
 	}
 
 	cluster, err := findCluster(ctx, conn, input)
@@ -101,12 +103,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("cluster_state", cluster.State)
 	d.Set("security_group_id", cluster.SecurityGroup)
-	var subnetIDs []string
-	for _, v := range cluster.SubnetMapping {
-		subnetIDs = append(subnetIDs, aws.StringValue(v))
-	}
-	d.Set("subnet_ids", subnetIDs)
-	d.Set("vpc_id", cluster.VpcId)
+	d.Set(names.AttrSubnetIDs, tfmaps.Values(cluster.SubnetMapping))
+	d.Set(names.AttrVPCID, cluster.VpcId)
 
 	return diags
 }

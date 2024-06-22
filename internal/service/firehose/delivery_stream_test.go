@@ -32,7 +32,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,29 +40,31 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "destination", "extended_s3"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "extended_s3"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "extended_s3_configuration.0.bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.buffering_interval", "300"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.buffering_size", "5"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.compression_format", "UNCOMPRESSED"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
 						"parameter_name": "LambdaArn",
 					}),
@@ -75,21 +77,22 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 						"parameter_value": "70",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "extended_s3_configuration.0.role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_mode", "Disabled"),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
-					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 				),
 			},
@@ -123,7 +126,7 @@ func TestAccFirehoseDeliveryStream_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -147,33 +150,33 @@ func TestAccFirehoseDeliveryStream_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDeliveryStreamConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccDeliveryStreamConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDeliveryStreamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDeliveryStreamConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDeliveryStreamConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -188,7 +191,7 @@ func TestAccFirehoseDeliveryStream_s3WithCloudWatchLogging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -211,7 +214,7 @@ func TestAccFirehoseDeliveryStream_extendedS3basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -220,7 +223,7 @@ func TestAccFirehoseDeliveryStream_extendedS3basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
 				),
 			},
@@ -241,7 +244,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversion_enabled(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -249,9 +252,9 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversion_enabled(t *tes
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -263,18 +266,18 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversion_enabled(t *tes
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -289,7 +292,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -297,9 +300,9 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3ExternalUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", acctest.Ct1),
 				),
 			},
 			{
@@ -313,7 +316,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 					udi := firehose.UpdateDestinationInput{
 						DeliveryStreamName:             aws.String(rName),
 						DestinationId:                  aws.String("destinationId-000000000001"),
-						CurrentDeliveryStreamVersionId: aws.String("1"),
+						CurrentDeliveryStreamVersionId: aws.String(acctest.Ct1),
 						ExtendedS3DestinationUpdate: &types.ExtendedS3DestinationUpdate{
 							DataFormatConversionConfiguration: &types.DataFormatConversionConfiguration{
 								Enabled: aws.Bool(false),
@@ -332,9 +335,9 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3ExternalUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", acctest.Ct1),
 				),
 			},
 		},
@@ -349,7 +352,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionDeserializer_up
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -357,11 +360,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionDeserializer_up
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationHiveJSONSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", acctest.Ct1),
 				),
 			},
 			{
@@ -373,11 +376,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionDeserializer_up
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOpenXJSONSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de.#", acctest.Ct1),
 				),
 			},
 		},
@@ -392,7 +395,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionHiveJSONSerDe_e
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -400,11 +403,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionHiveJSONSerDe_e
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationHiveJSONSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", acctest.Ct1),
 				),
 			},
 			{
@@ -424,7 +427,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOpenXJSONSerDe_
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -432,11 +435,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOpenXJSONSerDe_
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOpenXJSONSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.open_x_json_ser_de.#", acctest.Ct1),
 				),
 			},
 			{
@@ -456,7 +459,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOrcSerDe_empty(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -464,11 +467,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOrcSerDe_empty(
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOrcSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de.#", acctest.Ct1),
 				),
 			},
 			{
@@ -488,7 +491,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionParquetSerDe_em
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -496,11 +499,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionParquetSerDe_em
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationParquetSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", acctest.Ct1),
 				),
 			},
 			{
@@ -520,7 +523,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionSerializer_upda
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -528,11 +531,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionSerializer_upda
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOrcSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.orc_ser_de.#", acctest.Ct1),
 				),
 			},
 			{
@@ -544,11 +547,11 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionSerializer_upda
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationParquetSerDeEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.output_format_configuration.0.serializer.0.parquet_ser_de.#", acctest.Ct1),
 				),
 			},
 		},
@@ -563,7 +566,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_errorOutputPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -571,7 +574,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_errorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3ErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
@@ -584,7 +587,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_errorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3ErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
@@ -599,7 +602,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_errorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3ErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
 				),
 			},
@@ -615,7 +618,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_S3BackupConfiguration_ErrorOutputP
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -623,8 +626,8 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_S3BackupConfiguration_ErrorOutputP
 				Config: testAccDeliveryStreamConfig_extendedS3S3BackUpConfigurationErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
@@ -637,8 +640,8 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_S3BackupConfiguration_ErrorOutputP
 				Config: testAccDeliveryStreamConfig_extendedS3S3BackUpConfigurationErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.0.error_output_prefix", "prefix2")),
 			},
 			{
@@ -650,8 +653,8 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_S3BackupConfiguration_ErrorOutputP
 				Config: testAccDeliveryStreamConfig_extendedS3S3BackUpConfigurationErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.s3_backup_configuration.0.error_output_prefix", "")),
 			},
 		},
@@ -667,7 +670,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3Processing_empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -675,8 +678,8 @@ func TestAccFirehoseDeliveryStream_ExtendedS3Processing_empty(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3ProcessingConfigurationEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", acctest.Ct1),
 				),
 			},
 			{
@@ -696,7 +699,7 @@ func TestAccFirehoseDeliveryStream_extendedS3KMSKeyARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -705,7 +708,7 @@ func TestAccFirehoseDeliveryStream_extendedS3KMSKeyARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttrPair(resourceName, "extended_s3_configuration.0.kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "extended_s3_configuration.0.kms_key_arn", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -725,7 +728,7 @@ func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioning(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -734,8 +737,8 @@ func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioning(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", acctest.Ct1),
 				),
 			},
 			{
@@ -755,7 +758,7 @@ func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioningUpdate(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -771,8 +774,8 @@ func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioningUpdate(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", acctest.Ct1),
 				),
 			},
 		},
@@ -847,7 +850,7 @@ func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -888,6 +891,58 @@ func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_extendedS3CustomTimeZoneAndFileExtensionUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+	customTimeZone := "America/Los_Angeles"
+	fileExtension := ".json"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdates(rName, customTimeZone, fileExtension),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", customTimeZone),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", fileExtension),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdatesNoValues(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdates(rName, customTimeZone, fileExtension),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", customTimeZone),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", fileExtension),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_ExtendedS3_kinesisStreamSource(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.DeliveryStreamDescription
@@ -896,7 +951,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_kinesisStreamSource(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -924,7 +979,7 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_mskClusterSource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -932,9 +987,9 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_mskClusterSource(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_extendedS3MSKSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.authentication_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.0.authentication_configuration.0.connectivity", "PRIVATE"),
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.authentication_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "msk_source_configuration.0.msk_cluster_arn"),
@@ -979,7 +1034,7 @@ func TestAccFirehoseDeliveryStream_redshiftUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1001,6 +1056,164 @@ func TestAccFirehoseDeliveryStream_redshiftUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_snowflakeBasic(rName, key),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.account_url", fmt.Sprintf("https://%s.snowflakecomputing.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.content_column_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.data_loading_option", "JSON_MAPPING"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.database", "test-db"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.key_passphrase", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.metadata_column_name", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.private_key"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.retry_duration", "60"),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.buffering_interval", "400"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.buffering_size", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.compression_format", "GZIP"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.prefix", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.schema", "test-schema"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.snowflake_role", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_vpc_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.table", "test-table"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.user", "test-usr"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"snowflake_configuration.0.private_key"},
+			},
+			{
+				Config: testAccDeliveryStreamConfig_snowflakeUpdate(rName, key),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "snowflake"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.account_url", fmt.Sprintf("https://%s.snowflakecomputing.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.content_column_name", "test-content"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.data_loading_option", "VARIANT_CONTENT_MAPPING"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.database", "test-db"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.key_passphrase", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.metadata_column_name", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.private_key"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.Ct3),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name": "LambdaArn",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "BufferSizeInMBs",
+						"parameter_value": "1.1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "BufferIntervalInSeconds",
+						"parameter_value": "70",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.retry_duration", "60"),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.buffering_interval", "400"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.buffering_size", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.compression_format", "GZIP"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.prefix", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.schema", "test-schema"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.snowflake_role", "test-role"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_vpc_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.table", "test-table"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.user", "test-usr"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 				),
 			},
 		},
@@ -1039,7 +1252,7 @@ func TestAccFirehoseDeliveryStream_splunkUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1074,7 +1287,7 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -1082,7 +1295,7 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
@@ -1095,7 +1308,7 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
@@ -1108,7 +1321,7 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
@@ -1146,7 +1359,7 @@ func TestAccFirehoseDeliveryStream_httpEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1181,7 +1394,7 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -1189,7 +1402,7 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 				Config: testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
@@ -1202,7 +1415,7 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 				Config: testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
@@ -1215,7 +1428,7 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 				Config: testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
@@ -1231,7 +1444,7 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_retryDuration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1284,7 +1497,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/es") },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1339,7 +1552,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchEndpointUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/es") },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1396,7 +1609,7 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/es") },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1405,10 +1618,10 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", names.AttrARN),
 				),
 			},
 			{
@@ -1421,10 +1634,10 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticsearchConfig, nil, nil, nil),
-					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.vpc_config.0.security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "elasticsearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", names.AttrARN),
 				),
 			},
 		},
@@ -1439,7 +1652,7 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/es") },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -1447,7 +1660,7 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
@@ -1460,7 +1673,7 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
@@ -1473,7 +1686,7 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
@@ -1512,7 +1725,7 @@ func TestAccFirehoseDeliveryStream_openSearchUpdates(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1521,8 +1734,8 @@ func TestAccFirehoseDeliveryStream_openSearchUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.document_id_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.document_id_options.#", acctest.Ct0),
 				),
 			},
 			{
@@ -1572,7 +1785,7 @@ func TestAccFirehoseDeliveryStream_openSearchEndpointUpdates(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1632,7 +1845,7 @@ func TestAccFirehoseDeliveryStream_openSearchWithVPCUpdates(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1641,10 +1854,10 @@ func TestAccFirehoseDeliveryStream_openSearchWithVPCUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", names.AttrARN),
 				),
 			},
 			{
@@ -1657,10 +1870,10 @@ func TestAccFirehoseDeliveryStream_openSearchWithVPCUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, updatedOpensearchConfig, nil, nil),
-					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", names.AttrARN),
 				),
 			},
 		},
@@ -1678,7 +1891,7 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/opensearchservice")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
 		Steps: []resource.TestStep{
@@ -1686,7 +1899,7 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, "prefix1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix1"),
 				),
 			},
@@ -1699,7 +1912,7 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, "prefix2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.0.error_output_prefix", "prefix2"),
 				),
 			},
@@ -1712,7 +1925,7 @@ func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.s3_configuration.0.error_output_prefix", ""),
 				),
 			},
@@ -1731,7 +1944,7 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1739,36 +1952,36 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_openSearchServerlessBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "destination", "opensearchserverless"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "opensearchserverless"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_interval", "300"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_size", "5"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.collection_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.index_name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.retry_duration", "300"),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_backup_mode", "FailedDocumentsOnly"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_interval", "300"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_size", "5"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.compression_format", "UNCOMPRESSED"),
@@ -1776,14 +1989,15 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.vpc_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.vpc_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
-					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 				),
 			},
@@ -1796,30 +2010,30 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 				Config: testAccDeliveryStreamConfig_openSearchServerlessUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "destination", "opensearchserverless"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "opensearchserverless"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "msk_source_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_interval", "500"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.buffering_size", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.collection_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.index_name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
 						"parameter_name": "LambdaArn",
 					}),
@@ -1834,12 +2048,12 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.retry_duration", "300"),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_backup_mode", "FailedDocumentsOnly"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_interval", "300"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.buffering_size", "5"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.compression_format", "UNCOMPRESSED"),
@@ -1847,14 +2061,15 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.s3_configuration.0.role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.vpc_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.vpc_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
-					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 				),
 			},
@@ -1871,7 +2086,7 @@ func TestAccFirehoseDeliveryStream_missingProcessing(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1900,7 +2115,7 @@ func testAccCheckDeliveryStreamExists(ctx context.Context, n string, v *types.De
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseClient(ctx)
 
-		output, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes["name"])
+		output, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -1921,7 +2136,7 @@ func testAccCheckDeliveryStreamDestroy(ctx context.Context) resource.TestCheckFu
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseClient(ctx)
 
-			_, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1947,8 +2162,8 @@ func testAccCheckDeliveryStreamAttributes(stream *types.DeliveryStreamDescriptio
 			if rs.Type != "aws_kinesis_firehose_delivery_stream" {
 				continue
 			}
-			if *stream.DeliveryStreamARN != rs.Primary.Attributes["arn"] {
-				return fmt.Errorf("Bad Delivery Stream ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes["arn"], *stream.DeliveryStreamARN)
+			if *stream.DeliveryStreamARN != rs.Primary.Attributes[names.AttrARN] {
+				return fmt.Errorf("Bad Delivery Stream ARN\n\t expected: %s\n\tgot: %s\n", rs.Primary.Attributes[names.AttrARN], *stream.DeliveryStreamARN)
 			}
 
 			if s3config != nil {
@@ -3354,6 +3569,38 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 `, rName))
 }
 
+func testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdates(rName, customTimeZone, fileExtension string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn         = aws_iam_role.firehose.arn
+    bucket_arn       = aws_s3_bucket.bucket.arn
+    custom_time_zone = %[2]q
+    file_extension   = %[3]q
+  }
+}
+`, rName, customTimeZone, fileExtension))
+}
+
+func testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdatesNoValues(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+}
+`, rName))
+}
+
 func testAccDeliveryStreamConfig_baseRedshift(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeliveryStreamConfig_base(rName),
@@ -3459,6 +3706,91 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `, rName))
+}
+
+func testAccDeliveryStreamConfig_snowflakeBasic(rName, privateKey string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "snowflake"
+
+  snowflake_configuration {
+    account_url = "https://%[1]s.snowflakecomputing.com"
+    database    = "test-db"
+    private_key = "%[2]s"
+    role_arn    = aws_iam_role.firehose.arn
+    schema      = "test-schema"
+    table       = "test-table"
+    user        = "test-usr"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+  }
+}
+`, rName, acctest.TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(privateKey))))
+}
+
+func testAccDeliveryStreamConfig_snowflakeUpdate(rName, privateKey string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), testAccDeliveryStreamConfig_baseLambda(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "snowflake"
+
+  snowflake_configuration {
+    account_url = "https://%[1]s.snowflakecomputing.com"
+    database    = "test-db"
+    private_key = "%[2]s"
+    role_arn    = aws_iam_role.firehose.arn
+    schema      = "test-schema"
+    table       = "test-table"
+    user        = "test-usr"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+
+    data_loading_option = "VARIANT_CONTENT_MAPPING"
+    content_column_name = "test-content"
+
+    snowflake_role_configuration {
+      enabled        = true
+      snowflake_role = "test-role"
+    }
+
+    processing_configuration {
+      enabled = false
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = "1.1"
+        }
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = "70"
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(privateKey))))
 }
 
 func testAccDeliveryStreamConfig_splunkBasic(rName string) string {

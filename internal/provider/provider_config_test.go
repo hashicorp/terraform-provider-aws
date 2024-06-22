@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"maps"
 	"os"
 	"testing"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"golang.org/x/exp/maps"
 )
 
 // TestSharedConfigFileParsing prevents regression in shared config file parsing
@@ -117,7 +117,7 @@ region = us-west-2
 sso_start_url = https://d-123456789a.awsapps.com/start#
 `, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
-				awsConfig := meta.AwsConfig()
+				awsConfig := meta.AwsConfig(context.TODO())
 				var ssoStartUrl string
 				for _, source := range awsConfig.ConfigSources {
 					if shared, ok := source.(config.SharedConfig); ok {
@@ -299,7 +299,7 @@ func (d testCaseDriver) Apply(ctx context.Context, t *testing.T) (context.Contex
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	return ctx, thing{meta.CredentialsProvider()}
+	return ctx, thing{meta.CredentialsProvider(ctx)}
 }
 
 var _ configtesting.Configurer = &configurer{}

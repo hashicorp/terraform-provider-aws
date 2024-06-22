@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCSecurityGroupEgressRule_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccVPCSecurityGroupEgressRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupEgressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,16 +35,16 @@ func TestAccVPCSecurityGroupEgressRule_basic(t *testing.T) {
 				Config: testAccVPCSecurityGroupEgressRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupEgressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "10.0.0.0/8"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -64,7 +65,7 @@ func TestAccVPCSecurityGroupEgressRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupEgressRuleDestroy(ctx),
 		Steps: []resource.TestStep{

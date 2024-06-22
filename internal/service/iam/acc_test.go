@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -62,7 +62,7 @@ func pemEncode(b []byte, block string) (string, error) {
 }
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(iam.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.IAMServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {

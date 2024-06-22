@@ -9,14 +9,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2Model_basic(t *testing.T) {
@@ -41,7 +42,7 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -49,10 +50,10 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 				Config: testAccModelConfig_basic(rName, schema),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema),
 				),
 			},
 			{
@@ -87,7 +88,7 @@ func TestAccAPIGatewayV2Model_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +96,7 @@ func TestAccAPIGatewayV2Model_disappears(t *testing.T) {
 				Config: testAccModelConfig_basic(rName, schema),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					testAccCheckModelDisappears(ctx, &apiId, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -140,7 +141,7 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,30 +149,30 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 				Config: testAccModelConfig_allAttributes(rName, schema1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
 			},
 			{
 				Config: testAccModelConfig_basic(rName, schema2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema2),
 				),
 			},
 			{
 				Config: testAccModelConfig_allAttributes(rName, schema1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
 			},
 			{
@@ -186,68 +187,47 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 
 func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_model" {
 				continue
 			}
 
-			_, err := conn.GetModelWithContext(ctx, &apigatewayv2.GetModelInput{
-				ApiId:   aws.String(rs.Primary.Attributes["api_id"]),
-				ModelId: aws.String(rs.Primary.ID),
-			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			_, err := tfapigatewayv2.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("API Gateway v2 model %s still exists", rs.Primary.ID)
+			return fmt.Errorf("API Gateway v2 Model %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckModelDisappears(ctx context.Context, apiId *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
-
-		_, err := conn.DeleteModelWithContext(ctx, &apigatewayv2.DeleteModelInput{
-			ApiId:   apiId,
-			ModelId: v.ModelId,
-		})
-
-		return err
-	}
-}
-
-func testAccCheckModelExists(ctx context.Context, n string, vApiId *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
+func testAccCheckModelExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 model ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		output, err := tfapigatewayv2.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 
-		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetModelWithContext(ctx, &apigatewayv2.GetModelInput{
-			ApiId:   apiId,
-			ModelId: aws.String(rs.Primary.ID),
-		})
 		if err != nil {
 			return err
 		}
 
-		*vApiId = *apiId
-		*v = *resp
+		*apiID = rs.Primary.Attributes["api_id"]
+		*v = *output
 
 		return nil
 	}

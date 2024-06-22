@@ -33,7 +33,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,10 +41,10 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "Acceptance Test"),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "Acceptance Test"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "external_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttr(resourceName, "locale", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.family_name", "Doe"),
@@ -54,13 +54,13 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.middle_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "nickname", ""),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "preferred_language", ""),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},
@@ -85,7 +85,7 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -121,12 +121,12 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 				Config: testAccUserConfig_addresses2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "US"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", "The Locality 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", "AAA BBB 1"),
-					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", "The Region 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", "The Street Address 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "The Type 1"),
@@ -141,12 +141,12 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 				Config: testAccUserConfig_addresses3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "GB"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", "The Locality 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", "AAA BBB 2"),
-					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", "The Region 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", "The Street Address 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "The Type 2"),
@@ -161,12 +161,12 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 				Config: testAccUserConfig_addresses1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "US"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", ""),
-					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "Home"),
@@ -181,7 +181,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.Ct0),
 				),
 			},
 			{
@@ -208,7 +208,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -216,8 +216,8 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Config: testAccUserConfig_emails1(rName, email1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email1),
 				),
@@ -231,8 +231,8 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Config: testAccUserConfig_emails2(rName, email2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 2"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email2),
 				),
@@ -246,8 +246,8 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Config: testAccUserConfig_emails3(rName, email2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.value", ""),
 				),
@@ -261,7 +261,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", acctest.Ct0),
 				),
 			},
 			{
@@ -285,7 +285,7 @@ func TestAccIdentityStoreUser_Locale(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -336,7 +336,7 @@ func TestAccIdentityStoreUser_NameFamilyName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -375,7 +375,7 @@ func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -426,7 +426,7 @@ func TestAccIdentityStoreUser_NameGivenName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -465,7 +465,7 @@ func TestAccIdentityStoreUser_NameHonorificPrefix(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -504,7 +504,7 @@ func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -555,7 +555,7 @@ func TestAccIdentityStoreUser_NameMiddleName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -606,7 +606,7 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -657,7 +657,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -665,8 +665,8 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Config: testAccUserConfig_phoneNumbers1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "111111"),
 				),
@@ -680,8 +680,8 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Config: testAccUserConfig_phoneNumbers2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 2"),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "2222222"),
 				),
@@ -695,8 +695,8 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Config: testAccUserConfig_phoneNumbers3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", ""),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "2222222"),
 				),
@@ -710,7 +710,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.Ct0),
 				),
 			},
 			{
@@ -734,7 +734,7 @@ func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -785,7 +785,7 @@ func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -836,7 +836,7 @@ func TestAccIdentityStoreUser_Timezone(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -887,7 +887,7 @@ func TestAccIdentityStoreUser_Title(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -938,7 +938,7 @@ func TestAccIdentityStoreUser_UserType(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
@@ -22,7 +23,7 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 				),
 			},
 			{
@@ -42,14 +43,14 @@ func testAccServicecatalogPortfolioStatus_basic(t *testing.T) {
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Disabled"),
 				),
 			},
 			{
 				Config: testAccServicecatalogPortfolioStatusConfigConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServicecatalogPortfolioStatusExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 				),
 			},
 		},

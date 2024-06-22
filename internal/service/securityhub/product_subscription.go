@@ -20,10 +20,11 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_securityhub_product_subscription")
-func ResourceProductSubscription() *schema.Resource {
+// @SDKResource("aws_securityhub_product_subscription", name="Product Subscription")
+func resourceProductSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductSubscriptionCreate,
 		ReadWithoutTimeout:   resourceProductSubscriptionRead,
@@ -34,7 +35,7 @@ func ResourceProductSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,19 +84,19 @@ func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData
 
 	productARN, productSubscriptionARN := parts[0], parts[1]
 
-	_, err = FindProductSubscriptionByARN(ctx, conn, productSubscriptionARN)
+	_, err = findProductSubscriptionByARN(ctx, conn, productSubscriptionARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Product Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", productSubscriptionARN)
+	d.Set(names.AttrARN, productSubscriptionARN)
 	d.Set("product_arn", productARN)
 
 	return diags
@@ -128,7 +129,7 @@ func resourceProductSubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func FindProductSubscriptionByARN(ctx context.Context, conn *securityhub.Client, productSubscriptionARN string) (*string, error) {
+func findProductSubscriptionByARN(ctx context.Context, conn *securityhub.Client, productSubscriptionARN string) (*string, error) {
 	input := &securityhub.ListEnabledProductsForImportInput{}
 
 	return findProductSubscription(ctx, conn, input, func(v string) bool {

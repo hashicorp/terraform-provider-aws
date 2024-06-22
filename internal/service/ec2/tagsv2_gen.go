@@ -10,28 +10,27 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// GetTag fetches an individual ec2 service tag for a resource.
+// findTag fetches an individual ec2 service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
 // This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn *ec2.Client, identifier, key string, optFns ...func(*ec2.Options)) (*string, error) {
+func findTag(ctx context.Context, conn *ec2.Client, identifier, key string, optFns ...func(*ec2.Options)) (*string, error) {
 	input := &ec2.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("resource-id"),
-				Values: tfslices.Of(identifier),
+				Values: []string{identifier},
 			},
 			{
-				Name:   aws.String("key"),
-				Values: tfslices.Of(key),
+				Name:   aws.String(names.AttrKey),
+				Values: []string{key},
 			},
 		},
 	}
@@ -129,7 +128,7 @@ func updateTagsV2(ctx context.Context, conn *ec2.Client, identifier string, oldT
 	removedTags = removedTags.IgnoreSystem(names.EC2)
 	if len(removedTags) > 0 {
 		input := &ec2.DeleteTagsInput{
-			Resources: tfslices.Of(identifier),
+			Resources: []string{identifier},
 			Tags:      TagsV2(removedTags),
 		}
 
@@ -144,7 +143,7 @@ func updateTagsV2(ctx context.Context, conn *ec2.Client, identifier string, oldT
 	updatedTags = updatedTags.IgnoreSystem(names.EC2)
 	if len(updatedTags) > 0 {
 		input := &ec2.CreateTagsInput{
-			Resources: tfslices.Of(identifier),
+			Resources: []string{identifier},
 			Tags:      TagsV2(updatedTags),
 		}
 

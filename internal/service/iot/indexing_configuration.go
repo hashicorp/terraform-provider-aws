@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_indexing_configuration")
@@ -42,11 +43,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -60,11 +61,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -93,11 +94,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -111,7 +112,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Default:      iot.DeviceDefenderIndexingModeOff,
 							ValidateFunc: validation.StringInSlice(iot.DeviceDefenderIndexingMode_Values(), false),
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -139,11 +140,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -269,7 +270,7 @@ func flattenThingIndexingConfiguration(apiObject *iot.ThingIndexingConfiguration
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = []interface{}{flattenIndexingFilter(v)}
+		tfMap[names.AttrFilter] = []interface{}{flattenIndexingFilter(v)}
 	}
 
 	if v := apiObject.ManagedFields; v != nil {
@@ -313,11 +314,11 @@ func flattenField(apiObject *iot.Field) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -378,7 +379,7 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIn
 		apiObject.DeviceDefenderIndexingMode = aws.String(v)
 	}
 
-	if v, ok := tfMap["filter"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := tfMap[names.AttrFilter]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -422,11 +423,11 @@ func expandField(tfMap map[string]interface{}) *iot.Field {
 
 	apiObject := &iot.Field{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 

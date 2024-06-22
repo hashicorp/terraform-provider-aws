@@ -1,7 +1,7 @@
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Data Handling and Conversion
 
-The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/plugin/how-terraform-works) and an AWS API client to support AWS operations and data types as Terraform Resources. Data handling and conversion is a large portion of resource implementation given the domain specific implementations of each side of the provider. The first where Terraform is a generic infrastructure as code tool with a generic data model and the other where the details are driven by AWS API data modeling concepts. This guide is intended to explain and show preferred Terraform AWS Provider code implementations required to successfully translate data between these two systems.
+The Terraform AWS Provider codebase bridges the implementation of a [Terraform Plugin](https://www.terraform.io/plugin/how-terraform-works) and an AWS API client to support AWS operations and data types as Terraform Resources. Data handling and conversion is a large portion of resource implementation given the domain-specific implementations of each side of the provider. The first is where Terraform is a generic infrastructure as code tool with a generic data model and the other is where the details are driven by AWS API data modeling concepts. This guide is intended to explain and show preferred Terraform AWS Provider code implementations required to successfully translate data between these two systems.
 
 At the bottom of this documentation is a [Glossary section](#glossary), which may be a helpful reference while reading the other sections.
 
@@ -9,18 +9,18 @@ At the bottom of this documentation is a [Glossary section](#glossary), which ma
 
 Before getting into highly specific documentation about the Terraform AWS Provider handling of data, it may be helpful to briefly highlight how Terraform Plugins (Terraform Providers in this case) interact with Terraform CLI and the Terraform State in general and where this documentation fits into the whole process.
 
-There are two primary data flows that are typically handled by resources within a Terraform Provider. Data is either being converted from a planned new Terraform State into making a remote system request or a remote system response is being converted into a applied new Terraform State. The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and mainly handled by Terraform CLI. This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/main/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
+There are two primary data flows that are typically handled by resources within a Terraform Provider. Data is either being converted from a planned new Terraform State into making a remote system request or a remote system response is being converted into an applied new Terraform State. The semantics of how the data of the planned new Terraform State is surfaced to the resource implementation is determined by where a resource is in its lifecycle and is mainly handled by Terraform CLI. This concept can be explored further in the [Terraform Resource Instance Change Lifecycle documentation](https://github.com/hashicorp/terraform/blob/main/docs/resource-instance-change-lifecycle.md), with the caveat that some additional behaviors occur within the Terraform Plugin SDK as well (if the Terraform Plugin uses that implementation detail).
 
 As a generic walkthrough, the following data handling occurs when creating a Terraform Resource:
 
 - An operator creates a Terraform configuration with a new resource defined and runs `terraform apply`
 - Terraform CLI merges an empty prior state for the resource, along with the given configuration state, to create a planned new state for the resource
 - Terraform CLI sends a Terraform Plugin Protocol request to create the new resource with its planned new state data
-- If the Terraform Plugin is using a higher level library, such as the Terraform Plugin Framework, that library receives the request and translates the Terraform Plugin Protocol data types into the expected library types
+- If the Terraform Plugin is using a higher-level library, such as the Terraform Plugin Framework, that library receives the request and translates the Terraform Plugin Protocol data types into the expected library types
 - Terraform Plugin invokes the resource creation function with the planned new state data
-    - **The planned new state data is converted into an remote system request (e.g., API creation request) that is invoked**
+    - **The planned new state data is converted into a remote system request (e.g., API creation request) that is invoked**
     - **The remote system response is received and the data is converted into an applied new state**
-- If the Terraform Plugin is using a higher level library, such as the Terraform Plugin Framework, that library translates the library types back into Terraform Plugin Protocol data types
+- If the Terraform Plugin is using a higher-level library, such as the Terraform Plugin Framework, that library translates the library types back into Terraform Plugin Protocol data types
 - Terraform Plugin responds to Terraform Plugin Protocol request with the new state data
 - Terraform CLI verifies and stores the new state
 
@@ -36,7 +36,7 @@ Given a resource with a writeable root attribute named `not_set_attr` that never
 - If the Terraform configuration is updated to `not_set_attr = "updated"`, the Terraform State contains `not_set_attr` equal to `"updated"` after apply.
 - If the attribute was meant to be associated with a remote system value, it will never update the Terraform State on plan or apply with the remote value. Effectively, it cannot perform drift detection with the remote value.
 
-This however does _not_ apply for nested attributes and blocks if the parent block is refreshed.
+This however does _not_ apply to nested attributes and blocks if the parent block is refreshed.
 Given a resource with a root block named `parent`, with nested child attributes `set_attr` and `not_set_attr`, a read operation which updates the value of `parent` (and the nested `set_attr` attribute) will not copy the Terraform State for the nested `not_set_attr` attribute.
 
 There are valid use cases for passthrough attribute values such as these (see the [Virtual Attributes section](#virtual-attributes)), however the behavior can be confusing or incorrect for operators if the drift detection is expected.
@@ -46,7 +46,7 @@ Typically these types of drift detection issues can be discovered by implementin
 
 Perhaps the most distinct difference between [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) and [Terraform Plugin SDKv2](https://developer.hashicorp.com/terraform/plugin/sdkv2) is data handling.
 With Terraform Plugin Framework state data is strongly typed, while Plugin SDK V2 based resources represent state data generically (each attribute is an `interface{}`) and types must be asserted at runtime.
-Strongly typed data eliminates an entire class of runtime bugs and crashes, but does require compile type type declarations and a slightly different approach to reading and writing data.
+Strongly typed data eliminates an entire class of runtime bugs and crashes, but does require compile type declarations and a slightly different approach to reading and writing data.
 The sections below contain examples for both plugin libraries, but Terraform Plugin Framework should be preferred whenever possible.
 
 ## Data Conversions in the Terraform AWS Provider
@@ -110,21 +110,21 @@ To further understand the necessary data conversions used throughout the Terrafo
 
     <!-- markdownlint-enable no-inline-html --->
 
-    You may notice there are type encoding differences the AWS Go SDK and Terraform Plugin SDK:
+    You may notice there are type encoding differences between the AWS Go SDK and Terraform Plugin SDK:
 
     - AWS Go SDK types are all Go pointer types, while Terraform Plugin SDK types are not.
     - AWS Go SDK structures are the Go `struct` type, while there is no semantically equivalent Terraform Plugin SDK type. Instead they are represented as a slice of interfaces with an underlying map of interfaces.
     - AWS Go SDK types are all Go concrete types, while the Terraform Plugin SDK types for collections and maps are interfaces.
     - AWS Go SDK whole numeric type is always 64-bit, while the Terraform Plugin SDK type is implementation-specific.
 
-    Conceptually, the first and second items above the most problematic in the Terraform AWS Provider codebase. The first item because non-pointer types in Go cannot implement the concept of no value (`nil`). The [Zero Value Mapping section](#zero-value-mapping) will go into more details about the implications of this limitation. The second item because it can be confusing to always handle a structure ("object") type as a list.
+    Conceptually, the first and second items above are the most problematic in the Terraform AWS Provider codebase. The first item because non-pointer types in Go cannot implement the concept of no value (`nil`). The [Zero Value Mapping section](#zero-value-mapping) will go into more detail about the implications of this limitation. The second item because it can be confusing to always handle a structure ("object") type as a list.
 
 ### Zero Value Mapping
 
 !!! note
     This section only applies to Plugin SDK V2 based resources. Terraform Plugin Framework based resources will handle null and unknown values distinctly from zero values.
 
-As mentioned in the [Type Mapping section](#type-mapping) for Terraform Plugin SDK V2, there is a discrepancy with how the Terraform Plugin SDK represents values and the reality that a Terraform State may not configure an Attribute.
+As mentioned in the [Type Mapping section](#type-mapping) for Terraform Plugin SDK V2, there is a discrepancy between how the Terraform Plugin SDK represents values and the reality that a Terraform State may not configure an Attribute.
 These values will default to the matching underlying Go type "zero value" if not set:
 
 | Terraform Plugin SDK | Go Type | Zero Value |
@@ -141,7 +141,7 @@ The semantics of the API and its meaning of the zero value will determine whethe
 - If it is used/needed, whether:
     - A value can always be set and it is safe to always send to the API. Generally, boolean values fall into this category.
     - A different default/sentinel value must be used as the "unset" value so it can either match the default of the API or be ignored when sending to the API.
-    - A special type implementation is required within the schema to workaround the limitation.
+    - A special type implementation is required within the schema to work around the limitation.
 
 The maintainers can provide guidance on appropriate solutions for cases not mentioned in the [Recommended Implementation section](#recommended-implementations).
 
@@ -1543,29 +1543,29 @@ Attribute values may be very lengthy or potentially contain [Sensitive Values](#
 
 - Terraform expects any planned values to match applied values. Ensuring proper handling during the various Terraform operations such as difference planning and Terraform State storage can be a burden.
 - Hashed values are generally unusable in downstream attribute references. If a value is hashed, it cannot be successfully used in another resource or provider configuration that expects the real value.
-- Terraform plan differences are meant to be human readable. If a value is hashed, operators will only see the relatively unhelpful hash differences `abc123 -> def456` in plans.
+- Terraform plan differences are meant to be human-readable. If a value is hashed, operators will only see the relatively unhelpful hash differences `abc123 -> def456` in plans.
 
 Any value hashing implementation will not be accepted. An exception to this guidance is if the remote system explicitly provides a separate hash value in responses, in which a resource can provide a separate attribute with that hashed value.
 
 ### Sensitive Values
 
-Marking an Attribute in the Terraform Plugin Framework Schema with `Sensitive` has the following real world implications:
+Marking an Attribute in the Terraform Plugin Framework Schema with `Sensitive` has the following real-world implications:
 
 - All occurrences of the Attribute will have the value hidden in plan difference output. In the context of an Attribute within a Block, all Blocks will hide all values of the Attribute.
-- In Terraform CLI 0.14 (with the `provider_sensitive_attrs` experiment enabled) and later, any downstream references to the value in other configuration will hide the value in plan difference output.
+- In Terraform CLI 0.14 (with the `provider_sensitive_attrs` experiment enabled) and later, any downstream references to the value in other configurations will hide the value in plan difference output.
 
 The value is either always hidden or not as the Terraform Plugin Framework does not currently implement conditional support for this functionality. Since Terraform Configurations have no control over the behavior, hiding values from the plan difference can incur a potentially undesirable user experience cost for operators.
 
 Given that and especially with the improvements in Terraform CLI 0.14, the Terraform AWS Provider maintainers guiding principles for determining whether an Attribute should be marked as `Sensitive` is if an Attribute value:
 
-- Objectively will always contain a credential, password, or other secret material. Operators can have differing opinions on what constitutes secret material and the maintainers will make best effort determinations, if necessary consulting with the HashiCorp Security team.
-- If the Attribute is within a Block, that all occurrences of the Attribute value will objectively contain secret material. Some APIs (and therefore the Terraform AWS Provider resources) implement generic "setting" and "value" structures which likely will contain a mixture of secret and non-secret material. These will generally not be accepted for marking as `Sensitive`.
+- Objectively will always contain a credential, password, or other secret material. Operators can have differing opinions on what constitutes secret material and the maintainers will make best-effort determinations, if necessary consulting with the HashiCorp Security team.
+- If the Attribute is within a Block, all occurrences of the Attribute value will objectively contain secret material. Some APIs (and therefore the Terraform AWS Provider resources) implement generic "setting" and "value" structures which likely will contain a mixture of secret and non-secret material. These will generally not be accepted for marking as `Sensitive`.
 
 If you are unsatisfied with sensitive value handling, the maintainers can recommend ensuring there is a covering issue in the Terraform CLI and/or Terraform Plugin Framework projects explaining the use case. Ultimately, Terraform Plugins including the Terraform AWS Provider cannot implement their own sensitive value abilities if the upstream projects do not implement the appropriate functionality.
 
 ### Virtual Attributes
 
-Attributes which only exist within Terraform and not the remote system are typically referred as virtual attributes. Especially in the case of [Destroy State Values](#destroy-state-values), these attributes rely on the [Implicit State Passthrough](#implicit-state-passthrough) behavior of values in Terraform to be available in resource logic. A fictitous example of one of these may be a resource attribute such as a `skip_waiting` flag, which is used only in the resource logic to skip the typical behavior of waiting for operations to complete.
+Attributes which only exist within Terraform and not the remote system are typically referred to as virtual attributes. Especially in the case of [Destroy State Values](#destroy-state-values), these attributes rely on the [Implicit State Passthrough](#implicit-state-passthrough) behavior of values in Terraform to be available in resource logic. A fictitious example of one of these may be a resource attribute such as a `skip_waiting` flag, which is used only in the resource logic to skip the typical behavior of waiting for operations to complete.
 
 If a virtual attribute has a default value that does not match the [Zero Value Mapping](#zero-value-mapping) for the type, it is recommended to explicitly call `d.Set()` with the default value in the `schema.Resource` `Importer` `State` function, for example:
 
@@ -1611,7 +1611,7 @@ This list is not exhaustive of all concepts of Terraform Plugins, the Terraform 
 - **Terraform Plugin Go**: Low-level library that converts Go code into Terraform Plugin Protocol compatible operations and data types. Not currently implemented in the Terraform AWS Provider. [Project](https://github.com/hashicorp/terraform-plugin-go).
 - **Terraform Plugin Framework**: High-level library that converts Go code into Terraform Plugin Protocol compatible operations and data types. This library replaces Plugin SDK V2. See [Terraform Plugin Development Packages](terraform-plugin-development-packages.md) for more information. [Project](https://github.com/hashicorp/terraform-plugin-framework).
 - **Terraform Plugin SDK V2**: High-level library that converts Go code into Terraform Plugin Protocol compatible operations and data types. This library is replaced by Plugin Framework. See [Terraform Plugin Development Packages](terraform-plugin-development-packages.md) for more information. [Project](https://github.com/hashicorp/terraform-plugin-sdk).
-- **Terraform Plugin Schema**: Declarative description of types and domain specific behaviors for a Terraform provider, including resources and attributes. [Framework Documentation](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas). [SDK V2 Documentation](https://www.terraform.io/plugin/sdkv2/schemas).
+- **Terraform Plugin Schema**: Declarative description of types and domain-specific behaviors for a Terraform provider, including resources and attributes. [Framework Documentation](https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas). [SDK V2 Documentation](https://www.terraform.io/plugin/sdkv2/schemas).
 - **Terraform State**: Bindings between objects in a remote system (e.g., an EC2 VPC) and a Terraform configuration (e.g., an `aws_vpc` resource configuration). [Full Documentation](https://www.terraform.io/language/state).
 
 AWS Service API Models use specific terminology to describe data and types:
@@ -1650,7 +1650,7 @@ Terraform Plugin Framework Schemas use the following terminology to describe dat
     - **Bool**: Boolean value.
     - **Float64**: Fractional numeric value.
     - **Int64**: Whole numeric value.
-    - **List**: Ordered collection of values or Blocks.
+    - **List**: An ordered collection of values or Blocks.
     - **Map**: Grouping of key Type to value Type.
     - **Set**: Unordered collection of values or Blocks.
     - **String**: Sequence of characters value.
@@ -1660,7 +1660,7 @@ Terraform Plugin SDK Schemas use the following terminology to describe data and 
 - **Behaviors**: [Full Documentation](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors).
     - **Sensitive**: Whether the value should be hidden from user interface output.
     - **StateFunc**: Conversion function between the value set by the Terraform Plugin and the value seen by Terraform Plugin SDK (and ultimately the Terraform State).
-- **Element**: Underylying value type for a collection or grouping Schema.
+- **Element**: Underlying value type for a collection or grouping Schema.
 - **Resource Data**: Data representation of a Resource Schema. Translation layer between the Schema and Go code of a Terraform Plugin. In the Terraform Plugin SDK, the `ResourceData` Go type.
 - **Resource Schema**: Grouping of Schema that represents a Terraform Resource.
 - **Schema**: Represents an Attribute or Block. Has a Type and Behavior(s).
@@ -1681,6 +1681,6 @@ Some other terms that may be used:
 - **NullableTypeBool**: (SDK V2 Only) Workaround "schema type" created to accept a boolean value that is not configured in addition to true and false. Not implemented in the Terraform Plugin SDK, but uses `TypeString` (where `""` represents not configured) and additional validation.
 - **NullableTypeFloat**: (SDK V2 Only) Workaround "schema type" created to accept a fractional numeric value that is not configured in addition to `0.0`. Not implemented in the Terraform Plugin SDK, but uses `TypeString` (where `""` represents not configured) and additional validation.
 - **NullableTypeInt**: (SDK V2 Only) Workaround "schema type" created to accept a whole numeric value that is not configured in addition to `0`. Not implemented in the Terraform Plugin SDK, but uses `TypeString` (where `""` represents not configured) and additional validation.
-- **Root Attribute**: Resource top level Attribute or Block.
+- **Root Attribute: Resource top-level Attribute or Block.
 
 For additional reference, the Terraform documentation also includes a [full glossary of terminology](https://www.terraform.io/docs/glossary.html).

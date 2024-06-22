@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGroup(t *testing.T) {
@@ -27,31 +28,31 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logGrou
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, networkfirewall.LogDestinationTypeCloudWatchLogs, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":        "1",
+						"log_destination.%":        acctest.Ct1,
 						"log_destination.logGroup": logGroupName,
-						"log_destination_type":     networkfirewall.LogDestinationTypeCloudWatchLogs,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_cloudWatch(updatedLogGroupName, rName, networkfirewall.LogDestinationTypeCloudWatchLogs, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_cloudWatch(updatedLogGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":        "1",
+						"log_destination.%":        acctest.Ct1,
 						"log_destination.logGroup": updatedLogGroupName,
-						"log_destination_type":     networkfirewall.LogDestinationTypeCloudWatchLogs,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
 					}),
 				),
 			},
@@ -72,27 +73,27 @@ func TestAccNetworkFirewallLoggingConfiguration_CloudWatchLogDestination_logType
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, networkfirewall.LogDestinationTypeCloudWatchLogs, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_type": networkfirewall.LogTypeFlow,
+						"log_type": string(awstypes.LogTypeFlow),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, networkfirewall.LogDestinationTypeCloudWatchLogs, networkfirewall.LogTypeAlert),
+				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_type": networkfirewall.LogTypeAlert,
+						"log_type": string(awstypes.LogTypeAlert),
 					}),
 				),
 			},
@@ -114,31 +115,31 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_deliverySt
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, networkfirewall.LogDestinationTypeKinesisDataFirehose, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, string(awstypes.LogDestinationTypeKinesisDataFirehose), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":              "1",
+						"log_destination.%":              acctest.Ct1,
 						"log_destination.deliveryStream": streamName,
-						"log_destination_type":           networkfirewall.LogDestinationTypeKinesisDataFirehose,
+						"log_destination_type":           string(awstypes.LogDestinationTypeKinesisDataFirehose),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_kinesis(updatedStreamName, rName, networkfirewall.LogDestinationTypeKinesisDataFirehose, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_kinesis(updatedStreamName, rName, string(awstypes.LogDestinationTypeKinesisDataFirehose), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":              "1",
+						"log_destination.%":              acctest.Ct1,
 						"log_destination.deliveryStream": updatedStreamName,
-						"log_destination_type":           networkfirewall.LogDestinationTypeKinesisDataFirehose,
+						"log_destination_type":           string(awstypes.LogDestinationTypeKinesisDataFirehose),
 					}),
 				),
 			},
@@ -159,27 +160,27 @@ func TestAccNetworkFirewallLoggingConfiguration_KinesisLogDestination_logType(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, networkfirewall.LogDestinationTypeKinesisDataFirehose, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, string(awstypes.LogDestinationTypeKinesisDataFirehose), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_type": networkfirewall.LogTypeFlow,
+						"log_type": string(awstypes.LogTypeFlow),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, networkfirewall.LogDestinationTypeKinesisDataFirehose, networkfirewall.LogTypeAlert),
+				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, string(awstypes.LogDestinationTypeKinesisDataFirehose), string(awstypes.LogTypeAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_type": networkfirewall.LogTypeAlert,
+						"log_type": string(awstypes.LogTypeAlert),
 					}),
 				),
 			},
@@ -201,29 +202,29 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_bucketName(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "1",
+						"log_destination.%":          acctest.Ct1,
 						"log_destination.bucketName": bucketName,
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3(updatedBucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3(updatedBucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "1",
+						"log_destination.%":          acctest.Ct1,
 						"log_destination.bucketName": updatedBucketName,
 					}),
 				),
@@ -245,28 +246,28 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_logType(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_type": networkfirewall.LogTypeFlow,
+						"log_type": string(awstypes.LogTypeFlow),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeAlert),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_type": networkfirewall.LogTypeAlert,
+						"log_type": string(awstypes.LogTypeAlert),
 					}),
 				),
 			},
@@ -287,29 +288,29 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "1",
+						"log_destination.%":          acctest.Ct1,
 						"log_destination.bucketName": bucketName,
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3UpdatePrefix(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3UpdatePrefix(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "2",
+						"log_destination.%":          acctest.Ct2,
 						"log_destination.bucketName": bucketName,
 						"log_destination.prefix":     "update-prefix",
 					}),
@@ -333,23 +334,23 @@ func TestAccNetworkFirewallLoggingConfiguration_updateFirewallARN(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, names.AttrARN),
 				),
 			},
 			{
 				// ForceNew Firewall i.e. LoggingConfiguration Resource
-				Config: testAccLoggingConfigurationConfig_s3UpdateFirewallARN(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3UpdateFirewallARN(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_arn", firewallResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -371,44 +372,44 @@ func TestAccNetworkFirewallLoggingConfiguration_updateLogDestinationType(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, networkfirewall.LogDestinationTypeCloudWatchLogs, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":        "1",
+						"log_destination.%":        acctest.Ct1,
 						"log_destination.logGroup": logGroupName,
-						"log_destination_type":     networkfirewall.LogDestinationTypeCloudWatchLogs,
-						"log_type":                 networkfirewall.LogTypeFlow,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, networkfirewall.LogDestinationTypeKinesisDataFirehose, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_kinesis(streamName, rName, string(awstypes.LogDestinationTypeKinesisDataFirehose), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":              "1",
+						"log_destination.%":              acctest.Ct1,
 						"log_destination.deliveryStream": streamName,
-						"log_destination_type":           networkfirewall.LogDestinationTypeKinesisDataFirehose,
-						"log_type":                       networkfirewall.LogTypeFlow,
+						"log_destination_type":           string(awstypes.LogDestinationTypeKinesisDataFirehose),
+						"log_type":                       string(awstypes.LogTypeFlow),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination_type": networkfirewall.LogDestinationTypeS3,
-						"log_type":             networkfirewall.LogTypeFlow,
+						"log_destination_type": string(awstypes.LogDestinationTypeS3),
+						"log_type":             string(awstypes.LogTypeFlow),
 					}),
 				),
 			},
@@ -430,42 +431,42 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinations(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeAlert),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, networkfirewall.LogTypeAlert, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":              "1",
+						"log_destination.%":              acctest.Ct1,
 						"log_destination.deliveryStream": streamName,
-						"log_destination_type":           networkfirewall.LogDestinationTypeKinesisDataFirehose,
-						"log_type":                       networkfirewall.LogTypeFlow,
+						"log_destination_type":           string(awstypes.LogDestinationTypeKinesisDataFirehose),
+						"log_type":                       string(awstypes.LogTypeFlow),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "1",
+						"log_destination.%":          acctest.Ct1,
 						"log_destination.bucketName": bucketName,
-						"log_destination_type":       networkfirewall.LogDestinationTypeS3,
-						"log_type":                   networkfirewall.LogTypeAlert,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeAlert),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeAlert),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct1),
 				),
 			},
 			{
@@ -486,41 +487,41 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDestin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, networkfirewall.LogTypeAlert, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":        "1",
+						"log_destination.%":        acctest.Ct1,
 						"log_destination.logGroup": logGroupName,
-						"log_destination_type":     networkfirewall.LogDestinationTypeCloudWatchLogs,
-						"log_type":                 networkfirewall.LogTypeFlow,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "1",
+						"log_destination.%":          acctest.Ct1,
 						"log_destination.bucketName": bucketName,
-						"log_destination_type":       networkfirewall.LogDestinationTypeS3,
-						"log_type":                   networkfirewall.LogTypeAlert,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeAlert),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeAlert),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeAlert)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "1",
+						"log_destination.%":          acctest.Ct1,
 						"log_destination.bucketName": bucketName,
-						"log_destination_type":       networkfirewall.LogDestinationTypeS3,
-						"log_type":                   networkfirewall.LogTypeAlert,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeAlert),
 					}),
 				),
 			},
@@ -542,41 +543,41 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDestina
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, networkfirewall.LogTypeAlert, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":        "1",
+						"log_destination.%":        acctest.Ct1,
 						"log_destination.logGroup": logGroupName,
-						"log_destination_type":     networkfirewall.LogDestinationTypeCloudWatchLogs,
-						"log_type":                 networkfirewall.LogTypeFlow,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "1",
+						"log_destination.%":          acctest.Ct1,
 						"log_destination.bucketName": bucketName,
-						"log_destination_type":       networkfirewall.LogDestinationTypeS3,
-						"log_type":                   networkfirewall.LogTypeAlert,
+						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
+						"log_type":                   string(awstypes.LogTypeAlert),
 					}),
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, networkfirewall.LogDestinationTypeCloudWatchLogs, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, string(awstypes.LogDestinationTypeCloudwatchLogs), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":        "1",
+						"log_destination.%":        acctest.Ct1,
 						"log_destination.logGroup": logGroupName,
-						"log_destination_type":     networkfirewall.LogDestinationTypeCloudWatchLogs,
-						"log_type":                 networkfirewall.LogTypeFlow,
+						"log_destination_type":     string(awstypes.LogDestinationTypeCloudwatchLogs),
+						"log_type":                 string(awstypes.LogTypeFlow),
 					}),
 				),
 			},
@@ -597,12 +598,12 @@ func TestAccNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
+				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, string(awstypes.LogDestinationTypeS3), string(awstypes.LogTypeFlow)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceLoggingConfiguration(), resourceName),
@@ -620,17 +621,19 @@ func testAccCheckLoggingConfigurationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
-			output, err := tfnetworkfirewall.FindLoggingConfiguration(ctx, conn, rs.Primary.ID)
-			if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+
+			_, err := tfnetworkfirewall.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
-			if output != nil {
-				return fmt.Errorf("NetworkFirewall Logging Configuration for firewall (%s) still exists", rs.Primary.ID)
-			}
+
+			return fmt.Errorf("NetworkFirewall Logging Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -644,54 +647,19 @@ func testAccCheckLoggingConfigurationExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No NetworkFirewall Logging Configuration ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
-		output, err := tfnetworkfirewall.FindLoggingConfiguration(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		if output == nil || output.LoggingConfiguration == nil {
-			return fmt.Errorf("NetworkFirewall Logging Configuration for firewall (%s) not found", rs.Primary.ID)
-		}
+		_, err := tfnetworkfirewall.FindLoggingConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-		return nil
+		return err
 	}
 }
 
-func testAccLoggingConfigurationBaseConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccLoggingConfigurationConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
@@ -704,43 +672,17 @@ resource "aws_networkfirewall_firewall" "test" {
   vpc_id              = aws_vpc.test.id
 
   subnet_mapping {
-    subnet_id = aws_subnet.test.id
+    subnet_id = aws_subnet.test[0].id
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccLoggingConfigurationBaseConfig_updateFirewall(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccLoggingConfigurationConfig_baseFirewallUpdated(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall_policy" "test" {
   name = %[1]q
+
   firewall_policy {
     stateless_fragment_default_actions = ["aws:drop"]
     stateless_default_actions          = ["aws:pass"]
@@ -753,16 +695,16 @@ resource "aws_networkfirewall_firewall" "test" {
   vpc_id              = aws_vpc.test.id
 
   subnet_mapping {
-    subnet_id = aws_subnet.test.id
+    subnet_id = aws_subnet.test[0].id
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccLoggingConfigurationS3BucketDependencyConfig(rName string) string {
+func testAccLoggingConfigurationConfig_baseS3Bucket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket        = %q
+  bucket        = %[1]q
   force_destroy = true
 
   lifecycle {
@@ -772,10 +714,10 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccLoggingConfigurationCloudWatchDependencyConfig(rName string) string {
+func testAccLoggingConfigurationConfig_baseCloudWatch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
-  name = %q
+  name = %[1]q
 
   lifecycle {
     create_before_destroy = true
@@ -784,7 +726,7 @@ resource "aws_cloudwatch_log_group" "test" {
 `, rName)
 }
 
-func testAccLoggingConfiguration_kinesisDependenciesConfig(rName, streamName string) string {
+func testAccLoggingConfigurationConfig_baseFirehose(rName, streamName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -886,8 +828,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccLoggingConfigurationConfig_s3(bucketName, rName, destinationType, logType string) string {
 	return acctest.ConfigCompose(
-		testAccLoggingConfigurationBaseConfig(rName),
-		testAccLoggingConfigurationS3BucketDependencyConfig(bucketName),
+		testAccLoggingConfigurationConfig_base(rName),
+		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
@@ -907,8 +849,8 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
 func testAccLoggingConfigurationConfig_s3UpdateFirewallARN(bucketName, rName, destinationType, logType string) string {
 	return acctest.ConfigCompose(
-		testAccLoggingConfigurationBaseConfig_updateFirewall(rName),
-		testAccLoggingConfigurationS3BucketDependencyConfig(bucketName),
+		testAccLoggingConfigurationConfig_baseFirewallUpdated(rName),
+		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
@@ -928,8 +870,8 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
 func testAccLoggingConfigurationConfig_s3UpdatePrefix(bucketName, rName, destinationType, logType string) string {
 	return acctest.ConfigCompose(
-		testAccLoggingConfigurationBaseConfig(rName),
-		testAccLoggingConfigurationS3BucketDependencyConfig(bucketName),
+		testAccLoggingConfigurationConfig_base(rName),
+		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
@@ -950,8 +892,8 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
 func testAccLoggingConfigurationConfig_kinesis(streamName, rName, destinationType, logType string) string {
 	return acctest.ConfigCompose(
-		testAccLoggingConfigurationBaseConfig(rName),
-		testAccLoggingConfiguration_kinesisDependenciesConfig(rName, streamName),
+		testAccLoggingConfigurationConfig_base(rName),
+		testAccLoggingConfigurationConfig_baseFirehose(rName, streamName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
@@ -971,8 +913,8 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
 func testAccLoggingConfigurationConfig_cloudWatch(logGroupName, rName, destinationType, logType string) string {
 	return acctest.ConfigCompose(
-		testAccLoggingConfigurationBaseConfig(rName),
-		testAccLoggingConfigurationCloudWatchDependencyConfig(logGroupName),
+		testAccLoggingConfigurationConfig_base(rName),
+		testAccLoggingConfigurationConfig_baseCloudWatch(logGroupName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
@@ -992,9 +934,9 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
 func testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, logTypeS3, logTypeKinesis string) string {
 	return acctest.ConfigCompose(
-		testAccLoggingConfigurationS3BucketDependencyConfig(bucketName),
-		testAccLoggingConfiguration_kinesisDependenciesConfig(rName, streamName),
-		testAccLoggingConfigurationBaseConfig(rName),
+		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
+		testAccLoggingConfigurationConfig_baseFirehose(rName, streamName),
+		testAccLoggingConfigurationConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn
@@ -1022,9 +964,9 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 
 func testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, logTypeS3, logTypeCloudWatch string) string {
 	return acctest.ConfigCompose(
-		testAccLoggingConfigurationBaseConfig(rName),
-		testAccLoggingConfigurationS3BucketDependencyConfig(bucketName),
-		testAccLoggingConfigurationCloudWatchDependencyConfig(logGroupName),
+		testAccLoggingConfigurationConfig_base(rName),
+		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
+		testAccLoggingConfigurationConfig_baseCloudWatch(logGroupName),
 		fmt.Sprintf(`
 resource "aws_networkfirewall_logging_configuration" "test" {
   firewall_arn = aws_networkfirewall_firewall.test.arn

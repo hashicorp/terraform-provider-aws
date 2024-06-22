@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupVaultNotification_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccBackupVaultNotification_basic(t *testing.T) {
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +35,7 @@ func TestAccBackupVaultNotification_basic(t *testing.T) {
 				Config: testAccVaultNotificationsConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "backup_vault_events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "backup_vault_events.#", acctest.Ct2),
 				),
 			},
 			{
@@ -54,7 +55,7 @@ func TestAccBackupVaultNotification_disappears(t *testing.T) {
 	resourceName := "aws_backup_vault_notifications.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVaultNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func TestAccBackupVaultNotification_disappears(t *testing.T) {
 
 func testAccCheckVaultNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault_notifications" {
 				continue
@@ -82,10 +83,10 @@ func testAccCheckVaultNotificationDestroy(ctx context.Context) resource.TestChec
 				BackupVaultName: aws.String(rs.Primary.ID),
 			}
 
-			resp, err := conn.GetBackupVaultNotificationsWithContext(ctx, input)
+			resp, err := conn.GetBackupVaultNotifications(ctx, input)
 
 			if err == nil {
-				if aws.StringValue(resp.BackupVaultName) == rs.Primary.ID {
+				if aws.ToString(resp.BackupVaultName) == rs.Primary.ID {
 					return fmt.Errorf("Backup Plan notifications '%s' was not deleted properly", rs.Primary.ID)
 				}
 			}
@@ -102,11 +103,11 @@ func testAccCheckVaultNotificationExists(ctx context.Context, name string, vault
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		params := &backup.GetBackupVaultNotificationsInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.GetBackupVaultNotificationsWithContext(ctx, params)
+		resp, err := conn.GetBackupVaultNotifications(ctx, params)
 		if err != nil {
 			return err
 		}

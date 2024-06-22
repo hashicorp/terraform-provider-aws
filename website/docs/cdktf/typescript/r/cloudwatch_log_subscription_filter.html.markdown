@@ -83,7 +83,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
 
 ```console
-% terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter /aws/lambda/example_lambda_name|test_lambdafunction_logfilter
+% terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter "/aws/lambda/example_lambda_name|test_lambdafunction_logfilter"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6fe4a3f3f90f50bfb6b67e46b6ceeb3cbceaaa24c09559152a030888d8e3104b -->
+<!-- cache-key: cdktf-0.20.1 input-1915f72d7cf7bfe35f0416b1375655071d80b2c34d1cd2730d9615b7d32782b7 -->
