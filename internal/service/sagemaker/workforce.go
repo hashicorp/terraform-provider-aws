@@ -429,7 +429,7 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 		names.AttrIssuer:                      aws.StringValue(config.Issuer),
 		"jwks_uri":                            aws.StringValue(config.JwksUri),
 		"logout_endpoint":                     aws.StringValue(config.LogoutEndpoint),
-		names.AttrScope:                               aws.StringValue(config.Scope),
+		names.AttrScope:                       aws.StringValue(config.Scope),
 		"token_endpoint":                      aws.StringValue(config.TokenEndpoint),
 		"user_info_endpoint":                  aws.StringValue(config.UserInfoEndpoint),
 	}
