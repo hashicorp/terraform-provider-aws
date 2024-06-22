@@ -46,6 +46,8 @@ var (
 	ResourceInstanceState                            = resourceInstanceState
 	ResourceKeyPair                                  = resourceKeyPair
 	ResourceLaunchTemplate                           = resourceLaunchTemplate
+	ResourceLocalGatewayRoute                        = resourceLocalGatewayRoute
+	ResourceLocalGatewayRouteTableVPCAssociation     = resourceLocalGatewayRouteTableVPCAssociation
 	ResourceMainRouteTableAssociation                = resourceMainRouteTableAssociation
 	ResourceNetworkACL                               = resourceNetworkACL
 	ResourceNetworkACLRule                           = resourceNetworkACLRule
