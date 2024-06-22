@@ -85,6 +85,7 @@ variable "service_labels" {
     "cur",
     "customerprofiles",
     "databrew",
+    "databrew",
     "dataexchange",
     "datapipeline",
     "datasync",

@@ -71,6 +71,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/databrew"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
@@ -313,6 +314,8 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		costoptimizationhub.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
 		customerprofiles.ServicePackage(ctx),
+		databrew.ServicePackage(ctx),
+		databrew.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),

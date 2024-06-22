@@ -631,6 +631,12 @@ service/databrew:
           - any-glob-to-any-file:
               - 'internal/service/databrew/**/*'
               - 'website/**/databrew_*'
+service/databrew:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/databrew/**/*'
+              - 'website/**/databrew_*'
 service/dataexchange:
   - any:
       - changed-files:
