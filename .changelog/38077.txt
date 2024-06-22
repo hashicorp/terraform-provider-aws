@@ -1,0 +1,4 @@
+
+```release-note:enhancement
+resource/wafv2_web_acl: Add `sensitivity_level` attribute to `sqli_match_statement`
+```
