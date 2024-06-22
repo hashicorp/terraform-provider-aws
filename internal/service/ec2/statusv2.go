@@ -220,6 +220,36 @@ func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn 
 	}
 }
 
+// statusLocalGatewayRouteTableVPCAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
+func statusLocalGatewayRouteTableVPCAssociationState(ctx context.Context, conn *ec2.Client, localGatewayRouteTableVpcAssociationID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
+			LocalGatewayRouteTableVpcAssociationIds: []string{localGatewayRouteTableVpcAssociationID},
+		}
+
+		output, err := conn.DescribeLocalGatewayRouteTableVpcAssociations(ctx, input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var association awstypes.LocalGatewayRouteTableVpcAssociation
+
+		for _, outputAssociation := range output.LocalGatewayRouteTableVpcAssociations {
+			if aws.ToString(outputAssociation.LocalGatewayRouteTableVpcAssociationId) == localGatewayRouteTableVpcAssociationID {
+				association = outputAssociation
+				break
+			}
+		}
+
+		if association.LocalGatewayRouteTableVpcAssociationId == nil {
+			return association, string(awstypes.RouteTableAssociationStateCodeDisassociated), nil
+		}
+
+		return association, aws.ToString(association.State), nil
+	}
+}
+
 func statusPlacementGroup(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findPlacementGroupByName(ctx, conn, name)
