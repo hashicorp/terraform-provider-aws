@@ -161,16 +161,6 @@ func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoi
 	return output, nil
 }
 
-func findCOIPPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) (*awstypes.CoipPool, error) {
-	output, err := findCOIPPools(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
 func findFleet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFleetsInput) (*awstypes.FleetData, error) {
 	output, err := findFleets(ctx, conn, input)
 
@@ -669,16 +659,6 @@ func findLocalGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *e
 	return output, nil
 }
 
-func findLocalGatewayRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) (*awstypes.LocalGatewayRouteTable, error) {
-	output, err := findLocalGatewayRouteTables(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
 func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) ([]awstypes.LocalGatewayVirtualInterfaceGroup, error) {
 	var output []awstypes.LocalGatewayVirtualInterfaceGroup
 
@@ -696,16 +676,6 @@ func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Clien
 	return output, nil
 }
 
-func findLocalGatewayVirtualInterfaceGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) (*awstypes.LocalGatewayVirtualInterfaceGroup, error) {
-	output, err := findLocalGatewayVirtualInterfaceGroups(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
 func findLocalGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) ([]awstypes.LocalGateway, error) {
 	var output []awstypes.LocalGateway
 
@@ -721,16 +691,6 @@ func findLocalGateways(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	}
 
 	return output, nil
-}
-
-func findLocalGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) (*awstypes.LocalGateway, error) {
-	output, err := findLocalGateways(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
 }
 
 func findPlacementGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribePlacementGroupsInput) (*awstypes.PlacementGroup, error) {
