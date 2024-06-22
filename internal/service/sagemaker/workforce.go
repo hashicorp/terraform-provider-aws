@@ -108,7 +108,7 @@ func ResourceWorkforce() *schema.Resource {
 								validation.StringLenBetween(1, 500),
 								validation.IsURLWithHTTPS,
 							)},
-						"scope": {
+						names.AttrScope: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -409,7 +409,7 @@ func expandWorkforceOIDCConfig(l []interface{}) *sagemaker.OidcConfig {
 		config.AuthenticationRequestExtraParams = flex.ExpandStringMap(v)
 	}
 
-	if v, ok := m["scope"].(string); ok && v != "" {
+	if v, ok := m[names.AttrScope].(string); ok && v != "" {
 		config.Scope = aws.String(v)
 	}
 
@@ -429,7 +429,7 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 		names.AttrIssuer:                      aws.StringValue(config.Issuer),
 		"jwks_uri":                            aws.StringValue(config.JwksUri),
 		"logout_endpoint":                     aws.StringValue(config.LogoutEndpoint),
-		"scope":                               aws.StringValue(config.Scope),
+		names.AttrScope:                               aws.StringValue(config.Scope),
 		"token_endpoint":                      aws.StringValue(config.TokenEndpoint),
 		"user_info_endpoint":                  aws.StringValue(config.UserInfoEndpoint),
 	}
