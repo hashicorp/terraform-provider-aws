@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -130,7 +130,7 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx context.Context,
 			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		association, err := tfec2.GetLocalGatewayRouteTableVPCAssociation(ctx, conn, rs.Primary.ID)
 
@@ -142,8 +142,8 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx context.Context,
 			return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(association.State) != ec2.RouteTableAssociationStateCodeAssociated {
-			return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) not in associated state: %s", rs.Primary.ID, aws.StringValue(association.State))
+		if aws.ToString(association.State) != string(awstypes.RouteTableAssociationStateCodeAssociated) {
+			return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) not in associated state: %s", rs.Primary.ID, aws.ToString(association.State))
 		}
 
 		return nil
@@ -152,7 +152,7 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx context.Context,
 
 func testAccCheckLocalGatewayRouteTableVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_local_gateway_route_table_vpc_association" {
@@ -165,8 +165,8 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationDestroy(ctx context.Context
 				return err
 			}
 
-			if association != nil && aws.StringValue(association.State) != ec2.RouteTableAssociationStateCodeDisassociated {
-				return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) still exists in state: %s", rs.Primary.ID, aws.StringValue(association.State))
+			if association != nil && aws.ToString(association.State) != string(awstypes.RouteTableAssociationStateCodeDisassociated) {
+				return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) still exists in state: %s", rs.Primary.ID, aws.ToString(association.State))
 			}
 		}
 
