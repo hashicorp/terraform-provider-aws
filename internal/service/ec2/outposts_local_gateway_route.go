@@ -161,7 +161,7 @@ func resourceLocalGatewayRouteDelete(ctx context.Context, d *schema.ResourceData
 		LocalGatewayRouteTableId: aws.String(localGatewayRouteTableID),
 	}
 
-	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route (%s): %s", d.Id(), input)
+	log.Printf("[DEBUG] Deleting EC2 Local Gateway Route (%s): %#v", d.Id(), input)
 	_, err = conn.DeleteLocalGatewayRoute(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, "InvalidRoute.NotFound") || tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
