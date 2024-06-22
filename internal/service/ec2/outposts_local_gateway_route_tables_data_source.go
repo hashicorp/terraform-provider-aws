@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_ec2_local_gateway_route_tables")
-func DataSourceLocalGatewayRouteTables() *schema.Resource {
+func dataSourceLocalGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayRouteTablesRead,
 
@@ -40,15 +40,15 @@ func DataSourceLocalGatewayRouteTables() *schema.Resource {
 
 func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeLocalGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -56,7 +56,7 @@ func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.Resour
 		input.Filters = nil
 	}
 
-	output, err := FindLocalGatewayRouteTables(ctx, conn, input)
+	output, err := findLocalGatewayRouteTables(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route Tables: %s", err)
@@ -65,7 +65,7 @@ func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.Resour
 	var routeTableIDs []string
 
 	for _, v := range output {
-		routeTableIDs = append(routeTableIDs, aws.StringValue(v.LocalGatewayRouteTableId))
+		routeTableIDs = append(routeTableIDs, aws.ToString(v.LocalGatewayRouteTableId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
