@@ -318,6 +318,11 @@ func sqliMatchStatementSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"field_to_match":      fieldToMatchSchema(),
+				"sensitivity_level": {
+					Type:             schema.TypeString,
+					Required:         false,
+					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
+				},
 				"text_transformation": textTransformationSchema(),
 			},
 		},

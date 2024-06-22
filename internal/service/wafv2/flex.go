@@ -913,6 +913,7 @@ func expandSQLiMatchStatement(l []interface{}) *awstypes.SqliMatchStatement {
 
 	return &awstypes.SqliMatchStatement{
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
+		SensitivityLevel:    awstypes.SensitivityLevel(m["sensitivity_level"].(string)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -2332,6 +2333,7 @@ func flattenSQLiMatchStatement(s *awstypes.SqliMatchStatement) interface{} {
 
 	m := map[string]interface{}{
 		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
+		"sensitivity_level":   string(s.SensitivityLevel),
 		"text_transformation": flattenTextTransformations(s.TextTransformations),
 	}
 
