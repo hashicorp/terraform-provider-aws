@@ -63,6 +63,11 @@ func ResourceWorkforce() *schema.Resource {
 				ExactlyOneOf: []string{"oidc_config", "cognito_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"authentication_request_extra_params": {
+							Type:     schema.TypeMap,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Optional: true,
+						},
 						"authorization_endpoint": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -103,6 +108,10 @@ func ResourceWorkforce() *schema.Resource {
 								validation.StringLenBetween(1, 500),
 								validation.IsURLWithHTTPS,
 							)},
+						"scope": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"token_endpoint": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -396,6 +405,14 @@ func expandWorkforceOIDCConfig(l []interface{}) *sagemaker.OidcConfig {
 		UserInfoEndpoint:      aws.String(m["user_info_endpoint"].(string)),
 	}
 
+	if v, ok := m["authentication_request_extra_params"].(map[string]interface{}); ok && v != nil {
+		config.AuthenticationRequestExtraParams = flex.ExpandStringMap(v)
+	}
+
+	if v, ok := m["scope"].(string); ok && v != "" {
+		config.Scope = aws.String(v)
+	}
+
 	return config
 }
 
@@ -405,14 +422,16 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 	}
 
 	m := map[string]interface{}{
-		"authorization_endpoint": aws.StringValue(config.AuthorizationEndpoint),
-		names.AttrClientID:       aws.StringValue(config.ClientId),
-		names.AttrClientSecret:   clientSecret,
-		names.AttrIssuer:         aws.StringValue(config.Issuer),
-		"jwks_uri":               aws.StringValue(config.JwksUri),
-		"logout_endpoint":        aws.StringValue(config.LogoutEndpoint),
-		"token_endpoint":         aws.StringValue(config.TokenEndpoint),
-		"user_info_endpoint":     aws.StringValue(config.UserInfoEndpoint),
+		"authentication_request_extra_params": aws.StringValueMap(config.AuthenticationRequestExtraParams),
+		"authorization_endpoint":              aws.StringValue(config.AuthorizationEndpoint),
+		names.AttrClientID:                    aws.StringValue(config.ClientId),
+		names.AttrClientSecret:                clientSecret,
+		names.AttrIssuer:                      aws.StringValue(config.Issuer),
+		"jwks_uri":                            aws.StringValue(config.JwksUri),
+		"logout_endpoint":                     aws.StringValue(config.LogoutEndpoint),
+		"scope":                               aws.StringValue(config.Scope),
+		"token_endpoint":                      aws.StringValue(config.TokenEndpoint),
+		"user_info_endpoint":                  aws.StringValue(config.UserInfoEndpoint),
 	}
 
 	return []map[string]interface{}{m}
