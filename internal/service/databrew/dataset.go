@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/databrew"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databrew/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,24 +55,18 @@ func (r *resourceDataset) Metadata(_ context.Context, req resource.MetadataReque
 func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			names.AttrID: framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
 			},
-			"input": schema.MapNestedAttribute{
-				NestedObject: schema.NestedAttributeObject{
-                    Attributes: map[string]schema.Attribute{
-                        "s3_input_definition": schema.MapNestedAttribute{
-                            NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"bucket": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-                        },
-                    },
-                },
-                Required: true,
+			"input": schema.ListAttribute{
+				Required:   true,
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inputModel](ctx),
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"s3_input_definition": fwtypes.NewListNestedObjectTypeOf[s3InputDefinitionModel](ctx),
+					},
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -87,13 +83,20 @@ func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest
 	conn := r.Meta().DataBrewClient(ctx)
 
 	var plan resourceDatasetData
+
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	in := &databrew.CreateDatasetInput{
-		Name:        aws.String(plan.Name.ValueString()),
+		Name: aws.String(plan.Name.ValueString()),
+	}
+
+	planInput, _ := plan.Input.ToPtr(ctx)
+
+	if !plan.Input.IsNull() {
+		in.Input = expandInput(ctx, *planInput)
 	}
 
 	out, err := conn.CreateDataset(ctx, in)
@@ -113,6 +116,7 @@ func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	plan.Name = flex.StringToFramework(ctx, out.Name)
+	plan.ID = flex.StringToFramework(ctx, out.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -206,16 +210,6 @@ func (r *resourceDataset) Delete(ctx context.Context, req resource.DeleteRequest
 		)
 		return
 	}
-
-	// deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	// _, err = waitDatasetDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.DataBrew, create.ErrActionWaitingForDeletion, ResNameDataset, state.Name.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
 }
 
 func (r *resourceDataset) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -253,8 +247,39 @@ func findDatasetByName(ctx context.Context, conn *databrew.Client, name string) 
 	return out, nil
 }
 
+func expandInput(ctx context.Context, model inputModel) *awstypes.Input {
+	obj := &awstypes.Input{}
+
+	s3InputDefinitionModelData, _ := model.S3InputDefinition.ToPtr(ctx)
+
+	if !model.S3InputDefinition.IsNull() {
+		obj.S3InputDefinition = expandInputS3InputDefinition(*s3InputDefinitionModelData)
+	}
+
+	return obj
+}
+
+func expandInputS3InputDefinition(model s3InputDefinitionModel) *awstypes.S3Location {
+	obj := &awstypes.S3Location{}
+
+	if !model.Bucket.IsNull() {
+		obj.Bucket = aws.String(model.Bucket.ValueString())
+	}
+
+	return obj
+}
+
+type s3InputDefinitionModel struct {
+	Bucket types.String `tfsdk:"bucket"`
+}
+
+type inputModel struct {
+	S3InputDefinition fwtypes.ListNestedObjectValueOf[s3InputDefinitionModel] `tfsdk:"s3_input_definition"`
+}
+
 type resourceDatasetData struct {
-	Name        types.String   `tfsdk:"name"`
-	Input types.String   `tfsdk:"input"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+	ID       types.String                                `tfsdk:"id"`
+	Name     types.String                                `tfsdk:"name"`
+	Input    fwtypes.ListNestedObjectValueOf[inputModel] `tfsdk:"input"`
+	Timeouts timeouts.Value                              `tfsdk:"timeouts"`
 }

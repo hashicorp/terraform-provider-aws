@@ -123,6 +123,10 @@ func testAccCheckDatasetDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccCheckDatasetExists(ctx context.Context, name string, dataset *databrew.DescribeDatasetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
+
+		fmt.Println("ID:")
+		fmt.Println(rs.Primary.ID)
+
 		if !ok {
 			return create.Error(names.DataBrew, create.ErrActionCheckingExistence, tfdatabrew.ResNameDataset, name, errors.New("not found"))
 		}
@@ -177,17 +181,16 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.bucket
-  key    = %[1]q
-  source = "./test-fixtures/example-opensearch-custom-package.txt"
-  etag   = filemd5("./test-fixtures/example-opensearch-custom-package.txt")
+  bucket         = aws_s3_bucket.test.bucket
+  key            = %[1]q
+  content_base64 = "dGVzdAo="
 }
 
 resource "aws_databrew_dataset" "test" {
   name         = %[1]q
-  input        = {
-	s3_input_definition = {
-		bucket = aws_s3_bucket.test
+  input {
+	s3_input_definition {
+		bucket = aws_s3_bucket.test.id
 	}
   }
 }
