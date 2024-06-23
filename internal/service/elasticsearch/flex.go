@@ -5,14 +5,14 @@ package elasticsearch
 
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
-	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
-	options := &elasticsearch.CognitoOptions{
+func expandCognitoOptions(c []interface{}) *awstypes.CognitoOptions {
+	options := &awstypes.CognitoOptions{
 		Enabled: aws.Bool(false),
 	}
 	if len(c) < 1 {
@@ -40,13 +40,13 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 	return options
 }
 
-func expandDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointOptions {
+func expandDomainEndpointOptions(l []interface{}) *awstypes.DomainEndpointOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
-	domainEndpointOptions := &elasticsearch.DomainEndpointOptions{}
+	domainEndpointOptions := &awstypes.DomainEndpointOptions{}
 
 	if v, ok := m["enforce_https"].(bool); ok {
 		domainEndpointOptions.EnforceHTTPS = aws.Bool(v)
@@ -73,15 +73,15 @@ func expandDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointO
 	return domainEndpointOptions
 }
 
-func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
-	options := elasticsearch.EBSOptions{}
+func expandEBSOptions(m map[string]interface{}) *awstypes.EBSOptions {
+	options := awstypes.EBSOptions{}
 
 	if ebsEnabled, ok := m["ebs_enabled"]; ok {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
 			if v, ok := m[names.AttrVolumeSize]; ok && v.(int) > 0 {
-				options.VolumeSize = aws.Int64(int64(v.(int)))
+				options.VolumeSize = aws.Int32(int32(v.(int)))
 			}
 			var volumeType string
 			if v, ok := m[names.AttrVolumeType]; ok && v.(string) != "" {
@@ -89,10 +89,10 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 				options.VolumeType = awstypes.VolumeType(volumeType)
 			}
 			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
-				options.Iops = aws.Int64(int64(v.(int)))
+				options.Iops = aws.Int32(int32(v.(int)))
 			}
 			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
-				options.Throughput = aws.Int64(int64(v.(int)))
+				options.Throughput = aws.Int32(int32(v.(int)))
 			}
 		}
 	}
@@ -100,8 +100,8 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 	return &options
 }
 
-func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.EncryptionAtRestOptions {
-	options := elasticsearch.EncryptionAtRestOptions{}
+func expandEncryptAtRestOptions(m map[string]interface{}) *awstypes.EncryptionAtRestOptions {
+	options := awstypes.EncryptionAtRestOptions{}
 
 	if v, ok := m[names.AttrEnabled]; ok {
 		options.Enabled = aws.Bool(v.(bool))
@@ -113,24 +113,24 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.Encrypt
 	return &options
 }
 
-func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
+func expandVPCOptions(m map[string]interface{}) *awstypes.VPCOptions {
 	if m == nil {
 		return nil
 	}
 
-	options := elasticsearch.VPCOptions{}
+	options := awstypes.VPCOptions{}
 
 	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
-		options.SecurityGroupIds = flex.ExpandStringSet(v)
+		options.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 	if v, ok := m[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
-		options.SubnetIds = flex.ExpandStringSet(v)
+		options.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return &options
 }
 
-func flattenCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interface{} {
+func flattenCognitoOptions(c *awstypes.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	m[names.AttrEnabled] = aws.ToBool(c.Enabled)
@@ -144,7 +144,7 @@ func flattenCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]interfa
 	return []map[string]interface{}{m}
 }
 
-func flattenDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainEndpointOptions) []interface{} {
+func flattenDomainEndpointOptions(domainEndpointOptions *awstypes.DomainEndpointOptions) []interface{} {
 	if domainEndpointOptions == nil {
 		return nil
 	}
@@ -166,7 +166,7 @@ func flattenDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainEnd
 	return []interface{}{m}
 }
 
-func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
+func flattenEBSOptions(o *awstypes.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if o.EBSEnabled != nil {
@@ -175,23 +175,21 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 
 	if aws.ToBool(o.EBSEnabled) {
 		if o.Iops != nil {
-			m[names.AttrIOPS] = aws.ToInt64(o.Iops)
+			m[names.AttrIOPS] = aws.ToInt32(o.Iops)
 		}
 		if o.Throughput != nil {
-			m[names.AttrThroughput] = aws.ToInt64(o.Throughput)
+			m[names.AttrThroughput] = aws.ToInt32(o.Throughput)
 		}
 		if o.VolumeSize != nil {
-			m[names.AttrVolumeSize] = aws.ToInt64(o.VolumeSize)
+			m[names.AttrVolumeSize] = aws.ToInt32(o.VolumeSize)
 		}
-		if o.VolumeType != nil {
-			m[names.AttrVolumeType] = string(o.VolumeType)
-		}
+		m[names.AttrVolumeType] = string(o.VolumeType)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map[string]interface{} {
+func flattenEncryptAtRestOptions(o *awstypes.EncryptionAtRestOptions) []map[string]interface{} {
 	if o == nil {
 		return []map[string]interface{}{}
 	}
@@ -208,19 +206,19 @@ func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map
 	return []map[string]interface{}{m}
 }
 
-func flattenSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []map[string]interface{} {
+func flattenSnapshotOptions(snapshotOptions *awstypes.SnapshotOptions) []map[string]interface{} {
 	if snapshotOptions == nil {
 		return []map[string]interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"automated_snapshot_start_hour": int(aws.ToInt64(snapshotOptions.AutomatedSnapshotStartHour)),
+		"automated_snapshot_start_hour": int(aws.ToInt32(snapshotOptions.AutomatedSnapshotStartHour)),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface{} {
+func flattenVPCDerivedInfo(o *awstypes.VPCDerivedInfo) map[string]interface{} {
 	if o == nil {
 		return nil
 	}
@@ -228,13 +226,13 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
-		m[names.AttrAvailabilityZones] = flex.FlattenStringSet(o.AvailabilityZones)
+		m[names.AttrAvailabilityZones] = flex.FlattenStringValueSet(o.AvailabilityZones)
 	}
 	if o.SecurityGroupIds != nil {
-		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(o.SecurityGroupIds)
+		m[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(o.SecurityGroupIds)
 	}
 	if o.SubnetIds != nil {
-		m[names.AttrSubnetIDs] = flex.FlattenStringSet(o.SubnetIds)
+		m[names.AttrSubnetIDs] = flex.FlattenStringValueSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
 		m[names.AttrVPCID] = aws.ToString(o.VPCId)
