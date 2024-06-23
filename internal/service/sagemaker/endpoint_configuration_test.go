@@ -230,7 +230,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_ami(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.inference_ami_version", "al2-ami-sagemaker-inference-gpu-2"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.inference_ami_version", "al2-ami-sagemaker-inference-gpu-2"), //lintignore:AWSAT002
 				),
 			},
 			{
@@ -1293,6 +1293,7 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 }
 
 func testAccEndpointConfigurationConfig_ami(rName string) string {
+	//lintignore:AWSAT002
 	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
