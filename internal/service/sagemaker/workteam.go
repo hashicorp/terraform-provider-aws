@@ -472,7 +472,7 @@ func expandS3Presign(l []interface{}) *sagemaker.S3Presign {
 	config := &sagemaker.S3Presign{}
 
 	if v, ok := m["iam_policy_constraints"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		config.IamPolicyConstraints = expandIamPolicyConstraints(v)
+		config.IamPolicyConstraints = expandIAMPolicyConstraints(v)
 	} else {
 		return nil
 	}
@@ -486,13 +486,13 @@ func flattenS3Presign(config *sagemaker.S3Presign) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"iam_policy_constraints": flattenIamPolicyConstraints(config.IamPolicyConstraints),
+		"iam_policy_constraints": flattenIAMPolicyConstraints(config.IamPolicyConstraints),
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandIamPolicyConstraints(l []interface{}) *sagemaker.IamPolicyConstraints {
+func expandIAMPolicyConstraints(l []interface{}) *sagemaker.IamPolicyConstraints {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -512,7 +512,7 @@ func expandIamPolicyConstraints(l []interface{}) *sagemaker.IamPolicyConstraints
 	return config
 }
 
-func flattenIamPolicyConstraints(config *sagemaker.IamPolicyConstraints) []map[string]interface{} {
+func flattenIAMPolicyConstraints(config *sagemaker.IamPolicyConstraints) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
