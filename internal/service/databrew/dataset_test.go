@@ -53,10 +53,10 @@ func TestAccDataBrewDataset_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
 			},
 		},
 	})
@@ -123,9 +123,6 @@ func testAccCheckDatasetDestroy(ctx context.Context) resource.TestCheckFunc {
 func testAccCheckDatasetExists(ctx context.Context, name string, dataset *databrew.DescribeDatasetOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
-
-		fmt.Println("ID:")
-		fmt.Println(rs.Primary.ID)
 
 		if !ok {
 			return create.Error(names.DataBrew, create.ErrActionCheckingExistence, tfdatabrew.ResNameDataset, name, errors.New("not found"))

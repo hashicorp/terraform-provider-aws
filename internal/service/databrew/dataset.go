@@ -82,7 +82,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
 
-	var plan resourceDatasetData
+	var plan resourceDatasetModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -124,7 +124,7 @@ func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest
 func (r *resourceDataset) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
 
-	var state resourceDatasetData
+	var state resourceDatasetModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -136,6 +136,7 @@ func (r *resourceDataset) Read(ctx context.Context, req resource.ReadRequest, re
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataBrew, create.ErrActionSetting, ResNameDataset, state.Name.String(), err),
@@ -145,14 +146,16 @@ func (r *resourceDataset) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	state.Name = flex.StringToFramework(ctx, out.Name)
+	state.ID = flex.StringToFramework(ctx, out.Name)
 
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceDataset) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
 
-	var plan, state resourceDatasetData
+	var plan, state resourceDatasetModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -189,7 +192,7 @@ func (r *resourceDataset) Update(ctx context.Context, req resource.UpdateRequest
 func (r *resourceDataset) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
 
-	var state resourceDatasetData
+	var state resourceDatasetModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -213,7 +216,7 @@ func (r *resourceDataset) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceDataset) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("name"), req, resp)
 }
 
 const (
@@ -277,7 +280,7 @@ type inputModel struct {
 	S3InputDefinition fwtypes.ListNestedObjectValueOf[s3InputDefinitionModel] `tfsdk:"s3_input_definition"`
 }
 
-type resourceDatasetData struct {
+type resourceDatasetModel struct {
 	ID       types.String                                `tfsdk:"id"`
 	Name     types.String                                `tfsdk:"name"`
 	Input    fwtypes.ListNestedObjectValueOf[inputModel] `tfsdk:"input"`
