@@ -75,6 +75,7 @@ DMS (Database Migration)
 DRS (Elastic Disaster Recovery)
 Data Exchange
 Data Pipeline
+DataBrew
 DataSync
 DataZone
 Detective

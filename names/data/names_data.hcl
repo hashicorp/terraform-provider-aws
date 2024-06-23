@@ -2635,6 +2635,32 @@ service "cur" {
   brand                    = "AWS"
 }
 
+service "databrew" {
+
+  sdk {
+    id             = "DataBrew"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "DataBrew"
+    human_friendly      = "DataBrew"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListProjects"
+  }
+
+  resource_prefix {
+    correct = "aws_databrew_"
+  }
+
+  provider_package_correct = "databrew"
+  doc_prefix               = ["databrew_"]
+  brand                    = "AWS"
+}
+
+
 service "dataexchange" {
 
   sdk {
