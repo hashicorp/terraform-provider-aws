@@ -13,13 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConnectAppAuthorization_basic(t *testing.T) {
+func testAccConnectAppAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_connect_app_authorization.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
 	appAuthorization := "aws_appfabric_app_authorization.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// var connectAppAuthorization types.AppAuthorization
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -40,7 +39,7 @@ func TestAccConnectAppAuthorization_basic(t *testing.T) {
 		},
 	})
 }
-func TestAccConnectAppAuthorization_OAth2(t *testing.T) {
+func testAccConnectAppAuthorization_OAth2(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_connect_app_authorization.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
@@ -82,7 +81,7 @@ resource "aws_appfabric_app_authorization" "test" {
 
   credential {
     api_key_credential {
-      api_key = "TestApiKey"
+      api_key = "ApiKeyTest"
     }
   }
   tenant {
@@ -92,9 +91,10 @@ resource "aws_appfabric_app_authorization" "test" {
 }
 
 resource "aws_appfabric_connect_app_authorization" "test" {
-  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app_bundle_arn        = aws_appfabric_app_bundle.test.arn
   app_authorization_arn = aws_appfabric_app_authorization.test.arn
 }
+
 
 `, rName)
 }
@@ -125,14 +125,15 @@ resource "aws_appfabric_app_authorization" "test" {
 }
 
 resource "aws_appfabric_connect_app_authorization" "test" {
-  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  app_bundle_arn        = aws_appfabric_app_bundle.test.arn
   app_authorization_arn = aws_appfabric_app_authorization.test.arn
   auth_request {
-	code = "testcode"
-	redirect_uri = aws_appfabric_app_authorization.test.auth_url
+    code         = "testcode"
+    redirect_uri = aws_appfabric_app_authorization.test.auth_url
   }
 
 }
+
 
 `, rName)
 }

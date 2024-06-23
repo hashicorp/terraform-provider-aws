@@ -30,6 +30,10 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"oath2Update":        testAccAppAuthorization_oath2Update,
 			"tags":               testAccAppAuthorization_tags,
 		},
+		"ConnectAppAuthorization": {
+			acctest.CtBasic: testAccConnectAppAuthorization_basic,
+			"oath2Connect":  testAccConnectAppAuthorization_OAth2,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)
