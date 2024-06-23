@@ -231,11 +231,17 @@ func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
-	_, err = conn.DeleteFirewallRuleWithContext(ctx, &route53resolver.DeleteFirewallRuleInput{
+	input := &route53resolver.DeleteFirewallRuleInput{
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
-	})
+	}
+
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
+	_, err = conn.DeleteFirewallRuleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return diags
