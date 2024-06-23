@@ -10,7 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -20,10 +22,10 @@ const (
 )
 
 // UpgradeSucceeded waits for an Upgrade to return Success
-func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
+func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Client, name string, timeout time.Duration) (*elasticsearch.GetUpgradeStatusOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{elasticsearch.UpgradeStatusInProgress},
-		Target:     []string{elasticsearch.UpgradeStatusSucceeded},
+		Pending:    enum.Slice[awstypes.UpgradeStatus](awstypes.UpgradeStatusInProgress),
+		Target:     enum.Slice[awstypes.UpgradeStatus](awstypes.UpgradeStatusSucceeded),
 		Refresh:    statusUpgradeStatus(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: domainUpgradeSuccessMinTimeout,
@@ -39,8 +41,8 @@ func waitUpgradeSucceeded(ctx context.Context, conn *elasticsearch.Elasticsearch
 	return nil, err
 }
 
-func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
-	var out *elasticsearch.ElasticsearchDomainStatus
+func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) error {
+	var out *awstypes.ElasticsearchDomainStatus
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)
@@ -68,8 +70,8 @@ func WaitForDomainCreation(ctx context.Context, conn *elasticsearch.Elasticsearc
 	return err
 }
 
-func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
-	var out *elasticsearch.ElasticsearchDomainStatus
+func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) error {
+	var out *awstypes.ElasticsearchDomainStatus
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)
@@ -97,8 +99,8 @@ func waitForDomainUpdate(ctx context.Context, conn *elasticsearch.ElasticsearchS
 	return err
 }
 
-func waitForDomainDelete(ctx context.Context, conn *elasticsearch.ElasticsearchService, domainName string, timeout time.Duration) error {
-	var out *elasticsearch.ElasticsearchDomainStatus
+func waitForDomainDelete(ctx context.Context, conn *elasticsearch.Client, domainName string, timeout time.Duration) error {
+	var out *awstypes.ElasticsearchDomainStatus
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		out, err = FindDomainByName(ctx, conn, domainName)

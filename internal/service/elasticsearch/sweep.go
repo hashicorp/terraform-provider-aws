@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,7 +32,7 @@ func sweepDomains(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ElasticsearchConn(ctx)
+	conn := client.ElasticsearchClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -60,14 +59,10 @@ func sweepDomains(region string) error {
 	}
 
 	for _, domainInfo := range output.DomainNames {
-		if domainInfo == nil {
-			continue
-		}
-
 		name := aws.ToString(domainInfo.DomainName)
 
-		if engineType := string(domainInfo.EngineType); engineType != awstypes.EngineTypeElasticsearch {
-			log.Printf("[INFO] Skipping Elasticsearch Domain %s: EngineType = %s", name, engineType)
+		if domainInfo.EngineType != awstypes.EngineTypeElasticsearch {
+			log.Printf("[INFO] Skipping Elasticsearch Domain %s: EngineType = %s", name, string(domainInfo.EngineType))
 			continue
 		}
 
