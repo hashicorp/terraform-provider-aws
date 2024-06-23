@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	"github.com/aws/aws-sdk-go-v2/service/grafana/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,6 +23,7 @@ import (
 func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_grafana_workspace_service_account.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var v types.ServiceAccountSummary
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -33,10 +35,10 @@ func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceServiceAccountConfig_basic(),
+				Config: testAccWorkspaceServiceAccountConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account_role"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_id"),
@@ -66,7 +68,7 @@ func TestAccWorkspaceServiceAccount_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceServiceAccountConfig_basic(),
+				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
 					// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount(), resourceName),
@@ -124,66 +126,12 @@ func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.Te
 	}
 }
 
-// func testAccCheckWorkspaceRecreated(i, j *types.WorkspaceDescription) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(i.WorkspaceId), aws.ToString(j.WorkspaceId); before == after {
-// 			return fmt.Errorf("Prometheus Workspace (%s) not recreated", before)
-// 		}
-
-// 		return nil
-// 	}
-// }
-
-// func testAccCheckWorkspaceNotRecreated(i, j *types.WorkspaceDescription) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(i.WorkspaceId), aws.ToString(j.WorkspaceId); before != after {
-// 			return fmt.Errorf("Prometheus Workspace (%s) recreated", before)
-// 		}
-
-// 		return nil
-// 	}
-// }
-
-func testAccWorkspaceServiceAccountConfig_basic() string {
-	return `
-resource "aws_grafana_workspace_service_account" "test" {}
-`
+func testAccWorkspaceServiceAccountConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"), fmt.Sprintf(`
+resource "aws_grafana_workspace_service_account" "this" {
+	service_account_name = %[1]q
+	service_account_role = "ADMIN"
+	workspace_id = aws_grafana_workspace.test.id
 }
-
-func testAccWorkspaceConfig_alias(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-  alias = %[1]q
-}
-`, rName)
-}
-
-func testAccWorkspaceConfig_loggingConfiguration(rName string, idx int) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  count = 2
-
-  name = "%[1]s-${count.index}"
-}
-
-resource "aws_prometheus_workspace" "test" {
-  logging_configuration {
-    log_group_arn = "${aws_cloudwatch_log_group.test[%[2]d].arn}:*"
-  }
-}
-`, rName, idx)
-}
-
-func testAccWorkspaceConfig_kms(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-  alias       = %[1]q
-  kms_key_arn = aws_kms_key.test.arn
-}
-
-resource "aws_kms_key" "test" {
-  description             = "Test"
-  deletion_window_in_days = 7
-}
-`, rName)
+`, rName))
 }
