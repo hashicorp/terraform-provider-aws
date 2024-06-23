@@ -697,7 +697,7 @@ service "appsync" {
 
   sdk {
     id             = "AppSync"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -707,6 +707,7 @@ service "appsync" {
 
   client {
     go_v1_client_typename = "AppSync"
+    skip_client_generate  = true
   }
 
   endpoint_info {
@@ -6149,7 +6150,7 @@ service "meta" {
   }
 
   client {
-    go_v1_client_typename = ""
+    skip_client_generate = true
   }
 
   resource_prefix {
@@ -6465,7 +6466,7 @@ service "networkfirewall" {
 
   sdk {
     id             = "Network Firewall"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
