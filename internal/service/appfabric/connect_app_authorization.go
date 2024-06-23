@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	// "github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -50,6 +49,8 @@ const (
 
 type resourceConnectAppAuthorization struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[connectAppAuthorizationResourceModel]
+	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
 
@@ -98,7 +99,7 @@ func (r *resourceConnectAppAuthorization) Schema(ctx context.Context, req resour
 						"code": schema.StringAttribute{
 							Required: true,
 						},
-						"redirect_url": schema.StringAttribute{
+						"redirect_uri": schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -180,7 +181,7 @@ func (r *resourceConnectAppAuthorization) Read(ctx context.Context, request reso
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	output, err := findAppAuthorizationByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
+	output, err := findConnectAppAuthorizationByAppAuth(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -208,14 +209,6 @@ func (r *resourceConnectAppAuthorization) Read(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceConnectAppAuthorization) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// There is no update
-}
-
-func (r *resourceConnectAppAuthorization) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	// There is no Delete
-}
-
 func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -236,7 +229,7 @@ func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Cli
 
 func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleArn)
+		output, err := findConnectAppAuthorizationByAppAuth(ctx, conn, appAuthorizationARN, appBundleArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -248,6 +241,32 @@ func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, 
 
 		return output, string(output.Status), nil
 	}
+}
+
+func findConnectAppAuthorizationByAppAuth(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
+	in := &appfabric.GetAppAuthorizationInput{
+		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
+		AppBundleIdentifier:        aws.String(appBundleIdentifier),
+	}
+
+	output, err := conn.GetAppAuthorization(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AppAuthorization == nil ||  output.AppAuthorization.Status != awstypes.AppAuthorizationStatusConnected {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return output.AppAuthorization, nil
 }
 
 type connectAppAuthorizationResourceModel struct {
@@ -282,7 +301,7 @@ func (m *connectAppAuthorizationResourceModel) setID() {
 
 type authRequestModel struct {
 	Code        types.String `tfsdk:"code"`
-	RedirectUrl types.String `tfsdk:"redirect_url"`
+	RedirectUri types.String `tfsdk:"redirect_uri"`
 }
 
 type connectionTenantModel struct {
