@@ -36,17 +36,9 @@ resource "aws_databrew_dataset" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) The name of the dataset to be created.
 
-* `input` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-* `arn` - ARN of the Project. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `input` - (Required) Represents information on how DataBrew can find data, in either the AWS Glue Data Catalog or Amazon S3.
 
 ## Timeouts
 
