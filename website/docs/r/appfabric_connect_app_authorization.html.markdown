@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS AppFabric Connect App Authorization.
 ---
 
-# Resource: appfabric_connect_app_authorization
+# Resource: aws_appfabric_connect_app_authorization
 
 Terraform resource for managing an AWS AppFabric Connect App Authorization.
 
