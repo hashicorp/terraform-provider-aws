@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/networkmonitor"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +25,7 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,7 +61,7 @@ func TestAccNetworkMonitorMonitor_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +106,7 @@ func TestAccNetworkMonitorMonitor_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmonitor.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{

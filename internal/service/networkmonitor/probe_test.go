@@ -25,6 +25,7 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProbeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,7 +60,7 @@ func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "networkMonitor"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProbeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,6 +83,7 @@ func TestAccNetworkMonitorProbe_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProbeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,6 +128,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProbeDestroy(ctx),
 		Steps: []resource.TestStep{
