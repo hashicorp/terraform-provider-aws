@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -119,7 +120,7 @@ func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bo
 
 func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
@@ -133,7 +134,7 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
+	log.Printf("[DEBUG] Received Elasticsearch domain: %+v", ds)
 
 	options := ds.AdvancedSecurityOptions.SAMLOptions
 
@@ -146,13 +147,13 @@ func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
-	config := elasticsearch.AdvancedSecurityOptionsInput{}
-	config.SetSAMLOptions(expandESSAMLOptions(d.Get("saml_options").([]interface{})))
+	config := awstypes.AdvancedSecurityOptionsInput{}
+	config.SAMLOptions = expandESSAMLOptions(d.Get("saml_options").([]interface{}))
 
-	log.Printf("[DEBUG] Updating Elasticsearch domain SAML Options %s", config)
+	log.Printf("[DEBUG] Updating Elasticsearch domain SAML Options %+v", config)
 
 	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),
@@ -174,11 +175,11 @@ func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	domainName := d.Get(names.AttrDomainName).(string)
-	config := elasticsearch.AdvancedSecurityOptionsInput{}
-	config.SetSAMLOptions(nil)
+	config := awstypes.AdvancedSecurityOptionsInput{}
+	config.SAMLOptions = nil
 
 	_, err := conn.UpdateElasticsearchDomainConfig(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),

@@ -8,19 +8,20 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDomainByName(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) (*elasticsearch.ElasticsearchDomainStatus, error) {
+func FindDomainByName(ctx context.Context, conn *elasticsearch.Client, name string) (*awstypes.ElasticsearchDomainStatus, error) {
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(name),
 	}
 
 	output, err := conn.DescribeElasticsearchDomain(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
