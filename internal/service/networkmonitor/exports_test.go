@@ -6,7 +6,8 @@ package networkmonitor
 // Exports for use in tests only.
 var (
 	ResourceMonitor = newMonitorResource
-	ResourceProbe   = newResourceProbe
+	ResourceProbe   = newProbeResource
 
-	FindMonitorByName = findMonitorByName
+	FindMonitorByName     = findMonitorByName
+	FindProbeByTwoPartKey = findProbeByTwoPartKey
 )

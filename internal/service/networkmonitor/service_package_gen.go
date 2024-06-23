@@ -28,8 +28,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceProbe,
-			Name:    "CloudWatch Network Monitor Probe",
+			Factory: newProbeResource,
+			Name:    "Probe",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},

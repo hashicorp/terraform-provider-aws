@@ -21,14 +21,12 @@ resource "aws_networkmonitor_monitor" "example" {
 }
 
 resource "aws_networkmonitor_probe" "test" {
-	monitor_name = aws_networkmonitor_monitor.example.monitor_name
-	probe {
-		destination = 127.0.0.1
-		destination_port = 80
-		protocol = "TCP"
-		source_arn = aws_subnet.example.arn
-		packet_size = 200
-	}
+  monitor_name     = aws_networkmonitor_monitor.example.monitor_name
+  destination      = "127.0.0.1"
+  destination_port = 80
+  protocol         = "TCP"
+  source_arn       = aws_subnet.example.arn
+  packet_size      = 200
 }
 ```
 
@@ -36,16 +34,12 @@ resource "aws_networkmonitor_probe" "test" {
 
 The following arguments are required:
 
-- `monitor_name` - (Required) The name of the monitor.
-- `probe` - (Required) Describes the details of an individual probe for a monitor.
-
-The `probe` object supports the following:
-
 - `destination` - (Required) The destination IP address. This must be either IPV4 or IPV6.
-- `destination_port` - (Optional) The port associated with the destination. This is required only if the protocol is TCP and must be a number between 1 and 65536
+- `destination_port` - (Optional) The port associated with the destination. This is required only if the protocol is TCP and must be a number between 1 and 65536.
+- `monitor_name` - (Required) The name of the monitor.
 - `protocol` - (Required) The protocol used for the network traffic between the source and destination. This must be either TCP or ICMP.
 - `source_arn` - (Required) The ARN of the subnet.
-- `packet_size` - (Optional) The size of the packets sent between the source and destination. This must be a number between 56 and 8500
+- `packet_size` - (Optional) The size of the packets sent between the source and destination. This must be a number between 56 and 8500.
 
 The following arguments are optional:
 
@@ -56,14 +50,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The ARN of the attachment.
-- `monitor_name` - The name of the monitor.
-- `probe` - Describes the details of an individual probe for a monitor.
-- `destination` - The destination IP address.
-- `destination_port` - The port associated with the destination.
-- `protocol` - The protocol used for the network traffic between the source and destination.
 - `source_arn` - The ARN of the subnet.
-- `packet_size` - The size of the packets sent between the source and destination.
-- `state` - The state of the monitor.
 - `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -73,12 +60,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_networkmonitor_probe.example
-  id = "probe-3qm8p693i4fi1h8lqylzkbp42e:monitor-7786087912324693644"
+  id = "monitor-7786087912324693644,probe-3qm8p693i4fi1h8lqylzkbp42e"
 }
 ```
 
 Using `terraform import`, import `aws_networkmonitor_probe` using the monitor name and probe id. For example:
 
 ```console
-% terraform import aws_networkmonitor_probe.example probe-3qm8p693i4fi1h8lqylzkbp42e:monitor-7786087912324693644
+% terraform import aws_networkmonitor_probe.example monitor-7786087912324693644,probe-3qm8p693i4fi1h8lqylzkbp42e
 ```
