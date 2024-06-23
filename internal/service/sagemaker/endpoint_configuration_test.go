@@ -214,6 +214,34 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *test
 	})
 }
 
+func TestAccSageMakerEndpointConfiguration_ProductionVariants_ami(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_endpoint_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfigurationConfig_ami(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.inference_ami_version", "al2-ami-sagemaker-inference-gpu-2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverlessProvisionedConcurrency(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1259,6 +1287,23 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
       max_concurrency   = 1
       memory_size_in_mb = 1024
     }
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfigurationConfig_ami(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_endpoint_configuration" "test" {
+  name = %[1]q
+
+  production_variants {
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    inference_ami_version  = "al2-ami-sagemaker-inference-gpu-2"
+    instance_type          = "ml.t2.medium"
+    initial_instance_count = 2
+    initial_variant_weight = 1
   }
 }
 `, rName))
