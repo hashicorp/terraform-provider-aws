@@ -2333,7 +2333,7 @@ func flattenSQLiMatchStatement(s *awstypes.SqliMatchStatement) interface{} {
 
 	m := map[string]interface{}{
 		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		"sensitivity_level":   string(s.SensitivityLevel),
+		"sensitivity_level":   s.SensitivityLevel,
 		"text_transformation": flattenTextTransformations(s.TextTransformations),
 	}
 
