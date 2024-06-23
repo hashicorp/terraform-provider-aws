@@ -268,7 +268,7 @@ func statusMonitor(ctx context.Context, conn *networkmonitor.Client, name string
 	}
 }
 
-func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, name string) (*networkmonitor.GetMonitorOutput, error) {
+func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, name string) (*networkmonitor.GetMonitorOutput, error) { //nolint:unparam
 	const (
 		timeout = time.Minute * 10
 	)
