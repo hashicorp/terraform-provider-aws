@@ -61,9 +61,9 @@ func TestAccWorkspaceServiceAccount_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.Grafana)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +71,6 @@ func TestAccWorkspaceServiceAccount_disappears(t *testing.T) {
 				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
-					// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,18 +118,47 @@ func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			return fmt.Errorf("Prometheus Workspace %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Grafana workspace service account %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
+func testAccWorkspaceServiceAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var serviceAccount types.ServiceAccountSummary
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_prometheus_scraper.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceServiceAccountConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &serviceAccount),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccWorkspaceServiceAccountConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"), fmt.Sprintf(`
-resource "aws_grafana_workspace_service_account" "this" {
-	service_account_name = %[1]q
-	service_account_role = "ADMIN"
+resource "aws_grafana_workspace_service_account" "test" {
+	name = %[1]q
+	grafana_role = "ADMIN"
 	workspace_id = aws_grafana_workspace.test.id
 }
 `, rName))

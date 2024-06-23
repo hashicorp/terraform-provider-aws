@@ -49,13 +49,13 @@ func (r *resourceWorkspaceServiceAccount) Schema(ctx context.Context, req resour
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"service_account_name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"service_account_role": schema.StringAttribute{
+			"grafana_role": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -76,7 +76,6 @@ func (r *resourceWorkspaceServiceAccount) Schema(ctx context.Context, req resour
 
 func (r *resourceWorkspaceServiceAccount) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data resourceWorkspaceServiceAccountData
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -84,15 +83,13 @@ func (r *resourceWorkspaceServiceAccount) Create(ctx context.Context, req resour
 
 	conn := r.Meta().GrafanaClient(ctx)
 
-	input := &grafana.CreateWorkspaceServiceAccountInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-
-	if resp.Diagnostics.HasError() {
-		return
+	input := &grafana.CreateWorkspaceServiceAccountInput{
+		Name:        aws.String(data.ServiceAccountName.ValueString()),
+		GrafanaRole: awstypes.Role(data.ServiceAccountRole.ValueString()),
+		WorkspaceId: aws.String(data.WorkspaceID.ValueString()),
 	}
 
 	output, err := conn.CreateWorkspaceServiceAccount(ctx, input)
-
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Grafana, create.ErrActionCreating, ResNameServiceAccount, "", err),
@@ -165,25 +162,23 @@ func (r *resourceWorkspaceServiceAccount) Delete(ctx context.Context, req resour
 }
 
 func findWorkspaceServiceAccountByID(ctx context.Context, conn *grafana.Client, id, workspaceID string) (*awstypes.ServiceAccountSummary, error) {
-
 	input := &grafana.ListWorkspaceServiceAccountsInput{
 		WorkspaceId: aws.String(workspaceID),
 	}
+	paginator := grafana.NewListWorkspaceServiceAccountsPaginator(conn, input)
 
-	output, err := conn.ListWorkspaceServiceAccounts(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	for _, sa := range output.ServiceAccounts {
-		if aws.ToString(sa.Id) == id {
-			return &sa, nil
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
+
+		for _, sa := range page.ServiceAccounts {
+			if aws.ToString(sa.Id) == id {
+				return &sa, nil
+			}
+		}
+
 	}
 
 	return nil, errs.NewErrorWithMessage(fmt.Errorf("service account %s on workspaceId %s not found", id, workspaceID))
@@ -191,7 +186,7 @@ func findWorkspaceServiceAccountByID(ctx context.Context, conn *grafana.Client, 
 
 type resourceWorkspaceServiceAccountData struct {
 	ID                 types.String `tfsdk:"id"`
-	ServiceAccountName types.String `tfsdk:"service_account_name"`
-	ServiceAccountRole types.String `tfsdk:"service_account_role"`
+	ServiceAccountName types.String `tfsdk:"name"`
+	ServiceAccountRole types.String `tfsdk:"grafana_role"`
 	WorkspaceID        types.String `tfsdk:"workspace_id"`
 }
