@@ -29,7 +29,6 @@ This resource supports the following arguments:
 * `app_authorization_arn` - (Required) The Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app authorization to use for the request.
 * `auth_request` - (Optional) Contains OAuth2 authorization information.This is required if the app authorization for the request is configured with an OAuth2 (oauth2) authorization type.
 
-
 Auth Request support the following:
 
 * `code` - (Required) The authorization code returned by the application after permission is granted in the application OAuth page (after clicking on the AuthURL)..
