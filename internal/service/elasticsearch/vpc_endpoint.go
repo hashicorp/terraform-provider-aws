@@ -13,11 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -89,7 +89,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 
 func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	input := &elasticsearchservice.CreateVpcEndpointInput{
 		DomainArn:  aws.String(d.Get("domain_arn").(string)),
@@ -113,7 +113,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	endpoint, err := findVPCEndpointByID(ctx, conn, d.Id())
 
@@ -142,7 +142,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	input := &elasticsearchservice.UpdateVpcEndpointInput{
 		VpcOptions:    expandVPCOptions(d.Get("vpc_options").([]interface{})[0].(map[string]interface{})),
@@ -164,7 +164,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticsearchConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticsearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Elasticsearch VPC Endpoint: %s", d.Id())
 	_, err := conn.DeleteVpcEndpoint(ctx, &elasticsearchservice.DeleteVpcEndpointInput{
@@ -216,23 +216,19 @@ func (e *vpcEndpointNotFoundError) As(target any) bool {
 	return true
 }
 
-func vpcEndpointError(apiObject *awstypes.VpcEndpointError) error {
-	if apiObject == nil {
-		return nil
-	}
-
-	errorCode := aws.ToString(apiObject.ErrorCode)
+func vpcEndpointError(apiObject awstypes.VpcEndpointError) error {
+	errorCode := string(apiObject.ErrorCode)
 	innerError := fmt.Errorf("%s: %s", errorCode, aws.ToString(apiObject.ErrorMessage))
 	err := fmt.Errorf("%s: %w", aws.ToString(apiObject.VpcEndpointId), innerError)
 
-	if errorCode == awstypes.VpcEndpointErrorCodeEndpointNotFound {
+	if errorCode == string(awstypes.VpcEndpointErrorCodeEndpointNotFound) {
 		err = &vpcEndpointNotFoundError{apiError: err}
 	}
 
 	return err
 }
 
-func vpcEndpointsError(apiObjects []*awstypes.VpcEndpointError) error {
+func vpcEndpointsError(apiObjects []awstypes.VpcEndpointError) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
@@ -257,10 +253,10 @@ func findVPCEndpoint(ctx context.Context, conn *elasticsearchservice.Client, inp
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findVPCEndpoints(ctx context.Context, conn *elasticsearchservice.Client, input *elasticsearchservice.DescribeVpcEndpointsInput) ([]*awstypes.VpcEndpoint, error) {
+func findVPCEndpoints(ctx context.Context, conn *elasticsearchservice.Client, input *elasticsearchservice.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
 	output, err := conn.DescribeVpcEndpoints(ctx, input)
 
 	if err != nil {
@@ -290,14 +286,14 @@ func statusVPCEndpoint(ctx context.Context, conn *elasticsearchservice.Client, i
 			return nil, "", err
 		}
 
-		return output, aws.ToString(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
 func waitVPCEndpointCreated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.VpcEndpointStatusCreating},
-		Target:  []string{awstypes.VpcEndpointStatusActive},
+		Pending: enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusCreating),
+		Target:  enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -309,8 +305,8 @@ func waitVPCEndpointCreated(ctx context.Context, conn *elasticsearchservice.Clie
 
 func waitVPCEndpointUpdated(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.VpcEndpointStatusUpdating},
-		Target:  []string{awstypes.VpcEndpointStatusActive},
+		Pending: enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusUpdating),
+		Target:  enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusActive),
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -322,7 +318,7 @@ func waitVPCEndpointUpdated(ctx context.Context, conn *elasticsearchservice.Clie
 
 func waitVPCEndpointDeleted(ctx context.Context, conn *elasticsearchservice.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{awstypes.VpcEndpointStatusDeleting},
+		Pending: enum.Slice[awstypes.VpcEndpointStatus](awstypes.VpcEndpointStatusDeleting),
 		Target:  []string{},
 		Refresh: statusVPCEndpoint(ctx, conn, id),
 		Timeout: timeout,

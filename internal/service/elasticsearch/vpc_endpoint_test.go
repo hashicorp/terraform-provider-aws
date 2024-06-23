@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,28 +25,24 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		apiObjects []*awstypes.VpcEndpointError
+		apiObjects []awstypes.VpcEndpointError
 		notFound   bool
 	}{
 		{
 			name: "nil input",
 		},
 		{
-			name:       "slice of nil input",
-			apiObjects: []*awstypes.VpcEndpointError{nil, nil},
-		},
-		{
 			name: "single SERVER_ERROR",
-			apiObjects: []*awstypes.VpcEndpointError{{
-				ErrorCode:     aws.String(awstypes.VpcEndpointErrorCodeServerError),
+			apiObjects: []awstypes.VpcEndpointError{{
+				ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 				ErrorMessage:  aws.String("fail"),
 				VpcEndpointId: aws.String("aos-12345678"),
 			}},
 		},
 		{
 			name: "single ENDPOINT_NOT_FOUND",
-			apiObjects: []*awstypes.VpcEndpointError{{
-				ErrorCode:     aws.String(awstypes.VpcEndpointErrorCodeEndpointNotFound),
+			apiObjects: []awstypes.VpcEndpointError{{
+				ErrorCode:     awstypes.VpcEndpointErrorCodeEndpointNotFound,
 				ErrorMessage:  aws.String("Endpoint does not exist"),
 				VpcEndpointId: aws.String("aos-12345678"),
 			}},
@@ -55,14 +50,14 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "no ENDPOINT_NOT_FOUND in many",
-			apiObjects: []*awstypes.VpcEndpointError{
+			apiObjects: []awstypes.VpcEndpointError{
 				{
-					ErrorCode:     aws.String(awstypes.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
 				{
-					ErrorCode:     aws.String(awstypes.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("crash"),
 					VpcEndpointId: aws.String("aos-12345678"),
 				},
@@ -70,14 +65,14 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "single ENDPOINT_NOT_FOUND in many",
-			apiObjects: []*awstypes.VpcEndpointError{
+			apiObjects: []awstypes.VpcEndpointError{
 				{
-					ErrorCode:     aws.String(awstypes.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
 				{
-					ErrorCode:     aws.String(awstypes.VpcEndpointErrorCodeEndpointNotFound),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeEndpointNotFound,
 					ErrorMessage:  aws.String("Endpoint does not exist"),
 					VpcEndpointId: aws.String("aos-12345678"),
 				},
@@ -217,7 +212,7 @@ func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.Vp
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
 
 		output, err := tfelasticsearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -238,7 +233,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchClient(ctx)
 
 			_, err := tfelasticsearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
