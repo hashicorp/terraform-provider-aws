@@ -111,11 +111,12 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"VPC":                testAccWorkforce_vpc,
 		},
 		"Workteam": {
-			acctest.CtDisappears: testAccWorkteam_disappears,
-			"tags":               testAccWorkteam_tags,
-			"CognitoConfig":      testAccWorkteam_cognitoConfig,
-			"NotificationConfig": testAccWorkteam_notificationConfig,
-			"OidcConfig":         testAccWorkteam_oidcConfig,
+			acctest.CtDisappears:        testAccWorkteam_disappears,
+			"tags":                      testAccWorkteam_tags,
+			"CognitoConfig":             testAccWorkteam_cognitoConfig,
+			"NotificationConfig":        testAccWorkteam_notificationConfig,
+			"WorkerAccessConfiguration": testAccWorkteam_workerAccessConfiguration,
+			"OidcConfig":                testAccWorkteam_oidcConfig,
 		},
 		"Servicecatalog": {
 			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
