@@ -21,80 +21,59 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
-.
+
 	tfdatabrew "github.com/hashicorp/terraform-provider-aws/internal/service/databrew"
 )
 
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
+// func TestProjectExampleUnitTest(t *testing.T) {
+// 	t.Parallel()
 
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestProjectExampleUnitTest(t *testing.T) {
-	t.Parallel()
+// 	testCases := []struct {
+// 		TestName string
+// 		Input    string
+// 		Expected string
+// 		Error    bool
+// 	}{
+// 		{
+// 			TestName: "empty",
+// 			Input:    "",
+// 			Expected: "",
+// 			Error:    true,
+// 		},
+// 		{
+// 			TestName: "descriptive name",
+// 			Input:    "some input",
+// 			Expected: "some output",
+// 			Error:    false,
+// 		},
+// 		{
+// 			TestName: "another descriptive name",
+// 			Input:    "more input",
+// 			Expected: "more output",
+// 			Error:    false,
+// 		},
+// 	}
 
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
+// 	for _, testCase := range testCases {
+// 		testCase := testCase
+// 		t.Run(testCase.TestName, func(t *testing.T) {
+// 			t.Parallel()
+// 			got, err := tfdatabrew.FunctionFromResource(testCase.Input)
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfdatabrew.FunctionFromResource(testCase.Input)
+// 			if err != nil && !testCase.Error {
+// 				t.Errorf("got error (%s), expected no error", err)
+// 			}
 
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
+// 			if err == nil && testCase.Error {
+// 				t.Errorf("got (%s) and no error, expected error", got)
+// 			}
 
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
+// 			if got != testCase.Expected {
+// 				t.Errorf("got %s, expected %s", got, testCase.Expected)
+// 			}
+// 		})
+// 	}
+// }
 
 // Acceptance test access AWS and cost money to run.
 func TestAccDataBrewProject_basic(t *testing.T) {
@@ -105,14 +84,14 @@ func TestAccDataBrewProject_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var project databrew.DescribeProjectResponse
+	var project databrew.DescribeProjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_databrew_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DataBrewEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.DataBrewServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataBrewServiceID),
@@ -150,22 +129,22 @@ func TestAccDataBrewProject_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var project databrew.DescribeProjectResponse
+	var project databrew.DescribeProjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_databrew_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DataBrewEndpointID)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, names.DataBrewServiceID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DataBrewServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_basic(rName, testAccProjectVersionNewer),
+				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
@@ -174,7 +153,7 @@ func TestAccDataBrewProject_disappears(t *testing.T) {
 					// to exports_test.go:
 					//
 					//   var ResourceProject = newResourceProject
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatabrew.ResourceProject, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatabrew.ResourceDomain, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -191,17 +170,14 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &databrew.DescribeProjectInput{
-				ProjectId: aws.String(rs.Primary.ID),
-			}
 			_, err := conn.DescribeProject(ctx, &databrew.DescribeProjectInput{
-				ProjectId: aws.String(rs.Primary.ID),
+				Name: aws.String(rs.Primary.ID),
 			})
-			if errs.IsA[*types.ResourceNotFoundException](err){
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.DataBrew, create.ErrActionCheckingDestroyed, tfdatabrew.ResNameProject, rs.Primary.ID, err)
+				return create.Error(names.DataBrew, create.ErrActionCheckingDestroyed, tfdatabrew.ResNameProject, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.DataBrew, create.ErrActionCheckingDestroyed, tfdatabrew.ResNameProject, rs.Primary.ID, errors.New("not destroyed"))
@@ -211,7 +187,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckProjectExists(ctx context.Context, name string, project *databrew.DescribeProjectResponse) resource.TestCheckFunc {
+func testAccCheckProjectExists(ctx context.Context, name string, project *databrew.DescribeProjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -224,7 +200,7 @@ func testAccCheckProjectExists(ctx context.Context, name string, project *databr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataBrewClient(ctx)
 		resp, err := conn.DescribeProject(ctx, &databrew.DescribeProjectInput{
-			ProjectId: aws.String(rs.Primary.ID),
+			Name: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
@@ -251,39 +227,27 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckProjectNotRecreated(before, after *databrew.DescribeProjectResponse) resource.TestCheckFunc {
+func testAccCheckProjectNotRecreated(before, after *databrew.DescribeProjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.ProjectId), aws.ToString(after.ProjectId); before != after {
-			return create.Error(names.DataBrew, create.ErrActionCheckingNotRecreated, tfdatabrew.ResNameProject, aws.ToString(before.ProjectId), errors.New("recreated"))
+		if before, after := aws.ToString(before.Name), aws.ToString(after.Name); before != after {
+			return create.Error(names.DataBrew, create.ErrActionCheckingNotRecreated, tfdatabrew.ResNameProject, before, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccProjectConfig_basic(rName, version string) string {
+func testAccProjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
 }
 
 resource "aws_databrew_project" "test" {
-  project_name             = %[1]q
-  engine_type             = "ActiveDataBrew"
-  engine_version          = %[2]q
-  host_instance_type      = "databrew.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+  project_name = %[1]q
+  dataset_name = "test"
+  recipe_name  = "test"
+  role_arn     = "test"
 }
-`, rName, version)
+`, rName)
 }

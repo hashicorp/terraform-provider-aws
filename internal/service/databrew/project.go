@@ -12,15 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/databrew"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databrew/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -100,14 +94,14 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	in := &databrew.CreateProjectInput{
-		ProjectName:        aws.String(plan.Name.ValueString()),
-		ProjectDatasetName: aws.String(plan.DatasetName.ValueString()),
-		ProjectRecipeName:  aws.String(plan.RecipeName.ValueString()),
+		Name:        aws.String(plan.Name.ValueString()),
+		DatasetName: aws.String(plan.DatasetName.ValueString()),
+		RecipeName:  aws.String(plan.RecipeName.ValueString()),
 	}
 
-	if !plan.Sample.IsNull() {
-		in.Sample = aws.Int64(plan.Sample.ValueInt64())
-	}
+	// if !plan.Sample.IsNull() {
+	// 	in.Sample = aws.Int64(plan.Sample.ValueInt64())
+	// }
 
 	out, err := conn.CreateProject(ctx, in)
 	if err != nil {
@@ -117,7 +111,7 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		)
 		return
 	}
-	if out == nil || out.Project == nil {
+	if out == nil || out.Name == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataBrew, create.ErrActionCreating, ResNameProject, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
@@ -125,15 +119,14 @@ func (r *resourceProject) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.Project.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.Project.ProjectId)
-	plan.DatasetName = flex.StringToFramework(ctx, out.Project.DatasetName)
-	plan.RecipeName = flex.StringToFramework(ctx, out.Project.RecipeName)
-	plan.Sample = flex.Int64ToFramework(ctx, out.Project.Sample)
-	plan.RoleARN = flex.StringToFramework(ctx, out.Project.RoleARN)
+	plan.Name = flex.StringToFramework(ctx, out.Name)
+	plan.DatasetName = flex.StringToFramework(ctx, in.DatasetName)
+	plan.RecipeName = flex.StringToFramework(ctx, in.RecipeName)
+	// plan.Sample = flex.Int64ToFramework(ctx, out.Project.Sample)
+	plan.RoleArn = flex.StringToFramework(ctx, in.RoleArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitProjectCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	_, err = waitProjectCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DataBrew, create.ErrActionWaitingForCreation, ResNameProject, plan.Name.String(), err),
@@ -156,7 +149,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := findProjectByID(ctx, conn, state.ID.ValueString())
+	out, err := findProjectByName(ctx, conn, state.Name.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -164,19 +157,16 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataBrew, create.ErrActionSetting, ResNameProject, state.ID.String(), err),
+			create.ProblemStandardMessage(names.DataBrew, create.ErrActionSetting, ResNameProject, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.ID = flex.StringToFramework(ctx, out.ProjectId)
-	state.Name = flex.StringToFramework(ctx, out.ProjectName)
-	state.DatasetName = flex.StringToFramework(ctx, out.Project.DatasetName)
-	state.RecipeName = flex.StringToFramework(ctx, out.Project.RecipeName)
-	state.Sample = flex.Int64ToFramework(ctx, out.Project.Sample)
-	state.RoleARN = flex.StringToFramework(ctx, out.Project.RoleARN)
+	state.DatasetName = flex.StringToFramework(ctx, out.DatasetName)
+	state.RecipeName = flex.StringToFramework(ctx, out.RecipeName)
+	// state.Sample = flex.Int64ToFramework(ctx, out.Sample)
+	state.RoleArn = flex.StringToFramework(ctx, out.RoleArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -191,50 +181,50 @@ func (r *resourceProject) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	if !plan.RoleARN.Equal(state.RoleARN) ||
+	if !plan.RoleArn.Equal(state.RoleArn) ||
 		!plan.RecipeName.Equal(state.RecipeName) ||
 		!plan.DatasetName.Equal(state.DatasetName) ||
 		!plan.Sample.Equal(state.Sample) ||
 		!!plan.Name.Equal(state.Name) {
 
 		in := &databrew.UpdateProjectInput{
-			ProjectId:          aws.String(plan.ID.ValueString()),
-			ProjectName:        aws.String(plan.Name.ValueString()),
-			ProjectRecipeName:  aws.String(plan.RecipeName.ValueString()),
-			ProjectDatasetName: aws.String(plan.DatasetName.ValueString()),
-			ProjectSample:      aws.Int64(plan.Sample.ValueInt64()),
-			ProjectRoleARN:     aws.String(plan.RoleARN.ValueString()),
+			Name: aws.String(plan.Name.ValueString()),
+			// RecipeName:  aws.String(plan.RecipeName.ValueString()),
+			// DatasetName: aws.String(plan.DatasetName.ValueString()),
+			// Sample:      aws.Int64(plan.Sample.ValueInt64()),
+			RoleArn: aws.String(plan.RoleArn.ValueString()),
 		}
 
-		if !plan.Sample.IsNull() {
-			in.Sample = aws.Int64(plan.Sample.ValueInt64())
-		}
+		// if !plan.Sample.IsNull() {
+		// 	in.Sample = aws.Int64(plan.Sample.ValueInt64())
+		// }
 
 		out, err := conn.UpdateProject(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataBrew, create.ErrActionUpdating, ResNameProject, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.DataBrew, create.ErrActionUpdating, ResNameProject, plan.Name.String(), err),
 				err.Error(),
 			)
 			return
 		}
-		if out == nil || out.Project == nil {
+		if out == nil || out.Name == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataBrew, create.ErrActionUpdating, ResNameProject, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.DataBrew, create.ErrActionUpdating, ResNameProject, plan.Name.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
 
-		plan.ARN = flex.StringToFramework(ctx, out.Project.Arn)
-		plan.ID = flex.StringToFramework(ctx, out.Project.ProjectId)
+		plan.Name = flex.StringToFramework(ctx, out.Name)
+		// TODO: Implement Sample subtype
+		// plan.Sample
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitProjectUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	_, err := waitProjectUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataBrew, create.ErrActionWaitingForUpdate, ResNameProject, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.DataBrew, create.ErrActionWaitingForUpdate, ResNameProject, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -253,7 +243,7 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	in := &databrew.DeleteProjectInput{
-		ProjectId: aws.String(state.ID.ValueString()),
+		Name: aws.String(state.Name.ValueString()),
 	}
 
 	_, err := conn.DeleteProject(ctx, in)
@@ -262,17 +252,17 @@ func (r *resourceProject) Delete(ctx context.Context, req resource.DeleteRequest
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataBrew, create.ErrActionDeleting, ResNameProject, state.ID.String(), err),
+			create.ProblemStandardMessage(names.DataBrew, create.ErrActionDeleting, ResNameProject, state.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitProjectDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitProjectDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataBrew, create.ErrActionWaitingForDeletion, ResNameProject, state.ID.String(), err),
+			create.ProblemStandardMessage(names.DataBrew, create.ErrActionWaitingForDeletion, ResNameProject, state.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -301,25 +291,25 @@ func waitProjectCreated(ctx context.Context, conn *databrew.Client, id string, t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*databrew.Project); ok {
+	if out, ok := outputRaw.(*awstypes.Project); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitProjectUpdated(ctx context.Context, conn *databrew.Client, id string, timeout time.Duration) (*awstypes.Project, error) {
+func waitProjectUpdated(ctx context.Context, conn *databrew.Client, name string, timeout time.Duration) (*awstypes.Project, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
-		Refresh:                   statusProject(ctx, conn, id),
+		Refresh:                   statusProject(ctx, conn, name),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*databrew.Project); ok {
+	if out, ok := outputRaw.(*awstypes.Project); ok {
 		return out, err
 	}
 
@@ -335,16 +325,16 @@ func waitProjectDeleted(ctx context.Context, conn *databrew.Client, id string, t
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*databrew.Project); ok {
+	if out, ok := outputRaw.(*awstypes.Project); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func statusProject(ctx context.Context, conn *databrew.Client, id string) retry.StateRefreshFunc {
+func statusProject(ctx context.Context, conn *databrew.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findProjectByID(ctx, conn, id)
+		out, err := findProjectByName(ctx, conn, name)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -353,16 +343,16 @@ func statusProject(ctx context.Context, conn *databrew.Client, id string) retry.
 			return nil, "", err
 		}
 
-		return out, aws.ToString(out.Status), nil
+		return out, string(out.SessionStatus), nil
 	}
 }
 
-func findProjectByID(ctx context.Context, conn *databrew.Client, id string) (*awstypes.Project, error) {
-	in := &databrew.GetProjectInput{
-		Id: aws.String(id),
+func findProjectByName(ctx context.Context, conn *databrew.Client, name string) (*databrew.DescribeProjectOutput, error) {
+	in := &databrew.DescribeProjectInput{
+		Name: aws.String(name),
 	}
 
-	out, err := conn.GetProject(ctx, in)
+	out, err := conn.DescribeProject(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
@@ -374,20 +364,18 @@ func findProjectByID(ctx context.Context, conn *databrew.Client, id string) (*aw
 		return nil, err
 	}
 
-	if out == nil || out.Project == nil {
+	if out == nil || out.Name == nil {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.Project, nil
+	return out, nil
 }
 
 type resourceProjectData struct {
-	ARN         types.String   `tfsdk:"arn"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
-	ID          types.String   `tfsdk:"id"`
 	Name        types.String   `tfsdk:"name"`
 	DatasetName types.String   `tfsdk:"dataset_name"`
 	RecipeName  types.String   `tfsdk:"recipe_name"`
 	Sample      types.Int64    `tfsdk:"sample"`
-	RoleARN     types.String   `tfsdk:"role_arn"`
+	RoleArn     types.String   `tfsdk:"role_arn"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
