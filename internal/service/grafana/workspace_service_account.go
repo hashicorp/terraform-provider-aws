@@ -24,9 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_grafana_workspace_service_account", name="ServiceAccount")
-// @Tags(identifierAttribute="id")
-func newWorkspaceServiceAccountResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+// @FrameworkResource("aws_grafana_workspace_service_account", name="WorkspaceServiceAccount")
+func newResourceWorkspaceServiceAccount(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceWorkspaceServiceAccount{}, nil
 }
 

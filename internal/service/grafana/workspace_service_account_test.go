@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
+	"github.com/aws/aws-sdk-go-v2/service/grafana/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -51,33 +51,33 @@ func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 	})
 }
 
-// func TestAccAMPWorkspace_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var v types.WorkspaceDescription
-// 	resourceName := "aws_prometheus_workspace.test"
+func TestAccWorkspaceServiceAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.ServiceAccountSummary
+	resourceName := "aws_grafana_workspace_service_account.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccWorkspaceConfig_basic(),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-// 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceServiceAccountConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
+					// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v *types.WorkspaceDescription) resource.TestCheckFunc {
+func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v *types.ServiceAccountSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -86,7 +86,7 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
 
-		output, err := tfgrafana.(ctx, conn, rs.Primary.ID)
+		output, err := tfgrafana.FindWorkspaceServiceAccountByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
 
 		if err != nil {
 			return err
@@ -100,14 +100,14 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 
 func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_prometheus_workspace" {
+			if rs.Type != "aws_grafana_workspace_service_account" {
 				continue
 			}
 
-			_, err := tfamp.FindWorkspaceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfgrafana.FindWorkspaceServiceAccountByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
 
 			if tfresource.NotFound(err) {
 				continue

@@ -25,11 +25,8 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newWorkspaceServiceAccountResource,
-			Name:    "ServiceAccount",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
+			Factory: newResourceWorkspaceServiceAccount,
+			Name:    "WorkspaceServiceAccount",
 		},
 	}
 }
