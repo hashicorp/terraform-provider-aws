@@ -81,6 +81,13 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					enum.FrameworkValidate[awstypes.Auth](),
 				},
 			},
+			"backup_retention_period": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int64{
+					int64validator.Between(1, 35),
+				},
+			},
 			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -162,14 +169,15 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	input := &docdbelastic.CreateClusterInput{
-		ClientToken:       aws.String(id.UniqueId()),
-		AdminUserName:     flex.StringFromFramework(ctx, plan.AdminUserName),
-		AdminUserPassword: flex.StringFromFramework(ctx, plan.AdminUserPassword),
-		AuthType:          awstypes.Auth(plan.AuthType.ValueString()),
-		ClusterName:       flex.StringFromFramework(ctx, plan.Name),
-		ShardCapacity:     flex.Int32FromFramework(ctx, plan.ShardCapacity),
-		ShardCount:        flex.Int32FromFramework(ctx, plan.ShardCount),
-		Tags:              getTagsIn(ctx),
+		ClientToken:           aws.String(id.UniqueId()),
+		AdminUserName:         flex.StringFromFramework(ctx, plan.AdminUserName),
+		AdminUserPassword:     flex.StringFromFramework(ctx, plan.AdminUserPassword),
+		AuthType:              awstypes.Auth(plan.AuthType.ValueString()),
+		BackupRetentionPeriod: flex.Int32FromFramework(ctx, plan.BackupRetentionPeriod),
+		ClusterName:           flex.StringFromFramework(ctx, plan.Name),
+		ShardCapacity:         flex.Int32FromFramework(ctx, plan.ShardCapacity),
+		ShardCount:            flex.Int32FromFramework(ctx, plan.ShardCount),
+		Tags:                  getTagsIn(ctx),
 	}
 
 	if !plan.KmsKeyID.IsNull() || !plan.KmsKeyID.IsUnknown() {
@@ -274,6 +282,10 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 		if !plan.AuthType.Equal(state.AuthType) {
 			input.AuthType = awstypes.Auth(plan.AuthType.ValueString())
+		}
+
+		if !plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) {
+			input.BackupRetentionPeriod = flex.Int32FromFramework(ctx, plan.BackupRetentionPeriod)
 		}
 
 		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
@@ -381,6 +393,7 @@ type resourceClusterData struct {
 	AdminUserPassword          types.String   `tfsdk:"admin_user_password"`
 	ARN                        types.String   `tfsdk:"arn"`
 	AuthType                   types.String   `tfsdk:"auth_type"`
+	BackupRetentionPeriod      types.Int64    `tfsdk:"backup_retention_period"`
 	Endpoint                   types.String   `tfsdk:"endpoint"`
 	ID                         types.String   `tfsdk:"id"`
 	KmsKeyID                   types.String   `tfsdk:"kms_key_id"`
@@ -489,6 +502,7 @@ func findClusterByID(ctx context.Context, conn *docdbelastic.Client, id string) 
 func (r *resourceClusterData) refreshFromOutput(ctx context.Context, output *awstypes.Cluster) {
 	r.AdminUserName = flex.StringToFrameworkLegacy(ctx, output.AdminUserName)
 	r.AuthType = flex.StringValueToFramework(ctx, string(output.AuthType))
+	r.BackupRetentionPeriod = flex.Int32ToFramework(ctx, output.BackupRetentionPeriod)
 	r.ARN = flex.StringToFramework(ctx, output.ClusterArn)
 	r.Endpoint = flex.StringToFramework(ctx, output.ClusterEndpoint)
 	r.KmsKeyID = flex.StringToFramework(ctx, output.KmsKeyId)
@@ -504,6 +518,7 @@ func clusterHasChanges(_ context.Context, plan, state resourceClusterData) bool 
 	return !plan.Name.Equal(state.Name) ||
 		!plan.AdminUserPassword.Equal(state.AdminUserPassword) ||
 		!plan.AuthType.Equal(state.AuthType) ||
+		!plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) ||
 		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) ||
 		!plan.ShardCapacity.Equal(state.ShardCapacity) ||
 		!plan.ShardCount.Equal(state.ShardCount) ||
