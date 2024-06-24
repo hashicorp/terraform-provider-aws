@@ -107,6 +107,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		FirewallDomainListId:            aws.String(firewallDomainListID),
 		FirewallDomainRedirectionAction: aws.String(d.Get("firewall_domain_redirection_action").(string)),
 		Name:                            aws.String(name),
+		Priority:                        aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 	}
 
 	if v, ok := d.GetOk("block_override_dns_type"); ok {
