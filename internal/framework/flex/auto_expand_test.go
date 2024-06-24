@@ -994,6 +994,116 @@ func TestExpandOptions(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandInterface(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := autoFlexTestCases{
+		{
+			TestName: "single list Source and single interface Target",
+			Source: TestFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTFInterface02{
+					{
+						Field1: types.StringValue("value1"),
+					},
+				}),
+			},
+			Target: &TestFlexAWSInterfaceSingle{},
+			WantTarget: &TestFlexAWSInterfaceSingle{
+				Field1: &TestFlexAWSInterface02Type01{
+					Field1: "value1",
+				},
+			},
+		},
+		{
+			TestName: "single set Source and single interface Target",
+			Source: TestFlexTFInterfaceSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTFInterface02{
+					{
+						Field1: types.StringValue("value1"),
+					},
+				}),
+			},
+			Target: &TestFlexAWSInterfaceSingle{},
+			WantTarget: &TestFlexAWSInterfaceSingle{
+				Field1: &TestFlexAWSInterface02Type01{
+					Field1: "value1",
+				},
+			},
+		},
+		{
+			TestName: "empty list Source and empty interface Target",
+			Source: TestFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTFInterface02{}),
+			},
+			Target: &TestFlexAWSInterfaceSlice{},
+			WantTarget: &TestFlexAWSInterfaceSlice{
+				Field1: []TestFlexAWSInterface02{},
+			},
+		},
+		{
+			TestName: "non-empty list Source and non-empty interface Target",
+			Source: TestFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTFInterface02{
+					{
+						Field1: types.StringValue("value1"),
+					},
+					{
+						Field1: types.StringValue("value2"),
+					},
+				}),
+			},
+			Target: &TestFlexAWSInterfaceSlice{},
+			WantTarget: &TestFlexAWSInterfaceSlice{
+				Field1: []TestFlexAWSInterface02{
+					&TestFlexAWSInterface02Type01{
+						Field1: "value1",
+					},
+					&TestFlexAWSInterface02Type01{
+						Field1: "value2",
+					},
+				},
+			},
+		},
+		{
+			TestName: "empty set Source and empty interface Target",
+			Source: TestFlexTFInterfaceSetNestedObject{
+				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTFInterface02{}),
+			},
+			Target: &TestFlexAWSInterfaceSlice{},
+			WantTarget: &TestFlexAWSInterfaceSlice{
+				Field1: []TestFlexAWSInterface02{},
+			},
+		},
+		{
+			TestName: "non-empty set Source and non-empty interface Target",
+			Source: TestFlexTFInterfaceListNestedObject{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTFInterface02{
+					{
+						Field1: types.StringValue("value1"),
+					},
+					{
+						Field1: types.StringValue("value2"),
+					},
+				}),
+			},
+			Target: &TestFlexAWSInterfaceSlice{},
+			WantTarget: &TestFlexAWSInterfaceSlice{
+				Field1: []TestFlexAWSInterface02{
+					&TestFlexAWSInterface02Type01{
+						Field1: "value1",
+					},
+					&TestFlexAWSInterface02Type01{
+						Field1: "value2",
+					},
+				},
+			},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 type autoFlexTestCase struct {
 	Context    context.Context //nolint:containedctx // testing context use
 	Options    []AutoFlexOptionsFunc
