@@ -37,6 +37,7 @@ func testAccControl_basic(t *testing.T) {
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
 	ouName := "Security"
+	region := "us-west-2" //lintignore:AWSAT003
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -49,7 +50,7 @@ func testAccControl_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlConfig_basic(controlName, ouName),
+				Config: testAccControlConfig_basic(controlName, ouName, region),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
@@ -65,6 +66,7 @@ func testAccControl_disappears(t *testing.T) {
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
 	ouName := "Security"
+	region := "us-west-2" //lintignore:AWSAT003
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -77,7 +79,7 @@ func testAccControl_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlConfig_basic(controlName, ouName),
+				Config: testAccControlConfig_basic(controlName, ouName, region),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
@@ -135,7 +137,7 @@ func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccControlConfig_basic(controlName string, ouName string) string {
+func testAccControlConfig_basic(controlName, ouName, region string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -156,8 +158,8 @@ resource "aws_controltower_control" "test" {
 
   parameters {
     key   = "AllowedRegions"
-    value = jsonencode(["us-east-1"])
+    value = jsonencode([%[3]q])
   }
 }
-`, controlName, ouName)
+`, controlName, ouName, region)
 }
