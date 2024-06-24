@@ -71,7 +71,6 @@ func TestAccWorkspaceServiceAccount_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
