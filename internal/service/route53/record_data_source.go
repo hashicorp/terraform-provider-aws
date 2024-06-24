@@ -55,38 +55,6 @@ func DataSourceRecords() *schema.Resource {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							// Elem: &schema.Resource{
-							// 	Schema: map[string]*schema.Schema{
-							// 		"aws_region": {
-							// 			Type:     schema.TypeString,
-							// 			Computed: true,
-							// 		},
-							// 		"bias": {
-							// 			Type:     schema.TypeInt,
-							// 			Computed: true,
-							// 		},
-							// 		"coordinates": {
-							// 			Type:     schema.TypeSet,
-							// 			Computed: true,
-							// 			Elem: &schema.Resource{
-							// 				Schema: map[string]*schema.Schema{
-							// 					"latitude": {
-							// 						Type:     schema.TypeString,
-							// 						Computed: true,
-							// 					},
-							// 					"longitude": {
-							// 						Type:     schema.TypeString,
-							// 						Computed: true,
-							// 					},
-							// 				},
-							// 			},
-							// 		},
-							// 		"local_zone_group": {
-							// 			Type:     schema.TypeString,
-							// 			Optional: true,
-							// 		},
-							// 	},
-							// },
 						},
 						"latency_region": {
 							Type:     schema.TypeString,
