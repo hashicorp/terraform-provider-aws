@@ -5,6 +5,7 @@ package controltower
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"time"
@@ -83,9 +84,9 @@ func resourceControl() *schema.Resource {
 							Required: true,
 						},
 						names.AttrValue: {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeString,
 							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							// ValidateFunc: verify.ValidStringIsJSONOrYAML,
 						},
 					},
 				},
@@ -114,7 +115,12 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk(names.AttrParameters); ok && v.(*schema.Set).Len() > 0 {
-		input.Parameters = expandControlParameters(v.(*schema.Set).List())
+		p, err := expandControlParameters(v.(*schema.Set).List())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating ControlTower Control (%s): %s", id, err)
+		}
+
+		input.Parameters = p
 	}
 
 	output, err := conn.EnableControl(ctx, input)
@@ -171,8 +177,14 @@ func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange(names.AttrParameters) {
 		input := &controltower.UpdateEnabledControlInput{
 			EnabledControlIdentifier: aws.String(d.Get(names.AttrARN).(string)),
-			Parameters:               expandControlParameters(d.Get(names.AttrParameters).(*schema.Set).List()),
 		}
+
+		p, err := expandControlParameters(d.Get(names.AttrParameters).(*schema.Set).List())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ControlTower Control (%s): %s", d.Id(), err)
+		}
+
+		input.Parameters = p
 
 		output, err := conn.UpdateEnabledControl(ctx, input)
 
@@ -221,9 +233,9 @@ const (
 	controlResourceIDPartCount = 2
 )
 
-func expandControlParameters(input []any) []types.EnabledControlParameter {
+func expandControlParameters(input []any) ([]types.EnabledControlParameter, error) {
 	if len(input) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	var output []types.EnabledControlParameter
@@ -231,14 +243,20 @@ func expandControlParameters(input []any) []types.EnabledControlParameter {
 	for _, v := range input {
 		val := v.(map[string]any)
 		e := types.EnabledControlParameter{
-			Key:   aws.String(val[names.AttrKey].(string)),
-			Value: document.NewLazyDocument(val[names.AttrValue].(*schema.Set).List()),
+			Key: aws.String(val[names.AttrKey].(string)),
 		}
 
+		var out any
+		err := json.Unmarshal([]byte(val[names.AttrValue].(string)), &out)
+		if err != nil {
+			return nil, err
+		}
+
+		e.Value = document.NewLazyDocument(out)
 		output = append(output, e)
 	}
 
-	return output
+	return output, nil
 }
 
 func flattenControlParameters(input []types.EnabledControlParameterSummary) (*schema.Set, error) {
