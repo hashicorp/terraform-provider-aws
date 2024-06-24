@@ -19,9 +19,9 @@ var (
 
 	FindGroupByTwoPartKey                   = findGroupByTwoPartKey
 	FindIdentityProviderByTwoPartKey        = findIdentityProviderByTwoPartKey
+	FindResourceServerByTwoPartKey          = findResourceServerByTwoPartKey
 	FindUserByTwoPartKey                    = findUserByTwoPartKey
 	FindUserPoolByID                        = findUserPoolByID
 	FindUserPoolUICustomizationByTwoPartKey = findUserPoolUICustomizationByTwoPartKey
-
 	SkipFlatteningStringAttributeContraints = skipFlatteningStringAttributeContraints
 )
