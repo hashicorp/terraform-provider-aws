@@ -80,7 +80,7 @@ service "ec2ebs" {
 
 service "ec2outposts" {
   vpc_lock                   = true
-  pattern_override           = "TestAccOutposts"
+  pattern_override           = "TestAccEC2Outposts"
   split_package_real_package = "ec2"
 }
 

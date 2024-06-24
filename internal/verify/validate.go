@@ -385,20 +385,9 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func ValidRegionName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if value == "" {
-		return ws, errors
-	}
-	if !regionRegexp.MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q region name is malformed(%q): %q",
-			k, regionRegexp, value))
-	}
-
-	return
-}
+var (
+	ValidRegionName = validation.StringMatch(regionRegexp, "must be a valid AWS Region Code")
+)
 
 func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []error) {
 	if looksLikeJSONString(v) {

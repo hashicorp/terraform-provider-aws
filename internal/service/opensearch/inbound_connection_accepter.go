@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opensearch_inbound_connection_accepter")
@@ -28,7 +30,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, m interface{}) (result []*schema.ResourceData, err error) {
-				d.Set("connection_id", d.Id())
+				d.Set(names.AttrConnectionID, d.Id())
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -40,7 +42,7 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,9 +56,10 @@ func ResourceInboundConnectionAccepter() *schema.Resource {
 }
 
 func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	connectionID := d.Get("connection_id").(string)
+	connectionID := d.Get(names.AttrConnectionID).(string)
 	input := &opensearchservice.AcceptInboundConnectionInput{
 		ConnectionId: aws.String(connectionID),
 	}
@@ -64,19 +67,20 @@ func resourceInboundConnectionAccepterCreate(ctx context.Context, d *schema.Reso
 	_, err := conn.AcceptInboundConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("accepting OpenSearch Inbound Connection (%s): %s", connectionID, err)
+		return sdkdiag.AppendErrorf(diags, "accepting OpenSearch Inbound Connection (%s): %s", connectionID, err)
 	}
 
 	d.SetId(connectionID)
 
 	if _, err := waitInboundConnectionAccepted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) accept: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) accept: %s", d.Id(), err)
 	}
 
-	return resourceInboundConnectionRead(ctx, d, meta)
+	return append(diags, resourceInboundConnectionRead(ctx, d, meta)...)
 }
 
 func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	connection, err := FindInboundConnectionByID(ctx, conn, d.Id())
@@ -88,15 +92,16 @@ func resourceInboundConnectionRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("reading OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Inbound Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("connection_id", connection.ConnectionId)
+	d.Set(names.AttrConnectionID, connection.ConnectionId)
 	d.Set("connection_status", connection.ConnectionStatus.StatusCode)
 	return nil
 }
 
 func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	if d.Get("connection_status").(string) == opensearchservice.InboundConnectionStatusCodePendingAcceptance {
@@ -106,11 +111,11 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 		})
 
 		if err != nil {
-			return diag.Errorf("rejecting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "rejecting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitInboundConnectionRejected(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) reject: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) reject: %s", d.Id(), err)
 		}
 
 		return nil
@@ -126,11 +131,11 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitInboundConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for OpenSearch Inbound Connection (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

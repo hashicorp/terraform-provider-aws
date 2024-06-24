@@ -5,9 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
-	"github.com/aws/aws-sdk-go/service/appintegrationsservice/appintegrationsserviceiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -16,21 +15,54 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// map[string]*string handling
+// listTags lists appintegrations service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func listTags(ctx context.Context, conn *appintegrations.Client, identifier string, optFns ...func(*appintegrations.Options)) (tftags.KeyValueTags, error) {
+	input := &appintegrations.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists appintegrations service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).AppIntegrationsClient(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
+// map[string]string handling
 
 // Tags returns appintegrations service tags.
-func Tags(tags tftags.KeyValueTags) map[string]*string {
-	return aws.StringMap(tags.Map())
+func Tags(tags tftags.KeyValueTags) map[string]string {
+	return tags.Map()
 }
 
 // KeyValueTags creates tftags.KeyValueTags from appintegrations service tags.
-func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
 // getTagsIn returns appintegrations service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]*string {
+func getTagsIn(ctx context.Context) map[string]string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -41,7 +73,7 @@ func getTagsIn(ctx context.Context) map[string]*string {
 }
 
 // setTagsOut sets appintegrations service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]*string) {
+func setTagsOut(ctx context.Context, tags map[string]string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -50,7 +82,7 @@ func setTagsOut(ctx context.Context, tags map[string]*string) {
 // updateTags updates appintegrations service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegrationsServiceAPI, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *appintegrations.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*appintegrations.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -59,12 +91,12 @@ func updateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegra
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.AppIntegrations)
 	if len(removedTags) > 0 {
-		input := &appintegrationsservice.UntagResourceInput{
+		input := &appintegrations.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     aws.StringSlice(removedTags.Keys()),
+			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResourceWithContext(ctx, input)
+		_, err := conn.UntagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -74,12 +106,12 @@ func updateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegra
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.AppIntegrations)
 	if len(updatedTags) > 0 {
-		input := &appintegrationsservice.TagResourceInput{
+		input := &appintegrations.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResourceWithContext(ctx, input)
+		_, err := conn.TagResource(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -92,5 +124,5 @@ func updateTags(ctx context.Context, conn appintegrationsserviceiface.AppIntegra
 // UpdateTags updates appintegrations service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).AppIntegrationsConn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).AppIntegrationsClient(ctx), identifier, oldTags, newTags)
 }

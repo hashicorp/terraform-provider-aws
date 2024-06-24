@@ -223,7 +223,7 @@ This resource supports the following arguments:
 * `cache_key_parameters` - (Optional) List of cache key parameters for the integration.
 * `cache_namespace` - (Optional) Integration's cache namespace.
 * `content_handling` - (Optional) How to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the passthroughBehaviors is configured to support payload pass-through.
-* `timeout_milliseconds` - (Optional) Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000 milliseconds.
+* `timeout_milliseconds` - (Optional) Custom timeout between 50 and 300,000 milliseconds. The default value is 29,000 milliseconds. You need to raise a [Service Quota Ticket](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) to increase time beyond 29,000 milliseconds.
 * `tls_config` - (Optional) TLS configuration. See below.
 
 ### tls_config Configuration Block
