@@ -21,6 +21,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newAppAuthorizationConnectionResource,
+			Name:    "App Authorization Connection",
+		},
+		{
 			Factory: newAppAuthorizationResource,
 			Name:    "App Authorization",
 			Tags: &types.ServicePackageResourceTags{
@@ -33,10 +37,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
-		},
-		{
-			Factory: newAppAuthorizationConnectionResource,
-			Name:    "Connect App Authorization",
 		},
 	}
 }
