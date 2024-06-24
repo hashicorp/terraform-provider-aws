@@ -1,21 +1,21 @@
 ---
 subcategory: "AppFabric"
 layout: "aws"
-page_title: "AWS: aws_appfabric_connect_app_authorization"
+page_title: "AWS: aws_appfabric_app_authorization_connection"
 description: |-
-  Terraform resource for managing an AWS AppFabric Connect App Authorization.
+  Terraform resource for managing an AWS AppFabric App Authorization Connection.
 ---
 
-# Resource: aws_appfabric_connect_app_authorization
+# Resource: aws_appfabric_app_authorization_connection
 
-Terraform resource for managing an AWS AppFabric Connect App Authorization.
+Terraform resource for managing an AWS AppFabric App Authorization Connection.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_appfabric_connect_app_authorization" "example" {
+resource "aws_appfabric_app_authorization_connection" "example" {
   app_authorization_arn = aws_appfabric_app_authorization.test.arn
   app_bundle_arn        = aws_appfabric_app_bundle.arn
 }

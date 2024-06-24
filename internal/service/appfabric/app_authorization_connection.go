@@ -32,8 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="Connect App Authorization")
+// @FrameworkResource(name="App Authorization Connection")
 func newConnectAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceConnectAppAuthorization{}
 
@@ -56,7 +55,7 @@ type resourceConnectAppAuthorization struct {
 }
 
 func (r *resourceConnectAppAuthorization) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_appfabric_connect_app_authorization"
+	resp.TypeName = "aws_appfabric_app_authorization_connection"
 }
 
 func (r *resourceConnectAppAuthorization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

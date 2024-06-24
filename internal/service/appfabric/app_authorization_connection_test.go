@@ -15,7 +15,7 @@ import (
 
 func testAccConnectAppAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_appfabric_connect_app_authorization.test"
+	resourceName := "aws_appfabric_app_authorization_connection.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
 	appAuthorization := "aws_appfabric_app_authorization.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -41,7 +41,7 @@ func testAccConnectAppAuthorization_basic(t *testing.T) {
 }
 func testAccConnectAppAuthorization_OAth2(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_appfabric_connect_app_authorization.test"
+	resourceName := "aws_appfabric_app_authorization_connection.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
 	appAuthorization := "aws_appfabric_app_authorization.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -90,7 +90,7 @@ resource "aws_appfabric_app_authorization" "test" {
   }
 }
 
-resource "aws_appfabric_connect_app_authorization" "test" {
+resource "aws_appfabric_app_authorization_connection" "test" {
   app_bundle_arn        = aws_appfabric_app_bundle.test.arn
   app_authorization_arn = aws_appfabric_app_authorization.test.arn
 }
@@ -124,7 +124,7 @@ resource "aws_appfabric_app_authorization" "test" {
   }
 }
 
-resource "aws_appfabric_connect_app_authorization" "test" {
+resource "aws_appfabric_app_authorization_connection" "test" {
   app_bundle_arn        = aws_appfabric_app_bundle.test.arn
   app_authorization_arn = aws_appfabric_app_authorization.test.arn
   auth_request {
