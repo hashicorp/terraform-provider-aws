@@ -734,6 +734,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 		// types.List(OfObject) -> interface.
 		//
 		// Smithy union type handling not yet implemented. Silently skip.
+		diags.Append(expander.nestedObjectToInterface(ctx, vFrom, tTo, vTo)...)
 		return diags
 	}
 
@@ -767,6 +768,67 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 	}
 
 	return diags
+}
+
+type Expander interface {
+	Expand(ctx context.Context) (any, diag.Diagnostics)
+}
+
+// nestedObjectToInterface copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct value.
+func (expander autoExpander) nestedObjectToInterface(ctx context.Context, fromVal fwtypes.NestedObjectValue, toType reflect.Type, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Get the nested Object as a pointer.
+	from, d := fromVal.ToObjectPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	foo, ok := from.(Expander)
+	if !ok {
+		// TODO: skip silently but log
+		diags.AddError(
+			"AutoFlEx",
+			fmt.Sprintf("could not convert %T to Expander", from),
+		)
+		return diags
+	}
+	from, d = foo.Expand(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	fromType := reflect.TypeOf(from)
+	if !fromType.Implements(toType) {
+		diags.AddError(
+			"Incompatible Types",
+			"An unexpected error occurred while expanding configuration. "+ // TODO: rephrase
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Type %q does not implement %q", fullTypeName(fromType), fullTypeName(toType)),
+		)
+		return diags
+	}
+
+	to := reflect.ValueOf(from)
+
+	// Set value (or pointer).
+	if toVal.Type().Kind() == reflect.Struct {
+		toVal.Set(to.Elem())
+	} else {
+		toVal.Set(to)
+	}
+
+	return diags
+}
+
+func fullTypeName(t reflect.Type) string {
+	if path := t.PkgPath(); path != "" {
+		return fmt.Sprintf("%s.%s", path, t.Name())
+	}
+	return t.Name()
 }
 
 // nestedObjectToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
