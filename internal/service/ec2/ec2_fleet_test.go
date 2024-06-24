@@ -1561,6 +1561,45 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
 	})
 }
 
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_maxSpotPriceAsPercentageOfOptimalOnDemandPrice(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleet awstypes.FleetData
+	resourceName := "aws_ec2_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`max_spot_price_as_percentage_of_optimal_on_demand_price = 75
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct1),
+
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.max_spot_price_as_percentage_of_optimal_on_demand_price", "75"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCPU(t *testing.T) {
 	ctx := acctest.Context(t)
 	var fleet awstypes.FleetData

@@ -37,7 +37,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go/service/ec2;ec2.SecurityGroup")
 // @Testing(importIgnore="revoke_rules_on_delete")
-func ResourceSecurityGroup() *schema.Resource {
+func resourceSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityGroupCreate,

@@ -5,11 +5,13 @@ package appfabric
 
 // Exports for use in tests only.
 var (
-	ResourceAppAuthorization = newAppAuthorizationResource
-	ResourceAppBundle        = newAppBundleResource
-	ResourceIngestion        = newIngestionResource
+	ResourceAppAuthorization           = newAppAuthorizationResource
+	ResourceAppAuthorizationConnection = newAppAuthorizationConnectionResource
+	ResourceAppBundle                  = newAppBundleResource
+	ResourceIngestion                  = newIngestionResource
 
-	FindAppAuthorizationByTwoPartKey = findAppAuthorizationByTwoPartKey
-	FindAppBundleByID                = findAppBundleByID
-	FindIngestionByTwoPartKey        = findIngestionByTwoPartKey
+	FindAppAuthorizationByTwoPartKey           = findAppAuthorizationByTwoPartKey
+	FindAppAuthorizationConnectionByTwoPartKey = findAppAuthorizationConnectionByTwoPartKey
+	FindAppBundleByID                          = findAppBundleByID
+	FindIngestionByTwoPartKey                  = findIngestionByTwoPartKey
 )

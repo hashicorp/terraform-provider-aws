@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_ec2_transit_gateway_dx_gateway_attachment", name="Transit Gateway Direct Connect Gateway Attachment")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayDxGatewayAttachmentRead,

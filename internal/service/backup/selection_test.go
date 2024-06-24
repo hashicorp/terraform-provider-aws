@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -254,7 +254,7 @@ func TestAccBackupSelection_updateTag(t *testing.T) {
 
 func testAccCheckSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_selection" {
 				continue
@@ -265,7 +265,7 @@ func testAccCheckSelectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				SelectionId:  aws.String(rs.Primary.ID),
 			}
 
-			resp, err := conn.GetBackupSelectionWithContext(ctx, input)
+			resp, err := conn.GetBackupSelection(ctx, input)
 
 			if err == nil {
 				if *resp.SelectionId == rs.Primary.ID {
@@ -285,14 +285,14 @@ func testAccCheckSelectionExists(ctx context.Context, name string, selection *ba
 			return fmt.Errorf("not found: %s, %v", name, s.RootModule().Resources)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		input := &backup.GetBackupSelectionInput{
 			BackupPlanId: aws.String(rs.Primary.Attributes["plan_id"]),
 			SelectionId:  aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetBackupSelectionWithContext(ctx, input)
+		output, err := conn.GetBackupSelection(ctx, input)
 
 		if err != nil {
 			return err

@@ -33,6 +33,10 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"oath2Update":        testAccAppAuthorization_oath2Update,
 			"tags":               testAccAppAuthorization_tags,
 		},
+		"AppAuthorizationConnection": {
+			acctest.CtBasic: testAccAppAuthorizationConnection_basic,
+			"oath2Connect":  testAccAppAuthorizationConnection_OAuth2,
+		},
 		"Ingestion": {
 			acctest.CtBasic:      testAccIngestion_basic,
 			acctest.CtDisappears: testAccIngestion_disappears,

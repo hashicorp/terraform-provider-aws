@@ -55,7 +55,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 
   ttl {
     attribute_name = "TimeToExist"
-    enabled        = false
+    enabled        = true
   }
 
   global_secondary_index {
@@ -261,8 +261,10 @@ Optional arguments:
 
 ### `ttl`
 
-* `enabled` - (Required) Whether TTL is enabled.
-* `attribute_name` - (Required) Name of the table attribute to store the TTL timestamp in.
+* `attribute_name` - (Optional) Name of the table attribute to store the TTL timestamp in.
+  Required if `enabled` is `true`, must not be set otherwise.
+* `enabled` - (Optional) Whether TTL is enabled.
+  Default value is `false`.
 
 ## Attribute Reference
 
