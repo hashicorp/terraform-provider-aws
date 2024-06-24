@@ -53,6 +53,13 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			names.AttrApproximateCreationDateTimePrecision: {
+				Type:             schema.TypeString,
+				Required:         false,
+				ForceNew:         false,
+				Default:          awstypes.ApproximateCreationDateTimePrecisionMillisecond,
+				ValidateDiagFunc: enum.Validate[awstypes.ApproximateCreationDateTimePrecision](),
+			},
 		},
 	}
 }
