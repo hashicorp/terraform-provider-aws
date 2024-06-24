@@ -439,7 +439,7 @@ func findSecurityGroupByDescriptionAndVPCID(ctx context.Context, conn *ec2.EC2, 
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				names.AttrDescription: description,
+				"description": description, // nosemgrep:ci.literal-description-string-constant
 				"vpc-id":      vpcID,
 			},
 		),
