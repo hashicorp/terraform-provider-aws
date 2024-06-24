@@ -31,7 +31,7 @@ resource "aws_controltower_control" "example" {
 
   parameters {
     key   = "AllowedRegions"
-    value = ["us-east-1"]
+    value = jsonencode(["us-east-1"])
   }
 }
 ```

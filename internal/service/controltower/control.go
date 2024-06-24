@@ -84,9 +84,9 @@ func resourceControl() *schema.Resource {
 							Required: true,
 						},
 						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
-							// ValidateFunc: verify.ValidStringIsJSONOrYAML,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidStringIsJSONOrYAML,
 						},
 					},
 				},
@@ -271,9 +271,8 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 				Required: true,
 			},
 			names.AttrValue: {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeString,
 				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -285,7 +284,7 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 			names.AttrKey: aws.ToString(v.Key),
 		}
 
-		var va []any
+		var va any
 		err := v.Value.UnmarshalSmithyDocument(&va)
 
 		if err != nil {
@@ -293,7 +292,12 @@ func flattenControlParameters(input []types.EnabledControlParameterSummary) (*sc
 			return nil, err
 		}
 
-		val[names.AttrValue] = schema.NewSet(schema.HashString, va)
+		out, err := json.Marshal(va)
+		if err != nil {
+			return nil, err
+		}
+
+		val[names.AttrValue] = string(out)
 		output = append(output, val)
 	}
 
