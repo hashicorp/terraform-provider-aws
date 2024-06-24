@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const customActionsMaxItems = 10
@@ -1911,7 +1912,7 @@ func flattenNumericEqualityDrillDownFilter(apiObject *quicksight.NumericEquality
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}

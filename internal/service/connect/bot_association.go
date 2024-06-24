@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_bot_association")
@@ -28,7 +29,7 @@ func ResourceBotAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +48,7 @@ func ResourceBotAssociation() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -83,7 +84,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.AssociateBotInput{
 		InstanceId: aws.String(instanceId),
@@ -154,7 +155,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Connect Bot Association (%s): empty output", d.Id())
 	}
 
-	d.Set("instance_id", instanceId)
+	d.Set(names.AttrInstanceID, instanceId)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)
 	}
@@ -207,7 +208,7 @@ func expandLexBot(l []interface{}) *connect.LexBot {
 	}
 
 	result := &connect.LexBot{
-		Name: aws.String(tfMap["name"].(string)),
+		Name: aws.String(tfMap[names.AttrName].(string)),
 	}
 
 	if v, ok := tfMap["lex_region"].(string); ok && v != "" {
@@ -223,8 +224,8 @@ func flattenLexBot(bot *connect.LexBot) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"lex_region": bot.LexRegion,
-		"name":       bot.Name,
+		"lex_region":   bot.LexRegion,
+		names.AttrName: bot.Name,
 	}
 
 	return []interface{}{m}

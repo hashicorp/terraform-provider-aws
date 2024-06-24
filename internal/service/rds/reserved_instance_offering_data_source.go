@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,7 +35,7 @@ func DataSourceReservedOffering() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -68,11 +69,12 @@ func DataSourceReservedOffering() *schema.Resource {
 }
 
 func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeReservedDBInstancesOfferingsInput{
 		DBInstanceClass:    aws.String(d.Get("db_instance_class").(string)),
-		Duration:           aws.String(fmt.Sprint(d.Get("duration").(int))),
+		Duration:           aws.String(fmt.Sprint(d.Get(names.AttrDuration).(int))),
 		MultiAZ:            aws.Bool(d.Get("multi_az").(bool)),
 		OfferingType:       aws.String(d.Get("offering_type").(string)),
 		ProductDescription: aws.String(d.Get("product_description").(string)),
@@ -80,15 +82,15 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.DescribeReservedDBInstancesOfferingsWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstanceOffering, "unknown", err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, ResNameReservedInstanceOffering, "unknown", err)
 	}
 
 	if len(resp.ReservedDBInstancesOfferings) == 0 {
-		return diag.Errorf("no %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
+		return sdkdiag.AppendErrorf(diags, "no %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
 	}
 
 	if len(resp.ReservedDBInstancesOfferings) > 1 {
-		return diag.Errorf("More than one %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
+		return sdkdiag.AppendErrorf(diags, "More than one %s %s found matching criteria; try different search", names.RDS, ResNameReservedInstanceOffering)
 	}
 
 	offering := resp.ReservedDBInstancesOfferings[0]
@@ -96,12 +98,12 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 	d.SetId(aws.ToString(offering.ReservedDBInstancesOfferingId))
 	d.Set("currency_code", offering.CurrencyCode)
 	d.Set("db_instance_class", offering.DBInstanceClass)
-	d.Set("duration", offering.Duration)
+	d.Set(names.AttrDuration, offering.Duration)
 	d.Set("fixed_price", offering.FixedPrice)
 	d.Set("multi_az", offering.MultiAZ)
 	d.Set("offering_type", offering.OfferingType)
 	d.Set("product_description", offering.ProductDescription)
 	d.Set("offering_id", offering.ReservedDBInstancesOfferingId)
 
-	return nil
+	return diags
 }

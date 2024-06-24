@@ -212,6 +212,10 @@ func ExpandStringValueSet(configured *schema.Set) []string {
 	return ExpandStringValueList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
 }
 
+func ExpandStringValueEmptySet(configured *schema.Set) []string {
+	return ExpandStringValueListEmpty(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
+}
+
 func ExpandStringyValueSet[E ~string](configured *schema.Set) []E {
 	return ExpandStringyValueList[E](configured.List())
 }
@@ -238,9 +242,20 @@ func FlattenStringMap(m map[string]*string) map[string]interface{} {
 	})
 }
 
+func FlattenStringValueMap(m map[string]string) map[string]interface{} {
+	return tfmaps.ApplyToAllValues(m, func(v string) any {
+		return v
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*int64
 func ExpandInt64Set(configured *schema.Set) []*int64 {
 	return ExpandInt64List(configured.List())
+}
+
+// Takes the result of schema.Set of strings and returns a []int64
+func ExpandInt64ValueSet(configured *schema.Set) []int64 {
+	return ExpandInt64ValueList(configured.List())
 }
 
 func FlattenInt64Set(list []*int64) *schema.Set {
@@ -252,6 +267,27 @@ func FlattenInt64Set(list []*int64) *schema.Set {
 func ExpandInt32ValueList(configured []interface{}) []int32 {
 	return tfslices.ApplyToAll(configured, func(v any) int32 {
 		return int32(v.(int))
+	})
+}
+
+// Takes the result of schema.Set of strings and returns a []int32
+func ExpandInt32ValueSet(configured *schema.Set) []int32 {
+	return ExpandInt32ValueList(configured.List())
+}
+
+func FlattenInt32Set(set []*int32) *schema.Set {
+	return schema.NewSet(schema.HashInt, FlattenInt32List(set))
+}
+
+func FlattenInt32ValueSet(set []int32) *schema.Set {
+	return schema.NewSet(schema.HashInt, FlattenInt32ValueList(set))
+}
+
+// Takes the result of flatmap.Expand for an array of int64
+// and returns a []int64
+func ExpandInt64ValueList(configured []interface{}) []int64 {
+	return tfslices.ApplyToAll(configured, func(v any) int64 {
+		return int64(v.(int))
 	})
 }
 
@@ -292,6 +328,15 @@ func FlattenInt64List(list []*int64) []interface{} {
 func FlattenFloat64List(list []*float64) []interface{} {
 	return tfslices.ApplyToAll(list, func(v *float64) any {
 		return int(aws.Float64Value(v))
+	})
+}
+
+// Takes list of pointers to int32s. Expand to an array
+// of raw ints and returns a []interface{}
+// to keep compatibility w/ schema.NewSet
+func FlattenInt32List(list []*int32) []interface{} {
+	return tfslices.ApplyToAll(list, func(v *int32) any {
+		return int(aws.Int32Value(v))
 	})
 }
 

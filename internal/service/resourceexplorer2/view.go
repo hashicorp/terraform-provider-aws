@@ -53,7 +53,7 @@ func (r *resourceView) Metadata(_ context.Context, request resource.MetadataRequ
 func (r *resourceView) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -64,8 +64,8 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -99,7 +99,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				CustomType: fwtypes.NewListNestedObjectTypeOf[includedPropertyModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[propertyName](),
 							Required:   true,
 						},
@@ -299,7 +299,7 @@ func (r *resourceView) Delete(ctx context.Context, request resource.DeleteReques
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	tflog.Debug(ctx, "deleting Resource Explorer View", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 	_, err := conn.DeleteView(ctx, &resourceexplorer2.DeleteViewInput{
 		ViewArn: flex.StringFromFramework(ctx, data.ViewARN),
@@ -313,7 +313,7 @@ func (r *resourceView) Delete(ctx context.Context, request resource.DeleteReques
 }
 
 func (r *resourceView) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func (r *resourceView) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -406,7 +406,7 @@ type propertyName string
 
 // Enum values for propertyName.
 const (
-	propertyNameTags propertyName = "tags"
+	propertyNameTags propertyName = names.AttrTags
 )
 
 func (propertyName) Values() []propertyName {

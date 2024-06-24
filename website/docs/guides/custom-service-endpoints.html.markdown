@@ -84,6 +84,7 @@ provider "aws" {
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
+  <li><code>applicationsignals</code></li>
   <li><code>appmesh</code></li>
   <li><code>apprunner</code></li>
   <li><code>appstream</code></li>
@@ -147,6 +148,7 @@ provider "aws" {
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
   <li><code>docdbelastic</code></li>
+  <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
@@ -291,6 +293,7 @@ provider "aws" {
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>

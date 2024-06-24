@@ -42,7 +42,7 @@ func TestAccQuickSightIngestion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ingestion_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", quicksight.IngestionTypeFullRefresh),
 					resource.TestCheckResourceAttrPair(resourceName, "data_set_id", dataSetName, "data_set_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("dataset/%[1]s/ingestion/%[1]s", rId)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%[1]s/ingestion/%[1]s", rId)),
 				),
 			},
 			{

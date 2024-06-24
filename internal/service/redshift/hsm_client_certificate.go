@@ -36,7 +36,7 @@ func resourceHSMClientCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,7 +102,7 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 		Resource:  fmt.Sprintf("hsmclientcertificate:%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	d.Set("hsm_client_certificate_identifier", out.HsmClientCertificateIdentifier)
 	d.Set("hsm_client_certificate_public_key", out.HsmClientCertificatePublicKey)
@@ -135,7 +135,7 @@ func resourceHSMClientCertificateDelete(ctx context.Context, d *schema.ResourceD
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmClientCertificateNotFoundFault) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "updating Redshift HSM Client Certificate (%s) tags: %s", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "updating Redshift HSM Client Certificate (%s) tags: %s", d.Get(names.AttrARN).(string), err)
 	}
 
 	return diags

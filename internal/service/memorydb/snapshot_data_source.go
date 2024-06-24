@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_snapshot")
@@ -21,7 +22,7 @@ func DataSourceSnapshot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -30,11 +31,11 @@ func DataSourceSnapshot() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"engine_version": {
+						names.AttrEngineVersion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -42,7 +43,7 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -54,11 +55,11 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"parameter_group_name": {
+						names.AttrParameterGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -74,34 +75,34 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -112,7 +113,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	snapshot, err := FindSnapshotByName(ctx, conn, name)
 
@@ -122,22 +123,22 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(snapshot.Name))
 
-	d.Set("arn", snapshot.ARN)
+	d.Set(names.AttrARN, snapshot.ARN)
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
-	d.Set("cluster_name", snapshot.ClusterConfiguration.Name)
-	d.Set("kms_key_arn", snapshot.KmsKeyId)
-	d.Set("name", snapshot.Name)
-	d.Set("source", snapshot.Source)
+	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
+	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
+	d.Set(names.AttrName, snapshot.Name)
+	d.Set(names.AttrSource, snapshot.Source)
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

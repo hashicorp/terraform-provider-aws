@@ -37,7 +37,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 				Config: testAccTagsDataSourceConfig_basic(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", acctest.Ct1),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 				Config: testAccTagsDataSourceConfig_filter(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.#", acctest.Ct1),
 				),
 			},
 		},

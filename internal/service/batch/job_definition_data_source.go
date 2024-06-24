@@ -29,7 +29,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Job Definition")
+// @FrameworkDataSource("aws_batch_job_definition", name="Job Definition")
+// @Testing(tagsTest=true)
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }
@@ -95,14 +96,14 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 			"scheduling_priority": schema.Int64Attribute{
 				Computed: true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(jobDefinitionStatus_Values()...),
 				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"timeout": schema.ListAttribute{
+			names.AttrTimeout: schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionJobTimeoutModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
@@ -111,7 +112,7 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 					},
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 			},
 		},
