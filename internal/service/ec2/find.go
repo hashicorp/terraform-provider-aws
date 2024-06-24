@@ -440,7 +440,7 @@ func findSecurityGroupByDescriptionAndVPCID(ctx context.Context, conn *ec2.EC2, 
 		Filters: newAttributeFilterList(
 			map[string]string{
 				names.AttrDescription: description,
-				"vpc-id":      vpcID,
+				"vpc-id":              vpcID,
 			},
 		),
 	}
