@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -50,17 +49,13 @@ func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfig
 	return r, nil
 }
 
-const (
-	ResNameAppAuthorization = "App Authorization"
-)
-
 type appAuthorizationResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *appAuthorizationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*appAuthorizationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_appfabric_app_authorization"
 }
 
@@ -229,36 +224,35 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAppAuthorization(ctx, input)
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameAppAuthorization, data.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating AppFabric App (%s) Authorization", data.App.ValueString()), err.Error())
+
 		return
 	}
 
 	// Set values for unknowns.
-	appAuth := output.AppAuthorization
-	data.AppAuthorizationARN = fwflex.StringToFramework(ctx, appAuth.AppAuthorizationArn)
+	data.AppAuthorizationARN = fwflex.StringToFramework(ctx, output.AppAuthorization.AppAuthorizationArn)
 	data.setID()
 
-	aAuth, err := waitAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	appAuthorization, err := waitAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for App Fabric App Authorization (%s) to be created", data.AppAuthorizationARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for AppFabric App Authorization (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	// Set values for unknowns after creation is complete.I
-	data.Persona = fwflex.StringValueToFramework(ctx, aAuth.Persona)
-	data.AuthUrl = fwflex.StringToFramework(ctx, aAuth.AuthUrl)
+	// Set values for unknowns after creation is complete.
+	data.AuthUrl = fwflex.StringToFramework(ctx, appAuthorization.AuthUrl)
 	if err := data.parseAuthURL(); err != nil {
 		response.Diagnostics.AddError("parsing Auth URL", err.Error())
 
 		return
 	}
-	data.CreatedAt = fwflex.TimeToFramework(ctx, aAuth.CreatedAt)
-	data.UpdatedAt = fwflex.TimeToFramework(ctx, aAuth.UpdatedAt)
+	data.CreatedAt = fwflex.TimeToFramework(ctx, appAuthorization.CreatedAt)
+	data.Persona = fwflex.StringValueToFramework(ctx, appAuthorization.Persona)
+	data.UpdatedAt = fwflex.TimeToFramework(ctx, appAuthorization.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -288,7 +282,7 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading App Fabric AppAuthorization ID  (%s)", data.AppAuthorizationARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading AppFabric App Authorization (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
@@ -298,7 +292,7 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	//Seting it because of the dynamic nature of Auth Url
+	// Setting it because of the dynamic nature of Auth URL.
 	data.AuthUrl = fwflex.StringToFramework(ctx, output.AuthUrl)
 	if err := data.parseAuthURL(); err != nil {
 		response.Diagnostics.AddError("parsing Auth URL", err.Error())
@@ -323,7 +317,7 @@ func (r *appAuthorizationResource) Update(ctx context.Context, request resource.
 	conn := r.Meta().AppFabricClient(ctx)
 
 	// Check if updates are necessary based on the changed attributes
-	if !old.Credential.Equal(new.Credential) || !old.Tenant.Equal(new.Tenant) || !new.Tags.Equal(old.Tags) {
+	if !old.Credential.Equal(new.Credential) || !old.Tenant.Equal(new.Tenant) {
 		var credentialsData []credentialModel
 		response.Diagnostics.Append(new.Credential.ElementsAs(ctx, &credentialsData, false)...)
 		if response.Diagnostics.HasError() {
@@ -336,44 +330,34 @@ func (r *appAuthorizationResource) Update(ctx context.Context, request resource.
 			return
 		}
 
-		input := &appfabric.UpdateAppAuthorizationInput{
-			AppAuthorizationIdentifier: aws.String(new.AppAuthorizationARN.ValueString()),
-			AppBundleIdentifier:        aws.String(new.AppBundleARN.ValueString()),
-		}
+		input := &appfabric.UpdateAppAuthorizationInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
+		input.AppAuthorizationIdentifier = fwflex.StringFromFramework(ctx, new.AppAuthorizationARN)
+		input.AppBundleIdentifier = fwflex.StringFromFramework(ctx, new.AppBundleARN)
 		input.Credential = credential
 
 		_, err := conn.UpdateAppAuthorization(ctx, input)
+
 		if err != nil {
-			response.Diagnostics.AddError(
-				"Failed to update App Fabric App Authorization",
-				fmt.Sprintf("Error updating AppAuthorization with ID %s: %s", new.AppAuthorizationARN.String(), err.Error()),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating AppFabric App Authorization (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
 
-		appAuth, err := waitAppAuthorizationUpdated(ctx, conn, new.AppAuthorizationARN.ValueString(), new.AppBundleARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		appAuthorization, err := waitAppAuthorizationUpdated(ctx, conn, new.AppAuthorizationARN.ValueString(), new.AppBundleARN.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
 		if err != nil {
-			response.Diagnostics.AddError(
-				"Failed to fetch App Fabric App Authorization after update",
-				fmt.Sprintf("Error reading AppAuthorization with ARN %s post update: %s", new.AppAuthorizationARN.ValueString(), err.Error()),
-			)
-			return
-		}
-
-		// Set values for unknowns after creation is complete.
-		new.UpdatedAt = fwflex.TimeToFramework(ctx, appAuth.UpdatedAt)
-		new.Persona = fwflex.StringValueToFramework(ctx, appAuth.Persona)
-		new.AuthUrl = fwflex.StringToFramework(ctx, appAuth.AuthUrl)
-		if err := new.parseAuthURL(); err != nil {
-			response.Diagnostics.AddError("parsing Auth URL", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for AppFabric App Authorization (%s) update", new.ID.ValueString()), err.Error())
 
 			return
 		}
+
+		// Set values for unknowns.
+		new.UpdatedAt = fwflex.TimeToFramework(ctx, appAuthorization.UpdatedAt)
 	} else {
 		new.UpdatedAt = old.UpdatedAt
 	}
@@ -391,8 +375,8 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteAppAuthorization(ctx, &appfabric.DeleteAppAuthorizationInput{
-		AppAuthorizationIdentifier: aws.String(data.AppAuthorizationARN.ValueString()),
-		AppBundleIdentifier:        aws.String(data.AppBundleARN.ValueString()),
+		AppAuthorizationIdentifier: fwflex.StringFromFramework(ctx, data.AppAuthorizationARN),
+		AppBundleIdentifier:        fwflex.StringFromFramework(ctx, data.AppBundleARN),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -400,20 +384,62 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting App Fabric AppAuthorizations (%s)", data.AppAuthorizationARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting AppFabric App Authorization (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
 	if _, err = waitAppAuthorizationDeleted(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for App Fabric AppAuthenticator (%s) delete", data.AppAuthorizationARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for AppFabric AppAuthenticator (%s) delete", data.ID.ValueString()), err.Error())
 
 		return
 	}
 }
 
-func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, resp)
+func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
+	in := &appfabric.GetAppAuthorizationInput{
+		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
+		AppBundleIdentifier:        aws.String(appBundleIdentifier),
+	}
+
+	output, err := conn.GetAppAuthorization(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AppAuthorization == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return output.AppAuthorization, nil
+}
+
+func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 func waitAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
@@ -465,48 +491,6 @@ func waitAppAuthorizationDeleted(ctx context.Context, conn *appfabric.Client, ap
 	}
 
 	return nil, err
-}
-
-func statusAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleIdentifier)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status), nil
-	}
-}
-
-func findAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
-	in := &appfabric.GetAppAuthorizationInput{
-		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
-		AppBundleIdentifier:        aws.String(appBundleIdentifier),
-	}
-
-	output, err := conn.GetAppAuthorization(ctx, in)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AppAuthorization == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return output.AppAuthorization, nil
 }
 
 func expandCredentialsValue(ctx context.Context, credentialModels []credentialModel) (awstypes.Credential, diag.Diagnostics) {
