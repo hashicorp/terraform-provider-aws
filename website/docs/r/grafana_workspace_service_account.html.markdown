@@ -8,7 +8,6 @@ description: |-
 
 # Resource: aws_grafana_workspace_service_account
 
-
 https://docs.aws.amazon.com/grafana/latest/userguide/service-accounts.html
 
 -> **Note:** You cannot update a service account. If you change any attribute, Terraform
@@ -25,7 +24,7 @@ Read about Service Accounts in the [Amazon Managed Grafana user guide](https://d
 
 ```terraform
 resource "aws_grafana_workspace_service_account" "example" {
-  name = "example-admin"
+  name         = "example-admin"
   grafana_role = "ADMIN"
   workspace_id = aws_grafana_workspace.example.id
 }
@@ -41,13 +40,11 @@ The following arguments are required:
 
 * `workspace_id` - (Required) The Grafana workspace with which the service account is associated.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Identifier of the service account in the given Grafana workspace
-
 
 ## Import
 

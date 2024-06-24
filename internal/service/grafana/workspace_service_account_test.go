@@ -136,9 +136,9 @@ func testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName string) r
 func testAccWorkspaceServiceAccountConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"), fmt.Sprintf(`
 resource "aws_grafana_workspace_service_account" "test" {
-	name = %[1]q
-	grafana_role = "ADMIN"
-	workspace_id = aws_grafana_workspace.test.id
+  name = %[1]q
+  grafana_role = "ADMIN"
+  workspace_id = aws_grafana_workspace.test.id
 }
 `, rName))
 }
