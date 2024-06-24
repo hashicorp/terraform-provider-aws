@@ -2190,7 +2190,7 @@ service "cognitoidp" {
 
   sdk {
     id             = "Cognito Identity Provider"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
