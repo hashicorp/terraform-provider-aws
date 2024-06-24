@@ -167,7 +167,6 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 	data.AddressFamily = fwtypes.StringEnumValue(outputGP.AddressFamily)
 	if data.PacketSize.IsUnknown() {
 		data.PacketSize = fwflex.Int32ToFramework(ctx, outputGP.PacketSize)
-
 	}
 	data.VpcID = fwflex.StringToFramework(ctx, outputGP.VpcId)
 
