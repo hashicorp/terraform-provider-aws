@@ -144,7 +144,25 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	output, err := findEnabledControlByARN(ctx, conn, d.Get(names.AttrARN).(string))
+	var output *types.EnabledControlDetails
+	var err error
+	if v, ok := d.GetOk(names.AttrARN); ok && v.(string) != "" {
+		output, err = findEnabledControlByARN(ctx, conn, d.Get(names.AttrARN).(string))
+	} else {
+		// backwards compatibility if ARN is not set from existing state
+		parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		targetIdentifier, controlIdentifier := parts[0], parts[1]
+		out, err := findEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ControlTower Control (%s): %s", d.Id(), err)
+		}
+
+		output, err = findEnabledControlByARN(ctx, conn, aws.ToString(out.Arn))
+	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ControlTower Control %s not found, removing from state", d.Id())
@@ -156,6 +174,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading ControlTower Control (%s): %s", d.Id(), err)
 	}
 
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("control_identifier", output.ControlIdentifier)
 
 	parameters, err := flattenControlParameters(output.Parameters)
