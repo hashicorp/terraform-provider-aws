@@ -146,8 +146,8 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var output *types.EnabledControlDetails
 	var err error
-	if v, ok := d.GetOk(names.AttrARN); ok && v.(string) != "" {
-		output, err = findEnabledControlByARN(ctx, conn, d.Get(names.AttrARN).(string))
+	if v, ok := d.GetOk(names.AttrARN); ok {
+		output, err = findEnabledControlByARN(ctx, conn, v.(string))
 	} else {
 		// backwards compatibility if ARN is not set from existing state
 		parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
