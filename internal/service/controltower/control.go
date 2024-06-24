@@ -150,14 +150,14 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err = findEnabledControlByARN(ctx, conn, v.(string))
 	} else {
 		// backwards compatibility if ARN is not set from existing state
-		parts, err := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
-		if err != nil {
+		parts, internalErr := flex.ExpandResourceId(d.Id(), controlResourceIDPartCount, false)
+		if internalErr != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		targetIdentifier, controlIdentifier := parts[0], parts[1]
-		out, err := findEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
-		if err != nil {
+		out, internalErr := findEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
+		if internalErr != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ControlTower Control (%s): %s", d.Id(), err)
 		}
 
