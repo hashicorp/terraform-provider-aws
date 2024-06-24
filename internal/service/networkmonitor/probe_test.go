@@ -37,9 +37,9 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
 					resource.TestCheckNoResourceAttr(resourceName, "destination_port"),
-					resource.TestCheckNoResourceAttr(resourceName, "packet_size"),
+					resource.TestCheckResourceAttrSet(resourceName, "packet_size"),
 					resource.TestCheckResourceAttrSet(resourceName, "probe_id"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "ICMP"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
@@ -49,6 +49,8 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// TODO Need to delete the AmazonCloudWatchNetworkMonitor_ security group, else
+			// "Error: deleting EC2 VPC (vpc-00620dca13a12fd02): operation error EC2: DeleteVpc, https response error StatusCode: 400, RequestID: 3102b862-e45e-4921-8aba-0f8a4bdfe29b, api error DependencyViolation: The vpc 'vpc-00620dca13a12fd02' has dependencies and cannot be deleted"
 		},
 	})
 }
@@ -230,7 +232,7 @@ func testAccProbeConfig_basic(rName, destination string) string {
 resource "aws_networkmonitor_probe" "test" {
   monitor_name = aws_networkmonitor_monitor.test.monitor_name
   destination  = %[2]q
-  protocol     = "TCP"
+  protocol     = "ICMP"
   source_arn   = aws_subnet.test[0].arn
 }
 `, rName, destination))
@@ -254,7 +256,7 @@ func testAccProbeConfig_tags1(rName, tagKey1, tagValue1 string) string {
 resource "aws_networkmonitor_probe" "test" {
   monitor_name = aws_networkmonitor_monitor.test.monitor_name
   destination  = "10.0.0.1"
-  protocol     = "TCP"
+  protocol     = "ICMP"
   source_arn   = aws_subnet.test[0].arn
 
   tags = {
@@ -269,7 +271,7 @@ func testAccProbeConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 stri
 resource "aws_networkmonitor_probe" "test" {
   monitor_name = aws_networkmonitor_monitor.test.monitor_name
   destination  = "10.0.0.1"
-  protocol     = "TCP"
+  protocol     = "ICMP"
   source_arn   = aws_subnet.test[0].arn
 
   tags = {

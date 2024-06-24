@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -82,6 +83,10 @@ func (r *probeResource) Schema(ctx context.Context, request resource.SchemaReque
 			},
 			"packet_size": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Int64{
 					int64validator.Between(56, 8500),
 				},
@@ -124,14 +129,18 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 
 	conn := r.Meta().NetworkMonitorClient(ctx)
 
-	input := &networkmonitor.CreateProbeInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	probeInput := &awstypes.ProbeInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, probeInput)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.ClientToken = aws.String(id.UniqueId())
-	input.Tags = getTagsIn(ctx)
+	input := &networkmonitor.CreateProbeInput{
+		ClientToken: aws.String(id.UniqueId()),
+		MonitorName: fwflex.StringFromFramework(ctx, data.MonitorName),
+		Probe:       probeInput,
+		Tags:        getTagsIn(ctx),
+	}
 
 	outputCP, err := conn.CreateProbe(ctx, input)
 
@@ -156,6 +165,10 @@ func (r *probeResource) Create(ctx context.Context, request resource.CreateReque
 
 	// Set values for unknowns.
 	data.AddressFamily = fwtypes.StringEnumValue(outputGP.AddressFamily)
+	if data.PacketSize.IsUnknown() {
+		data.PacketSize = fwflex.Int32ToFramework(ctx, outputGP.PacketSize)
+
+	}
 	data.VpcID = fwflex.StringToFramework(ctx, outputGP.VpcId)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
