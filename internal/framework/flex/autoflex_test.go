@@ -364,42 +364,42 @@ type TestFlexAWS22 struct {
 	Field1 map[string]map[string]*string
 }
 
-type TestFlexTFInterfaceListNestedObject struct {
-	Field1 fwtypes.ListNestedObjectValueOf[TestFlexTFInterface02] `tfsdk:"field1"`
+type testFlexTFInterfaceListNestedObject struct {
+	Field1 fwtypes.ListNestedObjectValueOf[testFlexTFInterfaceExpander] `tfsdk:"field1"`
 }
 
-type TestFlexTFInterface02 struct {
+type testFlexTFInterfaceSetNestedObject struct {
+	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceExpander] `tfsdk:"field1"`
+}
+
+var _ Expander = testFlexTFInterfaceExpander{}
+
+type testFlexTFInterfaceExpander struct {
 	Field1 types.String `tfsdk:"field1"`
 }
 
-var _ Expander = TestFlexTFInterface02{}
-
-func (t TestFlexTFInterface02) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	return &TestFlexAWSInterface02Type01{
+func (t testFlexTFInterfaceExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return &testFlexAWSInterfaceInterfaceImpl01{
 		Field1: t.Field1.ValueString(),
 	}, nil
 }
 
-type TestFlexTFInterfaceSetNestedObject struct {
-	Field1 fwtypes.SetNestedObjectValueOf[TestFlexTFInterface02] `tfsdk:"field1"`
+type testFlexAWSInterfaceSingle struct {
+	Field1 testFlexAWSInterfaceInterface
 }
 
-type TestFlexAWSInterfaceSingle struct {
-	Field1 TestFlexAWSInterface02
+type testFlexAWSInterfaceSlice struct {
+	Field1 []testFlexAWSInterfaceInterface
 }
 
-type TestFlexAWSInterface02 interface {
-	isTestFlexAWSInterface02()
+type testFlexAWSInterfaceInterface interface {
+	isTestFlexAWSInterfaceInterface()
 }
 
-type TestFlexAWSInterface02Type01 struct {
+type testFlexAWSInterfaceInterfaceImpl01 struct {
 	Field1 string
 }
 
-var _ TestFlexAWSInterface02 = &TestFlexAWSInterface02Type01{}
+var _ testFlexAWSInterfaceInterface = &testFlexAWSInterfaceInterfaceImpl01{}
 
-func (t *TestFlexAWSInterface02Type01) isTestFlexAWSInterface02() {}
-
-type TestFlexAWSInterfaceSlice struct {
-	Field1 []TestFlexAWSInterface02
-}
+func (t *testFlexAWSInterfaceInterfaceImpl01) isTestFlexAWSInterfaceInterface() {}
