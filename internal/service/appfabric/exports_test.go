@@ -9,7 +9,7 @@ var (
 	ResourceConnectAppAuthorization = newAppAuthorizationConnectionResource
 	ResourceAppBundle               = newAppBundleResource
 
-	FindAppAuthorizationByTwoPartKey        = findAppAuthorizationByTwoPartKey
-	FindConnectAppAuthorizationByTwoPartKey = findConnectAppAuthorizationByTwoPartKey
-	FindAppBundleByID                       = findAppBundleByID
+	FindAppAuthorizationByTwoPartKey           = findAppAuthorizationByTwoPartKey
+	FindAppAuthorizationConnectionByTwoPartKey = findAppAuthorizationConnectionByTwoPartKey
+	FindAppBundleByID                          = findAppBundleByID
 )

@@ -60,14 +60,14 @@ func (r *appAuthorizationConnectionResource) Schema(ctx context.Context, request
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"app_bundle_arn": schema.StringAttribute{
+			"app_authorization_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"app_authorization_arn": schema.StringAttribute{
+			"app_bundle_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -172,7 +172,7 @@ func (r *appAuthorizationConnectionResource) Read(ctx context.Context, request r
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	output, err := findConnectAppAuthorizationByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
+	output, err := findAppAuthorizationConnectionByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -196,7 +196,7 @@ func (r *appAuthorizationConnectionResource) Read(ctx context.Context, request r
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func findConnectAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
+func findAppAuthorizationConnectionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
 	input := &appfabric.GetAppAuthorizationInput{
 		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
 		AppBundleIdentifier:        aws.String(appBundleIdentifier),
@@ -224,7 +224,7 @@ func findConnectAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabri
 
 func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findConnectAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleArn)
+		output, err := findAppAuthorizationConnectionByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
