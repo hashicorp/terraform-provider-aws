@@ -48,7 +48,7 @@ func TestAccCodeGuruProfilerProfilingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
-					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
-					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func TestAccCodeGuruProfilerProfilingGroup_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Default"),
-					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "agent_orchestration_config.0.profiling_enabled", acctest.CtFalse),
 				),
 			},
 		},

@@ -116,6 +116,7 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment"),
@@ -125,7 +126,7 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.location", "my_location"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.input_format", "SequenceFileInputFormat"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.output_format", "SequenceFileInputFormat"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
@@ -137,7 +138,7 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_names.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_value_location_maps.my_column_1", "my_column_1_val_loc_map"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_values.0", "skewed_val_1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.comment", "my_column_1_comment"),
@@ -195,6 +196,7 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment"),
@@ -204,7 +206,7 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.location", "my_location"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.input_format", "SequenceFileInputFormat"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.output_format", "SequenceFileInputFormat"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
@@ -216,7 +218,7 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_names.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_value_location_maps.my_column_1", "my_column_1_val_loc_map"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_values.0", "skewed_val_1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.comment", "my_column_1_comment"),
@@ -255,6 +257,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment"),
@@ -264,7 +267,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.location", "my_location"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.input_format", "SequenceFileInputFormat"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.output_format", "SequenceFileInputFormat"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
@@ -276,7 +279,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_names.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_value_location_maps.my_column_1", "my_column_1_val_loc_map"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_values.0", "skewed_val_1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.comment", "my_column_1_comment"),
@@ -304,6 +307,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test table from terraform2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "my_owner2"),
 					resource.TestCheckResourceAttr(resourceName, "retention", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.additional_locations.0", "my_additional_locations2"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_12"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.type", "date"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.comment", "my_column1_comment2"),
@@ -313,7 +317,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.location", "my_location2"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.input_format", "TextInputFormat"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.output_format", "TextInputFormat"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", "12"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name2"),
 					resource.TestCheckNoResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1"),
@@ -330,7 +334,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_value_location_maps.my_column_12", "my_column_1_val_loc_map2"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_values.0", "skewed_val_12"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.skewed_info.0.skewed_column_values.1", "skewed_val_2"),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.stored_as_sub_directories", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.name", "my_column_12"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.type", "date"),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.0.comment", "my_column_1_comment2"),
@@ -754,6 +758,7 @@ resource "aws_glue_catalog_table" "test" {
   view_original_text = "view_original_text_1"
 
   storage_descriptor {
+    additional_locations      = ["my_additional_locations"]
     bucket_columns            = ["bucket_column_1"]
     compressed                = false
     input_format              = "SequenceFileInputFormat"
@@ -848,7 +853,7 @@ resource "aws_glue_catalog_table" "test" {
       "bucket_column_12",
       "bucket_column_2",
     ]
-
+    additional_locations      = ["my_additional_locations2"]
     compressed                = true
     input_format              = "TextInputFormat"
     location                  = "my_location2"
@@ -1468,7 +1473,7 @@ resource "aws_glue_catalog_table" "test" {
   }
 
   storage_descriptor {
-    location = "s3://%[1]s/files/"
+    location = "s3://${aws_s3_bucket.bucket.bucket}/files/"
 
     columns {
       name    = "my_column_1"

@@ -75,7 +75,7 @@ func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", "true"),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", acctest.CtTrue),
 				),
 			},
 			{

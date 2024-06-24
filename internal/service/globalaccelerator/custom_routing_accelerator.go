@@ -91,7 +91,7 @@ func resourceCustomRoutingAccelerator() *schema.Resource {
 				Default:          awstypes.IpAddressTypeIpv4,
 				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 			},
-			"ip_addresses": {
+			names.AttrIPAddresses: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -102,7 +102,7 @@ func resourceCustomRoutingAccelerator() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_addresses": {
+						names.AttrIPAddresses: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -148,7 +148,7 @@ func resourceCustomRoutingAcceleratorCreate(ctx context.Context, d *schema.Resou
 		input.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_addresses"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrIPAddresses); ok && len(v.([]interface{})) > 0 {
 		input.IpAddresses = flex.ExpandStringValueList(v.([]interface{}))
 	}
 

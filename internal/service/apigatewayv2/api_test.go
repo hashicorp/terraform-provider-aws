@@ -43,7 +43,7 @@ func TestAccAPIGatewayV2API_basicWebSocket(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
@@ -82,7 +82,7 @@ func TestAccAPIGatewayV2API_basicHTTP(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeHttp)),
@@ -146,7 +146,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
@@ -162,7 +162,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.action"),
@@ -177,7 +177,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.service"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -191,7 +191,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$context.authorizer.usageIdentifierKey"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.service"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -229,7 +229,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeHttp)),
@@ -245,7 +245,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeHttp)),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
@@ -260,7 +260,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -274,7 +274,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -308,7 +308,7 @@ func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"_DIFFERENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
@@ -327,7 +327,7 @@ func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 				Config: testAccAPIConfig_updatedOpenYAML(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"_DIFFERENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2.0"),
 					testAccCheckAPIExists(ctx, resourceName, &v),
@@ -459,7 +459,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"_DIFFERENT"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0"),
@@ -479,7 +479,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 				Config: testAccAPIConfig_updatedOpen2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description different"),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName+"_DIFFERENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2.0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -523,7 +523,7 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Title test"),
 					testAccCheckAPIExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeHttp)),
-					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fail_on_warnings", acctest.CtFalse),
 					testAccCheckAPIRoutes(ctx, &v, []string{"GET /update"}),
 				),
 				ExpectNonEmptyPlan: true, // OpenAPI definition overrides HCL configuration.
@@ -585,60 +585,6 @@ func testAccCheckAPIRoutes(ctx context.Context, v *apigatewayv2.GetApiOutput, ro
 	}
 }
 
-func TestAccAPIGatewayV2API_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v apigatewayv2.GetApiOutput
-	resourceName := "aws_apigatewayv2_api.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAPIConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "api_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
-					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.action"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAPIConfig_basicWebSocket(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "protocol_type", string(awstypes.ProtocolTypeWebsocket)),
-					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.body.action"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAPIGatewayV2API_cors(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v apigatewayv2.GetApiOutput
@@ -659,7 +605,7 @@ func TestAccAPIGatewayV2API_cors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_headers.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_headers.*", "Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", acctest.Ct2),
@@ -692,7 +638,7 @@ func TestAccAPIGatewayV2API_cors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_selection_expression", "$request.header.x-api-key"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_headers.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "*"),
@@ -970,21 +916,6 @@ resource "aws_apigatewayv2_api" "test" {
   name                         = %[1]q
   protocol_type                = "HTTP"
   version                      = "v1"
-}
-`, rName)
-}
-
-func testAccAPIConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_apigatewayv2_api" "test" {
-  name                       = %[1]q
-  protocol_type              = "WEBSOCKET"
-  route_selection_expression = "$request.body.action"
-
-  tags = {
-    Key1 = "Value1"
-    Key2 = "Value2"
-  }
 }
 `, rName)
 }

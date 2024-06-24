@@ -207,71 +207,6 @@ func TestAccELBV2Listener_disappears(t *testing.T) {
 	})
 }
 
-func TestAccELBV2Listener_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.Listener
-	resourceName := "aws_lb_listener.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccListenerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"default_action.0.forward",
-				},
-			},
-			{
-				Config: testAccListenerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"default_action.0.forward",
-				},
-			},
-			{
-				Config: testAccListenerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckListenerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"default_action.0.forward",
-				},
-			},
-		},
-	})
-}
-
 func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.Listener
@@ -350,7 +285,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", acctest.Ct0),
@@ -373,7 +308,7 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", acctest.Ct0),
@@ -473,7 +408,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -515,7 +450,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddStickiness(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -539,7 +474,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddStickiness(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -581,7 +516,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveStickiness(t *testing
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -605,7 +540,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveStickiness(t *testing
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -665,7 +600,7 @@ func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_WeightAndSt
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -707,7 +642,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_NoChanges(t
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -767,7 +702,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_WeightAndSt
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -827,7 +762,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -852,7 +787,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_AddAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.target_group_arn", ""),
 				),
 			},
@@ -896,7 +831,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveAction(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.target_group_arn", ""),
 				),
 			},
@@ -921,7 +856,7 @@ func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveAction(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 				),
 			},
@@ -964,7 +899,7 @@ func TestAccELBV2Listener_ActionForward_IgnoreFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", acctest.Ct0),
@@ -1093,7 +1028,7 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", "ELBSecurityPolicy-2016-08"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationOff),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", "false"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.trust_store_arn", ""),
 				),
 			},
@@ -1129,7 +1064,7 @@ func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationVerify),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", "false"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_authentication.0.trust_store_arn", "aws_lb_trust_store.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
@@ -1176,7 +1111,7 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationPassthrough),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", "false"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.trust_store_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
@@ -3587,117 +3522,6 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
-}
-
-func testAccListenerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-
-resource "aws_lb" "test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.test.id]
-  subnets         = aws_subnet.test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccListenerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
-resource "aws_lb_listener" "test" {
-  load_balancer_arn = aws_lb.test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-
-resource "aws_lb" "test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.test.id]
-  subnets         = aws_subnet.test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccListenerConfig_EmptyDefaultAction(rName string, action awstypes.ActionTypeEnum) string {

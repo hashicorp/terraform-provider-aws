@@ -6,17 +6,23 @@ package route53
 type trafficPolicyDocEndpointType string
 
 const (
-	trafficPolicyDocEndpointCloudFront trafficPolicyDocEndpointType = "cloudfront"
-	trafficPolicyDocEndpointElastic    trafficPolicyDocEndpointType = "elastic-load-balancer"
-	trafficPolicyDocEndpointS3         trafficPolicyDocEndpointType = "s3-website"
-	trafficPolicyDocEndpointValue      trafficPolicyDocEndpointType = "value" // nosemgrep:ci.literal-value-string-constant
+	trafficPolicyDocEndpointALB              trafficPolicyDocEndpointType = "application-load-balancer"
+	trafficPolicyDocEndpointCloudFront       trafficPolicyDocEndpointType = "cloudfront"
+	trafficPolicyDocEndpointElasticBeanstalk trafficPolicyDocEndpointType = "elastic-beanstalk"
+	trafficPolicyDocEndpointELB              trafficPolicyDocEndpointType = "elastic-load-balancer"
+	trafficPolicyDocEndpointNLB              trafficPolicyDocEndpointType = "network-load-balancer"
+	trafficPolicyDocEndpointS3Website        trafficPolicyDocEndpointType = "s3-website"
+	trafficPolicyDocEndpointValue            trafficPolicyDocEndpointType = "value" // nosemgrep:ci.literal-value-string-constant
 )
 
 func (trafficPolicyDocEndpointType) Values() []trafficPolicyDocEndpointType {
 	return []trafficPolicyDocEndpointType{
+		trafficPolicyDocEndpointALB,
 		trafficPolicyDocEndpointCloudFront,
-		trafficPolicyDocEndpointElastic,
-		trafficPolicyDocEndpointS3,
+		trafficPolicyDocEndpointElasticBeanstalk,
+		trafficPolicyDocEndpointELB,
+		trafficPolicyDocEndpointNLB,
+		trafficPolicyDocEndpointS3Website,
 		trafficPolicyDocEndpointValue, // nosemgrep:ci.literal-value-string-constant
 	}
 }

@@ -22,6 +22,7 @@ import (
 
 // @SDKResource("aws_ec2_local_gateway_route_table_vpc_association", name="Local Gateway Route Table VPC Association")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceLocalGatewayRouteTableVPCAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocalGatewayRouteTableVPCAssociationCreate,

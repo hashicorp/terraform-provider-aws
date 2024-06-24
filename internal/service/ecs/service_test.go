@@ -307,6 +307,62 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	})
 }
 
+func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_volumeConfiguration_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp2", 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+			{
+				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+			{
+				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 16),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_familyAndRevision(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
@@ -539,7 +595,7 @@ func TestAccECSService_alarmsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", acctest.CtTrue),
 				),
 			},
 		},
@@ -563,7 +619,7 @@ func TestAccECSService_alarmsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", acctest.CtTrue),
 				),
 			},
 			{
@@ -571,7 +627,7 @@ func TestAccECSService_alarmsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", acctest.CtFalse),
 				),
 			},
 		},
@@ -644,8 +700,8 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", acctest.CtTrue),
 				),
 			},
 		},
@@ -811,7 +867,7 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service2),
 					testAccCheckServiceNotRecreated(&service1, &service2),
-					resource.TestCheckResourceAttr(resourceName, "force_new_deployment", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_new_deployment", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "triggers.update"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
@@ -967,7 +1023,7 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "LATEST"),
@@ -977,14 +1033,14 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 				Config: testAccServiceConfig_launchTypeFargate(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccServiceConfig_launchTypeFargate(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 				),
 			},
 		},
@@ -1046,7 +1102,7 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
 				),
 			},
 			{
@@ -1079,7 +1135,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtFalse),
 				),
 			},
 			{
@@ -1088,7 +1144,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
 				),
 			},
 			{
@@ -1097,7 +1153,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtFalse),
 				),
 			},
 		},
@@ -1120,7 +1176,7 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 				Config: testAccServiceConfig_networkConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.Ct2),
 				),
@@ -1129,7 +1185,7 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 				Config: testAccServiceConfig_networkConfigurationModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.Ct2),
 				),
@@ -1410,7 +1466,7 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.log_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "service_connect_configuration.0.namespace"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.#", acctest.Ct1),
@@ -1443,7 +1499,7 @@ func TestAccECSService_ServiceConnect_remove(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -1524,7 +1580,7 @@ func TestAccECSService_Tags_managed(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", acctest.CtTrue),
 				),
 			},
 		},
@@ -1585,14 +1641,14 @@ func TestAccECSService_executeCommand(t *testing.T) {
 				Config: testAccServiceConfig_executeCommand(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccServiceConfig_executeCommand(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", acctest.CtFalse),
 				),
 			},
 		},
@@ -2086,6 +2142,195 @@ resource "aws_ecs_service" "test" {
   force_new_deployment = true
 }
 `, rName))
+}
+
+func testAccServiceConfig_volumeConfiguration_basic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "mountPoints": [
+      {"sourceVolume": "vol1", "containerPath": "/vol1"}
+    ]
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name                = "vol1"
+    configure_at_launch = true
+  }
+}
+
+resource "aws_iam_role" "ecs_service" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {"AWS": "*"},
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs_service" {
+  name = %[1]q
+  role = aws_iam_role.ecs_service.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:*",
+        "ec2:*",
+        "ecs:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  volume_configuration {
+    name = "vol1"
+    managed_ebs_volume {
+      role_arn   = aws_iam_role.ecs_service.arn
+      size_in_gb = "8"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.ecs_service]
+}
+`, rName)
+}
+
+func testAccServiceConfig_volumeConfiguration_update(rName, volumeType string, size int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "mountPoints": [
+      {"sourceVolume": "vol1", "containerPath": "/vol1"}
+    ]
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name                = "vol1"
+    configure_at_launch = true
+  }
+}
+
+resource "aws_iam_role" "ecs_service" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {"AWS": "*"},
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs_service" {
+  name = %[1]q
+  role = aws_iam_role.ecs_service.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:*",
+        "ec2:*",
+        "ecs:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  volume_configuration {
+    name = "vol1"
+    managed_ebs_volume {
+      role_arn    = aws_iam_role.ecs_service.arn
+      size_in_gb  = %[3]d
+      volume_type = %[2]q
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.ecs_service]
+}
+`, rName, volumeType, size)
 }
 
 func testAccServiceConfig_forceNewDeployment(rName string) string {

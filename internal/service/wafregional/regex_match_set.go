@@ -120,7 +120,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF Regional Regex Match Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional Regex Match Set (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrName, regexMatchSet.Name)

@@ -35,6 +35,10 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"code_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"code_signing_config_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -186,8 +190,9 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"source_code_hash": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "This attribute is deprecated and will be removed in a future major version. Use `code_sha256` instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
@@ -288,6 +293,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(functionName)
 	d.Set("architectures", function.Architectures)
 	d.Set(names.AttrARN, unqualifiedARN)
+	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{

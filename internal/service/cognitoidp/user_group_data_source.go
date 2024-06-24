@@ -51,7 +51,7 @@ func (d *userGroupDataSource) Schema(ctx context.Context, request datasource.Sch
 			names.AttrRoleARN: schema.StringAttribute{
 				Computed: true,
 			},
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 			},
 		},

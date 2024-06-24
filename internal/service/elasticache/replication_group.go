@@ -108,7 +108,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -125,7 +125,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"final_snapshot_identifier": {
+			names.AttrFinalSnapshotIdentifier: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -136,8 +136,8 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed: true,
 				ConflictsWith: []string{
 					"num_node_groups",
-					"parameter_group_name",
-					"engine",
+					names.AttrParameterGroupName,
+					names.AttrEngine,
 					names.AttrEngineVersion,
 					"node_type",
 					"security_group_names",
@@ -236,7 +236,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"num_cache_clusters", "global_replication_group_id"},
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -442,7 +442,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		input.CacheNodeType = aws.String(nodeType)
-		input.Engine = aws.String(d.Get("engine").(string))
+		input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -489,7 +489,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.NumNodeGroups = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("parameter_group_name"); ok {
+	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.CacheParameterGroupName = aws.String(v.(string))
 	}
 
@@ -835,8 +835,8 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if d.HasChange("parameter_group_name") {
-			input.CacheParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+		if d.HasChange(names.AttrParameterGroupName) {
+			input.CacheParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			requestUpdate = true
 		}
 
@@ -970,7 +970,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 		ReplicationGroupId: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+	if v, ok := d.GetOk(names.AttrFinalSnapshotIdentifier); ok {
 		input.FinalSnapshotIdentifier = aws.String(v.(string))
 	}
 
@@ -995,7 +995,7 @@ func resourceReplicationGroupDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if hasGlobalReplicationGroupID {
-		if paramGroupName := d.Get("parameter_group_name").(string); paramGroupName != "" {
+		if paramGroupName := d.Get(names.AttrParameterGroupName).(string); paramGroupName != "" {
 			if err := deleteParameterGroup(ctx, conn, paramGroupName); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}

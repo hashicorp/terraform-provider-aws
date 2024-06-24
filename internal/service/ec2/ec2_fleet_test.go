@@ -12,8 +12,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +27,7 @@ import (
 
 func TestAccEC2Fleet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -53,7 +54,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.allocation_strategy", "lowestPrice"),
-					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_interruption_behavior", "terminate"),
@@ -62,8 +63,8 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "spot"),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances", "false"),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "maintain"),
 				),
 			},
@@ -79,7 +80,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 
 func TestAccEC2Fleet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -103,7 +104,7 @@ func TestAccEC2Fleet_disappears(t *testing.T) {
 
 func TestAccEC2Fleet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -150,7 +151,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 
 func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -187,7 +188,7 @@ func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
 	resourceName := "aws_ec2_fleet.test"
@@ -232,7 +233,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 
 func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	launchTemplateResourceName1 := "aws_launch_template.test1"
 	launchTemplateResourceName2 := "aws_launch_template.test2"
 	resourceName := "aws_ec2_fleet.test"
@@ -277,8 +278,8 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 
 func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
-	var launchTemplate ec2.LaunchTemplate
+	var fleet1, fleet2 awstypes.FleetData
+	var launchTemplate awstypes.LaunchTemplate
 	launchTemplateResourceName := "aws_launch_template.test"
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -328,7 +329,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 
 func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	availabilityZonesDataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -371,13 +372,13 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 // Pending AWS to provide this attribute back in the `Describe` call.
 // func TestAccEC2Fleet_LaunchTemplateOverride_imageId(t *testing.T) {
 // 	ctx := acctest.Context(t)
-// 	var fleet1 ec2.FleetData
+// 	var fleet1 awstypes.FleetData
 // 	awsAmiDataSourceName := "data.aws_ami.amz2"
 // 	resourceName := "aws_ec2_fleet.test"
 // 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
 // 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -397,7 +398,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -468,7 +469,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCP
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -566,7 +567,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorManufacturers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -634,7 +635,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorManu
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorNames(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -705,7 +706,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorName
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTotalMemoryMiB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -803,7 +804,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -870,7 +871,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorType
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_allowedInstanceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -937,7 +938,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_allowedInstance
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1024,7 +1025,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBandwidthMbps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1122,7 +1123,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerformance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1209,7 +1210,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_cpuManufacturers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1276,7 +1277,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_cpuManufacturer
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_excludedInstanceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1343,7 +1344,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_excludedInstanc
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerations(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1409,7 +1410,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerat
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1496,7 +1497,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1560,9 +1561,48 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
 	})
 }
 
+func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_maxSpotPriceAsPercentageOfOptimalOnDemandPrice(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleet awstypes.FleetData
+	resourceName := "aws_ec2_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_launchTemplateOverrideInstanceRequirements(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix),
+					`max_spot_price_as_percentage_of_optimal_on_demand_price = 75
+                     memory_mib {
+                       min = 500
+                     }
+                     vcpu_count {
+                       min = 1
+                     }`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct1),
+
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.max_spot_price_as_percentage_of_optimal_on_demand_price", "75"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCPU(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1660,7 +1700,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidthGbps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1758,7 +1798,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfaceCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1856,7 +1896,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_onDemandMaxPricePercentageOverLowestPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1895,7 +1935,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_onDemandMaxPric
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernateSupport(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1919,7 +1959,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct1),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", acctest.CtFalse),
 				),
 			},
 			{
@@ -1943,7 +1983,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct1),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", acctest.CtTrue),
 				),
 			},
 			{
@@ -1958,7 +1998,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_spotMaxPricePercentageOverLowestPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1997,7 +2037,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_spotMaxPricePer
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStorageGB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet ec2.FleetData
+	var fleet awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2095,7 +2135,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2136,7 +2176,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2178,12 +2218,12 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 // Pending AWS to provide this attribute back in the `Describe` call.
 // func TestAccEC2Fleet_LaunchTemplateOverride_placement(t *testing.T) {
 // 	ctx := acctest.Context(t)
-// 	var fleet1 ec2.FleetData
+// 	var fleet1 awstypes.FleetData
 // 	resourceName := "aws_ec2_fleet.test"
 // 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
 // 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -2204,7 +2244,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2245,7 +2285,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2288,7 +2328,7 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	subnetResourceName1 := "aws_subnet.test.0"
 	subnetResourceName2 := "aws_subnet.test.1"
 	resourceName := "aws_ec2_fleet.test"
@@ -2331,7 +2371,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2372,7 +2412,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 
 func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2415,7 +2455,7 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 
 func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2452,35 +2492,34 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 	})
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call.
-// func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var fleet1 ec2.FleetData
-// 	resourceName := "aws_ec2_fleet.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleet1 awstypes.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, "use-capacity-reservations-first"),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.0.usage_strategy", "use-capacity-reservations-first"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, "use-capacity-reservations-first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.0.usage_strategy", "use-capacity-reservations-first"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccEC2Fleet_OnDemandOptions_MaxTotalPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2504,7 +2543,7 @@ func TestAccEC2Fleet_OnDemandOptions_MaxTotalPrice(t *testing.T) {
 
 func TestAccEC2Fleet_OnDemandOptions_MinTargetCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2528,7 +2567,7 @@ func TestAccEC2Fleet_OnDemandOptions_MinTargetCapacity(t *testing.T) {
 
 func TestAccEC2Fleet_OnDemandOptions_SingleAvailabilityZone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2543,7 +2582,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleAvailabilityZone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_availability_zone", "true"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_availability_zone", acctest.CtTrue),
 				),
 			},
 		},
@@ -2552,7 +2591,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleAvailabilityZone(t *testing.T) {
 
 func TestAccEC2Fleet_OnDemandOptions_SingleInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2567,7 +2606,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleInstanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_instance_type", "true"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_instance_type", acctest.CtTrue),
 				),
 			},
 		},
@@ -2576,7 +2615,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleInstanceType(t *testing.T) {
 
 func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2590,7 +2629,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 				Config: testAccFleetConfig_replaceUnhealthyInstances(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "true"),
+					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", acctest.CtTrue),
 				),
 			},
 			{
@@ -2604,7 +2643,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", acctest.CtFalse),
 				),
 			},
 		},
@@ -2613,7 +2652,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 
 func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2652,7 +2691,7 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 
 func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2706,7 +2745,7 @@ func TestAccEC2Fleet_capacityRebalanceInvalidType(t *testing.T) {
 
 func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2745,7 +2784,7 @@ func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 
 func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2784,7 +2823,7 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 
 func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2817,7 +2856,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *te
 
 func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_onDemand(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2847,7 +2886,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_onDema
 
 func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_spot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2877,7 +2916,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_spot(t
 
 func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2916,7 +2955,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 
 func TestAccEC2Fleet_TargetCapacitySpecification_targetCapacityUnitType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	targetCapacityUnitType := "vcpu"
@@ -2947,7 +2986,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_targetCapacityUnitType(t *testi
 
 func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1, fleet2 ec2.FleetData
+	var fleet1, fleet2 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2961,7 +3000,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 				Config: testAccFleetConfig_terminateInstancesExpiration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", acctest.CtTrue),
 				),
 			},
 			{
@@ -2975,7 +3014,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", acctest.CtFalse),
 				),
 			},
 		},
@@ -2984,7 +3023,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 
 func TestAccEC2Fleet_type(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	excessCapacityTerminationPolicy := "termination"
@@ -3024,7 +3063,7 @@ func TestAccEC2Fleet_type(t *testing.T) {
 
 func TestAccEC2Fleet_type_instant(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	fleetType := "instant"
@@ -3070,7 +3109,7 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 // Test for the bug described in https://github.com/hashicorp/terraform-provider-aws/issues/6777
 func TestAccEC2Fleet_templateMultipleNetworkInterfaces(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3094,7 +3133,7 @@ func TestAccEC2Fleet_templateMultipleNetworkInterfaces(t *testing.T) {
 
 func TestAccEC2Fleet_validFrom(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validFrom := "1970-01-01T00:00:00Z"
@@ -3117,7 +3156,7 @@ func TestAccEC2Fleet_validFrom(t *testing.T) {
 
 func TestAccEC2Fleet_validUntil(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
+	var fleet1 awstypes.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := "1970-01-01T00:00:00Z"
@@ -3151,14 +3190,14 @@ func testAccCheckFleetHistory(ctx context.Context, resourceName string, errorMsg
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		input := &ec2.DescribeFleetHistoryInput{
 			FleetId:   aws.String(rs.Primary.ID),
 			StartTime: aws.Time(time.Now().Add(time.Hour * -2)),
 		}
 
-		output, err := conn.DescribeFleetHistoryWithContext(ctx, input)
+		output, err := conn.DescribeFleetHistory(ctx, input)
 
 		if err != nil {
 			return err
@@ -3173,10 +3212,7 @@ func testAccCheckFleetHistory(ctx context.Context, resourceName string, errorMsg
 		}
 
 		for _, record := range output.HistoryRecords {
-			if record == nil {
-				continue
-			}
-			if strings.Contains(aws.StringValue(record.EventInformation.EventDescription), errorMsg) {
+			if strings.Contains(aws.ToString(record.EventInformation.EventDescription), errorMsg) {
 				return fmt.Errorf("Error %s found in fleet history event", errorMsg)
 			}
 		}
@@ -3185,7 +3221,7 @@ func testAccCheckFleetHistory(ctx context.Context, resourceName string, errorMsg
 	}
 }
 
-func testAccCheckFleetExists(ctx context.Context, n string, v *ec2.FleetData) resource.TestCheckFunc {
+func testAccCheckFleetExists(ctx context.Context, n string, v *awstypes.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -3196,7 +3232,7 @@ func testAccCheckFleetExists(ctx context.Context, n string, v *ec2.FleetData) re
 			return fmt.Errorf("No EC2 Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindFleetByID(ctx, conn, rs.Primary.ID)
 
@@ -3212,7 +3248,7 @@ func testAccCheckFleetExists(ctx context.Context, n string, v *ec2.FleetData) re
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_fleet" {
@@ -3236,9 +3272,9 @@ func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFleetNotRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
+func testAccCheckFleetNotRecreated(i, j *awstypes.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreateTime).Equal(aws.TimeValue(j.CreateTime)) {
+		if !aws.ToTime(i.CreateTime).Equal(aws.ToTime(j.CreateTime)) {
 			return errors.New("EC2 Fleet was recreated")
 		}
 
@@ -3246,9 +3282,9 @@ func testAccCheckFleetNotRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckFleetRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
+func testAccCheckFleetRecreated(i, j *awstypes.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreateTime).Equal(aws.TimeValue(j.CreateTime)) {
+		if aws.ToTime(i.CreateTime).Equal(aws.ToTime(j.CreateTime)) {
 			return errors.New("EC2 Fleet was not recreated")
 		}
 
@@ -3257,13 +3293,13 @@ func testAccCheckFleetRecreated(i, j *ec2.FleetData) resource.TestCheckFunc {
 }
 
 func testAccPreCheckFleet(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeFleetsInput{
-		MaxResults: aws.Int64(1),
+		MaxResults: aws.Int32(1),
 	}
 
-	_, err := conn.DescribeFleetsWithContext(ctx, input)
+	_, err := conn.DescribeFleets(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -3875,36 +3911,35 @@ resource "aws_ec2_fleet" "test" {
 `, rName, allocationStrategy))
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call.
-// func testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, usageStrategy string) string {
-// 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
-// resource "aws_ec2_fleet" "test" {
-//   launch_template_config {
-//     launch_template_specification {
-//       launch_template_id = aws_launch_template.test.id
-//       version            = aws_launch_template.test.latest_version
-//     }
-//   }
+func testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, usageStrategy string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
+resource "aws_ec2_fleet" "test" {
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+  }
 
-//   on_demand_options {
-//     capacity_reservation_options {
-//       usage_strategy = %[2]q
-//     }
-//   }
+  on_demand_options {
+    capacity_reservation_options {
+      usage_strategy = %[2]q
+    }
+  }
 
-//   target_capacity_specification {
-//     default_target_capacity_type = "on-demand"
-//     total_target_capacity        = 0
-//   }
-//   terminate_instances = true
-//   type = "instant"
+  target_capacity_specification {
+    default_target_capacity_type = "on-demand"
+    total_target_capacity        = 0
+  }
+  terminate_instances = true
+  type                = "instant"
 
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// `, rName, usageStrategy))
-// }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, usageStrategy))
+}
 
 func testAccFleetConfig_onDemandOptionsMaxTotalPrice(rName, maxTotalPrice string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`

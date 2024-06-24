@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_alb")
 // @SDKDataSource("aws_lb")
+// @Testing(tagsTest=true)
 func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,

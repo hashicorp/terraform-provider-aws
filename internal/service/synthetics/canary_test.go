@@ -285,7 +285,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "false"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
 					resource.TestCheckResourceAttr(resourceName, "success_retention_period", "31"),
 					resource.TestCheckResourceAttr(resourceName, "handler", "exports.handler"),
@@ -371,7 +371,7 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 				Config: testAccCanaryConfig_runTracing(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", acctest.CtTrue),
 				),
 			},
 			{
@@ -384,14 +384,14 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 				Config: testAccCanaryConfig_runTracing(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "false"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccCanaryConfig_runTracing(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", acctest.CtTrue),
 				),
 			},
 		},

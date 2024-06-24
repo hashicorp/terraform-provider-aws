@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -73,6 +74,7 @@ func DataSourceRule() *schema.Resource {
 }
 
 func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -83,7 +85,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 		rule, err = FindResolverRuleByID(ctx, conn, id)
 
 		if err != nil {
-			return diag.Errorf("reading Route53 Resolver Rule (%s): %s", id, err)
+			return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Rule (%s): %s", id, err)
 		}
 	} else {
 		input := &route53resolver.ListResolverRulesInput{
@@ -102,13 +104,13 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 		})
 
 		if err != nil {
-			return diag.Errorf("listing Route53 Resolver Rules: %s", err)
+			return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Rules: %s", err)
 		}
 
 		if n := len(rules); n == 0 {
-			return diag.Errorf("no Route53 Resolver Rules matched")
+			return sdkdiag.AppendErrorf(diags, "no Route53 Resolver Rules matched")
 		} else if n > 1 {
-			return diag.Errorf("%d Route53 Resolver Rules matched; use additional constraints to reduce matches to a single Rule", n)
+			return sdkdiag.AppendErrorf(diags, "%d Route53 Resolver Rules matched; use additional constraints to reduce matches to a single Rule", n)
 		}
 
 		rule = rules[0]
@@ -132,15 +134,15 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 		tags, err := listTags(ctx, conn, arn)
 
 		if err != nil {
-			return diag.Errorf("listing tags for Route53 Resolver Rule (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "listing tags for Route53 Resolver Rule (%s): %s", arn, err)
 		}
 
 		if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-			return diag.Errorf("setting tags: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func buildAttributeFilterList(attrs map[string]string) []*route53resolver.Filter {
