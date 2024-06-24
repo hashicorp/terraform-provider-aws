@@ -114,30 +114,35 @@ func ResourceWorkteam() *schema.Resource {
 			"worker_access_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_presign": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"iam_policy_constraints": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"source_ip": {
 													Type:         schema.TypeString,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.EnabledOrDisabled_Values(), false),
 													ExactlyOneOf: []string{"worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.vpc_source_ip"},
 												},
 												"vpc_source_ip": {
 													Type:         schema.TypeString,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.EnabledOrDisabled_Values(), false),
 													ExactlyOneOf: []string{"worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.source_ip", "worker_access_configuration.0.s3_presign.0.iam_policy_constraints.0.vpc_source_ip"},
 												},
