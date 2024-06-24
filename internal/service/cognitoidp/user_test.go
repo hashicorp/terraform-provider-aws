@@ -44,7 +44,7 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
 					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.UserStatusTypeForceChangePassword)),
+					resource.TestCheckResourceAttr(resourceName, "status", string(string(awstypes.UserStatusTypeForceChangePassword))),
 				),
 			},
 			{

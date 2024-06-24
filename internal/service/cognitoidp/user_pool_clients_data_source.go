@@ -66,6 +66,7 @@ func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, 
 			clientNames = append(clientNames, aws.ToString(v.ClientName))
 			clientIDs = append(clientIDs, aws.ToString(v.ClientId))
 		}
+
 	}
 
 	d.SetId(userPoolID)

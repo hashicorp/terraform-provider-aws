@@ -453,7 +453,6 @@ func (r *userPoolClientResource) Read(ctx context.Context, request resource.Read
 }
 
 func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	const updateUserPoolClientTimeout = 2 * time.Minute
 	var config resourceUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
@@ -485,7 +484,7 @@ func (r *userPoolClientResource) Update(ctx context.Context, request resource.Up
 		params.TokenValidityUnits.RefreshToken = awstypes.TimeUnitsTypeDays
 	}
 
-	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, updateUserPoolClientTimeout, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateUserPoolClient(ctx, params)
 	})
 	if err != nil {

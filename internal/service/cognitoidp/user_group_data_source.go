@@ -85,7 +85,8 @@ func (d *userGroupDataSource) Read(ctx context.Context, request datasource.ReadR
 		GroupName:  data.Name.ValueStringPointer(),
 		UserPoolId: data.UserPoolID.ValueStringPointer(),
 	}
-
+	// 🌱 For the person who migrates to sdkv2:
+	// this should work by just updating the client, and removing the WithContext method.
 	conn := d.Meta().CognitoIDPClient(ctx)
 	resp, err := conn.GetGroup(ctx, params)
 	if err != nil {

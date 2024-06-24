@@ -1723,7 +1723,9 @@ func expandUserPoolSchema(inputs []interface{}) []*awstypes.SchemaAttributeType 
 
 func flattenUserPoolSchema(configuredAttributes, inputs []*awstypes.SchemaAttributeType) []map[string]interface{} {
 	values := make([]map[string]interface{}, 0)
+
 	for _, input := range inputs {
+
 		// The API returns all standard attributes
 		// https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes
 		// Ignore setting them in state if they are unconfigured to prevent a huge and unexpected diff
@@ -1919,6 +1921,7 @@ func flattenUserPoolPasswordPolicy(s *awstypes.PasswordPolicyType) []map[string]
 }
 
 func UserPoolSchemaAttributeMatchesStandardAttribute(input awstypes.SchemaAttributeType) bool {
+
 	// All standard attributes always returned by API
 	// https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes
 	var standardAttributes = []awstypes.SchemaAttributeType{
