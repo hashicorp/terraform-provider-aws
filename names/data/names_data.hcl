@@ -1780,6 +1780,31 @@ service "logs" {
   brand                    = "AWS"
 }
 
+service "networkmonitor" {
+
+  sdk {
+    id             = "NetworkMonitor"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "NetworkMonitor"
+    human_friendly      = "CloudWatch Network Monitor"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListMonitors"
+  }
+
+  resource_prefix {
+    correct = "aws_networkmonitor_"
+  }
+
+  provider_package_correct = "networkmonitor"
+  doc_prefix               = ["networkmonitor_"]
+  brand                    = "Amazon"
+}
+
 service "rum" {
 
   go_packages {
