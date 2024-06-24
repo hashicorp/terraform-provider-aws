@@ -98,7 +98,6 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
-	FirewallDomainRedirectionAction := d.Get("firewall_domain_redirection_action").(string)
 	ruleID := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateFirewallRuleInput{
@@ -106,7 +105,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		CreatorRequestId:                aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-")),
 		FirewallRuleGroupId:             aws.String(firewallRuleGroupID),
 		FirewallDomainListId:            aws.String(firewallDomainListID),
-		FirewallDomainRedirectionAction: aws.String(FirewallDomainRedirectionAction),
+		FirewallDomainRedirectionAction: aws.String(d.Get("firewall_domain_redirection_action").(string)),
 		Name:                            aws.String(name),
 	}
 
