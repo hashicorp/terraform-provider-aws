@@ -153,6 +153,11 @@ resource "aws_controltower_control" "test" {
     for x in data.aws_organizations_organizational_units.test.children :
     x.arn if x.name == "%[2]s"
   ][0]
+
+  parameters {
+    key   = "AllowedRegions"
+    value = jsonencode(["us-east-1"])
+  }
 }
 `, controlName, ouName)
 }
