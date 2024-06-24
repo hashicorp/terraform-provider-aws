@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkmonitor "github.com/hashicorp/terraform-provider-aws/internal/service/networkmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,7 +23,9 @@ import (
 
 func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
+	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,15 +54,22 @@ func TestAccNetworkMonitorProbe_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// TODO Need to delete the AmazonCloudWatchNetworkMonitor_ security group, else
-			// "Error: deleting EC2 VPC (vpc-00620dca13a12fd02): operation error EC2: DeleteVpc, https response error StatusCode: 400, RequestID: 3102b862-e45e-4921-8aba-0f8a4bdfe29b, api error DependencyViolation: The vpc 'vpc-00620dca13a12fd02' has dependencies and cannot be deleted"
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
+				),
+			},
 		},
 	})
 }
 
 func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
+	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,13 +86,22 @@ func TestAccNetworkMonitorProbe_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
+				),
+			},
 		},
 	})
 }
 
 func TestAccNetworkMonitorProbe_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
+	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -119,13 +140,22 @@ func TestAccNetworkMonitorProbe_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
+				),
+			},
 		},
 	})
 }
 
 func TestAccNetworkMonitorProbe_update(t *testing.T) {
 	ctx := acctest.Context(t)
+	var vpc ec2.Vpc
 	resourceName := "aws_networkmonitor_probe.test"
+	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,6 +199,13 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckProbeDeleteSecurityGroup(ctx, rName, &vpc),
+				),
+			},
 		},
 	})
 }
@@ -209,6 +246,34 @@ func testAccCheckProbeExists(ctx context.Context, n string) resource.TestCheckFu
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkMonitorClient(ctx)
 
 		_, err := tfnetworkmonitor.FindProbeByTwoPartKey(ctx, conn, rs.Primary.Attributes["monitor_name"], rs.Primary.Attributes["probe_id"])
+
+		return err
+	}
+}
+
+func testAccCheckProbeDeleteSecurityGroup(ctx context.Context, rName string, vpc *ec2.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		meta := acctest.Provider.Meta()
+		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+
+		description := "Created By Amazon CloudWatch Network Monitor for " + rName
+		v, err := tfec2.FindSecurityGroupByDescriptionAndVPCID(ctx, conn, description, aws.ToString(vpc.VpcId))
+
+		if tfresource.NotFound(err) {
+			// Already gone.
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		r := tfec2.ResourceSecurityGroup()
+		d := r.Data(nil)
+		d.SetId(aws.ToString(v.GroupId))
+		d.Set("revoke_rules_on_delete", true)
+
+		err = acctest.DeleteResource(ctx, r, d, meta)
 
 		return err
 	}
