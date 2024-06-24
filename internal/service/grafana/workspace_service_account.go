@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -20,6 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+
+	// "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -84,7 +88,7 @@ func (r *resourceWorkspaceServiceAccount) Create(ctx context.Context, req resour
 	conn := r.Meta().GrafanaClient(ctx)
 
 	input := &grafana.CreateWorkspaceServiceAccountInput{
-		Name:        aws.String(data.ServiceAccountName.ValueString()),
+		Name:        aws.String(data.Name.ValueString()),
 		GrafanaRole: awstypes.Role(data.ServiceAccountRole.ValueString()),
 		WorkspaceId: aws.String(data.WorkspaceID.ValueString()),
 	}
@@ -111,7 +115,7 @@ func (r *resourceWorkspaceServiceAccount) Read(ctx context.Context, req resource
 
 	conn := r.Meta().GrafanaClient(ctx)
 
-	output, err := findWorkspaceServiceAccountByID(ctx, conn, data.ID.ValueString(), data.WorkspaceID.ValueString())
+	output, err := findWorkspaceServiceAccount(ctx, conn, data.ID.ValueString(), data.WorkspaceID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -161,12 +165,30 @@ func (r *resourceWorkspaceServiceAccount) Delete(ctx context.Context, req resour
 	}
 }
 
-func findWorkspaceServiceAccountByID(ctx context.Context, conn *grafana.Client, id, workspaceID string) (*awstypes.ServiceAccountSummary, error) {
+func (r *resourceWorkspaceServiceAccount) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+
+	const (
+		partCount = 3
+	)
+	parts, err := flex.ExpandResourceId(req.ID, partCount, false)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("importing Workspace Service Account ID (%s)", req.ID), err.Error())
+		return
+	}
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("grafana_role"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrWorkspaceID), parts[2])...)
+}
+
+func findWorkspaceServiceAccount(ctx context.Context, conn *grafana.Client, id, workspaceID string) (*awstypes.ServiceAccountSummary, error) {
+	if workspaceID == "" {
+		return nil, errs.NewErrorWithMessage(fmt.Errorf("workspace_id is required to find the service account"))
+	}
 	input := &grafana.ListWorkspaceServiceAccountsInput{
 		WorkspaceId: aws.String(workspaceID),
 	}
-	paginator := grafana.NewListWorkspaceServiceAccountsPaginator(conn, input)
 
+	paginator := grafana.NewListWorkspaceServiceAccountsPaginator(conn, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
@@ -178,15 +200,14 @@ func findWorkspaceServiceAccountByID(ctx context.Context, conn *grafana.Client, 
 				return &sa, nil
 			}
 		}
-
 	}
 
-	return nil, errs.NewErrorWithMessage(fmt.Errorf("service account %s on workspaceId %s not found", id, workspaceID))
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
 type resourceWorkspaceServiceAccountData struct {
 	ID                 types.String `tfsdk:"id"`
-	ServiceAccountName types.String `tfsdk:"name"`
+	Name               types.String `tfsdk:"name"`
 	ServiceAccountRole types.String `tfsdk:"grafana_role"`
 	WorkspaceID        types.String `tfsdk:"workspace_id"`
 }

@@ -27,9 +27,7 @@ func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 	var v types.ServiceAccountSummary
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Grafana) },
 		ErrorCheck:               acctest.ErrorCheck(t, grafana.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
@@ -38,14 +36,15 @@ func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 				Config: testAccWorkspaceServiceAccountConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, ""),
-					resource.TestCheckResourceAttrSet(resourceName, "service_account_role"),
-					resource.TestCheckResourceAttrSet(resourceName, "service_account_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "grafana_role"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_id"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -86,9 +85,7 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
-
-		output, err := tfgrafana.FindWorkspaceServiceAccountByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
-
+		output, err := tfgrafana.FindWorkspaceServiceAccount(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrWorkspaceID])
 		if err != nil {
 			return err
 		}
@@ -108,7 +105,7 @@ func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			_, err := tfgrafana.FindWorkspaceServiceAccountByID(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
+			_, err := tfgrafana.FindWorkspaceServiceAccount(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -125,33 +122,15 @@ func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccWorkspaceServiceAccount_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
+func testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
 
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
+		return fmt.Sprintf("%s,%s,%s", rs.Primary.Attributes[names.AttrID], rs.Primary.Attributes["grafana_role"], rs.Primary.Attributes[names.AttrWorkspaceID]), nil
 	}
-
-	var serviceAccount types.ServiceAccountSummary
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_prometheus_scraper.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWorkspaceServiceAccountConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &serviceAccount),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspaceServiceAccount, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
 }
 
 func testAccWorkspaceServiceAccountConfig_basic(rName string) string {

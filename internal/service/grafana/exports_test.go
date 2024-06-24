@@ -7,5 +7,5 @@ package grafana
 var (
 	ResourceWorkspaceServiceAccount = newResourceWorkspaceServiceAccount
 
-	FindWorkspaceServiceAccountByID = findWorkspaceServiceAccountByID
+	FindWorkspaceServiceAccount = findWorkspaceServiceAccount
 )

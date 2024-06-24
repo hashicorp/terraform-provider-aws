@@ -3435,3 +3435,18 @@ rules:
       - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
     severity: ERROR
     fix: "names.AttrWeight"
+
+  - id: literal-workspace_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrWorkspaceID` for the string literal "workspace_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"workspace_id"'
+      - pattern-not-regex: '"workspace_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrWorkspaceID"

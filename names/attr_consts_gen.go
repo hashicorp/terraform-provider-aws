@@ -234,4 +234,5 @@ const (
 	AttrVolumeSize                 = "volume_size"
 	AttrVolumeType                 = "volume_type"
 	AttrWeight                     = "weight"
+	AttrWorkspaceID                = "workspace_id"
 )

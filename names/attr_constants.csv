@@ -227,3 +227,4 @@ vpc_endpoint_id,VPCEndpointID
 vpc_id,VPCID
 vpc_security_group_ids,VPCSecurityGroupIDs
 weight,Weight
+workspace_id,WorkspaceID
