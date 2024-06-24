@@ -145,6 +145,7 @@ This resource supports the following arguments:
 #### canvas_app_settings
 
 * `direct_deploy_settings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct_deploy_settings) below.
+* `generative_ai_settings` - (Optional) The generative AI settings for the SageMaker Canvas application. See [Generative AI Settings](#generative_ai_settings) below.
 * `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity_provider_oauth_settings) below.
 * `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model_register_settings) below.
@@ -159,7 +160,11 @@ This resource supports the following arguments:
 
 ##### direct_deploy_settings
 
-* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+* `status` - (Optional) Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### generative_ai_settings
+
+* `amazon_bedrock_role_arn` - (Optional) The ARN of an Amazon Web Services IAM role that allows fine-tuning of large language models (LLMs) in Amazon Bedrock. The IAM role should have Amazon S3 read and write permissions, as well as a trust relationship that establishes bedrock.amazonaws.com as a service principal.
 
 ##### kendra_settings
 

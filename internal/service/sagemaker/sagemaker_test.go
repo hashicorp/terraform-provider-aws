@@ -58,6 +58,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"defaultUserSettingsUpdated":                              testAccDomain_defaultUserSettingsUpdated,
 			"canvas":                                                  testAccDomain_canvasAppSettings,
 			"modelRegisterSettings":                                   testAccDomain_modelRegisterSettings,
+			"generativeAi":                                            testAccDomain_generativeAiSettings,
 			"identityProviderOauthSettings":                           testAccDomain_identityProviderOAuthSettings,
 			"directDeploySettings":                                    testAccDomain_directDeploySettings,
 			"kendraSettings":                                          testAccDomain_kendraSettings,
