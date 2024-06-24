@@ -98,6 +98,34 @@ type Testing interface {
 //			println()
 //		}
 //	}
+//
+// # Conflicts
+//
+// A single analysis pass may offer two or more suggested fixes that
+// (1) conflict but are nonetheless logically composable, (e.g.
+// because both update the import declaration), or (2) are
+// fundamentally incompatible (e.g. alternative fixes to the same
+// statement).
+//
+// It is up to the driver to decide how to apply such fixes. A
+// sophisticated driver could attempt to resolve conflicts of the
+// first kind, but this test driver simply reports the fact of the
+// conflict with the expectation that the user will split their tests
+// into nonconflicting parts.
+//
+// Conflicts of the second kind can be avoided by giving the
+// alternative fixes different names (SuggestedFix.Message) and using
+// a multi-section .txtar file with a named section for each
+// alternative fix.
+//
+// Analyzers that compute fixes from a textual diff of the
+// before/after file contents (instead of directly from syntax tree
+// positions) may produce fixes that, although logically
+// non-conflicting, nonetheless conflict due to the particulars of the
+// diff algorithm. In such cases it may suffice to introduce
+// sufficient separation of the statements in the test input so that
+// the computed diffs do not overlap. If that fails, break the test
+// into smaller parts.
 func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns ...string) []*Result {
 	r := Run(t, dir, a, patterns...)
 
@@ -135,7 +163,7 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 						continue
 					}
 					if _, ok := fileContents[file]; !ok {
-						contents, err := ioutil.ReadFile(file.Name())
+						contents, err := os.ReadFile(file.Name())
 						if err != nil {
 							t.Errorf("error reading %s: %v", file.Name(), err)
 						}
@@ -186,7 +214,7 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 							found = true
 							out, err := diff.ApplyBytes(orig, edits)
 							if err != nil {
-								t.Errorf("%s: error applying fixes: %v", file.Name(), err)
+								t.Errorf("%s: error applying fixes: %v (see possible explanations at RunWithSuggestedFixes)", file.Name(), err)
 								continue
 							}
 							// the file may contain multiple trailing
@@ -220,7 +248,7 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 
 				out, err := diff.ApplyBytes(orig, catchallEdits)
 				if err != nil {
-					t.Errorf("%s: error applying fixes: %v", file.Name(), err)
+					t.Errorf("%s: error applying fixes: %v (see possible explanations at RunWithSuggestedFixes)", file.Name(), err)
 					continue
 				}
 				want := string(ar.Comment)
@@ -242,12 +270,16 @@ func RunWithSuggestedFixes(t Testing, dir string, a *analysis.Analyzer, patterns
 
 // Run applies an analysis to the packages denoted by the "go list" patterns.
 //
-// It loads the packages from the specified GOPATH-style project
+// It loads the packages from the specified
 // directory using golang.org/x/tools/go/packages, runs the analysis on
 // them, and checks that each analysis emits the expected diagnostics
 // and facts specified by the contents of '// want ...' comments in the
 // package's source files. It treats a comment of the form
-// "//...// want..." or "/*...// want... */" as if it starts at 'want'
+// "//...// want..." or "/*...// want... */" as if it starts at 'want'.
+//
+// If the directory contains a go.mod file, Run treats it as the root of the
+// Go module in which to work. Otherwise, Run treats it as the root of a
+// GOPATH-style tree, with package contained in the src subdirectory.
 //
 // An expectation of a Diagnostic is specified by a string literal
 // containing a regular expression that must match the diagnostic
@@ -309,10 +341,17 @@ func Run(t Testing, dir string, a *analysis.Analyzer, patterns ...string) []*Res
 type Result = checker.TestAnalyzerResult
 
 // loadPackages uses go/packages to load a specified packages (from source, with
-// dependencies) from dir, which is the root of a GOPATH-style project
-// tree. It returns an error if any package had an error, or the pattern
+// dependencies) from dir, which is the root of a GOPATH-style project tree.
+// loadPackages returns an error if any package had an error, or the pattern
 // matched no packages.
 func loadPackages(a *analysis.Analyzer, dir string, patterns ...string) ([]*packages.Package, error) {
+	env := []string{"GOPATH=" + dir, "GO111MODULE=off"} // GOPATH mode
+
+	// Undocumented module mode. Will be replaced by something better.
+	if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+		env = []string{"GO111MODULE=on", "GOPROXY=off"} // module mode
+	}
+
 	// packages.Load loads the real standard library, not a minimal
 	// fake version, which would be more efficient, especially if we
 	// have many small tests that import, say, net/http.
@@ -322,12 +361,12 @@ func loadPackages(a *analysis.Analyzer, dir string, patterns ...string) ([]*pack
 
 	mode := packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports |
 		packages.NeedTypes | packages.NeedTypesSizes | packages.NeedSyntax | packages.NeedTypesInfo |
-		packages.NeedDeps
+		packages.NeedDeps | packages.NeedModule
 	cfg := &packages.Config{
 		Mode:  mode,
 		Dir:   dir,
 		Tests: true,
-		Env:   append(os.Environ(), "GOPATH="+dir, "GO111MODULE=off", "GOPROXY=off"),
+		Env:   append(os.Environ(), env...),
 	}
 	pkgs, err := packages.Load(cfg, patterns...)
 	if err != nil {

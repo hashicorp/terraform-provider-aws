@@ -26,7 +26,7 @@ func validThingTypeDescription(v interface{}, k string) (ws []string, errors []e
 
 func validThingTypeName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`[a-zA-Z0-9:_-]+`).MatchString(value) {
+	if !regexache.MustCompile(`[0-9A-Za-z_:-]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, colons, underscores and hyphens allowed in %q", k))
 	}
@@ -39,7 +39,7 @@ func validThingTypeSearchableAttribute(v interface{}, k string) (ws []string, er
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 128 characters", k))
 	}
-	if !regexache.MustCompile(`[a-zA-Z0-9_.,@/:#-]+`).MatchString(value) {
+	if !regexache.MustCompile(`[0-9A-Za-z_.,@/:#-]+`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, underscores, dots, commas, arobases, slashes, colons, hashes and hyphens allowed in %q", k))
 	}
@@ -89,14 +89,14 @@ func validTopicRuleName(v interface{}, s string) ([]string, []error) {
 		return nil, []error{fmt.Errorf("Name must between 1 and 128 characters long")}
 	}
 
-	matched, err := regexp.MatchReader("^[a-zA-Z0-9_]+$", strings.NewReader(name))
+	matched, err := regexp.MatchReader("^[0-9A-Za-z_]+$", strings.NewReader(name))
 
 	if err != nil {
 		return nil, []error{err}
 	}
 
 	if !matched {
-		return nil, []error{fmt.Errorf("Name must match the pattern ^[a-zA-Z0-9_]+$")}
+		return nil, []error{fmt.Errorf("Name must match the pattern ^[0-9A-Za-z_]+$")}
 	}
 
 	return nil, nil

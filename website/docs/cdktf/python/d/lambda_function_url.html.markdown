@@ -40,7 +40,7 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `function_name` - (Required) he name (or ARN) of the Lambda function.
+* `function_name` - (Required) The name (or ARN) of the Lambda function.
 * `qualifier` - (Optional) Alias name or `"$LATEST"`.
 
 ## Attribute Reference
@@ -51,9 +51,9 @@ This data source exports the following attributes in addition to the arguments a
 * `cors` - The [cross-origin resource sharing (CORS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) settings for the function URL. See the [`aws_lambda_function_url` resource](/docs/providers/aws/r/lambda_function_url.html) documentation for more details.
 * `creation_time` - When the function URL was created, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `function_arn` - ARN of the function.
-* `function_url` - HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws`.
+* `function_url` - HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws/`.
 * `invoke_mode` - Whether the Lambda function responds in `BUFFERED` or `RESPONSE_STREAM` mode.
 * `last_modified_time` - When the function URL configuration was last updated, in [ISO-8601 format](https://www.w3.org/TR/NOTE-datetime).
 * `url_id` - Generated ID for the endpoint.
 
-<!-- cache-key: cdktf-0.18.0 input-854b2f3b33d8d2f28452798da526cac323edaafd3f9f362153c62fd3405d67c1 -->
+<!-- cache-key: cdktf-0.20.1 input-b587b59f7a3e286f023eb4d8e5bb8b174ddb55d0a6307c1cd7e1fa245282063f -->

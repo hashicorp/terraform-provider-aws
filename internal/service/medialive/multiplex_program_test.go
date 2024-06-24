@@ -88,7 +88,7 @@ func testAccMultiplexProgram_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexProgramDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func testAccMultiplexProgram_basic(t *testing.T) {
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
 					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
 				),
 			},
@@ -127,7 +127,7 @@ func testAccMultiplexProgram_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexProgramDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -137,7 +137,7 @@ func testAccMultiplexProgram_update(t *testing.T) {
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
 					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.video_settings.0.statmux_settings.0.minimum_bitrate", "100000"),
 				),
@@ -148,7 +148,7 @@ func testAccMultiplexProgram_update(t *testing.T) {
 					testAccCheckMultiplexProgramExists(ctx, resourceName, &multiplexprogram),
 					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.video_settings.0.statmux_settings.0.minimum_bitrate", "100001"),
 				),
@@ -172,7 +172,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexProgramDestroy(ctx),
 		Steps: []resource.TestStep{

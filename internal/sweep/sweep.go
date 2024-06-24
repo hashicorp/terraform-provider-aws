@@ -10,12 +10,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -60,6 +62,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 	meta.ServicePackages = servicePackageMap
 
 	conf := &conns.Config{
+		MaxRetries:       5,
 		Region:           region,
 		SuppressDebugLog: true,
 	}
@@ -102,6 +105,10 @@ type Sweepable interface {
 }
 
 func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
+	if len(sweepables) == 0 {
+		tflog.Info(ctx, "No resources to sweep")
+	}
+
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
@@ -115,21 +122,48 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 	return g.Wait().ErrorOrNil()
 }
 
-// Deprecated: Usse awsv1.SkipSweepError
-//
-//nolint:stylecheck // It's not required for functions, so why for variables?
+// Deprecated: Use awsv1.SkipSweepError
 var SkipSweepError = awsv1.SkipSweepError
 
 func Partition(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.ID()
-	}
-	return "aws"
+	return names.PartitionForRegion(region)
 }
 
 func PartitionDNSSuffix(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.DNSSuffix()
-	}
-	return "amazonaws.com"
+	return names.DNSSuffixForPartition(Partition(region))
+}
+
+type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)
+
+func Register(name string, f SweeperFn, dependencies ...string) {
+	resource.AddTestSweepers(name, &resource.Sweeper{
+		Name: name,
+		F: func(region string) error {
+			ctx := Context(region)
+			ctx = logWithResourceType(ctx, name)
+
+			client, err := SharedRegionalSweepClient(ctx, region)
+			if err != nil {
+				return fmt.Errorf("getting client: %w", err)
+			}
+			sweepResources, err := f(ctx, client)
+
+			if SkipSweepError(err) {
+				tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+					"error": err.Error(),
+				})
+				return nil
+			}
+			if err != nil {
+				return fmt.Errorf("listing %q (%s): %w", name, region, err)
+			}
+
+			err = SweepOrchestrator(ctx, sweepResources)
+			if err != nil {
+				return fmt.Errorf("sweeping %q (%s): %w", name, region, err)
+			}
+
+			return nil
+		},
+	})
 }

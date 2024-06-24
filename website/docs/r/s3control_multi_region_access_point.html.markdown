@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to manage an S3 Multi-Region Access Point associated with specified buckets.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Multiple AWS Buckets in Different Regions
@@ -96,6 +98,7 @@ The `public_access_block` block supports the following:
 The `region` block supports the following:
 
 * `bucket` - (Required) The name of the associated bucket for the Region.
+* `bucket_account_id` - (Optional) The AWS account ID that owns the Amazon S3 bucket that's associated with this Multi-Region Access Point.
 
 ## Attribute Reference
 

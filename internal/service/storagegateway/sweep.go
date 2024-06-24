@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package storagegateway
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_storagegateway_gateway", &resource.Sweeper{
 		Name: "aws_storagegateway_gateway",
 		F:    sweepGateways,
@@ -52,7 +50,7 @@ func sweepGateways(region string) error {
 		}
 
 		for _, gateway := range page.Gateways {
-			r := ResourceGateway()
+			r := resourceGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(gateway.GatewayARN))
 
@@ -62,7 +60,7 @@ func sweepGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -96,7 +94,7 @@ func sweepTapePools(region string) error {
 		}
 
 		for _, pool := range page.PoolInfos {
-			r := ResourceTapePool()
+			r := resourceTapePool()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(pool.PoolARN))
 
@@ -106,7 +104,7 @@ func sweepTapePools(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway Tape Pool sweep for %s: %s", region, err)
 		return nil
 	}
@@ -140,7 +138,7 @@ func sweepFileSystemAssociations(region string) error {
 		}
 
 		for _, assoc := range page.FileSystemAssociationSummaryList {
-			r := ResourceFileSystemAssociation()
+			r := resourceFileSystemAssociation()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(assoc.FileSystemAssociationARN))
 
@@ -150,7 +148,7 @@ func sweepFileSystemAssociations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway File System Association sweep for %s: %s", region, err)
 		return nil
 	}

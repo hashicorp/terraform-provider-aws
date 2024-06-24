@@ -12,7 +12,7 @@ description: |-
 
 Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
-~> **NOTE on blue/green deployments:** When using `greenFleetProvisioningOption` with the `copyAutoScalingGroup` action, CodeDeploy will create a new ASG with a different name. This ASG is _not_ managed by terraform and will conflict with existing configuration and state. You may want to use a different approach to managing deployments that involve multiple ASG, such as `discoverExisting` with separate blue and green ASG.
+~> **NOTE on blue/green deployments:** When using `greenFleetProvisioningOption` with the `COPY_AUTO_SCALING_GROUP` action, CodeDeploy will create a new ASG with a different name. This ASG is _not_ managed by terraform and will conflict with existing configuration and state. You may want to use a different approach to managing deployments that involve multiple ASG, such as `DISCOVER_EXISTING` with separate blue and green ASG.
 
 ## Example Usage
 
@@ -95,6 +95,7 @@ class MyConvertedCode extends TerraformStack {
             ],
           },
         ],
+        outdatedInstancesStrategy: "UPDATE",
         serviceRoleArn: Token.asString(awsIamRoleExample.arn),
         triggerConfiguration: [
           {
@@ -260,6 +261,7 @@ This resource supports the following arguments:
 * `loadBalancerInfo` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `onPremisesInstanceTagFilter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `triggerConfiguration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `outdatedInstancesStrategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `UPDATE` and `IGNORE`. Defaults to `UPDATE`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
@@ -279,7 +281,7 @@ _Only one `alarmConfiguration` is allowed_.
 You can configure a deployment group to automatically rollback when a deployment fails or when a monitoring threshold you specify is met. In this case, the last known good version of an application revision is deployed. `autoRollbackConfiguration` supports the following:
 
 * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
-* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `deploymentFailure` and `deploymentStopOnAlarm`.
+* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE`, `DEPLOYMENT_STOP_ON_ALARM` and `DEPLOYMENT_STOP_ON_REQUEST`.
 
 _Only one `autoRollbackConfiguration` is allowed_.
 
@@ -296,29 +298,29 @@ _Only one `blueGreenDeploymentConfig` is allowed_.
 You can configure how traffic is rerouted to instances in a replacement environment in a blue/green deployment. `deploymentReadyOption` supports the following:
 
 * `actionOnTimeout` - (Optional) When to reroute traffic from an original environment to a replacement environment in a blue/green deployment.
-    * `continueDeployment`: Register new instances with the load balancer immediately after the new application revision is installed on the instances in the replacement environment.
-    * `stopDeployment`: Do not register new instances with load balancer unless traffic is rerouted manually. If traffic is not rerouted manually before the end of the specified wait period, the deployment status is changed to Stopped.
-* `waitTimeInMinutes` - (Optional) The number of minutes to wait before the status of a blue/green deployment changed to Stopped if rerouting is not started manually. Applies only to the `stopDeployment` option for `actionOnTimeout`.
+    * `CONTINUE_DEPLOYMENT`: Register new instances with the load balancer immediately after the new application revision is installed on the instances in the replacement environment.
+    * `STOP_DEPLOYMENT`: Do not register new instances with load balancer unless traffic is rerouted manually. If traffic is not rerouted manually before the end of the specified wait period, the deployment status is changed to Stopped.
+* `waitTimeInMinutes` - (Optional) The number of minutes to wait before the status of a blue/green deployment changed to Stopped if rerouting is not started manually. Applies only to the `STOP_DEPLOYMENT` option for `actionOnTimeout`.
 
 You can configure how instances will be added to the replacement environment in a blue/green deployment. `greenFleetProvisioningOption` supports the following:
 
 * `action` - (Optional) The method used to add instances to a replacement environment.
-    * `discoverExisting`: Use instances that already exist or will be created manually.
-    * `copyAutoScalingGroup`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `copyAutoScalingGroup`. Use `autoscalingGroups` to specify the Auto Scaling group.
+    * `DISCOVER_EXISTING`: Use instances that already exist or will be created manually.
+    * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscalingGroups` to specify the Auto Scaling group.
 
 You can configure how instances in the original environment are terminated when a blue/green deployment is successful. `terminateBlueInstancesOnDeploymentSuccess` supports the following:
 
 * `action` - (Optional) The action to take on instances in the original environment after a successful blue/green deployment.
-    * `terminate`: Instances are terminated after a specified wait time.
-    * `keepAlive`: Instances are left running after they are deregistered from the load balancer and removed from the deployment group.
+    * `TERMINATE`: Instances are terminated after a specified wait time.
+    * `KEEP_ALIVE`: Instances are left running after they are deregistered from the load balancer and removed from the deployment group.
 * `terminationWaitTimeInMinutes` - (Optional) The number of minutes to wait after a successful blue/green deployment before terminating instances from the original environment.
 
 ### deployment_style Argument Reference
 
 You can configure the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deploymentStyle` supports the following:
 
-* `deploymentOption` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `withTrafficControl` or `withoutTrafficControl`. Default is `withoutTrafficControl`.
-* `deploymentType` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `inPlace` or `blueGreen`. Default is `inPlace`.
+* `deploymentOption` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`. Default is `WITHOUT_TRAFFIC_CONTROL`.
+* `deploymentType` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`. Default is `IN_PLACE`.
 
 _Only one `deploymentStyle` is allowed_.
 
@@ -327,7 +329,7 @@ _Only one `deploymentStyle` is allowed_.
 The `ec2TagFilter` configuration block supports the following:
 
 * `key` - (Optional) The key of the tag filter.
-* `type` - (Optional) The type of the tag filter, either `keyOnly`, `valueOnly`, or `keyAndValue`.
+* `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
 * `value` - (Optional) The value of the tag filter.
 
 Multiple occurrences of `ec2TagFilter` are allowed, where any instance that matches to at least one of the tag filters is selected.
@@ -394,14 +396,14 @@ The `testTrafficRoute` configuration block supports the following:
 The `onPremisesInstanceTagFilter` configuration block supports the following:
 
 * `key` - (Optional) The key of the tag filter.
-* `type` - (Optional) The type of the tag filter, either `keyOnly`, `valueOnly`, or `keyAndValue`.
+* `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
 * `value` - (Optional) The value of the tag filter.
 
 ### trigger_configuration Argument Reference
 
 Add triggers to a Deployment Group to receive notifications about events related to deployments or instances in the group. Notifications are sent to subscribers of the **SNS** topic associated with the trigger. _CodeDeploy must have permission to publish to the topic from this deployment group_. `triggerConfiguration` supports the following:
 
-* `triggerEvents` - (Required) The event type or types for which notifications are triggered. Some values that are supported: `deploymentStart`, `deploymentSuccess`, `deploymentFailure`, `deploymentStop`, `deploymentRollback`, `instanceStart`, `instanceSuccess`, `instanceFailure`.  See [the CodeDeploy documentation][1] for all possible values.
+* `triggerEvents` - (Required) The event type or types for which notifications are triggered. Some values that are supported: `DeploymentStart`, `DeploymentSuccess`, `DeploymentFailure`, `DeploymentStop`, `DeploymentRollback`, `InstanceStart`, `InstanceSuccess`, `InstanceFailure`.  See [the CodeDeploy documentation][1] for all possible values.
 * `triggerName` - (Required) The name of the notification trigger.
 * `triggerTargetArn` - (Required) The ARN of the SNS topic through which notifications are sent.
 
@@ -423,9 +425,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CodedeployDeploymentGroup } from "./.gen/providers/aws/codedeploy-deployment-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CodedeployDeploymentGroup.generateConfigForImport(
+      this,
+      "example",
+      "my-application:my-deployment-group"
+    );
   }
 }
 
@@ -439,4 +451,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `appName`, a
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.18.0 input-70b1ac8f959a8f0e332bcee83c9a8eb1cf2d53be3138362839841a095ccaa257 -->
+<!-- cache-key: cdktf-0.20.1 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->

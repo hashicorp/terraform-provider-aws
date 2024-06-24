@@ -31,7 +31,7 @@ func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
 	}
 
 	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
-	pattern := `^[\.\-_/#A-Za-z0-9]+$`
+	pattern := `^[0-9A-Za-z_./#-]+$`
 	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q isn't a valid log group name (alphanumeric characters, underscores,"+
@@ -51,7 +51,7 @@ func validLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []err
 	}
 
 	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
-	pattern := `^[\.\-_/#A-Za-z0-9]+$`
+	pattern := `^[0-9A-Za-z_./#-]+$`
 	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q isn't a valid log group name (alphanumeric characters, underscores,"+

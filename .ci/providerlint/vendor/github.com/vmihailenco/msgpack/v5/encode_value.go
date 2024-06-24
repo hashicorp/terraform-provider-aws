@@ -111,6 +111,8 @@ func _getEncoder(typ reflect.Type) encoderFunc {
 			switch typ.Elem() {
 			case stringType:
 				return encodeMapStringStringValue
+			case boolType:
+				return encodeMapStringBoolValue
 			case interfaceType:
 				return encodeMapStringInterfaceValue
 			}
@@ -196,6 +198,13 @@ func nilable(kind reflect.Kind) bool {
 		return true
 	}
 	return false
+}
+
+func nilableType(t reflect.Type) bool {
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return nilable(t.Kind())
 }
 
 //------------------------------------------------------------------------------

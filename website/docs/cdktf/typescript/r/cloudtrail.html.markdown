@@ -52,17 +52,9 @@ class MyConvertedCode extends TerraformStack {
     const dataAwsRegionCurrent = new DataAwsRegion(this, "current_3", {});
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     dataAwsRegionCurrent.overrideLogicalId("current");
-    const awsCloudtrailExample = new Cloudtrail(this, "example_4", {
-      includeGlobalServiceEvents: false,
-      name: "example",
-      s3BucketName: example.id,
-      s3KeyPrefix: "prefix",
-    });
-    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
-    awsCloudtrailExample.overrideLogicalId("example");
     const dataAwsIamPolicyDocumentExample = new DataAwsIamPolicyDocument(
       this,
-      "example_5",
+      "example_4",
       {
         statement: [
           {
@@ -135,12 +127,21 @@ class MyConvertedCode extends TerraformStack {
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     dataAwsIamPolicyDocumentExample.overrideLogicalId("example");
-    const awsS3BucketPolicyExample = new S3BucketPolicy(this, "example_6", {
+    const awsS3BucketPolicyExample = new S3BucketPolicy(this, "example_5", {
       bucket: example.id,
       policy: Token.asString(dataAwsIamPolicyDocumentExample.json),
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
     awsS3BucketPolicyExample.overrideLogicalId("example");
+    const awsCloudtrailExample = new Cloudtrail(this, "example_6", {
+      dependsOn: [awsS3BucketPolicyExample],
+      includeGlobalServiceEvents: false,
+      name: "example",
+      s3BucketName: example.id,
+      s3KeyPrefix: "prefix",
+    });
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsCloudtrailExample.overrideLogicalId("example");
   }
 }
 
@@ -500,9 +501,9 @@ The following arguments are optional:
 ### event_selector
 
 * `dataResource` - (Optional) Configuration block for data events. See details below.
-* `excludeManagementEventSources` (Optional) -  A set of event sources to exclude. Valid values include: `kmsAmazonawsCom` and `rdsdataAmazonawsCom`. `includeManagementEvents` must be set to`true` to allow this.
+* `excludeManagementEventSources` (Optional) -  A set of event sources to exclude. Valid values include: `kms.amazonaws.com` and `rdsdata.amazonaws.com`. `includeManagementEvents` must be set to`true` to allow this.
 * `includeManagementEvents` - (Optional) Whether to include management events for your trail. Defaults to `true`.
-* `readWriteType` - (Optional) Type of events to log. Valid values are `readOnly`, `writeOnly`, `all`. Default value is `all`.
+* `readWriteType` - (Optional) Type of events to log. Valid values are `ReadOnly`, `WriteOnly`, `All`. Default value is `All`.
 
 #### data_resource
 
@@ -511,7 +512,7 @@ The following arguments are optional:
 
 ### insight_selector
 
-* `insightType` - (Optional) Type of insights to log on a trail. Valid values are: `apiCallRateInsight` and `apiErrorRateInsight`.
+* `insightType` - (Optional) Type of insights to log on a trail. Valid values are: `ApiCallRateInsight` and `ApiErrorRateInsight`.
 
 ### Advanced Event Selector Arguments
 
@@ -520,9 +521,9 @@ The following arguments are optional:
 
 #### Field Selector Arguments
 
-* `field` (Required) - Field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resourcesType`, `resourcesArn`.
+* `field` (Required) - Field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
 * `endsWith` (Optional) - A list of values that includes events that match the last few characters of the event record field specified as the value of `field`.
-* `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resourcesType` fields.
+* `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
 * `notEndsWith` (Optional) - A list of values that excludes events that match the last few characters of the event record field specified as the value of `field`.
 * `notEquals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
 * `notStartsWith` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
@@ -534,29 +535,39 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the trail.
 * `homeRegion` - Region in which the trail was created.
-* `id` - Name of the trail.
+* `id` - ARN of the trail.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrails using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudtrail Trails using the `arn`. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Cloudtrail } from "./.gen/providers/aws/cloudtrail";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Cloudtrail.generateConfigForImport(
+      this,
+      "sample",
+      "arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import Cloudtrails using the `name`. For example:
+Using `terraform import`, import Cloudtrails using the `arn`. For example:
 
 ```console
-% terraform import aws_cloudtrail.sample my-sample-trail
+% terraform import aws_cloudtrail.sample arn:aws:cloudtrail:us-east-1:123456789012:trail/my-sample-trail
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-98216d45a2a27863ff111f0d40da50548fbed7371974a66a6d0f1d447b675fea -->
+<!-- cache-key: cdktf-0.20.1 input-5ed397d637a150a8f46c866261ad00abfa51b67e2e83e6d4564b95a1f22de811 -->

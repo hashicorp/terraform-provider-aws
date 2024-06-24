@@ -10,16 +10,18 @@ import (
 	"net"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -30,7 +32,7 @@ import (
 
 // @SDKResource("aws_route53_health_check", name="Health Check")
 // @Tags(identifierAttribute="id", resourceType="healthcheck")
-func ResourceHealthCheck() *schema.Resource {
+func resourceHealthCheck() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHealthCheckCreate,
 		ReadWithoutTimeout:   resourceHealthCheckRead,
@@ -42,7 +44,7 @@ func ResourceHealthCheck() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,8 +67,9 @@ func ResourceHealthCheck() *schema.Resource {
 				Optional: true,
 			},
 			"cloudwatch_alarm_region": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.CloudWatchRegion](),
 			},
 			"disabled": {
 				Type:     schema.TypeBool,
@@ -90,15 +93,15 @@ func ResourceHealthCheck() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"insufficient_data_health_status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(route53.InsufficientDataHealthStatus_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.InsufficientDataHealthStatus](),
 			},
 			"invert_healthcheck": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsIPAddress,
@@ -112,7 +115,7 @@ func ResourceHealthCheck() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IsPortNumber,
@@ -133,8 +136,8 @@ func ResourceHealthCheck() *schema.Resource {
 				MinItems: 3,
 				MaxItems: 64,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(route53.HealthCheckRegion_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.HealthCheckRegion](),
 				},
 				Optional: true,
 			},
@@ -162,14 +165,14 @@ func ResourceHealthCheck() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.HealthCheckType](),
 				StateFunc: func(val interface{}) string {
 					return strings.ToUpper(val.(string))
 				},
-				ValidateFunc: validation.StringInSlice(route53.HealthCheckType_Values(), true),
 			},
 		},
 
@@ -179,11 +182,11 @@ func ResourceHealthCheck() *schema.Resource {
 
 func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	healthCheckType := d.Get("type").(string)
-	healthCheckConfig := &route53.HealthCheckConfig{
-		Type: aws.String(healthCheckType),
+	healthCheckType := awstypes.HealthCheckType(d.Get(names.AttrType).(string))
+	healthCheckConfig := &awstypes.HealthCheckConfig{
+		Type: healthCheckType,
 	}
 
 	if v, ok := d.GetOk("disabled"); ok {
@@ -195,7 +198,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("failure_threshold"); ok {
-		healthCheckConfig.FailureThreshold = aws.Int64(int64(v.(int)))
+		healthCheckConfig.FailureThreshold = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("fqdn"); ok {
@@ -206,15 +209,15 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.Inverted = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		healthCheckConfig.IPAddress = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("port"); ok {
-		healthCheckConfig.Port = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk(names.AttrPort); ok {
+		healthCheckConfig.Port = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("request_interval"); ok {
-		healthCheckConfig.RequestInterval = aws.Int64(int64(v.(int)))
+		healthCheckConfig.RequestInterval = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("resource_path"); ok {
@@ -226,31 +229,31 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	switch healthCheckType {
-	case route53.HealthCheckTypeCalculated:
+	case awstypes.HealthCheckTypeCalculated:
 		if v, ok := d.GetOk("child_health_threshold"); ok {
-			healthCheckConfig.HealthThreshold = aws.Int64(int64(v.(int)))
+			healthCheckConfig.HealthThreshold = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("child_healthchecks"); ok {
-			healthCheckConfig.ChildHealthChecks = flex.ExpandStringSet(v.(*schema.Set))
+			healthCheckConfig.ChildHealthChecks = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
-	case route53.HealthCheckTypeCloudwatchMetric:
-		alarmIdentifier := &route53.AlarmIdentifier{}
+	case awstypes.HealthCheckTypeCloudwatchMetric:
+		alarmIdentifier := &awstypes.AlarmIdentifier{}
 
 		if v, ok := d.GetOk("cloudwatch_alarm_name"); ok {
 			alarmIdentifier.Name = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("cloudwatch_alarm_region"); ok {
-			alarmIdentifier.Region = aws.String(v.(string))
+			alarmIdentifier.Region = awstypes.CloudWatchRegion(v.(string))
 		}
 
 		healthCheckConfig.AlarmIdentifier = alarmIdentifier
 
 		if v, ok := d.GetOk("insufficient_data_health_status"); ok {
-			healthCheckConfig.InsufficientDataHealthStatus = aws.String(v.(string))
+			healthCheckConfig.InsufficientDataHealthStatus = awstypes.InsufficientDataHealthStatus(v.(string))
 		}
-	case route53.HealthCheckTypeRecoveryControl:
+	case awstypes.HealthCheckTypeRecoveryControl:
 		if v, ok := d.GetOk("routing_control_arn"); ok {
 			healthCheckConfig.RoutingControlArn = aws.String(v.(string))
 		}
@@ -262,7 +265,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("regions"); ok && v.(*schema.Set).Len() > 0 {
-		healthCheckConfig.Regions = flex.ExpandStringSet(v.(*schema.Set))
+		healthCheckConfig.Regions = flex.ExpandStringyValueSet[awstypes.HealthCheckRegion](v.(*schema.Set))
 	}
 
 	callerRef := id.UniqueId()
@@ -275,15 +278,15 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		HealthCheckConfig: healthCheckConfig,
 	}
 
-	output, err := conn.CreateHealthCheckWithContext(ctx, input)
+	output, err := conn.CreateHealthCheck(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Health Check: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.HealthCheck.Id))
+	d.SetId(aws.ToString(output.HealthCheck.Id))
 
-	if err := createTags(ctx, conn, d.Id(), route53.TagResourceTypeHealthcheck, getTagsIn(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), string(awstypes.TagResourceTypeHealthcheck), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Route53 Health Check (%s) tags: %s", d.Id(), err)
 	}
 
@@ -292,9 +295,9 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	output, err := FindHealthCheckByID(ctx, conn, d.Id())
+	output, err := findHealthCheckByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Health Check (%s) not found, removing from state", d.Id())
@@ -309,12 +312,12 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "route53",
-		Resource:  fmt.Sprintf("healthcheck/%s", d.Id()),
+		Resource:  "healthcheck/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	healthCheckConfig := output.HealthCheckConfig
 	d.Set("child_health_threshold", healthCheckConfig.HealthThreshold)
-	d.Set("child_healthchecks", aws.StringValueSlice(healthCheckConfig.ChildHealthChecks))
+	d.Set("child_healthchecks", healthCheckConfig.ChildHealthChecks)
 	if alarmIdentifier := healthCheckConfig.AlarmIdentifier; alarmIdentifier != nil {
 		d.Set("cloudwatch_alarm_name", alarmIdentifier.Name)
 		d.Set("cloudwatch_alarm_region", alarmIdentifier.Region)
@@ -325,40 +328,40 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("fqdn", healthCheckConfig.FullyQualifiedDomainName)
 	d.Set("insufficient_data_health_status", healthCheckConfig.InsufficientDataHealthStatus)
 	d.Set("invert_healthcheck", healthCheckConfig.Inverted)
-	d.Set("ip_address", healthCheckConfig.IPAddress)
+	d.Set(names.AttrIPAddress, healthCheckConfig.IPAddress)
 	d.Set("measure_latency", healthCheckConfig.MeasureLatency)
-	d.Set("port", healthCheckConfig.Port)
-	d.Set("regions", aws.StringValueSlice(healthCheckConfig.Regions))
+	d.Set(names.AttrPort, healthCheckConfig.Port)
+	d.Set("regions", healthCheckConfig.Regions)
 	d.Set("request_interval", healthCheckConfig.RequestInterval)
 	d.Set("resource_path", healthCheckConfig.ResourcePath)
 	d.Set("routing_control_arn", healthCheckConfig.RoutingControlArn)
 	d.Set("search_string", healthCheckConfig.SearchString)
-	d.Set("type", healthCheckConfig.Type)
+	d.Set(names.AttrType, healthCheckConfig.Type)
 
 	return diags
 }
 
 func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53.UpdateHealthCheckInput{
 			HealthCheckId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("child_health_threshold") {
-			input.HealthThreshold = aws.Int64(int64(d.Get("child_health_threshold").(int)))
+			input.HealthThreshold = aws.Int32(int32(d.Get("child_health_threshold").(int)))
 		}
 
 		if d.HasChange("child_healthchecks") {
-			input.ChildHealthChecks = flex.ExpandStringSet(d.Get("child_healthchecks").(*schema.Set))
+			input.ChildHealthChecks = flex.ExpandStringValueSet(d.Get("child_healthchecks").(*schema.Set))
 		}
 
 		if d.HasChanges("cloudwatch_alarm_name", "cloudwatch_alarm_region") {
-			alarmIdentifier := &route53.AlarmIdentifier{
+			alarmIdentifier := &awstypes.AlarmIdentifier{
 				Name:   aws.String(d.Get("cloudwatch_alarm_name").(string)),
-				Region: aws.String(d.Get("cloudwatch_alarm_region").(string)),
+				Region: awstypes.CloudWatchRegion(d.Get("cloudwatch_alarm_region").(string)),
 			}
 
 			input.AlarmIdentifier = alarmIdentifier
@@ -373,7 +376,7 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("failure_threshold") {
-			input.FailureThreshold = aws.Int64(int64(d.Get("failure_threshold").(int)))
+			input.FailureThreshold = aws.Int32(int32(d.Get("failure_threshold").(int)))
 		}
 
 		if d.HasChange("fqdn") {
@@ -381,23 +384,23 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("insufficient_data_health_status") {
-			input.InsufficientDataHealthStatus = aws.String(d.Get("insufficient_data_health_status").(string))
+			input.InsufficientDataHealthStatus = awstypes.InsufficientDataHealthStatus(d.Get("insufficient_data_health_status").(string))
 		}
 
 		if d.HasChange("invert_healthcheck") {
 			input.Inverted = aws.Bool(d.Get("invert_healthcheck").(bool))
 		}
 
-		if d.HasChange("ip_address") {
-			input.IPAddress = aws.String(d.Get("ip_address").(string))
+		if d.HasChange(names.AttrIPAddress) {
+			input.IPAddress = aws.String(d.Get(names.AttrIPAddress).(string))
 		}
 
-		if d.HasChange("port") {
-			input.Port = aws.Int64(int64(d.Get("port").(int)))
+		if d.HasChange(names.AttrPort) {
+			input.Port = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 		}
 
 		if d.HasChange("regions") {
-			input.Regions = flex.ExpandStringSet(d.Get("regions").(*schema.Set))
+			input.Regions = flex.ExpandStringyValueSet[awstypes.HealthCheckRegion](d.Get("regions").(*schema.Set))
 		}
 
 		if d.HasChange("resource_path") {
@@ -408,7 +411,7 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.SearchString = aws.String(d.Get("search_string").(string))
 		}
 
-		_, err := conn.UpdateHealthCheckWithContext(ctx, input)
+		_, err := conn.UpdateHealthCheck(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Route53 Health Check (%s): %s", d.Id(), err)
@@ -420,14 +423,14 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
+	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Health Check: %s", d.Id())
-	_, err := conn.DeleteHealthCheckWithContext(ctx, &route53.DeleteHealthCheckInput{
+	_, err := conn.DeleteHealthCheck(ctx, &route53.DeleteHealthCheckInput{
 		HealthCheckId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
+	if errs.IsA[*awstypes.NoSuchHealthCheck](err) {
 		return diags
 	}
 
@@ -438,14 +441,14 @@ func resourceHealthCheckDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindHealthCheckByID(ctx context.Context, conn *route53.Route53, id string) (*route53.HealthCheck, error) {
+func findHealthCheckByID(ctx context.Context, conn *route53.Client, id string) (*awstypes.HealthCheck, error) {
 	input := &route53.GetHealthCheckInput{
 		HealthCheckId: aws.String(id),
 	}
 
-	output, err := conn.GetHealthCheckWithContext(ctx, input)
+	output, err := conn.GetHealthCheck(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
+	if errs.IsA[*awstypes.NoSuchHealthCheck](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

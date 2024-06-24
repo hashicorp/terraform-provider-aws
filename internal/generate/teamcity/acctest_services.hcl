@@ -5,6 +5,14 @@ service "appautoscaling" {
   vpc_lock = true
 }
 
+service "apigateway" {
+  vpc_lock = true
+}
+
+service "apigatewayv2" {
+  vpc_lock = true
+}
+
 service "appstream" {
   vpc_lock    = true
   parallelism = 10
@@ -38,6 +46,10 @@ service "datasync" {
   vpc_lock = true
 }
 
+service "deploy" {
+  vpc_lock = true
+}
+
 service "directconnect" {
   vpc_lock = true
 }
@@ -55,11 +67,29 @@ service "ds" {
 }
 
 service "ec2" {
-  vpc_lock = true
+  vpc_lock         = true
+  pattern_override = "TestAccEC2"
+  exclude_pattern  = "TestAccEC2EBS|TestAccEC2Outposts"
+}
+
+service "ec2ebs" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccEC2EBS"
+  split_package_real_package = "ec2"
+}
+
+service "ec2outposts" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccEC2Outposts"
+  split_package_real_package = "ec2"
 }
 
 service "ecrpublic" {
   region = "us-east-1"
+}
+
+service "ecs" {
+  vpc_lock = true
 }
 
 service "efs" {
@@ -102,6 +132,16 @@ service "fsx" {
   vpc_lock = true
 }
 
+service "imagebuilder" {
+  vpc_lock = true
+}
+
+service "ipam" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccIPAM"
+  split_package_real_package = "ec2"
+}
+
 service "kafka" {
   vpc_lock = true
 }
@@ -135,6 +175,14 @@ service "mwaa" {
 }
 
 service "networkfirewall" {
+  vpc_lock = true
+}
+
+service "networkmanager" {
+  vpc_lock = true
+}
+
+service "opensearch" {
   vpc_lock = true
 }
 
@@ -186,8 +234,44 @@ service "transfer" {
   vpc_lock = true
 }
 
+service "transitgateway" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccTransitGateway"
+  split_package_real_package = "ec2"
+}
+
+service "verifiedaccess" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccVerifiedAccess"
+  split_package_real_package = "ec2"
+}
+
+service "vpc" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccVPC"
+  split_package_real_package = "ec2"
+}
+
+service "vpnclient" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccClientVPN"
+  split_package_real_package = "ec2"
+}
+
+service "vpnsite" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccSiteVPN"
+  split_package_real_package = "ec2"
+}
+
 service "waf" {
   region = "us-east-1"
+}
+
+service "wavelength" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccWavelength"
+  split_package_real_package = "ec2"
 }
 
 service "workspaces" {

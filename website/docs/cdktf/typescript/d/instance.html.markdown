@@ -100,10 +100,11 @@ interpolation.
 * `hostId` - ID of the dedicated host the instance will be assigned to.
 * `hostResourceGroupArn` - ARN of the host resource group the instance is associated with.
 * `iamInstanceProfile` - Name of the instance profile associated with the Instance.
-* `instanceState` - State of the instance. One of: `pending`, `running`, `shuttingDown`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
+* `instanceState` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `instanceType` - Type of the Instance.
 * `ipv6Addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `keyName` - Key name of the Instance.
+* `launch_time` - Time the instance was launched.
 * `maintenanceOptions` - Maintenance and recovery options for the instance.
     * `autoRecovery` - Automatic recovery behavior of the instance.
 * `metadataOptions` - Metadata options of the Instance.
@@ -125,7 +126,7 @@ interpolation.
     * `hostnameType` - Type of hostname for EC2 instances.
 * `privateIp` - Private IP address assigned to the Instance.
 * `publicDns` - Public DNS name assigned to the Instance. For EC2-VPC, this is only available if you've enabled DNS hostnames for your VPC.
-* `publicIp` - Public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`awsEip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `publicIp`, as this field will change after the EIP is attached.
+* `publicIp` - Public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `publicIp`, as this field will change after the EIP is attached.
 * `rootBlockDevice` - Root block device mappings of the Instance
     * `deviceName` - Physical name of the device.
     * `deleteOnTermination` - If the root block device will be deleted on termination.
@@ -142,15 +143,15 @@ interpolation.
 * `tags` - Map of tags assigned to the Instance.
 * `tenancy` - Tenancy of the instance: `dedicated`, `default`, `host`.
 * `userData` - SHA-1 hash of User Data supplied to the Instance.
-* `userDataBase64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64Decode` function](https://www.terraform.io/docs/configuration/functions/base64decode.html). This attribute is only exported if `getUserData` is true.
+* `userDataBase64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](https://www.terraform.io/docs/configuration/functions/base64decode.html). This attribute is only exported if `getUserData` is true.
 * `vpcSecurityGroupIds` - Associated security groups in a non-default VPC.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
 
-<!-- cache-key: cdktf-0.18.0 input-58a6dcf6b973aceef047b6a5f4da20044aa0391cf4a6935de6e8bdc7dc78ba4c -->
+<!-- cache-key: cdktf-0.20.1 input-0360e36bcd653291899c63abe79b8fb1fd576446cfbc317105b63e631c4e981b -->

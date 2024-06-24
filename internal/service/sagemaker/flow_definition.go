@@ -39,7 +39,7 @@ func ResourceFlowDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func ResourceFlowDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[a-z0-9](-*[a-z0-9])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, 0-9, and - (hyphen)."),
 				),
 			},
 			"human_loop_activation_config": {
@@ -165,7 +165,7 @@ func ResourceFlowDefinition() *schema.Resource {
 								Type: schema.TypeString,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 30),
-									validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9]+( [A-Za-z0-9]+)*$`), ""),
+									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+( [0-9A-Za-z]+)*$`), ""),
 								),
 							},
 						},
@@ -215,7 +215,7 @@ func ResourceFlowDefinition() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -233,7 +233,7 @@ func ResourceFlowDefinition() *schema.Resource {
 					},
 				},
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -255,7 +255,7 @@ func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &sagemaker.CreateFlowDefinitionInput{
 		FlowDefinitionName: aws.String(name),
 		HumanLoopConfig:    expandFlowDefinitionHumanLoopConfig(d.Get("human_loop_config").([]interface{})),
-		RoleArn:            aws.String(d.Get("role_arn").(string)),
+		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
 		OutputConfig:       expandFlowDefinitionOutputConfig(d.Get("output_config").([]interface{})),
 		Tags:               getTagsIn(ctx),
 	}
@@ -307,8 +307,8 @@ func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := aws.StringValue(flowDefinition.FlowDefinitionArn)
-	d.Set("arn", arn)
-	d.Set("role_arn", flowDefinition.RoleArn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrRoleARN, flowDefinition.RoleArn)
 	d.Set("flow_definition_name", flowDefinition.FlowDefinitionName)
 
 	if err := d.Set("human_loop_activation_config", flattenFlowDefinitionHumanLoopActivationConfig(flowDefinition.HumanLoopActivationConfig)); err != nil {
@@ -439,7 +439,7 @@ func expandFlowDefinitionOutputConfig(l []interface{}) *sagemaker.FlowDefinition
 		S3OutputPath: aws.String(m["s3_output_path"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		config.KmsKeyId = aws.String(v)
 	}
 
@@ -452,8 +452,8 @@ func flattenFlowDefinitionOutputConfig(config *sagemaker.FlowDefinitionOutputCon
 	}
 
 	m := map[string]interface{}{
-		"kms_key_id":     aws.StringValue(config.KmsKeyId),
-		"s3_output_path": aws.StringValue(config.S3OutputPath),
+		names.AttrKMSKeyID: aws.StringValue(config.KmsKeyId),
+		"s3_output_path":   aws.StringValue(config.S3OutputPath),
 	}
 
 	return []map[string]interface{}{m}

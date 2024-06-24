@@ -12,7 +12,7 @@ description: |-
 
 The Public ECR Authorization Token data source allows the authorization token, token expiration date, user name, and password to be retrieved for a Public ECR repository.
 
-~> **NOTE:** This data source can only be used in the `usEast1` region.
+~> **NOTE:** This data source can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -38,10 +38,10 @@ class MyConvertedCode extends TerraformStack {
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `userName:password`.
+* `authorizationToken` - Temporary IAM authentication credentials to access the ECR repository encoded in base64 in the form of `user_name:password`.
 * `expiresAt` - Time in UTC RFC3339 format when the authorization token expires.
 * `id` - Region of the authorization token.
 * `password` - Password decoded from the authorization token.
 * `userName` - User name decoded from the authorization token.
 
-<!-- cache-key: cdktf-0.18.0 input-fc553185b1ad0893b42035538b008c8015883bff0b2f28b28094a5ed72a8fc63 -->
+<!-- cache-key: cdktf-0.20.1 input-fc553185b1ad0893b42035538b008c8015883bff0b2f28b28094a5ed72a8fc63 -->

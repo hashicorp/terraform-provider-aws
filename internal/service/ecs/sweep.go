@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package ecs
 
 import (
@@ -15,9 +12,11 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ecs_capacity_provider", &resource.Sweeper{
 		Name: "aws_ecs_capacity_provider",
 		F:    sweepCapacityProviders,
@@ -82,7 +81,7 @@ func sweepCapacityProviders(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Capacity Provider sweep for %s: %s", region, err)
 		return nil
 	}
@@ -126,7 +125,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -183,7 +182,7 @@ func sweepServices(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -195,7 +194,7 @@ func sweepServices(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -232,7 +231,7 @@ func sweepTaskDefinitions(region string) error {
 			r := ResourceTaskDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v))
-			d.Set("arn", v)
+			d.Set(names.AttrARN, v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -240,7 +239,7 @@ func sweepTaskDefinitions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Task Definition sweep for %s: %s", region, err)
 		return nil
 	}

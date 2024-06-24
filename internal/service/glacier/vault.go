@@ -52,21 +52,21 @@ func resourceVault() *schema.Resource {
 					return json
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[.0-9A-Za-z-_]+$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
 						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
 				),
 			},
@@ -107,7 +107,7 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlacierClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &glacier.CreateVaultInput{
 		VaultName: aws.String(name),
 	}
@@ -178,9 +178,9 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("access_policy", nil)
-	d.Set("arn", output.VaultARN)
-	d.Set("location", fmt.Sprintf("/%s/vaults/%s", meta.(*conns.AWSClient).AccountID, d.Id()))
-	d.Set("name", output.VaultName)
+	d.Set(names.AttrARN, output.VaultARN)
+	d.Set(names.AttrLocation, fmt.Sprintf("/%s/vaults/%s", meta.(*conns.AWSClient).AccountID, d.Id()))
+	d.Set(names.AttrName, output.VaultName)
 	d.Set("notification", nil)
 
 	if output, err := conn.GetVaultAccessPolicy(ctx, &glacier.GetVaultAccessPolicyInput{

@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_msk_cluster: Add `cluster_uuid` attribute
+```
+
+```release-note:enhancement
+data-source/aws_msk_cluster: Add `cluster_uuid` attribute
+```
+
+```release-note:enhancement
+resource/aws_msk_serverless_cluster: Add `cluster_uuid` attribute
+```

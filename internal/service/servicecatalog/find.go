@@ -150,35 +150,23 @@ func FindTagOptionResourceAssociation(ctx context.Context, conn *servicecatalog.
 	return result, err
 }
 
-func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) (*servicecatalog.Principal, error) {
-	input := &servicecatalog.ListPrincipalsForPortfolioInput{
-		PortfolioId: aws.String(portfolioID),
+func findProductByID(ctx context.Context, conn *servicecatalog.ServiceCatalog, productID string) (*servicecatalog.DescribeProductAsAdminOutput, error) {
+	in := &servicecatalog.DescribeProductAsAdminInput{
+		Id: aws.String(productID),
 	}
 
-	if acceptLanguage != "" {
-		input.AcceptLanguage = aws.String(acceptLanguage)
+	out, err := conn.DescribeProductAsAdminWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
 	}
 
-	var result *servicecatalog.Principal
+	if err != nil {
+		return nil, err
+	}
 
-	err := conn.ListPrincipalsForPortfolioPagesWithContext(ctx, input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, deet := range page.Principals {
-			if deet == nil {
-				continue
-			}
-
-			if aws.StringValue(deet.PrincipalARN) == principalARN {
-				result = deet
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return result, err
+	return out, nil
 }

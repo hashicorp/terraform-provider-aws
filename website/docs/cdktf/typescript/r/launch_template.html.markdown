@@ -131,7 +131,7 @@ This resource supports the following arguments:
 * `hibernationOptions` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `iamInstanceProfile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
   below for more details.
-* `imageId` - (Optional) The AMI from which to launch the instance.
+* `imageId` - (Optional) The AMI from which to launch the instance or use a Systems Manager parameter convention e.g. `resolve:ssm:parameter-name`. See [docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id) for more details.
 * `instanceInitiatedShutdownBehavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
   (Default: `stop`).
 * `instanceMarketOptions` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
@@ -153,11 +153,11 @@ This resource supports the following arguments:
 * `ramDiskId` - (Optional) The ID of the RAM disk.
 * `securityGroupNames` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpcSecurityGroupIds` instead.
-* `tagSpecifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
+* `tagSpecifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details. Default tags [are currently not propagated to ASG created resources](https://github.com/hashicorp/terraform-provider-aws/issues/32328) so you may wish to inject your default tags into this variable against the relevant child resource types created.
 * `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `updateDefaultVersion` - (Optional) Whether to update Default Version each update. Conflicts with `defaultVersion`.
 * `userData` - (Optional) The base64-encoded user data to provide when launching the instance.
-* `vpcSecurityGroupIds` - (Optional) A list of security group IDs to associate with. Conflicts with `networkInterfacesSecurityGroups`
+* `vpcSecurityGroupIds` - (Optional) A list of security group IDs to associate with. Conflicts with `network_interfaces.security_groups`
 
 ### Block devices
 
@@ -179,7 +179,7 @@ Each `blockDeviceMappings` supports the following:
 The `ebs` block supports the following:
 
 * `deleteOnTermination` - (Optional) Whether the volume should be destroyed on instance termination.
-  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
+  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/preserving-volumes-on-termination.html) for more information.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshotId`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
@@ -233,7 +233,7 @@ Attach an elastic GPU the instance.
 
 The `elasticGpuSpecifications` block supports the following:
 
-* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-gpus.html#elastic-gpus-basics)
+* `type` - The [Elastic GPU Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/elastic-graphics.html#elastic-graphics-basics)
 
 ### Elastic Inference Accelerator
 
@@ -264,14 +264,14 @@ to attach.
 
 The `iamInstanceProfile` block supports the following:
 
-* `arn` - The Amazon Resource Name (ARN) of the instance profile.
+* `arn` - The Amazon Resource Name (ARN) of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements
 
 This configuration block supports the following:
 
-~> **NOTE:** Both `memoryMibMin` and `vcpuCountMin` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 * `acceleratorCount` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -311,7 +311,7 @@ This configuration block supports the following:
       * inference
     ```
 
-* `allowedInstanceTypes` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m58Xlarge`, `c5*.*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+* `allowedInstanceTypes` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
 
     ~> **NOTE:** If you specify `allowedInstanceTypes`, you can't specify `excludedInstanceTypes`.
 
@@ -331,7 +331,7 @@ This configuration block supports the following:
       * intel
     ```
 
-* `excludedInstanceTypes` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m58Xlarge`, `c5*.*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excludedInstanceTypes` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
     ~> **NOTE:** If you specify `excludedInstanceTypes`, you can't specify `allowedInstanceTypes`.
 
@@ -353,8 +353,8 @@ This configuration block supports the following:
     ```
 
 * `memoryGibPerVcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
-    * `min` - (Optional) Minimum. May be a decimal number, e.g. `05`.
-    * `max` - (Optional) Maximum. May be a decimal number, e.g. `05`.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 * `memoryMib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
     * `min` - (Required) Minimum.
     * `max` - (Optional) Maximum.
@@ -372,8 +372,8 @@ This configuration block supports the following:
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `totalLocalStorageGb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
-    * `min` - (Optional) Minimum. May be a decimal number, e.g. `05`.
-    * `max` - (Optional) Maximum. May be a decimal number, e.g. `05`.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 * `vcpuCount` - (Required) Block describing the minimum and maximum number of vCPUs. Default is no maximum.
     * `min` - (Required) Minimum.
     * `max` - (Optional) Maximum.
@@ -407,7 +407,7 @@ The `spotOptions` block supports the following:
 * `instanceInterruptionBehavior` - The behavior when a Spot Instance is interrupted. Can be `hibernate`,
   `stop`, or `terminate`. (Default: `terminate`).
 * `maxPrice` - The maximum hourly price you're willing to pay for the Spot Instances.
-* `spotInstanceType` - The Spot Instance request type. Can be `oneTime`, or `persistent`.
+* `spotInstanceType` - The Spot Instance request type. Can be `one-time`, or `persistent`.
 * `validUntil` - The end date of the request.
 
 ### Metadata Options
@@ -482,7 +482,7 @@ The `privateDnsNameOptions` block supports the following:
 
 * `enableResourceNameDnsAaaaRecord` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
 * `enableResourceNameDnsARecord` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
-* `hostnameType` - (Optional) The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ipName` and `resourceName`.
+* `hostnameType` - (Optional) The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
 
 ### Tag Specifications
 
@@ -510,9 +510,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { LaunchTemplate } from "./.gen/providers/aws/launch-template";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    LaunchTemplate.generateConfigForImport(this, "web", "lt-12345678");
   }
 }
 
@@ -524,4 +530,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a5333efb037c0df523bc8a52b27bb2917c678c42feabe7b2e32815b125c04e27 -->
+<!-- cache-key: cdktf-0.20.1 input-8003f9c6450601e32f73e508e3a6c3a1d45c8eceab312b856d0b7abbfa41d04f -->

@@ -27,15 +27,15 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 			{
@@ -45,17 +45,17 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			},
 			{
 				Config: testAccEncryptionConfigConfig_key(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", keyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, keyResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NONE"),
 				),
 			},
 		},

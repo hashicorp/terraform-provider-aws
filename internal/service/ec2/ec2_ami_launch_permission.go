@@ -10,20 +10,23 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ami_launch_permission")
-func ResourceAMILaunchPermission() *schema.Resource {
+// @SDKResource("aws_ami_launch_permission", name="AMI Launch Permission")
+func resourceAMILaunchPermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAMILaunchPermissionCreate,
 		ReadWithoutTimeout:   resourceAMILaunchPermissionRead,
@@ -34,18 +37,18 @@ func ResourceAMILaunchPermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"group": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.PermissionGroup_Values(), false),
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PermissionGroup](),
+				ExactlyOneOf:     []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"image_id": {
 				Type:     schema.TypeString,
@@ -57,107 +60,113 @@ func ResourceAMILaunchPermission() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"organizational_unit_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
 			},
 		},
 	}
 }
 
 func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	imageID := d.Get("image_id").(string)
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	group := d.Get("group").(string)
 	organizationARN := d.Get("organization_arn").(string)
 	organizationalUnitARN := d.Get("organizational_unit_arn").(string)
 	id := AMILaunchPermissionCreateResourceID(imageID, accountID, group, organizationARN, organizationalUnitARN)
 	input := &ec2.ModifyImageAttributeInput{
-		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
+		Attribute: aws.String(string(awstypes.ImageAttributeNameLaunchPermission)),
 		ImageId:   aws.String(imageID),
-		LaunchPermission: &ec2.LaunchPermissionModifications{
+		LaunchPermission: &awstypes.LaunchPermissionModifications{
 			Add: expandLaunchPermissions(accountID, group, organizationARN, organizationalUnitARN),
 		},
 	}
 
-	log.Printf("[DEBUG] Creating AMI Launch Permission: %s", input)
-	_, err := conn.ModifyImageAttributeWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating AMI Launch Permission: %s", d.Id())
+	_, err := conn.ModifyImageAttribute(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AMI Launch Permission (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating AMI Launch Permission (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceAMILaunchPermissionRead(ctx, d, meta)
+	return append(diags, resourceAMILaunchPermissionRead(ctx, d, meta)...)
 }
 
 func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	imageID, accountID, group, organizationARN, organizationalUnitARN, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = FindImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+	_, err = findImageLaunchPermission(ctx, conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AMI Launch Permission %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AMI Launch Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("group", group)
 	d.Set("image_id", imageID)
 	d.Set("organization_arn", organizationARN)
 	d.Set("organizational_unit_arn", organizationalUnitARN)
 
-	return nil
+	return diags
 }
 
 func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	imageID, accountID, group, organizationARN, organizationalUnitARN, err := AMILaunchPermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &ec2.ModifyImageAttributeInput{
-		Attribute: aws.String(ec2.ImageAttributeNameLaunchPermission),
+		Attribute: aws.String(string(awstypes.ImageAttributeNameLaunchPermission)),
 		ImageId:   aws.String(imageID),
-		LaunchPermission: &ec2.LaunchPermissionModifications{
+		LaunchPermission: &awstypes.LaunchPermissionModifications{
 			Remove: expandLaunchPermissions(accountID, group, organizationARN, organizationalUnitARN),
 		},
 	}
 
 	log.Printf("[INFO] Deleting AMI Launch Permission: %s", d.Id())
-	_, err = conn.ModifyImageAttributeWithContext(ctx, input)
+	_, err = conn.ModifyImageAttribute(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AMI Launch Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -200,15 +209,15 @@ func resourceAMILaunchPermissionImport(ctx context.Context, d *schema.ResourceDa
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandLaunchPermissions(accountID, group, organizationARN, organizationalUnitARN string) []*ec2.LaunchPermission {
-	apiObject := &ec2.LaunchPermission{}
+func expandLaunchPermissions(accountID, group, organizationARN, organizationalUnitARN string) []awstypes.LaunchPermission {
+	apiObject := awstypes.LaunchPermission{}
 
 	if accountID != "" {
 		apiObject.UserId = aws.String(accountID)
 	}
 
 	if group != "" {
-		apiObject.Group = aws.String(group)
+		apiObject.Group = awstypes.PermissionGroup(group)
 	}
 
 	if organizationARN != "" {
@@ -219,7 +228,7 @@ func expandLaunchPermissions(accountID, group, organizationARN, organizationalUn
 		apiObject.OrganizationalUnitArn = aws.String(organizationalUnitARN)
 	}
 
-	return []*ec2.LaunchPermission{apiObject}
+	return []awstypes.LaunchPermission{apiObject}
 }
 
 const (

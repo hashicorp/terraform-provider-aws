@@ -83,6 +83,7 @@ The `aws_lambda` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `alias` - Alias for the S3 Object Lambda Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Object Lambda Access Point.
 * `id` - The AWS account ID and access point name separated by a colon (`:`).
 

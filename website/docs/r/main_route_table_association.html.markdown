@@ -11,7 +11,7 @@ description: |-
 Provides a resource for managing the main routing table of a VPC.
 
 ~> **NOTE:** **Do not** use both `aws_default_route_table` to manage a default route table **and** `aws_main_route_table_association` with the same VPC due to possible route conflicts. See [aws_default_route_table][tf-default-route-table] documentation for more details.
-For more information, see the Amazon VPC User Guide on [Route Tables](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html). For information about managing normal route tables in Terraform, see [`aws_route_table`](/docs/providers/aws/r/route_table.html).
+For more information, see the Amazon VPC User Guide on [Route Tables][aws-route-tables]. For information about managing normal route tables in Terraform, see [`aws_route_table`][tf-route-tables].
 
 ## Example Usage
 
@@ -46,10 +46,6 @@ this original table as the Main Route Table for the VPC. You'll see this
 additional Route Table in the AWS console; it must remain intact in order for
 the `main_route_table_association` delete to work properly.
 
-[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
-[tf-route-tables]: /docs/providers/aws/r/route_table.html
-[tf-default-route-table]: /docs/providers/aws/r/default_route_table.html
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
@@ -57,3 +53,7 @@ the `main_route_table_association` delete to work properly.
 - `create` - (Default `5m`)
 - `update` - (Default `2m`)
 - `delete` - (Default `5m`)
+
+[aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
+[tf-route-tables]: /docs/providers/aws/r/route_table.html
+[tf-default-route-table]: /docs/providers/aws/r/default_route_table.html

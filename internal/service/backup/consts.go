@@ -3,6 +3,12 @@
 
 package backup
 
+import "time"
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
+)
+
 const (
 	frameworkStatusCompleted          = "COMPLETED"
 	frameworkStatusCreationInProgress = "CREATE_IN_PROGRESS"

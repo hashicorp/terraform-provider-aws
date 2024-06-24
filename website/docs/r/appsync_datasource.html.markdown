@@ -88,7 +88,7 @@ This resource supports the following arguments:
 * `lambda_config` - (Optional) AWS Lambda settings. See [Lambda Config](#lambda-config)
 * `opensearchservice_config` - (Optional) Amazon OpenSearch Service settings. See [OpenSearch Service Config](#opensearch-service-config)
 * `relational_database_config` (Optional) AWS RDS settings. See [Relational Database Config](#relational-database-config)
-* `service_role_arn` - (Optional) IAM service role ARN for the data source.
+* `service_role_arn` - (Optional) IAM service role ARN for the data source. Required if `type` is specified as `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `AMAZON_EVENTBRIDGE`, or `AMAZON_OPENSEARCH_SERVICE`.
 
 ### DynamoDB Config
 

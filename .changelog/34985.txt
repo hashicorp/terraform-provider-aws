@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_neptune_cluster: Add `storage_type` argument
+```
+
+```release-note:enhancement
+resource/aws_neptune_cluster_instance: Add `storage_type` attribute
+```

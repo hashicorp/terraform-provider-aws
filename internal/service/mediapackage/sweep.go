@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package mediapackage
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_media_package_channel", &resource.Sweeper{
 		Name: "aws_media_package_channel",
 		F:    sweepChannels,
@@ -41,7 +38,7 @@ func sweepChannels(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
-			log.Println("[WARN] Skipping MediaPackage Channels sweep for %s: %s", region, err)
+			log.Printf("[WARN] Skipping MediaPackage Channels sweep for %s: %s", region, err)
 			return nil
 		}
 

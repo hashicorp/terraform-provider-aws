@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESEventDestination_basic(t *testing.T) {
@@ -33,7 +34,7 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,12 +44,12 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 					testAccCheckEventDestinationExists(ctx, cloudwatchDestinationResourceName, &v1),
 					testAccCheckEventDestinationExists(ctx, kinesisDestinationResourceName, &v2),
 					testAccCheckEventDestinationExists(ctx, snsDestinationResourceName, &v3),
-					acctest.CheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
-					acctest.CheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
-					acctest.CheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
-					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, "name", rName1),
-					resource.TestCheckResourceAttr(kinesisDestinationResourceName, "name", rName2),
-					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
+					acctest.CheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
+					acctest.CheckResourceAttrRegionalARN(kinesisDestinationResourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
+					acctest.CheckResourceAttrRegionalARN(snsDestinationResourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
+					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, names.AttrName, rName1),
+					resource.TestCheckResourceAttr(kinesisDestinationResourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(snsDestinationResourceName, names.AttrName, rName3),
 				),
 			},
 			{
@@ -88,7 +89,7 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{

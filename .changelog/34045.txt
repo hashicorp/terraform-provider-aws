@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `vpc_config.ipv6_allowed_for_dual_stack` argument
+```

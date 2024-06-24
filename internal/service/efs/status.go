@@ -50,19 +50,3 @@ func statusBackupPolicy(ctx context.Context, conn *efs.EFS, id string) retry.Sta
 		return output, aws.StringValue(output.Status), nil
 	}
 }
-
-func statusReplicationConfiguration(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindReplicationConfigurationByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Destinations[0].Status), nil
-	}
-}

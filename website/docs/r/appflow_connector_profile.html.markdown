@@ -186,6 +186,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 * `access_token` (Optional) - The credentials used to access protected Salesforce resources.
 * `client_credentials_arn` (Optional) - The secret manager ARN, which contains the client ID and client secret of the connected app.
+* `jwt_token` (Optional) - A JSON web token (JWT) that authorizes access to Salesforce records.
+* `oauth2_grant_type` (Optional) - The OAuth 2.0 grant type used when requesting an access token from Salesforce. Valid values are `CLIENT_CREDENTIALS`, `AUTHORIZATION_CODE`, and `JWT_BEARER`.
 * `oauth_request` (Optional) - The OAuth requirement needed to request security tokens from the connector endpoint. See [OAuth Request](#oauth-request) for more details.
 * `refresh_token` (Optional) - The credentials used to acquire new access tokens.
 

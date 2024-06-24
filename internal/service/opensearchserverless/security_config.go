@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,17 +55,17 @@ func (r *resourceSecurityConfig) Metadata(_ context.Context, request resource.Me
 func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"config_version": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -73,7 +74,7 @@ func (r *resourceSecurityConfig) Schema(ctx context.Context, req resource.Schema
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -257,8 +258,8 @@ func (r *resourceSecurityConfig) ImportState(ctx context.Context, req resource.I
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), parts[2])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrName), parts[2])...)
 }
 
 type resourceSecurityConfigData struct {
@@ -319,12 +320,11 @@ func expandSAMLOptions(ctx context.Context, object types.Object, diags *diag.Dia
 }
 
 func flattenSAMLOptions(ctx context.Context, so *awstypes.SamlConfigOptions) types.Object {
-	attributeTypes := flex.AttributeTypesMust[samlOptions](ctx)
-
 	if so == nil {
-		return types.ObjectNull(attributeTypes)
+		return fwtypes.NewObjectValueOfNull[samlOptions](ctx).ObjectValue
 	}
 
+	attributeTypes := fwtypes.AttributeTypesMust[samlOptions](ctx)
 	attrs := map[string]attr.Value{}
 	attrs["group_attribute"] = flex.StringToFramework(ctx, so.GroupAttribute)
 	attrs["metadata"] = flex.StringToFramework(ctx, so.Metadata)

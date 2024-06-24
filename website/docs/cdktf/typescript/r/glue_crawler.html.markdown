@@ -225,11 +225,12 @@ This argument supports the following arguments:
 * `description` (Optional) Description of the crawler.
 * `deltaTarget` (Optional) List of nested Delta Lake target arguments. See [Delta Target](#delta-target) below.
 * `dynamodbTarget` (Optional) List of nested DynamoDB target arguments. See [Dynamodb Target](#dynamodb-target) below.
-* `jdbcTarget` (Optional) List of nested JBDC target arguments. See [JDBC Target](#jdbc-target) below.
-* `s3Target` (Optional) List nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
-* `mongodbTarget` (Optional) List nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
-* `hudiTarget` (Optional) List nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
-* `icebergTarget` (Optional) List nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
+* `jdbcTarget` (Optional) List of nested JDBC target arguments. See [JDBC Target](#jdbc-target) below.
+* `s3Target` (Optional) List of nested Amazon S3 target arguments. See [S3 Target](#s3-target) below.
+* `catalogTarget` (Optional) List of nested AWS Glue Data Catalog target arguments. See [Catalog Target](#catalog-target) below.
+* `mongodbTarget` (Optional) List of nested MongoDB target arguments. See [MongoDB Target](#mongodb-target) below.
+* `hudiTarget` (Optional) List of nested Hudi target arguments. See [Iceberg Target](#hudi-target) below.
+* `icebergTarget` (Optional) List of nested Iceberg target arguments. See [Iceberg Target](#iceberg-target) below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schemaChangePolicy` (Optional) Policy for the crawler's update and deletion behavior. See [Schema Change Policy](#schema-change-policy) below.
 * `lakeFormationConfiguration` (Optional) Specifies Lake Formation configuration settings for the crawler. See [Lake Formation Configuration](#lake-formation-configuration) below.
@@ -250,7 +251,7 @@ This argument supports the following arguments:
 * `connectionName` - (Required) The name of the connection to use to connect to the JDBC target.
 * `path` - (Required) The path of the JDBC target.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
-* `enableAdditionalMetadata` - (Optional) Specify a value of `rawtypes` or `comments` to enable additional metadata intable responses. `rawtypes` provides the native-level datatype. `comments` provides comments associated with a column or table in the database.
+* `enableAdditionalMetadata` - (Optional) Specify a value of `RAWTYPES` or `COMMENTS` to enable additional metadata intable responses. `RAWTYPES` provides the native-level datatype. `COMMENTS` provides comments associated with a column or table in the database.
 
 ### S3 Target
 
@@ -263,13 +264,13 @@ This argument supports the following arguments:
 
 ### Catalog Target
 
-* `connectionName` - (Optional) The name of the connection for an Amazon S3-backed Data Catalog table to be a target of the crawl when using a Catalog connection type paired with a `network` Connection type.
+* `connectionName` - (Optional) The name of the connection for an Amazon S3-backed Data Catalog table to be a target of the crawl when using a Catalog connection type paired with a `NETWORK` Connection type.
 * `databaseName` - (Required) The name of the Glue database to be synchronized.
 * `tables` - (Required) A list of catalog tables to be synchronized.
 * `eventQueueArn` - (Optional)  A valid Amazon SQS ARN.
 * `dlqEventQueueArn` - (Optional)  A valid Amazon SQS ARN.
 
-~> **Note:** `deletionBehavior` of catalog target doesn't support `deprecateInDatabase`.
+~> **Note:** `deletion_behavior` of catalog target doesn't support `DEPRECATE_IN_DATABASE`.
 
 -> **Note:** `configuration` for catalog target crawlers will have `{ ... "Grouping": { "TableGroupingPolicy": "CombineCompatibleSchemas"} }` by default.
 
@@ -302,8 +303,8 @@ This argument supports the following arguments:
 
 ### Schema Change Policy
 
-* `deleteBehavior` - (Optional) The deletion behavior when the crawler finds a deleted object. Valid values: `log`, `deleteFromDatabase`, or `deprecateInDatabase`. Defaults to `deprecateInDatabase`.
-* `updateBehavior` - (Optional) The update behavior when the crawler finds a changed schema. Valid values: `log` or `updateInDatabase`. Defaults to `updateInDatabase`.
+* `deleteBehavior` - (Optional) The deletion behavior when the crawler finds a deleted object. Valid values: `LOG`, `DELETE_FROM_DATABASE`, or `DEPRECATE_IN_DATABASE`. Defaults to `DEPRECATE_IN_DATABASE`.
+* `updateBehavior` - (Optional) The update behavior when the crawler finds a changed schema. Valid values: `LOG` or `UPDATE_IN_DATABASE`. Defaults to `UPDATE_IN_DATABASE`.
 
 ### Lake Formation Configuration
 
@@ -312,11 +313,11 @@ This argument supports the following arguments:
 
 ### Lineage Configuration
 
-* `crawlerLineageSettings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `enable` and `disable`. Default value is `disable`.
+* `crawlerLineageSettings` - (Optional) Specifies whether data lineage is enabled for the crawler. Valid values are: `ENABLE` and `DISABLE`. Default value is `DISABLE`.
 
 ### Recrawl Policy
 
-* `recrawlBehavior` - (Optional) Specifies whether to crawl the entire dataset again, crawl only folders that were added since the last crawler run, or crawl what S3 notifies the crawler of via SQS. Valid Values are: `crawlEventMode`, `crawlEverything` and `crawlNewFoldersOnly`. Default value is `crawlEverything`.
+* `recrawlBehavior` - (Optional) Specifies whether to crawl the entire dataset again, crawl only folders that were added since the last crawler run, or crawl what S3 notifies the crawler of via SQS. Valid Values are: `CRAWL_EVENT_MODE`, `CRAWL_EVERYTHING` and `CRAWL_NEW_FOLDERS_ONLY`. Default value is `CRAWL_EVERYTHING`.
 
 ## Attribute Reference
 
@@ -334,9 +335,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { GlueCrawler } from "./.gen/providers/aws/glue-crawler";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    GlueCrawler.generateConfigForImport(this, "myJob", "MyJob");
   }
 }
 
@@ -348,4 +355,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0fe79636a772df56c0c70d645742fc1288237ce3dba667ec68c68bad3a10b2a6 -->
+<!-- cache-key: cdktf-0.20.1 input-0df369bee2ab9f48ca2abe5fa0e864a1921bff66fc146728b45e061f21763933 -->

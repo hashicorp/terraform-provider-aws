@@ -7,6 +7,12 @@ on:
       - 'release/**'
   pull_request_target:
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 jobs:
   community_check:
     if: github.event_name == 'pull_request_target'
@@ -22,7 +28,7 @@ jobs:
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
-      - uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50 # v2.11.1
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         if: needs.community_check.outputs.maintainer == 'false'
         id: filter
         with:
@@ -40,7 +46,7 @@ jobs:
     steps:
       - name: Find Existing PR Comment
         id: prc
-        uses: peter-evans/find-comment@a54c31d7fa095754bfef525c0c8e5e5674c4b4b1 # v2.4.0
+        uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
@@ -48,7 +54,7 @@ jobs:
       - run: echo ${{ steps.prc.outputs.comment-id }}
       - name: PR Comment
         if: steps.prc.outputs.comment-id == ''
-        uses: peter-evans/create-or-update-comment@c6c9a1a66007646a28c153e2a8580a5bad27bcfa # v3.0.2
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -63,20 +69,18 @@ jobs:
             * Check [open pull requests with the `dependencies` label](https://github.com/hashicorp/terraform-provider-aws/pulls?q=is%3Aopen+is%3Apr+label%3Adependencies) to view other dependency updates.
             * If this pull request includes an update the AWS Go SDK (or any other dependency) version, only updates submitted via dependabot will be merged. This pull request will need to remove these changes and will need to be rebased after the existing dependency update via dependabot has been merged for this pull request to be reviewed.
             * If this pull request is for supporting a new AWS service:
-              * Ensure the new AWS service changes are following the [Contributing Guide section on new services](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#new-service), in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
+              * Ensure the new AWS service changes are following the [Contributing Guide section on new services](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/add-a-new-service.md), in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
               * If this pull request is already a separate pull request from the above item, you can ignore this message.
 
   go_mod:
     name: go mod
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
-          go-version-file: go.mod
+          go-version-file: .go-version
       - name: go mod
         run: |
-          echo "==> Checking source code with go mod tidy..."
-          go mod tidy
-          git diff --exit-code -- go.mod go.sum || \
-            (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+          echo "Using make to check dependencies"
+          make deps-check

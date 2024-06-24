@@ -4,12 +4,16 @@
 package guardduty_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationConfiguration_basic(t *testing.T) {
@@ -21,19 +25,19 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// GuardDuty Organization Configuration cannot be deleted separately.
-		// Ensure parent resource is destroyed instead.
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NEW"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 			{
@@ -44,9 +48,10 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 		},
@@ -62,19 +67,19 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// GuardDuty Organization Configuration cannot be deleted separately.
-		// Ensure parent resource is destroyed instead.
-		CheckDestroy: testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("ALL"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 			{
@@ -85,67 +90,47 @@ func testAccOrganizationConfiguration_autoEnableOrganizationMembers(t *testing.T
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("NONE"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("ALL"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NEW"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers("NONE"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_organization_members", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -160,19 +145,21 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_s3Logs(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 			{
@@ -183,11 +170,12 @@ func testAccOrganizationConfiguration_s3logs(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_s3Logs(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.auto_enable", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 		},
@@ -203,20 +191,22 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_kubernetes(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 			{
@@ -227,12 +217,13 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_kubernetes(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 		},
@@ -248,21 +239,23 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDetectorDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_malwareprotection(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.auto_enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 			{
@@ -273,20 +266,36 @@ func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_malwareprotection(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.auto_enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.auto_enable", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-const testAccOrganizationConfigurationConfigBase = `
+func testAccCheckOrganizationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+
+		_, err := tfguardduty.FindOrganizationConfigurationByID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+const testAccOrganizationConfigurationConfig_base = `
 data "aws_caller_identity" "current" {}
 
 data "aws_partition" "current" {}
@@ -310,9 +319,7 @@ resource "aws_guardduty_organization_admin_account" "test" {
 `
 
 func testAccOrganizationConfigurationConfig_autoEnable(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -323,9 +330,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_autoEnableOrganizationMembers(value string) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -336,9 +341,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_s3Logs(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -355,9 +358,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_kubernetes(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 
@@ -376,9 +377,7 @@ resource "aws_guardduty_organization_configuration" "test" {
 }
 
 func testAccOrganizationConfigurationConfig_malwareprotection(autoEnable bool) string {
-	return acctest.ConfigCompose(
-		testAccOrganizationConfigurationConfigBase,
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccOrganizationConfigurationConfig_base, fmt.Sprintf(`
 resource "aws_guardduty_organization_configuration" "test" {
   depends_on = [aws_guardduty_organization_admin_account.test]
 

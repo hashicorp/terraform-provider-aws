@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package elasticache
+package elasticache_test
 
 import (
 	"fmt"
@@ -11,6 +11,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidMemcachedVersionString(t *testing.T) {
@@ -41,7 +44,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: "1",
+			version: acctest.Ct1,
 			valid:   false,
 		},
 		{
@@ -59,7 +62,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			warnings, errors := validMemcachedVersionString(testcase.version, "key")
+			warnings, errors := tfelasticache.ValidMemcachedVersionString(testcase.version, names.AttrKey)
 
 			if l := len(warnings); l != 0 {
 				t.Errorf("expected no warnings, got %d", l)
@@ -186,7 +189,7 @@ func TestValidRedisVersionString(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			warnings, errors := validRedisVersionString(testcase.version, "key")
+			warnings, errors := tfelasticache.ValidRedisVersionString(testcase.version, names.AttrKey)
 
 			if l := len(warnings); l != 0 {
 				t.Errorf("expected no warnings, got %d", l)
@@ -238,43 +241,43 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 		},
 
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "1.2.3",
 			valid:   true,
 		},
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "6.x",
 			valid:   false,
 		},
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "6.0",
 			valid:   false,
 		},
 		{
-			engine:  engineMemcached,
+			engine:  tfelasticache.EngineMemcached,
 			version: "7.0",
 			valid:   false,
 		},
 
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "1.2.3",
 			valid:   true,
 		},
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "6.x",
 			valid:   true,
 		},
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "6.0",
 			valid:   true,
 		},
 		{
-			engine:  engineRedis,
+			engine:  tfelasticache.EngineRedis,
 			version: "7.0",
 			valid:   true,
 		},
@@ -284,7 +287,7 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 		testcase := testcase
 		t.Run(fmt.Sprintf("%s %s", testcase.engine, testcase.version), func(t *testing.T) {
 			t.Parallel()
-			err := validateClusterEngineVersion(testcase.engine, testcase.version)
+			err := tfelasticache.ValidateClusterEngineVersion(testcase.engine, testcase.version)
 
 			if testcase.valid {
 				if err != nil {
@@ -303,87 +306,85 @@ type mockGetChangeDiffer struct {
 	old, new string
 }
 
-func (d *mockGetChangeDiffer) GetChange(key string) (interface{}, interface{}) {
+func (d *mockGetChangeDiffer) GetChange(key string) (any, any) {
 	return d.old, d.new
+}
+
+func (d *mockGetChangeDiffer) Get(key string) any {
+	return ""
 }
 
 func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		old, new string
-		expected bool
+		old, new    string
+		isDowngrade bool
 	}{
 		"no change": {
-			old:      "1.2.3",
-			new:      "1.2.3",
-			expected: false,
+			old:         "1.2.3",
+			new:         "1.2.3",
+			isDowngrade: false,
 		},
 
 		"upgrade minor versions": {
-			old:      "1.2.3",
-			new:      "1.3.5",
-			expected: false,
+			old:         "1.2.3",
+			new:         "1.3.5",
+			isDowngrade: false,
 		},
 
 		"upgrade major versions": {
-			old:      "1.2.3",
-			new:      "2.4.6",
-			expected: false,
+			old:         "1.2.3",
+			new:         "2.4.6",
+			isDowngrade: false,
 		},
 
 		"upgrade major 6.x": {
-			old:      "5.0.6",
-			new:      "6.x",
-			expected: false,
+			old:         "5.0.6",
+			new:         "6.x",
+			isDowngrade: false,
 		},
 
 		"upgrade major 6.digit": {
-			old:      "5.0.6",
-			new:      "6.0",
-			expected: false,
+			old:         "5.0.6",
+			new:         "6.0",
+			isDowngrade: false,
 		},
 
 		"downgrade minor versions": {
-			old:      "1.3.5",
-			new:      "1.2.3",
-			expected: true,
+			old:         "1.3.5",
+			new:         "1.2.3",
+			isDowngrade: true,
 		},
 
 		"downgrade major versions": {
-			old:      "2.4.6",
-			new:      "1.2.3",
-			expected: true,
-		},
-
-		"downgrade from major 6.x": {
-			old:      "6.x",
-			new:      "5.0.6",
-			expected: true,
+			old:         "2.4.6",
+			new:         "1.2.3",
+			isDowngrade: true,
 		},
 
 		"downgrade major 6.digit": {
-			old:      "6.2",
-			new:      "6.0",
-			expected: true,
+			old:         "6.2",
+			new:         "6.0",
+			isDowngrade: true,
 		},
 
 		"switch major 6.digit to 6.x": {
-			old:      "6.2",
-			new:      "6.x",
-			expected: false,
+			old:         "6.2",
+			new:         "6.x",
+			isDowngrade: false,
 		},
 
 		"downgrade from major 7.digit to 6.x": {
-			old:      "7.2",
-			new:      "6.x",
-			expected: true,
+			old:         "7.2",
+			new:         "6.x",
+			isDowngrade: true,
 		},
 
 		"downgrade from major 7.digit to 6.digit": {
-			old:      "7.2",
-			new:      "6.2",
-			expected: true,
+			old:         "7.2",
+			new:         "6.2",
+			isDowngrade: true,
 		},
 	}
 
@@ -397,14 +398,90 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 				new: testcase.new,
 			}
 
-			actual, err := engineVersionIsDowngrade(diff)
+			actual, err := tfelasticache.EngineVersionIsDowngrade(diff)
 
 			if err != nil {
 				t.Fatalf("no error expected, got %s", err)
 			}
 
-			if testcase.expected != actual {
-				t.Errorf("expected %t, got %t", testcase.expected, actual)
+			if testcase.isDowngrade != actual {
+				t.Errorf("expected %t, got %t", testcase.isDowngrade, actual)
+			}
+		})
+	}
+}
+
+func TestCustomizeDiffEngineVersionIsDowngrade_6xTo6digit(t *testing.T) {
+	t.Parallel()
+
+	// Version 6.x currently maps to v6.2. In case that changes, we need to check
+	testcases := map[string]struct {
+		versionOld       string
+		actualVersionOld string
+		versionNew       string
+		isDowngrade      bool
+	}{
+		"minor downgrade to 6.0": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "6.0",
+			isDowngrade:      true,
+		},
+
+		"same version": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "6.2",
+			isDowngrade:      false,
+		},
+
+		"minor upgrade": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "6.4",
+			isDowngrade:      false,
+		},
+
+		"major downgrade from 6.x": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "5.0.6",
+			isDowngrade:      true,
+		},
+
+		"major upgrade from 6.x": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "7.0",
+			isDowngrade:      false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		testcase := testcase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diff := mockChangesDiffer{
+				values: map[string]mockDiff{
+					names.AttrEngineVersion: {
+						old: testcase.versionOld,
+						new: testcase.versionNew,
+					},
+					"engine_version_actual": {
+						old: testcase.actualVersionOld,
+					},
+				},
+			}
+
+			actual, err := tfelasticache.EngineVersionIsDowngrade(&diff)
+
+			if err != nil {
+				t.Fatalf("no error expected, got %s", err)
+			}
+
+			if testcase.isDowngrade != actual {
+				t.Errorf("expected %t, got %t", testcase.isDowngrade, actual)
 			}
 		})
 	}
@@ -421,11 +498,15 @@ func (d *mockForceNewDiffer) Id() string {
 	return d.id
 }
 
+func (d *mockForceNewDiffer) Get(key string) any {
+	return d.old
+}
+
 func (d *mockForceNewDiffer) HasChange(key string) bool {
 	return d.hasChange || d.old != d.new
 }
 
-func (d *mockForceNewDiffer) GetChange(key string) (interface{}, interface{}) {
+func (d *mockForceNewDiffer) GetChange(key string) (any, any) {
 	return d.old, d.new
 }
 
@@ -487,7 +568,7 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 		},
 
 		"upgrade major 7.digit": {
-			old:            "6.x",
+			old:            "6.2",
 			new:            "7.0",
 			expectForceNew: false,
 		},
@@ -501,12 +582,6 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 		"downgrade major versions": {
 			old:            "2.4.6",
 			new:            "1.2.3",
-			expectForceNew: true,
-		},
-
-		"downgrade from major 6.x": {
-			old:            "6.x",
-			new:            "5.0.6",
 			expectForceNew: true,
 		},
 
@@ -554,7 +629,7 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 			}
 			diff.hasChange = testcase.hasChange
 
-			err := engineVersionForceNewOnDowngrade(diff)
+			err := tfelasticache.EngineVersionForceNewOnDowngrade(diff)
 
 			if err != nil {
 				t.Fatalf("no error expected, got %s", err)
@@ -616,7 +691,7 @@ func TestNormalizeEngineVersion(t *testing.T) {
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
-			version, err := normalizeEngineVersion(testcase.version)
+			version, err := tfelasticache.NormalizeEngineVersion(testcase.version)
 
 			if testcase.valid {
 				if err != nil {
@@ -640,15 +715,15 @@ func TestVersionDiff(t *testing.T) {
 	cases := []struct {
 		v1       string
 		v2       string
-		expected versionDiff
+		expected tfelasticache.VersionDiff
 	}{
-		{"1.2.3", "1.2.3", versionDiff{0, 0, 0}},
-		{"1.2.3", "1.1.7", versionDiff{0, 1, 0}},
-		{"1.2.3", "1.4.5", versionDiff{0, -1, 0}},
-		{"2.0.0", "1.2.3", versionDiff{1, 0, 0}},
-		{"1.2.3", "2.0.0", versionDiff{-1, 0, 0}},
-		{"1.2.3", "1.2.1", versionDiff{0, 0, 1}},
-		{"1.2.3", "1.2.4", versionDiff{0, 0, -1}},
+		{"1.2.3", "1.2.3", tfelasticache.VersionDiff{0, 0, 0}},
+		{"1.2.3", "1.1.7", tfelasticache.VersionDiff{0, 1, 0}},
+		{"1.2.3", "1.4.5", tfelasticache.VersionDiff{0, -1, 0}},
+		{"2.0.0", "1.2.3", tfelasticache.VersionDiff{1, 0, 0}},
+		{"1.2.3", "2.0.0", tfelasticache.VersionDiff{-1, 0, 0}},
+		{"1.2.3", "1.2.1", tfelasticache.VersionDiff{0, 0, 1}},
+		{"1.2.3", "1.2.4", tfelasticache.VersionDiff{0, 0, -1}},
 	}
 
 	for _, tc := range cases {
@@ -662,7 +737,7 @@ func TestVersionDiff(t *testing.T) {
 			t.Fatalf("err: %s", err)
 		}
 
-		actual := diffVersion(v1, v2)
+		actual := tfelasticache.DiffVersion(v1, v2)
 		expected := tc.expected
 		if actual != expected {
 			t.Fatalf(
@@ -678,11 +753,15 @@ type mockDiff struct {
 	hasChange bool // force HasChange() to return true
 }
 
+func (d mockDiff) Get() any {
+	return d.old
+}
+
 func (d mockDiff) HasChange() bool {
 	return d.hasChange || d.old != d.new
 }
 
-func (d mockDiff) GetChange() (interface{}, interface{}) {
+func (d mockDiff) GetChange() (any, any) {
 	return d.old, d.new
 }
 
@@ -695,11 +774,23 @@ func (d *mockChangesDiffer) Id() string {
 	return d.id
 }
 
+func (d *mockChangesDiffer) Get(key string) any {
+	return d.values[key].Get()
+}
+
+func (d *mockChangesDiffer) GetOk(string) (any, bool) {
+	return nil, false
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
 }
 
-func (d *mockChangesDiffer) GetChange(key string) (interface{}, interface{}) {
+func (d *mockChangesDiffer) HasChanges(...string) bool {
+	return false
+}
+
+func (d *mockChangesDiffer) GetChange(key string) (any, any) {
 	return d.values[key].GetChange()
 }
 
@@ -788,12 +879,12 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 
 			diff := &mockChangesDiffer{
 				values: map[string]mockDiff{
-					"parameter_group_name": {
+					names.AttrParameterGroupName: {
 						old:       testcase.paramOld,
 						new:       testcase.paramNew,
 						hasChange: testcase.paramHasChange,
 					},
-					"engine_version": {
+					names.AttrEngineVersion: {
 						old:       testcase.versionOld,
 						new:       testcase.versionNew,
 						hasChange: testcase.versionHasChange,
@@ -804,7 +895,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 				diff.id = "some id"
 			}
 
-			err := paramGroupNameRequiresMajorVersionUpgrade(diff)
+			err := tfelasticache.ParamGroupNameRequiresMajorVersionUpgrade(diff)
 
 			if testcase.expectError == nil {
 				if err != nil {

@@ -6,7 +6,8 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -56,8 +57,12 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 	stateTags := make(map[string]string)
 	if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
 		s := state.GetAttr(names.AttrTagsAll)
-		for k, v := range s.AsValueMap() {
-			stateTags[k] = v.AsString()
+		if !s.IsNull() {
+			for k, v := range s.AsValueMap() {
+				if !v.IsNull() {
+					stateTags[k] = v.AsString()
+				}
+			}
 		}
 	}
 
@@ -79,6 +84,11 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 		UpdateTags(context.Context, any, string, string, any, any) error
 	}); ok && spt.ResourceType != "" {
 		err = v.UpdateTags(ctx, meta, identifier, spt.ResourceType, oldTags, newTags)
+	} else {
+		tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+			"ServicePackage": sp.ServicePackageName(),
+			"ResourceType":   spt.ResourceType,
+		})
 	}
 
 	// ISO partitions may not support tagging, giving error.
@@ -123,6 +133,11 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 			ListTags(context.Context, any, string, string) error
 		}); ok && spt.ResourceType != "" {
 			err = v.ListTags(ctx, meta, identifier, spt.ResourceType) // Sets tags in Context
+		} else {
+			tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+				"ServicePackage": sp.ServicePackageName(),
+				"ResourceType":   spt.ResourceType,
+			})
 		}
 
 		// ISO partitions may not support tagging, giving error.

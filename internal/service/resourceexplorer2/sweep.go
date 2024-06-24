@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package resourceexplorer2
 
 import (
@@ -16,9 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_resourceexplorer2_index", &resource.Sweeper{
 		Name: "aws_resourceexplorer2_index",
 		F:    sweepIndexes,
@@ -50,7 +48,7 @@ func sweepIndexes(region string) error {
 
 		for _, v := range page.Indexes {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIndex, client,
-				framework.NewAttribute("id", aws.ToString(v.Arn)),
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn)),
 			))
 		}
 	}

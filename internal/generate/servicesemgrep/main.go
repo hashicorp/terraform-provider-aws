@@ -20,7 +20,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 //go:embed semgrep_header.tmpl
@@ -61,7 +61,6 @@ func main() {
 		filename        = `../../../.ci/.semgrep-service-name.yml`
 		filenameCAE     = `../../../.ci/.semgrep-caps-aws-ec2.yml`
 		filenameConfigs = `../../../.ci/.semgrep-configs.yml`
-		namesDataFile   = "../../../names/names_data.csv"
 		capsDataFile    = "../../../names/caps.csv"
 	)
 	g := common.NewGenerator()
@@ -101,73 +100,59 @@ func main() {
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() && l.AllowedSubcategory() == "" {
 			continue
 		}
 
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		rp := p
 
-		if l[names.ColSplitPackageRealPackage] != "" {
-			rp = l[names.ColSplitPackageRealPackage]
+		if l.SplitPackageRealPackage() != "" {
+			rp = l.SplitPackageRealPackage()
 		}
 
 		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
-		if l[names.ColAliases] != "" {
-			for _, v := range strings.Split(l[names.ColAliases], ";") {
-				if strings.ToLower(v) == "es" {
-					continue // "es" is too short to usefully grep
-				}
-
-				if strings.ToLower(v) == "config" {
-					continue // "config" is too ubiquitous
-				}
-
-				sd := ServiceDatum{
-					ProviderPackage: rp,
-					ServiceAlias:    v,
-					LowerAlias:      strings.ToLower(v),
-					MainAlias:       false,
-				}
-
-				td.Services = append(td.Services, sd)
+		for _, v := range l.Aliases() {
+			if strings.ToLower(v) == "es" {
+				continue // "es" is too short to usefully grep
 			}
+
+			if strings.ToLower(v) == "config" {
+				continue // "config" is too ubiquitous
+			}
+
+			sd := ServiceDatum{
+				ProviderPackage: rp,
+				ServiceAlias:    v,
+				LowerAlias:      strings.ToLower(v),
+				MainAlias:       false,
+			}
+
+			td.Services = append(td.Services, sd)
 		}
 
 		sd := ServiceDatum{
 			ProviderPackage: rp,
-			ServiceAlias:    l[names.ColProviderNameUpper],
+			ServiceAlias:    l.ProviderNameUpper(),
 			LowerAlias:      strings.ToLower(p),
 			MainAlias:       true,
 		}
 
-		if l[names.ColFilePrefix] != "" {
-			sd.FilePrefix = l[names.ColFilePrefix]
+		if l.FilePrefix() != "" {
+			sd.FilePrefix = l.FilePrefix()
 		}
 
 		td.Services = append(td.Services, sd)

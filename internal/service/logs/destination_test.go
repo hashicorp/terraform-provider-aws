@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
+	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResourceName := "aws_kinesis_stream.test.0"
 	roleResourceName := "aws_iam_role.test.0"
@@ -29,7 +30,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,10 +38,10 @@ func TestAccLogsDestination_basic(t *testing.T) {
 				Config: testAccDestinationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexache.MustCompile(`destination:.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "logs", regexache.MustCompile(`destination:.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -54,13 +55,13 @@ func TestAccLogsDestination_basic(t *testing.T) {
 
 func TestAccLogsDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
+	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,55 +77,9 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLogsDestination_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
-	resourceName := "aws_cloudwatch_log_destination.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDestinationConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDestinationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccDestinationConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccLogsDestination_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
+	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResource1Name := "aws_kinesis_stream.test.0"
 	roleResource1Name := "aws_iam_role.test.0"
@@ -134,7 +89,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,9 +97,9 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Config: testAccDestinationConfig_update(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource1Name, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource1Name, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
 			},
 			{
@@ -156,39 +111,39 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Config: testAccDestinationConfig_update(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource2Name, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource2Name, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 0, "key1", "value1"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 0, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource1Name, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource1Name, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource2Name, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource2Name, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1updated"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResource2Name, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResource2Name, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
 		},
@@ -197,7 +152,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 
 func testAccCheckDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_destination" {
@@ -220,18 +175,14 @@ func testAccCheckDestinationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckDestinationExists(ctx context.Context, n string, v *cloudwatchlogs.Destination) resource.TestCheckFunc {
+func testAccCheckDestinationExists(ctx context.Context, n string, v *types.Destination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch Logs Destination ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		output, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
 
@@ -329,39 +280,6 @@ resource "aws_cloudwatch_log_destination" "test" {
   depends_on = [aws_iam_role_policy.test[0]]
 }
 `, rName))
-}
-
-func testAccDestinationConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 1), fmt.Sprintf(`
-resource "aws_cloudwatch_log_destination" "test" {
-  name       = %[1]q
-  target_arn = aws_kinesis_stream.test[0].arn
-  role_arn   = aws_iam_role.test[0].arn
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  depends_on = [aws_iam_role_policy.test[0]]
-}
-`, rName, tag1Key, tag1Value))
-}
-
-func testAccDestinationConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccDestinationConfig_base(rName, 1), fmt.Sprintf(`
-resource "aws_cloudwatch_log_destination" "test" {
-  name       = %[1]q
-  target_arn = aws_kinesis_stream.test[0].arn
-  role_arn   = aws_iam_role.test[0].arn
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  depends_on = [aws_iam_role_policy.test[0]]
-}
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value))
 }
 
 func testAccDestinationConfig_update(rName string, idx int) string {

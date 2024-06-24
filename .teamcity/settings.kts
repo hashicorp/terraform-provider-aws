@@ -11,7 +11,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-version = "2023.05"
+version = "2024.03"
 
 val defaultRegion = DslContext.getParameter("default_region")
 val alternateRegion = DslContext.getParameter("alternate_region", "")
@@ -54,11 +54,15 @@ project {
         buildType(Sweeper)
     }
 
+    buildType(Sanity)
+    buildType(Performance)
+
     params {
         if (acctestParallelism != "") {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
         }
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
+        text("TEST_EXCLUDE_PATTERN", "", display = ParameterDisplay.HIDDEN)
         text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
@@ -442,7 +446,7 @@ object Sweeper : BuildType({
                     branchFilter = "+:refs/heads/main"
                     triggerBuild = always()
                     withPendingChangesOnly = false
-                    enableQueueOptimization = false
+                    enableQueueOptimization = true
                     enforceCleanCheckoutForDependencies = true
                 }
             }
@@ -489,6 +493,183 @@ object Sweeper : BuildType({
                 buildFinishedSuccessfully = true
                 firstBuildErrorOccurs = true
             }
+        }
+    }
+})
+
+object Sanity : BuildType({
+    name = "Sanity"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        ConfigureGoEnv()
+        script {
+            name = "IAM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Logs"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "EC2"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "ECS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "ELBv2"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "KMS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "IAM"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Lambda"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Meta"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Route53"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "S3"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "Secrets Manager"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }
+        script {
+            name = "STS"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }  
+        script {
+            name = "Report Success"
+            scriptContent = File("./scripts/sanity.sh").readText()
+        }    
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("sanity_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
+        }
+    }
+})
+
+object Performance : BuildType({
+    name = "Performance"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        script {
+            name = "Configure Go"
+            scriptContent = File("./scripts/configure_goenv.sh").readText()
+        }
+        script {
+            name = "VPC Main"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "SSM Main"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "VPC Latest Version"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "SSM Latest Version"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+        script {
+            name = "Analysis"
+            scriptContent = File("./scripts/performance.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("performance_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        val enableTestTriggersGlobally = DslContext.getParameter("enable_test_triggers_globally", "true").equals("true", ignoreCase = true)
+        if (enableTestTriggersGlobally) {
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        val triggerHM = LocalTime.from(triggerTime)
+                        hour = triggerHM.getHour()
+                        minute = triggerHM.getMinute()
+                        timezone = ZoneId.from(triggerTime).toString()
+                    }
+                    branchFilter = "+:refs/heads/main"
+                    triggerBuild = always()
+                    withPendingChangesOnly = false
+                    enableQueueOptimization = true
+                    enforceCleanCheckoutForDependencies = true
+                }
+            }
+        }
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
         }
     }
 })

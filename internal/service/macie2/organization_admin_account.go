@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -39,6 +40,8 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
@@ -66,18 +69,18 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("creating Macie OrganizationAdminAccount: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Macie OrganizationAdminAccount: %s", err)
 	}
 
 	d.SetId(adminAccountID)
 
-	return resourceOrganizationAdminAccountRead(ctx, d, meta)
+	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+	var diags diag.Diagnostics
 
-	var err error
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	res, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
 
@@ -85,29 +88,31 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
 
 	if res == nil {
 		if !d.IsNewResource() {
 			log.Printf("[WARN] Macie OrganizationAdminAccount (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return diag.FromErr(&retry.NotFoundError{})
+		return sdkdiag.AppendFromErr(diags, &retry.NotFoundError{})
 	}
 
 	d.Set("admin_account_id", res.AccountId)
 
-	return nil
+	return diags
 }
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisableOrganizationAdminAccountInput{
@@ -118,11 +123,11 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.Errorf("deleting Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Macie OrganizationAdminAccount (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func GetOrganizationAdminAccount(ctx context.Context, conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {

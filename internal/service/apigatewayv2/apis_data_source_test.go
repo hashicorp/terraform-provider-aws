@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
@@ -20,17 +20,17 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIsDataSourceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -44,17 +44,17 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIsDataSourceConfig_protocolType(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -69,18 +69,18 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIsDataSourceConfig_tags(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
-					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", acctest.Ct0),
 				),
 			},
 		},

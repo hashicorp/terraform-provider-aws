@@ -50,6 +50,16 @@ func TestExpandFrameworkStringMap(t *testing.T) {
 			}),
 			expected: nil,
 		},
+		"null element": {
+			input: types.MapValueMust(types.StringType, map[string]attr.Value{
+				"one": types.StringValue("GET"),
+				"two": types.StringNull(),
+			}),
+			expected: map[string]*string{
+				"one": aws.String("GET"),
+				"two": nil,
+			},
+		},
 	}
 
 	for name, test := range tests {

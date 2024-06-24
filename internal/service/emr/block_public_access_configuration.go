@@ -14,11 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_emr_block_public_access_configuration")
-func ResourceBlockPublicAccessConfiguration() *schema.Resource {
+// @SDKResource("aws_emr_block_public_access_configuration", name="Block Public Access Configuration")
+func resourceBlockPublicAccessConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBlockPublicAccessConfigurationCreate,
 		ReadWithoutTimeout:   resourceBlockPublicAccessConfigurationRead,
@@ -64,6 +65,8 @@ const (
 )
 
 func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	blockPublicAccessConfiguration := &emr.BlockPublicAccessConfiguration{}
@@ -80,31 +83,35 @@ func resourceBlockPublicAccessConfigurationCreate(ctx context.Context, d *schema
 
 	_, err := conn.PutBlockPublicAccessConfigurationWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.EMR, create.ErrActionCreating, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.EMR, create.ErrActionCreating, ResNameBlockPublicAccessConfiguration, d.Id(), err)
 	}
 	d.SetId(dummyIDBlockPublicAccessConfiguration)
 
-	return resourceBlockPublicAccessConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBlockPublicAccessConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	out, err := FindBlockPublicAccessConfiguration(ctx, conn)
+	out, err := findBlockPublicAccessConfiguration(ctx, conn)
 
 	if err != nil {
-		return create.DiagError(names.EMR, create.ErrActionReading, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.EMR, create.ErrActionReading, ResNameBlockPublicAccessConfiguration, d.Id(), err)
 	}
 
 	d.Set("block_public_security_group_rules", out.BlockPublicAccessConfiguration.BlockPublicSecurityGroupRules)
 	if err := d.Set("permitted_public_security_group_rule_range", flattenPermittedPublicSecurityGroupRuleRanges(out.BlockPublicAccessConfiguration.PermittedPublicSecurityGroupRuleRanges)); err != nil {
-		return create.DiagError(names.EMR, create.ErrActionSetting, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.EMR, create.ErrActionSetting, ResNameBlockPublicAccessConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	log.Print("[INFO] Restoring EMR Block Public Access Configuration to default settings")
@@ -116,10 +123,24 @@ func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema
 
 	_, err := conn.PutBlockPublicAccessConfigurationWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.EMR, create.ErrActionDeleting, ResNameBlockPublicAccessConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.EMR, create.ErrActionDeleting, ResNameBlockPublicAccessConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findBlockPublicAccessConfiguration(ctx context.Context, conn *emr.EMR) (*emr.GetBlockPublicAccessConfigurationOutput, error) {
+	input := &emr.GetBlockPublicAccessConfigurationInput{}
+	output, err := conn.GetBlockPublicAccessConfigurationWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.BlockPublicAccessConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func findDefaultBlockPublicAccessConfiguration() *emr.BlockPublicAccessConfiguration {

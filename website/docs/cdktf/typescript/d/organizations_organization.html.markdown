@@ -113,6 +113,7 @@ This data source exports the following attributes in addition to the arguments a
 * `masterAccountArn` - ARN of the account that is designated as the master account for the organization.
 * `masterAccountEmail` - The email address that is associated with the AWS account that is designated as the master account for the organization.
 * `masterAccountId` - Unique identifier (ID) of the master account of an organization.
+* `masterAccountName` - Name of the master account of an organization.
 
 ### Master Account or Delegated Administrator Attribute Reference
 
@@ -124,8 +125,8 @@ If the account is the master account or a delegated administrator for the organi
     * `id` - Identifier of the account
     * `name` - Name of the account
     * `status` - Status of the account
-* `awsServiceAccessPrincipals` - A list of AWS service principal names that have integration enabled with your organization. Organization must have `featureSet` set to `all`. For additional information, see the [AWS Organizations User Guide](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html).
-* `enabledPolicyTypes` - A list of Organizations policy types that are enabled in the Organization Root. Organization must have `featureSet` set to `all`. For additional information about valid policy types (e.g., `serviceControlPolicy`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
+* `awsServiceAccessPrincipals` - A list of AWS service principal names that have integration enabled with your organization. Organization must have `featureSet` set to `ALL`. For additional information, see the [AWS Organizations User Guide](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html).
+* `enabledPolicyTypes` - A list of Organizations policy types that are enabled in the Organization Root. Organization must have `featureSet` set to `ALL`. For additional information about valid policy types (e.g., `SERVICE_CONTROL_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
 * `nonMasterAccounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account
     * `email` - Email of the account
@@ -136,8 +137,8 @@ If the account is the master account or a delegated administrator for the organi
     * `arn` - ARN of the root
     * `id` - Identifier of the root
     * `name` - Name of the root
-    * `policyTypes` - List of policy types enabled for this root. All elements have these attributes:
+    * `policy_types` - List of policy types enabled for this root. All elements have these attributes:
         * `name` - The name of the policy type
         * `status` - The status of the policy type as it relates to the associated root
 
-<!-- cache-key: cdktf-0.18.0 input-4e6e30bcec5e05a330427cb7ef2a21c714b5908caa1af760eadc9537632c8f92 -->
+<!-- cache-key: cdktf-0.20.1 input-3f9a5e0bb85e9f8cdd8dcfa0c9353de9ba55a603cd7bf0529bbfabb7df52d6fd -->

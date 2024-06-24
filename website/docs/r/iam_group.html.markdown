@@ -32,7 +32,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The group's ID.
+* `id` - The group's name.
 * `arn` - The ARN assigned by AWS for this group.
 * `name` - The group's name.
 * `path` - The path of the group in IAM.

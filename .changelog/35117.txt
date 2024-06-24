@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_secretsmanager_secret: Add `created_date` and `last_changed_date` attributes
+```
+
+```release-note:enhancement
+data-source/aws_secretsmanager_secret_version: Add `created_date` attribute
+```

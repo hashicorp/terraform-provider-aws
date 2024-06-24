@@ -5,7 +5,6 @@ package efs
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -14,7 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_efs_file_system")
@@ -23,7 +25,7 @@ func DataSourceFileSystem() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,20 +43,20 @@ func DataSourceFileSystem() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,6 +65,10 @@ func DataSourceFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"transition_to_archive": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"transition_to_ia": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -74,13 +80,25 @@ func DataSourceFileSystem() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"performance_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"protection": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replication_overwrite": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"provisioned_throughput_in_mibps": {
 				Type:     schema.TypeFloat,
@@ -90,7 +108,7 @@ func DataSourceFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"throughput_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -104,69 +122,52 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	describeEfsOpts := &efs.DescribeFileSystemsInput{}
+	input := &efs.DescribeFileSystemsInput{}
 
 	if v, ok := d.GetOk("creation_token"); ok {
-		describeEfsOpts.CreationToken = aws.String(v.(string))
+		input.CreationToken = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("file_system_id"); ok {
-		describeEfsOpts.FileSystemId = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
+		input.FileSystemId = aws.String(v.(string))
 	}
 
-	describeResp, err := conn.DescribeFileSystemsWithContext(ctx, describeEfsOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: %s", err)
-	}
+	filter := tfslices.PredicateTrue[*efs.FileSystemDescription]()
 
-	if describeResp == nil || len(describeResp.FileSystems) == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: empty output")
-	}
-
-	results := describeResp.FileSystems
-
-	if len(tagsToMatch) > 0 {
-		var fileSystems []*efs.FileSystemDescription
-
-		for _, fileSystem := range describeResp.FileSystems {
-			tags := KeyValueTags(ctx, fileSystem.Tags)
-
-			if !tags.ContainsAll(tagsToMatch) {
-				continue
-			}
-
-			fileSystems = append(fileSystems, fileSystem)
+	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+		filter = func(v *efs.FileSystemDescription) bool {
+			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
-
-		results = fileSystems
 	}
 
-	if count := len(results); count != 1 {
-		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", count)
+	fs, err := findFileSystem(ctx, conn, input, filter)
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS file system", err))
 	}
 
-	fs := results[0]
-
-	d.SetId(aws.StringValue(fs.FileSystemId))
-	d.Set("arn", fs.FileSystemArn)
+	fsID := aws.StringValue(fs.FileSystemId)
+	d.SetId(fsID)
+	d.Set(names.AttrARN, fs.FileSystemArn)
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
-	d.Set("file_system_id", fs.FileSystemId)
-	d.Set("encrypted", fs.Encrypted)
-	d.Set("kms_key_id", fs.KmsKeyId)
-	d.Set("name", fs.Name)
+	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
+	d.Set(names.AttrFileSystemID, fsID)
+	d.Set(names.AttrEncrypted, fs.Encrypted)
+	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
+	d.Set(names.AttrName, fs.Name)
 	d.Set("performance_mode", fs.PerformanceMode)
+	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
+	}
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	if fs.SizeInBytes != nil {
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	if err := d.Set("tags", KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

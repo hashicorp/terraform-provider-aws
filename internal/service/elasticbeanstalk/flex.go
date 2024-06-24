@@ -4,10 +4,10 @@
 package elasticbeanstalk
 
 import (
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 )
 
-func flattenASG(list []*elasticbeanstalk.AutoScalingGroup) []string {
+func flattenASG(list []awstypes.AutoScalingGroup) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Name != nil {
@@ -17,7 +17,7 @@ func flattenASG(list []*elasticbeanstalk.AutoScalingGroup) []string {
 	return strs
 }
 
-func flattenLoadBalancers(list []*elasticbeanstalk.LoadBalancer) []string {
+func flattenLoadBalancers(list []awstypes.LoadBalancer) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Name != nil {
@@ -27,7 +27,7 @@ func flattenLoadBalancers(list []*elasticbeanstalk.LoadBalancer) []string {
 	return strs
 }
 
-func flattenInstances(list []*elasticbeanstalk.Instance) []string {
+func flattenInstances(list []awstypes.Instance) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Id != nil {
@@ -37,7 +37,7 @@ func flattenInstances(list []*elasticbeanstalk.Instance) []string {
 	return strs
 }
 
-func flattenLaunchConfigurations(list []*elasticbeanstalk.LaunchConfiguration) []string {
+func flattenLaunchConfigurations(list []awstypes.LaunchConfiguration) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Name != nil {
@@ -47,7 +47,7 @@ func flattenLaunchConfigurations(list []*elasticbeanstalk.LaunchConfiguration) [
 	return strs
 }
 
-func flattenQueues(list []*elasticbeanstalk.Queue) []string {
+func flattenQueues(list []awstypes.Queue) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.URL != nil {
@@ -57,7 +57,7 @@ func flattenQueues(list []*elasticbeanstalk.Queue) []string {
 	return strs
 }
 
-func flattenTriggers(list []*elasticbeanstalk.Trigger) []string {
+func flattenTriggers(list []awstypes.Trigger) []string {
 	strs := make([]string, 0, len(list))
 	for _, r := range list {
 		if r.Name != nil {

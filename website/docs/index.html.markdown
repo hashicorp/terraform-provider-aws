@@ -11,7 +11,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1248 resources and 513 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1380 resources and 560 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -68,7 +68,7 @@ which are applied in the following order:
 1. Shared credentials files
 1. Shared configuration files
 1. Container credentials
-1. Instance profile credentials and region
+1. Instance profile credentials and Region
 
 This order matches the precedence used by the
 [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-precedence)
@@ -110,7 +110,7 @@ Other settings related to authorization can be configured, such as:
 ### Environment Variables
 
 Credentials can be provided by using the `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and optionally `AWS_SESSION_TOKEN` environment variables.
-The region can be set using the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.
+The Region can be set using the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables.
 
 For example:
 
@@ -160,7 +160,7 @@ If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task
 
 If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform can use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
 
-### Instance profile credentials and region
+### Instance profile credentials and Region
 
 When the AWS Provider is running on an EC2 instance with an IAM Instance Profile set,
 the provider can source credentials from the [EC2 Instance Metadata Service](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#instance-metadata-security-credentials).
@@ -235,7 +235,9 @@ credential_process = custom-process --username jdoe
 |EC2 IMDS Endpoint |`ec2_metadata_service_endpoint`|`AWS_EC2_METADATA_SERVICE_ENDPOINT`|N/A|
 |EC2 IMDS Endpoint Mode|`ec2_metadata_service_endpoint_mode`|`AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE`|N/A|
 |Disable EC2 IMDS|`skip_metadata_api_check`|`AWS_EC2_METADATA_DISABLED`|N/A|
-|HTTP Proxy|`http_proxy`|`HTTP_PROXY` or `HTTPS_PROXY`|N/A|
+|HTTP Proxy|`http_proxy`|`HTTP_PROXY` or `http_proxy`|N/A|
+|HTTPS Proxy|`https_proxy`|`HTTPS_PROXY` or `https_proxy`|N/A|
+|Non-Proxied Hosts|`no_proxy`|`NO_PROXY` or `no_proxy`|N/A|
 |Max Retries|`max_retries`|`AWS_MAX_ATTEMPTS`|`max_attempts`|
 |Profile|`profile`|`AWS_PROFILE` or `AWS_DEFAULT_PROFILE`|N/A|
 |Retry Mode|`retry_mode`|`AWS_RETRY_MODE`|`retry_mode`|
@@ -245,27 +247,29 @@ credential_process = custom-process --username jdoe
 |Use DualStack Endpoints|`use_dualstack_endpoint`|`AWS_USE_DUALSTACK_ENDPOINT`|`use_dualstack_endpoint`|
 |Use FIPS Endpoints|`use_fips_endpoint`|`AWS_USE_FIPS_ENDPOINT`|`use_fips_endpoint`|
 
+[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
+[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+
 ### Assume Role Configuration Reference
 
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
+Note that environment variables are not supported for assuming IAM roles.
+
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|--------|-----------------------|
-|Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
-|Duration|`duration`|N/A|`duration_seconds`|
-|External ID|`external_id`|N/A|`external_id`|
-|Policy|`policy`|N/A|N/A|
-|Policy ARNs|`policy_arns`|N/A|N/A|
-|Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
-|Source Identity|`source_identity`|N/A|N/A|
-|Tags|`tags`|N/A|N/A|
-|Transitive Tag Keys|`transitive_tag_keys`|N/A|N/A|
-
-[envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
-[config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
+|Setting|Provider|[Shared Config][config]|
+|-------|--------|-----------------------|
+|Role ARN|`role_arn`|`role_arn`|
+|Duration|`duration`|`duration_seconds`|
+|External ID|`external_id`|`external_id`|
+|Policy|`policy`|N/A|
+|Policy ARNs|`policy_arns`|N/A|
+|Session Name|`session_name`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|
+|Tags|`tags`|N/A|
+|Transitive Tag Keys|`transitive_tag_keys`|N/A|
 
 ### Assume Role with Web Identity Configuration Reference
 
@@ -308,9 +312,16 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `default_tags` - (Optional) Configuration block with resource tag settings to apply across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed to replace redundant per-resource `tags` configurations. Provider tags can be overridden with new values, but not excluded from specific resources. To override provider tag values, use the `tags` argument within a resource to configure new tag values for matching keys. See the [`default_tags`](#default_tags-configuration-block) Configuration Block section below for example usage and available arguments. This functionality is supported in all resources that implement `tags`, with the exception of the `aws_autoscaling_group` resource.
 * `ec2_metadata_service_endpoint` - (Optional) Address of the EC2 metadata service (IMDS) endpoint to use. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT` environment variable.
 * `ec2_metadata_service_endpoint_mode` - (Optional) Mode to use in communicating with the metadata service. Valid values are `IPv4` and `IPv6`. Can also be set with the `AWS_EC2_METADATA_SERVICE_ENDPOINT_MODE` environment variable.
-* `endpoints` - (Optional) Configuration block for customizing service endpoints. See the [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html) for more information about connecting to alternate AWS endpoints or AWS compatible solutions. See also `use_fips_endpoint`.
+* `endpoints` - (Optional) Configuration block for customizing service endpoints.
+  See the [Custom Service Endpoints Guide](/docs/providers/aws/guides/custom-service-endpoints.html) for more information about connecting to alternate AWS endpoints or AWS compatible solutions.
+  Can be used to specify FIPS endpoints for specific services
+  or, if using the parameter `use_fips_endpoints`, to override endpoints when there is no FIPS endpoint for the service.
 * `forbidden_account_ids` - (Optional) List of forbidden AWS account IDs to prevent you from mistakenly using the wrong one (and potentially end up destroying a live environment). Conflicts with `allowed_account_ids`.
-* `http_proxy` - (Optional) Address of an HTTP proxy to use when accessing the AWS API. Can also be set using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
+* `http_proxy` - (Optional) URL of a proxy to use for HTTP requests when accessing the AWS API.
+  Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.
+* `https_proxy` - (Optional) URL of a proxy to use for HTTPS requests when accessing the AWS API.
+  Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.
+  To use an HTTP proxy **without** an HTTPS proxy, set `https_proxy` to an empty string (`""`).
 * `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](https://www.terraform.io/docs/configuration/providers.html#alias-multiple-provider-configurations) for more information about additional provider configurations.
 * `insecure` - (Optional) Whether to explicitly allow the provider to perform "insecure" SSL requests. If omitted, the default value is `false`.
 * `max_retries` - (Optional) Maximum number of times an API call is retried when AWS throttles requests or you experience transient failures.
@@ -318,20 +329,29 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   If omitted, the default value is `25`.
   Can also be set using the environment variable `AWS_MAX_ATTEMPTS`
   and the shared configuration parameter `max_attempts`.
+* `no_proxy` - (Optional) Comma-separated list of hosts that should not use HTTP or HTTPS proxies.
+  Each value can be one of:
+    * A domain name
+    * An IP address
+    * A CIDR address
+    * An asterisk (`*`), to indicate that no proxying should be performed
+  Domain name and IP address values can also include a port number.
+  Can also be set using the `NO_PROXY` or `no_proxy` environment variables.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
   Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
-* `region` - (Optional) AWS region where the provider will operate. The region must be set.
+* `region` - (Optional) AWS Region where the provider will operate. The Region must be set.
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
-  If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
+  If credentials are retrieved from the EC2 Instance Metadata Service, the Region can also be retrieved from the metadata.
 * `retry_mode` - (Optional) Specifies how retries are attempted.
   Valid values are `standard` and `adaptive`.
   Can also be configured using the `AWS_RETRY_MODE` environment variable or the shared config file parameter `retry_mode`.
 * `s3_use_path_style` - (Optional) Whether to enable the request to use path-style addressing, i.e., `https://s3.amazonaws.com/BUCKET/KEY`.
   By default, the S3 client will use virtual hosted bucket addressing, `https://BUCKET.s3.amazonaws.com/KEY`, when possible.
   Specific to the Amazon S3 service.
-* `s3_us_east_1_regional_endpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint.
+* `s3_us_east_1_regional_endpoint` - (Optional) Specifies whether S3 API calls in the `us-east-1` Region use the legacy global endpoint or a regional endpoint.
   Valid values are `legacy` or `regional`.
+  If omitted, the default behavior in the `us-east-1` Region is to use the global endpoint for general purpose buckets and the regional endpoint for directory buckets.
   Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter.
   Specific to the Amazon S3 service.
 * `secret_key` - (Optional) AWS secret key. Can also be set with the `AWS_SECRET_ACCESS_KEY` environment variable, or via a shared configuration and credentials files if `profile` is used. See also `access_key`.
@@ -339,7 +359,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skip_credentials_validation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
 * `skip_metadata_api_check` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.
-* `skip_region_validation` - (Optional) Whether to skip validating the region. Useful for AWS-like implementations that use their own region names or to bypass the validation for regions that aren't publicly available yet.
+* `skip_region_validation` - (Optional) Whether to skip validating the Region. Useful for AWS-like implementations that use their own Region names or to bypass the validation for Regions that aren't publicly available yet.
 * `skip_requesting_account_id` - (Optional) Whether to skip requesting the account ID.  Useful for AWS API implementations that do not have the IAM, STS API, or metadata API.  When set to `true` and not determined previously, returns an empty account ID when manually constructing ARN attributes with the following:
     - [`aws_api_gateway_deployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
     - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
@@ -396,6 +416,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
     - [`aws_elb` data source](/docs/providers/aws/d/elb.html)
     - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+    - [`aws_finspace_kx_dataview` resource](/docs/providers/aws/r/finspace_kx_dataview.html)
     - [`aws_flow_log` resource](/docs/providers/aws/r/flow_log.html)
     - [`aws_glue_catalog_database` resource](/docs/providers/aws/r/glue_catalog_database.html)
     - [`aws_glue_catalog_table` resource](/docs/providers/aws/r/glue_catalog_table.html)
@@ -456,10 +477,15 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_waf_size_constraint_set` resource](/docs/providers/aws/r/waf_size_constraint_set.html)
     - [`aws_waf_web_acl` resource](/docs/providers/aws/r/waf_web_acl.html)
     - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
-* `sts_region` - (Optional) AWS region for STS. If unset, AWS will use the same region for STS as other non-STS operations.
+* `sts_region` - (Optional) AWS Region for STS. If unset, AWS will use the same Region for STS as other non-STS operations.
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
+* `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. If no value is specified then client-side rate limiting is disabled. If a value is specified there is a greater likelihood of `retry quota exceeded` errors being raised.
 * `use_dualstack_endpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
-* `use_fips_endpoint` - (Optional) Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
+* `use_fips_endpoint` - (Optional) Force the provider to resolve endpoints with FIPS capability for all services.
+  Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared configfile (`use_fips_endpoint`).
+  This setting is ignored for any service with a custom endpoint specified.
+  Note that not all services or regions have valid FIPS endpoints.
+  The parameter `endpoints` can be used to override a particular service's endpoint if there is no valid FIPS endpoint.
 
 ### assume_role Configuration Block
 

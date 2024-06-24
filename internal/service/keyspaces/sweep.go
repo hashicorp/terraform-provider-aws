@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package keyspaces
 
 import (
@@ -17,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	// No need to have separate sweeper for table as would be destroyed as part of keyspace
 	resource.AddTestSweepers("aws_keyspaces_keyspace", &resource.Sweeper{
 		Name: "aws_keyspaces_keyspace",

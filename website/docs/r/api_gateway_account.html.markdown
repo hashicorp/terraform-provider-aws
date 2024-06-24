@@ -71,7 +71,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `api_key_version` - The version of the API keys used for the account.
 * `throttle_settings` - Account-Level throttle settings. See exported fields below.
+* `features` - A list of features supported for the account.
 
 `throttle_settings` block exports the following:
 
