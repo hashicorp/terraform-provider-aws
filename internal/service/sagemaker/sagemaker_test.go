@@ -108,6 +108,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			acctest.CtDisappears: testAccWorkforce_disappears,
 			"CognitoConfig":      testAccWorkforce_cognitoConfig,
 			"OidcConfig":         testAccWorkforce_oidcConfig,
+			"OidcConfig_full":    testAccWorkforce_oidcConfig_full,
 			"SourceIpConfig":     testAccWorkforce_sourceIPConfig,
 			"VPC":                testAccWorkforce_vpc,
 		},
