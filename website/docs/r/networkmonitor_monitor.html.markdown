@@ -16,14 +16,8 @@ Terraform resource for managing an AWS Network Monitor Monitor.
 
 ```terraform
 resource "aws_networkmonitor_monitor" "example" {
-  subnet_arns     = [aws_subnet.example.arn]
-  core_network_id = awscc_networkmanager_core_network.example.id
-  vpc_arn         = aws_vpc.example.arn
-}
-
-resource "aws_networkmonitor_monitor" "example" {
   aggregation_period = 30
-  monitor_name = "example
+  monitor_name       = "example
 }
 ```
 
