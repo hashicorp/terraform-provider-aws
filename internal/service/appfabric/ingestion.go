@@ -76,10 +76,6 @@ func (r *ingestionResource) Schema(ctx context.Context, request resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrState: schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.IngestionState](),
-				Computed:   true,
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"tenant_id": schema.StringAttribute{
@@ -130,7 +126,6 @@ func (r *ingestionResource) Create(ctx context.Context, request resource.CreateR
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Ingestion.Arn)
-	data.State = fwtypes.StringEnumValue(output.Ingestion.State)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -229,15 +224,14 @@ func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appB
 }
 
 type ingestionResourceModel struct {
-	App           types.String                                `tfsdk:"app"`
-	AppBundleARN  fwtypes.ARN                                 `tfsdk:"app_bundle_arn"`
-	ARN           types.String                                `tfsdk:"arn"`
-	ID            types.String                                `tfsdk:"id"`
-	IngestionType fwtypes.StringEnum[awstypes.IngestionType]  `tfsdk:"ingestion_type"`
-	State         fwtypes.StringEnum[awstypes.IngestionState] `tfsdk:"state"`
-	Tags          types.Map                                   `tfsdk:"tags"`
-	TagsAll       types.Map                                   `tfsdk:"tags_all"`
-	TenantId      types.String                                `tfsdk:"tenant_id"`
+	App           types.String                               `tfsdk:"app"`
+	AppBundleARN  fwtypes.ARN                                `tfsdk:"app_bundle_arn"`
+	ARN           types.String                               `tfsdk:"arn"`
+	ID            types.String                               `tfsdk:"id"`
+	IngestionType fwtypes.StringEnum[awstypes.IngestionType] `tfsdk:"ingestion_type"`
+	Tags          types.Map                                  `tfsdk:"tags"`
+	TagsAll       types.Map                                  `tfsdk:"tags_all"`
+	TenantId      types.String                               `tfsdk:"tenant_id"`
 }
 
 const (

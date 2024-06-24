@@ -42,7 +42,6 @@ Refer to the AWS Documentation for the [list of valid values](https://docs.aws.a
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Ingestion.
-* `state` - Status of the Ingestion. Valid values are: `enabled` or `disabled`
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
