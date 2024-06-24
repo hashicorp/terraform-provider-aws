@@ -64,7 +64,10 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 				CustomType: fwtypes.NewListNestedObjectTypeOf[inputModel](ctx),
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"s3_input_definition": fwtypes.NewListNestedObjectTypeOf[s3InputDefinitionModel](ctx),
+						"s3_input_definition":           fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
+						"data_catalog_input_definition": fwtypes.NewListNestedObjectTypeOf[dataCatalogInputDefinitionModel](ctx),
+						"database_input_definition":     fwtypes.NewListNestedObjectTypeOf[databaseInputDefinitionModel](ctx),
+						"metadata":                      fwtypes.NewListNestedObjectTypeOf[metadataModel](ctx),
 					},
 				},
 			},
@@ -90,14 +93,18 @@ func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	in := &databrew.CreateDatasetInput{
-		Name: aws.String(plan.Name.ValueString()),
+		// Name: aws.String(plan.Name.ValueString()),
 	}
 
-	planInput, _ := plan.Input.ToPtr(ctx)
+	// planInput, _ := plan.Input.ToPtr(ctx)
 
-	if !plan.Input.IsNull() {
-		in.Input = expandInput(ctx, *planInput)
-	}
+	// Todo: Test if Expand works
+	// if !plan.Input.IsNull() {
+	// 	in.Input = expandInput(ctx, *planInput)
+	// }
+
+	resp.Diagnostics.Append(flex.Expand(ctx, in, &plan)...)
+	// resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 	out, err := conn.CreateDataset(ctx, in)
 	if err != nil {
@@ -269,15 +276,46 @@ func expandInputS3InputDefinition(model s3InputDefinitionModel) *awstypes.S3Loca
 		obj.Bucket = aws.String(model.Bucket.ValueString())
 	}
 
+	if !model.Key.IsNull() {
+		obj.Key = aws.String(model.Key.ValueString())
+	}
+
+	if !model.BucketOwner.IsNull() {
+		obj.BucketOwner = aws.String(model.BucketOwner.ValueString())
+	}
+
 	return obj
 }
 
-type s3InputDefinitionModel struct {
-	Bucket types.String `tfsdk:"bucket"`
+type s3LocationModel struct {
+	Bucket      types.String `tfsdk:"bucket"`
+	BucketOwner types.String `tfsdk:"bucket_owner"`
+	Key         types.String `tfsdk:"key"`
+}
+
+type dataCatalogInputDefinitionModel struct {
+	CatalogId     types.String                                     `tfsdk:"catalog_id"`
+	DatabaseName  types.String                                     `tfsdk:"database_name"`
+	TableName     types.String                                     `tfsdk:"table_name"`
+	TempDirectory fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"temp_directory"`
+}
+
+type databaseInputDefinitionModel struct {
+	GlueConnectionName types.String                                     `tfsdk:"glue_connection_name"`
+	DatabaseTableName  types.String                                     `tfsdk:"database_table_name"`
+	QueryString        types.String                                     `tfsdk:"query_string"`
+	TempDirectory      fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"temp_directory"`
+}
+
+type metadataModel struct {
+	SourceArn types.String `tfsdk:"source_arn"`
 }
 
 type inputModel struct {
-	S3InputDefinition fwtypes.ListNestedObjectValueOf[s3InputDefinitionModel] `tfsdk:"s3_input_definition"`
+	S3InputDefinition          fwtypes.ListNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_input_definition"`
+	DataCatalogInputDefinition fwtypes.ListNestedObjectValueOf[dataCatalogInputDefinitionModel] `tfsdk:"data_catalog_input_definition"`
+	DatabaseInputDefinition    fwtypes.ListNestedObjectValueOf[databaseInputDefinitionModel]    `tfsdk:"database_input_definition"`
+	Metadata                   fwtypes.ListNestedObjectValueOf[metadataModel]                   `tfsdk:"metadata"`
 }
 
 type resourceDatasetModel struct {

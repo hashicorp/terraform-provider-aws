@@ -173,6 +173,33 @@ func testAccCheckDatasetNotRecreated(before, after *databrew.DescribeDatasetOutp
 
 func testAccDatasetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket         = aws_s3_bucket.test.bucket
+  key            = %[1]q
+  content_base64 = "dGVzdAo="
+}
+
+resource "aws_databrew_dataset" "test" {
+  name         = %[1]q
+  input {
+	s3_input_definition {
+		bucket = aws_s3_bucket.test.id
+		owner  = data.aws_caller_identity.current.account_id
+		key    = %[1]q
+	}
+  }
+}
+`, rName)
+}
+
+func testAccDatasetConfig_dataCatalog(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
 	bucket = %[1]q
 }
