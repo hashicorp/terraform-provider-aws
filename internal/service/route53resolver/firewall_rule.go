@@ -88,6 +88,10 @@ func ResourceFirewallRule() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			"q_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -124,6 +128,10 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("block_response"); ok {
 		input.BlockResponse = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateFirewallRuleWithContext(ctx, input)
@@ -169,6 +177,7 @@ func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("firewall_domain_redirection_action", firewallRule.FirewallDomainRedirectionAction)
 	d.Set(names.AttrName, firewallRule.Name)
 	d.Set(names.AttrPriority, firewallRule.Priority)
+	d.Set("q_type", firewallRule.Qtype)
 
 	return diags
 }
@@ -211,6 +220,10 @@ func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		input.FirewallDomainRedirectionAction = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
+	}
+
 	_, err = conn.UpdateFirewallRuleWithContext(ctx, input)
 
 	if err != nil {
@@ -230,11 +243,17 @@ func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
-	_, err = conn.DeleteFirewallRuleWithContext(ctx, &route53resolver.DeleteFirewallRuleInput{
+	input := &route53resolver.DeleteFirewallRuleInput{
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
-	})
+	}
+
+	if v, ok := d.GetOk("q_type"); ok {
+		input.Qtype = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
+	_, err = conn.DeleteFirewallRuleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return diags
