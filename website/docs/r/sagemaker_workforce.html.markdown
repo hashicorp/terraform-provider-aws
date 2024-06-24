@@ -76,12 +76,14 @@ This resource supports the following arguments:
 
 ### Oidc Config
 
+* `authentication_request_extra_params` - (Optional) A string to string map of identifiers specific to the custom identity provider (IdP) being used.
 * `authorization_endpoint` - (Required) The OIDC IdP authorization endpoint used to configure your private workforce.
 * `client_id` - (Required) The OIDC IdP client ID used to configure your private workforce.
 * `client_secret` - (Required) The OIDC IdP client secret used to configure your private workforce.
 * `issuer` - (Required) The OIDC IdP issuer used to configure your private workforce.
 * `jwks_uri` - (Required) The OIDC IdP JSON Web Key Set (Jwks) URI used to configure your private workforce.
 * `logout_endpoint` - (Required) The OIDC IdP logout endpoint used to configure your private workforce.
+* `scope` - (Optional) An array of string identifiers used to refer to the specific pieces of user data or claims that the client application wants to access.
 * `token_endpoint` - (Required) The OIDC IdP token endpoint used to configure your private workforce.
 * `user_info_endpoint` - (Required) The OIDC IdP user information endpoint used to configure your private workforce.
 
