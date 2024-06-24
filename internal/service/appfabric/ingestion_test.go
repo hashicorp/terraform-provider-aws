@@ -22,8 +22,11 @@ import (
 func testAccIngestion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ingestion awstypes.Ingestion
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_ingestion.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -36,7 +39,7 @@ func testAccIngestion_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngestionConfig_basic(rName),
+				Config: testAccIngestionConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
@@ -44,7 +47,6 @@ func testAccIngestion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", "auditLog"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tenant_id", "test-tenant-id"),
 				),
 			},
 			{
@@ -59,8 +61,11 @@ func testAccIngestion_basic(t *testing.T) {
 func testAccIngestion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ingestion awstypes.Ingestion
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_ingestion.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -73,7 +78,7 @@ func testAccIngestion_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngestionConfig_basic(rName),
+				Config: testAccIngestionConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceIngestion, resourceName),
@@ -87,8 +92,11 @@ func testAccIngestion_disappears(t *testing.T) {
 func testAccIngestion_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ingestion awstypes.Ingestion
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appfabric_ingestion.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -101,7 +109,7 @@ func testAccIngestion_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckIngestionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngestionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccIngestionConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -114,7 +122,7 @@ func testAccIngestion_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIngestionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccIngestionConfig_tags2(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
@@ -123,7 +131,7 @@ func testAccIngestion_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIngestionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccIngestionConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionExists(ctx, resourceName, &ingestion),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -181,7 +189,7 @@ func testAccCheckIngestionExists(ctx context.Context, n string, v *awstypes.Inge
 	}
 }
 
-func testAccIngestionConfig_base(rName string) string {
+func testAccIngestionConfig_base(rName, tenantID, serviceAccountToken string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
   tags = {
@@ -196,60 +204,65 @@ resource "aws_appfabric_app_authorization" "test" {
 
   credential {
     api_key_credential {
-      api_key = "ApiExampleKey"
+      api_key = %[3]q
     }
   }
 
   tenant {
-    tenant_display_name = "test"
-    tenant_identifier   = "test-tenant-id"
+    tenant_display_name = %[1]q
+    tenant_identifier   = %[2]q
   }
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+
+resource "aws_appfabric_app_authorization_connection" "test" {
+  app_bundle_arn        = aws_appfabric_app_bundle.test.arn
+  app_authorization_arn = aws_appfabric_app_authorization.test.arn
+}
+`, rName, tenantID, serviceAccountToken)
 }
 
-func testAccIngestionConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccIngestionConfig_base(rName), `
+func testAccIngestionConfig_basic(rName, tenantID, serviceAccountToken string) string {
+	return acctest.ConfigCompose(testAccIngestionConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
 resource "aws_appfabric_ingestion" "test" {
-  app            = aws_appfabric_app_authorization.test.app
+  app            = aws_appfabric_app_authorization_connection.test.app
   app_bundle_arn = aws_appfabric_app_bundle.test.arn
-  tenant_id      = "test-tenant-id"
+  tenant_id      = %[1]q
   ingestion_type = "auditLog"
 }
-`)
+`, tenantID))
 }
 
-func testAccIngestionConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccIngestionConfig_base(rName), fmt.Sprintf(`
+func testAccIngestionConfig_tags1(rName, tenantID, serviceAccountToken, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccIngestionConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
 resource "aws_appfabric_ingestion" "test" {
-  app            = aws_appfabric_app_authorization.test.app
+  app            = aws_appfabric_app_authorization_connection.test.app
   app_bundle_arn = aws_appfabric_app_bundle.test.arn
-  tenant_id      = "test-tenant-id"
-  ingestion_type = "auditLog"
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccIngestionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccIngestionConfig_base(rName), fmt.Sprintf(`
-resource "aws_appfabric_ingestion" "test" {
-  app            = aws_appfabric_app_authorization.test.app
-  app_bundle_arn = aws_appfabric_app_bundle.test.arn
-  tenant_id      = "test-tenant-id"
+  tenant_id      = %[1]q
   ingestion_type = "auditLog"
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %[2]q = %[3]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2))
+`, tenantID, tagKey1, tagValue1))
+}
+
+func testAccIngestionConfig_tags2(rName, tenantID, serviceAccountToken, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccIngestionConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
+resource "aws_appfabric_ingestion" "test" {
+  app            = aws_appfabric_app_authorization_connection.test.app
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  tenant_id      = %[1]q
+  ingestion_type = "auditLog"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, tenantID, tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -31,7 +31,7 @@ import (
 )
 
 // @FrameworkResource(name="Ingestion")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 func newIngestionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingestionResource{}
 
