@@ -88,9 +88,6 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, request resource.
 			},
 			"auth_url": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
@@ -244,7 +241,7 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 	}
 
 	// Set values for unknowns after creation is complete.
-	data.AuthUrl = fwflex.StringToFramework(ctx, appAuthorization.AuthUrl)
+	data.AuthURL = fwflex.StringToFramework(ctx, appAuthorization.AuthUrl)
 	if err := data.parseAuthURL(); err != nil {
 		response.Diagnostics.AddError("parsing Auth URL", err.Error())
 
@@ -293,7 +290,7 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 	}
 
 	// Setting it because of the dynamic nature of Auth URL.
-	data.AuthUrl = fwflex.StringToFramework(ctx, output.AuthUrl)
+	data.AuthURL = fwflex.StringToFramework(ctx, output.AuthUrl)
 	if err := data.parseAuthURL(); err != nil {
 		response.Diagnostics.AddError("parsing Auth URL", err.Error())
 
@@ -357,8 +354,15 @@ func (r *appAuthorizationResource) Update(ctx context.Context, request resource.
 		}
 
 		// Set values for unknowns.
+		new.AuthURL = fwflex.StringToFramework(ctx, appAuthorization.AuthUrl)
+		if err := new.parseAuthURL(); err != nil {
+			response.Diagnostics.AddError("parsing Auth URL", err.Error())
+
+			return
+		}
 		new.UpdatedAt = fwflex.TimeToFramework(ctx, appAuthorization.UpdatedAt)
 	} else {
+		new.AuthURL = old.AuthURL
 		new.UpdatedAt = old.UpdatedAt
 	}
 
@@ -545,7 +549,7 @@ type appAuthorizationResourceModel struct {
 	AppAuthorizationARN types.String                                     `tfsdk:"arn"`
 	AppBundleARN        fwtypes.ARN                                      `tfsdk:"app_bundle_arn"`
 	AuthType            fwtypes.StringEnum[awstypes.AuthType]            `tfsdk:"auth_type"`
-	AuthUrl             types.String                                     `tfsdk:"auth_url"`
+	AuthURL             types.String                                     `tfsdk:"auth_url"`
 	CreatedAt           timetypes.RFC3339                                `tfsdk:"created_at"`
 	Credential          fwtypes.ListNestedObjectValueOf[credentialModel] `tfsdk:"credential"`
 	ID                  types.String                                     `tfsdk:"id"`
@@ -597,11 +601,11 @@ type tenantModel struct {
 }
 
 func (m *appAuthorizationResourceModel) parseAuthURL() error {
-	if m.AuthUrl.IsNull() {
+	if m.AuthURL.IsNull() {
 		return nil
 	}
 
-	fullURL := m.AuthUrl.ValueString()
+	fullURL := m.AuthURL.ValueString()
 
 	index := strings.Index(fullURL, "oauth2")
 	if index == -1 {
@@ -609,7 +613,7 @@ func (m *appAuthorizationResourceModel) parseAuthURL() error {
 	}
 
 	baseURL := fullURL[:index+len("oauth2")]
-	m.AuthUrl = types.StringValue(baseURL)
+	m.AuthURL = types.StringValue(baseURL)
 
 	return nil
 }
