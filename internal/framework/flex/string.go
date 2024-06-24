@@ -22,15 +22,6 @@ func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *strin
 	return output
 }
 
-// StringyValueFromFramework converts a Framework String value to an AWS string type.
-func StringyValueFromFramework[T ~string](ctx context.Context, v basetypes.StringValuable) T {
-	var output T
-
-	must(Expand(ctx, v, &output))
-
-	return output
-}
-
 // StringFromFramework converts a single Framework String value to a string pointer slice.
 // A null String is converted to a nil slice.
 func StringSliceFromFramework(ctx context.Context, v basetypes.StringValuable) []*string {

@@ -6,7 +6,7 @@ package cognitoidp_test
 import (
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -15,7 +15,7 @@ import (
 
 func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "data.aws_cognito_user_pool_client.test"
 

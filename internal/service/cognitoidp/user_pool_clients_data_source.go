@@ -6,8 +6,8 @@ package cognitoidp
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,7 +43,7 @@ func dataSourceUserPoolClients() *schema.Resource {
 
 func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	userPoolID := d.Get("user_pool_id").(string)
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
@@ -52,21 +52,25 @@ func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, 
 
 	var clientIDs []string
 	var clientNames []string
-
-	pages := cognitoidentityprovider.NewListUserPoolClientsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "getting user pool clients: %s", err)
+	err := conn.ListUserPoolClientsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, v := range page.UserPoolClients {
-			clientNames = append(clientNames, aws.ToString(v.ClientName))
-			clientIDs = append(clientIDs, aws.ToString(v.ClientId))
+			if v == nil {
+				continue
+			}
+
+			clientNames = append(clientNames, aws.StringValue(v.ClientName))
+			clientIDs = append(clientIDs, aws.StringValue(v.ClientId))
 		}
 
+		return !lastPage
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "getting user pool clients: %s", err)
 	}
 
 	d.SetId(userPoolID)

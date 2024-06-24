@@ -6,8 +6,8 @@ package cognitoidp
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -47,7 +47,7 @@ func resourceUserInGroup() *schema.Resource {
 
 func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.AdminAddUserToGroupInput{}
 
@@ -63,7 +63,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Username = aws.String(v.(string))
 	}
 
-	_, err := conn.AdminAddUserToGroup(ctx, input)
+	_, err := conn.AdminAddUserToGroupWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "adding user to group: %s", err)
@@ -77,7 +77,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	groupName := d.Get("group_name").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -98,7 +98,7 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	groupName := d.Get("group_name").(string)
 	userPoolID := d.Get("user_pool_id").(string)
@@ -110,7 +110,7 @@ func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 		Username:   aws.String(username),
 	}
 
-	_, err := conn.AdminRemoveUserFromGroup(ctx, input)
+	_, err := conn.AdminRemoveUserFromGroupWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "removing user from group: %s", err)

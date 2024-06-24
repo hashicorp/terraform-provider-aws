@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -31,7 +31,7 @@ func randomOpenSearchDomainName() string {
 
 func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -92,7 +92,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_namePattern(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -124,7 +124,7 @@ func TestAccCognitoIDPManagedUserPoolClient_namePattern(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 
 	resourceName := "aws_cognito_managed_user_pool_client.test"
@@ -173,7 +173,7 @@ func TestAccCognitoIDPManagedUserPoolClient_enableRevocation(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -234,11 +234,11 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity_error(t *testing
 				ExpectError: regexache.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 25h0m0s`),
 			},
 			{
-				Config:      testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName, 2, awstypes.TimeUnitsTypeDays),
+				Config:      testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName, 2, cognitoidentityprovider.TimeUnitsTypeDays),
 				ExpectError: regexache.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 48h0m0s`),
 			},
 			{
-				Config:      testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName, 4, awstypes.TimeUnitsTypeMinutes),
+				Config:      testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName, 4, cognitoidentityprovider.TimeUnitsTypeMinutes),
 				ExpectError: regexache.MustCompile(`Attribute access_token_validity must have a duration between 5m0s and\s+24h0m0s, got: 4m0s`),
 			},
 		},
@@ -247,7 +247,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity_error(t *testing
 
 func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -308,11 +308,11 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity_error(t *testing.T) 
 				ExpectError: regexache.MustCompile(`Attribute id_token_validity must have a duration between 5m0s and\s+24h0m0s,\s+got: 25h0m0s`),
 			},
 			{
-				Config:      testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName, 2, awstypes.TimeUnitsTypeDays),
+				Config:      testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName, 2, cognitoidentityprovider.TimeUnitsTypeDays),
 				ExpectError: regexache.MustCompile(`Attribute id_token_validity must have a duration between 5m0s and\s+24h0m0s,\s+got: 48h0m0s`),
 			},
 			{
-				Config:      testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName, 4, awstypes.TimeUnitsTypeMinutes),
+				Config:      testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName, 4, cognitoidentityprovider.TimeUnitsTypeMinutes),
 				ExpectError: regexache.MustCompile(`Attribute id_token_validity must have a duration between 5m0s and\s+24h0m0s,\s+got: 4m0s`),
 			},
 		},
@@ -321,7 +321,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity_error(t *testing.T) 
 
 func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -382,7 +382,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity_error(t *testin
 				ExpectError: regexache.MustCompile(`Attribute refresh_token_validity must have a duration between 1h0m0s and\s+87600h0m0s,\s+got: 87624h0m0s`),
 			},
 			{
-				Config:      testAccManagedUserPoolClientConfig_refreshTokenValidityUnit(rName, 59, awstypes.TimeUnitsTypeMinutes),
+				Config:      testAccManagedUserPoolClientConfig_refreshTokenValidityUnit(rName, 59, cognitoidentityprovider.TimeUnitsTypeMinutes),
 				ExpectError: regexache.MustCompile(`Attribute refresh_token_validity must have a duration between 1h0m0s and\s+87600h0m0s,\s+got: 59m0s`),
 			},
 		},
@@ -391,7 +391,7 @@ func TestAccCognitoIDPManagedUserPoolClient_refreshTokenValidity_error(t *testin
 
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -461,7 +461,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_explicitDefaults(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -487,7 +487,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_explicitDefaults(
 
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -541,7 +541,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnits_AccessToken(t *te
 
 func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -597,7 +597,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 
 func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -655,7 +655,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -716,7 +716,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing
 
 func TestAccCognitoIDPManagedUserPoolClient_analyticsApplicationID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 	pinpointResourceName := "aws_pinpoint_app.analytics"
@@ -795,7 +795,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 	t.Skip("this test hangs on deletion")
 
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 	pinpointResourceName := "aws_pinpoint_app.analytics"
@@ -856,7 +856,7 @@ func TestAccCognitoIDPManagedUserPoolClient_analyticsWithARN(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -904,7 +904,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_Disappears_OpenSearchDomain(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -928,7 +928,7 @@ func TestAccCognitoIDPManagedUserPoolClient_Disappears_OpenSearchDomain(t *testi
 
 func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -971,7 +971,7 @@ func TestAccCognitoIDPManagedUserPoolClient_emptySets(t *testing.T) {
 
 func TestAccCognitoIDPManagedUserPoolClient_nulls(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client awstypes.UserPoolClientType
+	var client cognitoidentityprovider.UserPoolClientType
 	rName := randomOpenSearchDomainName()
 	resourceName := "aws_cognito_managed_user_pool_client.test"
 
@@ -1163,7 +1163,7 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName, validity))
 }
 
-func testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName string, validity int, unit awstypes.TimeUnitsType) string {
+func testAccManagedUserPoolClientConfig_accessTokenValidityUnit(rName string, validity int, unit string) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1201,7 +1201,7 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName, validity))
 }
 
-func testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName string, validity int, unit awstypes.TimeUnitsType) string {
+func testAccManagedUserPoolClientConfig_idTokenValidityUnit(rName string, validity int, unit string) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientBaseConfig(rName),
 		fmt.Sprintf(`
@@ -1239,7 +1239,7 @@ resource "aws_cognito_managed_user_pool_client" "test" {
 `, rName, refreshTokenValidity))
 }
 
-func testAccManagedUserPoolClientConfig_refreshTokenValidityUnit(rName string, refreshTokenValidity int, unit awstypes.TimeUnitsType) string {
+func testAccManagedUserPoolClientConfig_refreshTokenValidityUnit(rName string, refreshTokenValidity int, unit string) string {
 	return acctest.ConfigCompose(
 		testAccManagedUserPoolClientBaseConfig(rName),
 		fmt.Sprintf(`

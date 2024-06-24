@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var identityProvider awstypes.IdentityProviderType
+	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -83,7 +83,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 
 func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var identityProvider awstypes.IdentityProviderType
+	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -120,7 +120,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 
 func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 	ctx := acctest.Context(t)
-	var identityProvider awstypes.IdentityProviderType
+	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -173,7 +173,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 
 func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var identityProvider awstypes.IdentityProviderType
+	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -197,7 +197,7 @@ func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 
 func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 	ctx := acctest.Context(t)
-	var identityProvider awstypes.IdentityProviderType
+	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -221,7 +221,7 @@ func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 
 func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_provider" {
@@ -245,14 +245,14 @@ func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *awstypes.IdentityProviderType) resource.TestCheckFunc {
+func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *cognitoidentityprovider.IdentityProviderType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		output, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["provider_name"])
 

@@ -21,27 +21,9 @@ func BoolFromFramework(ctx context.Context, v basetypes.BoolValuable) *bool {
 	return output
 }
 
-// BoolValueFromFramework converts a Framework Bool value to a bool.
-func BoolValueFromFramework(ctx context.Context, v basetypes.BoolValuable) bool {
-	var output bool
-
-	must(Expand(ctx, v, &output))
-
-	return output
-}
-
 // BoolToFramework converts a bool pointer to a Framework Bool value.
 // A nil bool pointer is converted to a null Bool.
 func BoolToFramework(ctx context.Context, v *bool) types.Bool {
-	var output types.Bool
-
-	must(Flatten(ctx, v, &output))
-
-	return output
-}
-
-// BoolValueToFramework converts a bool to a Framework Bool value.
-func BoolValueToFramework(ctx context.Context, v bool) types.Bool {
 	var output types.Bool
 
 	must(Flatten(ctx, v, &output))

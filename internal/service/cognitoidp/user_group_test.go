@@ -161,7 +161,7 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		_, err := tfcognitoidp.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["name"])
 
@@ -171,7 +171,7 @@ func testAccCheckUserGroupExists(ctx context.Context, n string) resource.TestChe
 
 func testAccCheckUserGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_group" {

@@ -8,9 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -18,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,7 +88,7 @@ func resourceUserPoolDomain() *schema.Resource {
 
 func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	domain := d.Get("domain").(string)
 	timeout := 1 * time.Minute
@@ -100,13 +98,13 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk("certificate_arn"); ok {
-		input.CustomDomainConfig = &awstypes.CustomDomainConfigType{
+		input.CustomDomainConfig = &cognitoidentityprovider.CustomDomainConfigType{
 			CertificateArn: aws.String(v.(string)),
 		}
 		timeout = 60 * time.Minute // Custom domains take more time to become active.
 	}
 
-	_, err := conn.CreateUserPoolDomain(ctx, input)
+	_, err := conn.CreateUserPoolDomainWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cognito User Pool Domain (%s): %s", domain, err)
@@ -123,7 +121,7 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	desc, err := FindUserPoolDomain(ctx, conn, d.Id())
 
@@ -155,17 +153,17 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.UpdateUserPoolDomainInput{
-		CustomDomainConfig: &awstypes.CustomDomainConfigType{
+		CustomDomainConfig: &cognitoidentityprovider.CustomDomainConfigType{
 			CertificateArn: aws.String(d.Get("certificate_arn").(string)),
 		},
 		Domain:     aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
-	_, err := conn.UpdateUserPoolDomain(ctx, input)
+	_, err := conn.UpdateUserPoolDomainWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Cognito User Pool Domain (%s): %s", d.Id(), err)
@@ -183,15 +181,15 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
-	_, err := conn.DeleteUserPoolDomain(ctx, &cognitoidentityprovider.DeleteUserPoolDomainInput{
+	_, err := conn.DeleteUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DeleteUserPoolDomainInput{
 		Domain:     aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "No such domain") {
+	if tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "No such domain") {
 		return diags
 	}
 
@@ -206,14 +204,14 @@ func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func FindUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Client, domain string) (*awstypes.DomainDescriptionType, error) {
+func FindUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) (*cognitoidentityprovider.DomainDescriptionType, error) {
 	input := &cognitoidentityprovider.DescribeUserPoolDomainInput{
 		Domain: aws.String(domain),
 	}
 
-	output, err := conn.DescribeUserPoolDomain(ctx, input)
+	output, err := conn.DescribeUserPoolDomainWithContext(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -228,14 +226,14 @@ func FindUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Clien
 	// {
 	// 	"DomainDescription": {}
 	// }
-	if output == nil || output.DomainDescription == nil {
+	if output == nil || output.DomainDescription == nil || output.DomainDescription.Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.DomainDescription, nil
 }
 
-func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Client, domain string) retry.StateRefreshFunc {
+func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindUserPoolDomain(ctx, conn, domain)
 
@@ -247,47 +245,47 @@ func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Cli
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovider.Client, domain string, timeout time.Duration) (*awstypes.DomainDescriptionType, error) {
+func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DomainStatusTypeCreating, awstypes.DomainStatusTypeUpdating),
-		Target:  enum.Slice(awstypes.DomainStatusTypeActive),
+		Pending: []string{cognitoidentityprovider.DomainStatusTypeCreating, cognitoidentityprovider.DomainStatusTypeUpdating},
+		Target:  []string{cognitoidentityprovider.DomainStatusTypeActive},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.DomainDescriptionType); ok {
+	if output, ok := outputRaw.(*cognitoidentityprovider.DomainDescriptionType); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitUserPoolDomainUpdated(ctx context.Context, conn *cognitoidentityprovider.Client, domain string, timeout time.Duration) (*awstypes.DomainDescriptionType, error) {
+func waitUserPoolDomainUpdated(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DomainStatusTypeUpdating),
-		Target:  enum.Slice(awstypes.DomainStatusTypeActive),
+		Pending: []string{cognitoidentityprovider.DomainStatusTypeUpdating},
+		Target:  []string{cognitoidentityprovider.DomainStatusTypeActive},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.DomainDescriptionType); ok {
+	if output, ok := outputRaw.(*cognitoidentityprovider.DomainDescriptionType); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitUserPoolDomainDeleted(ctx context.Context, conn *cognitoidentityprovider.Client, domain string, timeout time.Duration) (*awstypes.DomainDescriptionType, error) {
+func waitUserPoolDomainDeleted(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DomainDescriptionType, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.DomainStatusTypeUpdating, awstypes.DomainStatusTypeDeleting),
+		Pending: []string{cognitoidentityprovider.DomainStatusTypeUpdating, cognitoidentityprovider.DomainStatusTypeDeleting},
 		Target:  []string{},
 		Refresh: statusUserPoolDomain(ctx, conn, domain),
 		Timeout: timeout,
@@ -295,7 +293,7 @@ func waitUserPoolDomainDeleted(ctx context.Context, conn *cognitoidentityprovide
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.DomainDescriptionType); ok {
+	if output, ok := outputRaw.(*cognitoidentityprovider.DomainDescriptionType); ok {
 		return output, err
 	}
 

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -3169,13 +3169,13 @@ resource "aws_elasticsearch_domain" "test" {
 }
 
 func testAccPreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int32(1),
+		MaxResults: aws.Int64(1),
 	}
 
-	_, err := conn.ListUserPools(ctx, input)
+	_, err := conn.ListUserPoolsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

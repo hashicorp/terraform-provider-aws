@@ -6,8 +6,8 @@ package cognitoidp
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -87,8 +87,8 @@ func (d *userGroupDataSource) Read(ctx context.Context, request datasource.ReadR
 	}
 	// 🌱 For the person who migrates to sdkv2:
 	// this should work by just updating the client, and removing the WithContext method.
-	conn := d.Meta().CognitoIDPClient(ctx)
-	resp, err := conn.GetGroup(ctx, params)
+	conn := d.Meta().CognitoIDPConn(ctx)
+	resp, err := conn.GetGroupWithContext(ctx, params)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionReading, DSNameUserGroup, data.ID.String(), err),
@@ -101,7 +101,7 @@ func (d *userGroupDataSource) Read(ctx context.Context, request datasource.ReadR
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.Name = types.StringValue(aws.ToString(resp.Group.GroupName))
+	data.Name = types.StringValue(aws.StringValue(resp.Group.GroupName))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

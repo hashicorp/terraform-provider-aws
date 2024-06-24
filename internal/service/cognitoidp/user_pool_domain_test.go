@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -168,7 +168,7 @@ func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.Te
 			return errors.New("No Cognito User Pool Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		_, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, rs.Primary.ID)
 
@@ -178,7 +178,7 @@ func testAccCheckUserPoolDomainExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckUserPoolDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_pool_domain" {
@@ -222,7 +222,7 @@ func testAccCheckUserPoolDomainCertMatches(ctx context.Context, cognitoResourceN
 			return errors.New("No ACM Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
 		domain, err := tfcognitoidp.FindUserPoolDomain(ctx, conn, cognitoResource.Primary.ID)
 
@@ -231,11 +231,11 @@ func testAccCheckUserPoolDomainCertMatches(ctx context.Context, cognitoResourceN
 		}
 
 		if domain.CustomDomainConfig == nil {
-			return fmt.Errorf("No Custom Domain set on Cognito User Pool: %s", aws.ToString(domain.UserPoolId))
+			return fmt.Errorf("No Custom Domain set on Cognito User Pool: %s", aws.StringValue(domain.UserPoolId))
 		}
 
-		if aws.ToString(domain.CustomDomainConfig.CertificateArn) != certResource.Primary.ID {
-			return fmt.Errorf("Certificate ARN on Custom Domain does not match, expected: %s, got: %s", certResource.Primary.ID, aws.ToString(domain.CustomDomainConfig.CertificateArn))
+		if aws.StringValue(domain.CustomDomainConfig.CertificateArn) != certResource.Primary.ID {
+			return fmt.Errorf("Certificate ARN on Custom Domain does not match, expected: %s, got: %s", certResource.Primary.ID, aws.StringValue(domain.CustomDomainConfig.CertificateArn))
 		}
 
 		return nil

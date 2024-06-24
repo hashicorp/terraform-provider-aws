@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider/cognitoidentityprovideriface"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -18,12 +19,12 @@ import (
 // listTags lists cognitoidp service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *cognitoidentityprovider.Client, identifier string, optFns ...func(*cognitoidentityprovider.Options)) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn cognitoidentityprovideriface.CognitoIdentityProviderAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cognitoidentityprovider.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -35,7 +36,7 @@ func listTags(ctx context.Context, conn *cognitoidentityprovider.Client, identif
 // ListTags lists cognitoidp service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).CognitoIDPClient(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).CognitoIDPConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -48,21 +49,21 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]string handling
+// map[string]*string handling
 
 // Tags returns cognitoidp service tags.
-func Tags(tags tftags.KeyValueTags) map[string]string {
-	return tags.Map()
+func Tags(tags tftags.KeyValueTags) map[string]*string {
+	return aws.StringMap(tags.Map())
 }
 
 // KeyValueTags creates tftags.KeyValueTags from cognitoidp service tags.
-func KeyValueTags(ctx context.Context, tags map[string]string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags map[string]*string) tftags.KeyValueTags {
 	return tftags.New(ctx, tags)
 }
 
 // getTagsIn returns cognitoidp service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) map[string]string {
+func getTagsIn(ctx context.Context) map[string]*string {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -73,7 +74,7 @@ func getTagsIn(ctx context.Context) map[string]string {
 }
 
 // setTagsOut sets cognitoidp service tags in Context.
-func setTagsOut(ctx context.Context, tags map[string]string) {
+func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -82,7 +83,7 @@ func setTagsOut(ctx context.Context, tags map[string]string) {
 // updateTags updates cognitoidp service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *cognitoidentityprovider.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*cognitoidentityprovider.Options)) error {
+func updateTags(ctx context.Context, conn cognitoidentityprovideriface.CognitoIdentityProviderAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -93,10 +94,10 @@ func updateTags(ctx context.Context, conn *cognitoidentityprovider.Client, ident
 	if len(removedTags) > 0 {
 		input := &cognitoidentityprovider.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagKeys:     removedTags.Keys(),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -111,7 +112,7 @@ func updateTags(ctx context.Context, conn *cognitoidentityprovider.Client, ident
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -124,5 +125,5 @@ func updateTags(ctx context.Context, conn *cognitoidentityprovider.Client, ident
 // UpdateTags updates cognitoidp service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).CognitoIDPClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).CognitoIDPConn(ctx), identifier, oldTags, newTags)
 }

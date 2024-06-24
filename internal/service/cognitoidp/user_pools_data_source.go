@@ -7,15 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cognito_user_pools", name="User Pools")
@@ -44,7 +42,7 @@ func dataSourceUserPools() *schema.Resource {
 
 func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	output, err := findUserPoolDescriptionTypes(ctx, conn)
 
@@ -56,14 +54,14 @@ func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	var arns, userPoolIDs []string
 
 	for _, v := range output {
-		if name != aws.ToString(v.Name) {
+		if name != aws.StringValue(v.Name) {
 			continue
 		}
 
-		userPoolID := aws.ToString(v.Id)
+		userPoolID := aws.StringValue(v.Id)
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   names.CognitoIDPEndpointID,
+			Service:   cognitoidentityprovider.ServiceName,
 			Region:    meta.(*conns.AWSClient).Region,
 			AccountID: meta.(*conns.AWSClient).AccountID,
 			Resource:  fmt.Sprintf("userpool/%s", userPoolID),
@@ -80,22 +78,28 @@ func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func findUserPoolDescriptionTypes(ctx context.Context, conn *cognitoidentityprovider.Client) ([]awstypes.UserPoolDescriptionType, error) {
+func findUserPoolDescriptionTypes(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider) ([]*cognitoidentityprovider.UserPoolDescriptionType, error) {
 	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int32(60),
+		MaxResults: aws.Int64(60),
 	}
-	var output []awstypes.UserPoolDescriptionType
+	var output []*cognitoidentityprovider.UserPoolDescriptionType
 
-	pages := cognitoidentityprovider.NewListUserPoolsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListUserPoolsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		output = append(output, page.UserPools...)
+		for _, v := range page.UserPools {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
