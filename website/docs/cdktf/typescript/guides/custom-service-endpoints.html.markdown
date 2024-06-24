@@ -116,6 +116,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
+  <li><code>applicationsignals</code></li>
   <li><code>appmesh</code></li>
   <li><code>apprunner</code></li>
   <li><code>appstream</code></li>
@@ -445,4 +446,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-28568d63602252f93a7bf5c1c81b4800aae1f6e0c52b0a21222f9ee702daf47d -->
+<!-- cache-key: cdktf-0.20.1 input-217dacc8986772aa95a9df842e787776d800041c33e189c22c8f136e26bc766c -->
