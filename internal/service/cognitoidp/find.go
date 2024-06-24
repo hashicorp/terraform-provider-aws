@@ -123,37 +123,3 @@ func listCognitoUserPoolClientDescriptions(ctx context.Context, conn *cognitoide
 
 	return descs, nil
 }
-
-func FindRiskConfigurationById(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, id string) (*cognitoidentityprovider.RiskConfigurationType, error) {
-	userPoolId, clientId, err := RiskConfigurationParseID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	input := &cognitoidentityprovider.DescribeRiskConfigurationInput{
-		UserPoolId: aws.String(userPoolId),
-	}
-
-	if clientId != "" {
-		input.ClientId = aws.String(clientId)
-	}
-
-	output, err := conn.DescribeRiskConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.RiskConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.RiskConfiguration, nil
-}

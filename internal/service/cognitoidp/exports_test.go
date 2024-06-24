@@ -20,6 +20,7 @@ var (
 	FindGroupByTwoPartKey                   = findGroupByTwoPartKey
 	FindIdentityProviderByTwoPartKey        = findIdentityProviderByTwoPartKey
 	FindResourceServerByTwoPartKey          = findResourceServerByTwoPartKey
+	FindRiskConfigurationByTwoPartKey       = findRiskConfigurationByTwoPartKey
 	FindUserByTwoPartKey                    = findUserByTwoPartKey
 	FindUserPoolByID                        = findUserPoolByID
 	FindUserPoolUICustomizationByTwoPartKey = findUserPoolUICustomizationByTwoPartKey
