@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newConnectAppAuthorizationResource,
+			Factory: newAppAuthorizationConnectionResource,
 			Name:    "Connect App Authorization",
 		},
 	}

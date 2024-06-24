@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccConnectAppAuthorization_basic(t *testing.T) {
+func testAccAppAuthorizationConnection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization_connection.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
@@ -30,7 +30,7 @@ func testAccConnectAppAuthorization_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectAppAuthorizationConfig_basic(rName),
+				Config: testAccAppAuthorizationConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "app_bundle_arn", appBudleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "app_authorization_arn", appAuthorization, names.AttrARN),
@@ -39,7 +39,7 @@ func testAccConnectAppAuthorization_basic(t *testing.T) {
 		},
 	})
 }
-func testAccConnectAppAuthorization_OAth2(t *testing.T) {
+func testAccAppAuthorizationConnection_OAuth2(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization_connection.test"
 	appBudleResourceName := "aws_appfabric_app_bundle.test"
@@ -56,7 +56,7 @@ func testAccConnectAppAuthorization_OAth2(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectAppAuthorizationConfig_OAth2(rName),
+				Config: testAccAppAuthorizationConnectionConfig_OAuth2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "app_bundle_arn", appBudleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "app_authorization_arn", appAuthorization, names.AttrARN),
@@ -66,7 +66,7 @@ func testAccConnectAppAuthorization_OAth2(t *testing.T) {
 	})
 }
 
-func testAccConnectAppAuthorizationConfig_basic(rName string) string {
+func testAccAppAuthorizationConnectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
   tags = {
@@ -94,12 +94,10 @@ resource "aws_appfabric_app_authorization_connection" "test" {
   app_bundle_arn        = aws_appfabric_app_bundle.test.arn
   app_authorization_arn = aws_appfabric_app_authorization.test.arn
 }
-
-
 `, rName)
 }
 
-func testAccConnectAppAuthorizationConfig_OAth2(rName string) string {
+func testAccAppAuthorizationConnectionConfig_OAuth2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
   tags = {
@@ -133,7 +131,5 @@ resource "aws_appfabric_app_authorization_connection" "test" {
   }
 
 }
-
-
 `, rName)
 }

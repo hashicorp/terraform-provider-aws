@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -33,57 +32,53 @@ import (
 )
 
 // @FrameworkResource(name="App Authorization Connection")
-func newConnectAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceConnectAppAuthorization{}
+func newAppAuthorizationConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &appAuthorizationConnectionResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
 
-const (
-	ResNameConnectAppAuthorization = "Connect App Authorization"
-)
-
-type resourceConnectAppAuthorization struct {
+type appAuthorizationConnectionResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[connectAppAuthorizationResourceModel]
+	framework.WithNoUpdate
 	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
 
-func (r *resourceConnectAppAuthorization) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_appfabric_app_authorization_connection"
+func (*appAuthorizationConnectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_appfabric_app_authorization_connection"
 }
 
-func (r *resourceConnectAppAuthorization) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *appAuthorizationConnectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"app": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"app_bundle_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"app_authorization_arn": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"tenant": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[connectionTenantModel](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[tenantModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"tenant_display_name": types.StringType,
-						"tenant_identifier":   types.StringType,
-					},
+					AttrTypes: fwtypes.AttributeTypesMust[tenantModel](ctx),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -107,15 +102,13 @@ func (r *resourceConnectAppAuthorization) Schema(ctx context.Context, req resour
 			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
-				Delete: true,
 			}),
 		},
 	}
 }
 
-func (r *resourceConnectAppAuthorization) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data connectAppAuthorizationResourceModel
+func (r *appAuthorizationConnectionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data appAuthorizationConnectionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -123,51 +116,49 @@ func (r *resourceConnectAppAuthorization) Create(ctx context.Context, request re
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	input := &appfabric.ConnectAppAuthorizationInput{
-		AppBundleIdentifier:        aws.String(data.AppBundleARN.ValueString()),
-		AppAuthorizationIdentifier: aws.String(data.AppAuthorizationARN.ValueString()),
-	}
+	input := &appfabric.ConnectAppAuthorizationInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := conn.ConnectAppAuthorization(ctx, input)
+	input.AppBundleIdentifier = fwflex.StringFromFramework(ctx, data.AppBundleARN)
+	input.AppAuthorizationIdentifier = fwflex.StringFromFramework(ctx, data.AppAuthorizationARN)
+
+	_, err := conn.ConnectAppAuthorization(ctx, input)
+
 	if err != nil {
-		response.Diagnostics.AddError("Creating Connection for App Authorization", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating AppFabric App Authorization (%s) Connection", data.AppAuthorizationARN.ValueString()), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	appAuthorization := output.AppAuthorizationSummary
-	data.AppBundleARN = fwflex.StringToFramework(ctx, appAuthorization.AppBundleArn)
-	data.AppAuthorizationARN = fwflex.StringToFramework(ctx, appAuthorization.AppAuthorizationArn)
 	data.setID()
 
-	con, err := waitConnectAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	appAuthorization, err := waitConnectAppAuthorizationCreated(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for App Authorization (%s) Conect", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for AppFabric App Authorization Connection (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	var tenant connectionTenantModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, con.Tenant, &tenant)...)
+	data.App = fwflex.StringToFramework(ctx, appAuthorization.App)
+
+	var tenant tenantModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, appAuthorization.Tenant, &tenant)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	data.Tenant = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tenant)
-	data.App = fwflex.StringToFramework(ctx, appAuthorization.App)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceConnectAppAuthorization) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data connectAppAuthorizationResourceModel
+func (r *appAuthorizationConnectionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data appAuthorizationConnectionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -181,7 +172,7 @@ func (r *resourceConnectAppAuthorization) Read(ctx context.Context, request reso
 
 	conn := r.Meta().AppFabricClient(ctx)
 
-	output, err := findConnectAppAuthorizationByAppAuth(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
+	output, err := findConnectAppAuthorizationByTwoPartKey(ctx, conn, data.AppAuthorizationARN.ValueString(), data.AppBundleARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -191,45 +182,49 @@ func (r *resourceConnectAppAuthorization) Read(ctx context.Context, request reso
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading App Fabric AppAuthorization Connection ID  (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading AppFabric App Authorization Connection (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	var tenant connectionTenantModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Tenant, &tenant)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.Tenant = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tenant)
-	data.App = fwflex.StringToFramework(ctx, output.App)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    enum.Slice(awstypes.AppAuthorizationStatusConnected),
-		Refresh:                   statusConnectAppAuthorization(ctx, conn, appAuthorizationARN, appBundleArn),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+func findConnectAppAuthorizationByTwoPartKey(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
+	input := &appfabric.GetAppAuthorizationInput{
+		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
+		AppBundleIdentifier:        aws.String(appBundleIdentifier),
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.AppAuthorization); ok {
-		return out, err
+	output, err := conn.GetAppAuthorization(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return nil, err
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.AppAuthorization == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AppAuthorization, nil
 }
 
 func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findConnectAppAuthorizationByAppAuth(ctx, conn, appAuthorizationARN, appBundleArn)
+		output, err := findConnectAppAuthorizationByTwoPartKey(ctx, conn, appAuthorizationARN, appBundleArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -243,68 +238,54 @@ func statusConnectAppAuthorization(ctx context.Context, conn *appfabric.Client, 
 	}
 }
 
-func findConnectAppAuthorizationByAppAuth(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleIdentifier string) (*awstypes.AppAuthorization, error) {
-	in := &appfabric.GetAppAuthorizationInput{
-		AppAuthorizationIdentifier: aws.String(appAuthorizationARN),
-		AppBundleIdentifier:        aws.String(appBundleIdentifier),
+func waitConnectAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, appAuthorizationARN, appBundleArn string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AppAuthorizationStatusPendingConnect),
+		Target:  enum.Slice(awstypes.AppAuthorizationStatusConnected),
+		Refresh: statusConnectAppAuthorization(ctx, conn, appAuthorizationARN, appBundleArn),
+		Timeout: timeout,
 	}
 
-	output, err := conn.GetAppAuthorization(ctx, in)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
+	if out, ok := outputRaw.(*awstypes.AppAuthorization); ok {
+		return out, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AppAuthorization == nil || output.AppAuthorization.Status != awstypes.AppAuthorizationStatusConnected {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return output.AppAuthorization, nil
+	return nil, err
 }
 
-type connectAppAuthorizationResourceModel struct {
-	App                 types.String                                           `tfsdk:"app"`
-	AppAuthorizationARN types.String                                           `tfsdk:"app_authorization_arn"`
-	AppBundleARN        types.String                                           `tfsdk:"app_bundle_arn"`
-	AuthRequest         fwtypes.ListNestedObjectValueOf[authRequestModel]      `tfsdk:"auth_request"`
-	Tenant              fwtypes.ListNestedObjectValueOf[connectionTenantModel] `tfsdk:"tenant"`
-	ID                  types.String                                           `tfsdk:"id"`
-	Timeouts            timeouts.Value                                         `tfsdk:"timeouts"`
+type appAuthorizationConnectionResourceModel struct {
+	App                 types.String                                      `tfsdk:"app"`
+	AppAuthorizationARN fwtypes.ARN                                       `tfsdk:"app_authorization_arn"`
+	AppBundleARN        fwtypes.ARN                                       `tfsdk:"app_bundle_arn"`
+	AuthRequest         fwtypes.ListNestedObjectValueOf[authRequestModel] `tfsdk:"auth_request"`
+	ID                  types.String                                      `tfsdk:"id"`
+	Tenant              fwtypes.ListNestedObjectValueOf[tenantModel]      `tfsdk:"tenant"`
+	Timeouts            timeouts.Value                                    `tfsdk:"timeouts"`
 }
 
 const (
-	connectAppAuthorizationIDPartCount = 2
+	appAuthorizationConnectionResourceIDPartCount = 2
 )
 
-func (m *connectAppAuthorizationResourceModel) InitFromID() error {
-	parts, err := flex.ExpandResourceId(m.ID.ValueString(), connectAppAuthorizationIDPartCount, false)
+func (m *appAuthorizationConnectionResourceModel) InitFromID() error {
+	parts, err := flex.ExpandResourceId(m.ID.ValueString(), appAuthorizationConnectionResourceIDPartCount, false)
 	if err != nil {
 		return err
 	}
 
-	m.AppAuthorizationARN = types.StringValue(parts[0])
-	m.AppBundleARN = types.StringValue(parts[1])
+	m.AppAuthorizationARN = fwtypes.ARNValue(parts[0])
+	m.AppBundleARN = fwtypes.ARNValue(parts[1])
 
 	return nil
 }
 
-func (m *connectAppAuthorizationResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppAuthorizationARN.ValueString(), m.AppBundleARN.ValueString()}, connectAppAuthorizationIDPartCount, false)))
+func (m *appAuthorizationConnectionResourceModel) setID() {
+	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppAuthorizationARN.ValueString(), m.AppBundleARN.ValueString()}, appAuthorizationConnectionResourceIDPartCount, false)))
 }
 
 type authRequestModel struct {
 	Code        types.String `tfsdk:"code"`
-	RedirectUri types.String `tfsdk:"redirect_uri"`
-}
-
-type connectionTenantModel struct {
-	TenantDisplayName types.String `tfsdk:"tenant_display_name"`
-	TenantIdentifier  types.String `tfsdk:"tenant_identifier"`
+	RedirectURI types.String `tfsdk:"redirect_uri"`
 }
