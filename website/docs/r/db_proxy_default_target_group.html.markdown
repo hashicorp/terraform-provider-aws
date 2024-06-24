@@ -53,7 +53,7 @@ resource "aws_db_proxy_default_target_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_proxy_name` - (Required) Name of the RDS DB Proxy.
 * `connection_pool_config` - (Optional) The settings that determine the size and behavior of the connection pool for the target group.
@@ -66,9 +66,9 @@ The following arguments are supported:
 * `max_idle_connections_percent` - (Optional) Controls how actively the proxy closes idle database connections in the connection pool. A high value enables the proxy to leave a high percentage of idle connections open. A low value causes the proxy to close idle client connections and return the underlying database connections to the connection pool. For Aurora MySQL, it is expressed as a percentage of the max_connections setting for the RDS DB instance or Aurora DB cluster used by the target group.
 * `session_pinning_filters` - (Optional) Each item in the list represents a class of SQL operations that normally cause all later statements in a session using a proxy to be pinned to the same underlying database connection. Including an item in the list exempts that class of SQL operations from the pinning behavior. Currently, the only allowed value is `EXCLUDE_VARIABLE_SETS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the RDS DB Proxy.
 * `arn` - The Amazon Resource Name (ARN) representing the target group.
@@ -83,8 +83,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB proxy default target groups can be imported using the `db_proxy_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB proxy default target groups using the `db_proxy_name`. For example:
 
+```terraform
+import {
+  to = aws_db_proxy_default_target_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_db_proxy_default_target_group.example example
+
+Using `terraform import`, import DB proxy default target groups using the `db_proxy_name`. For example:
+
+```console
+% terraform import aws_db_proxy_default_target_group.example example
 ```

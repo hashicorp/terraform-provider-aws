@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_grafana_workspace_api_key")
@@ -28,9 +29,10 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 		DeleteWithoutTimeout: resourceWorkspaceAPIKeyDelete,
 
 		Schema: map[string]*schema.Schema{
-			"key": {
-				Type:     schema.TypeString,
-				Computed: true,
+			names.AttrKey: {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"key_name": {
 				Type:         schema.TypeString,
@@ -80,7 +82,7 @@ func resourceWorkspaceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.SetId(id)
-	d.Set("key", output.Key)
+	d.Set(names.AttrKey, output.Key)
 
 	return diags
 }

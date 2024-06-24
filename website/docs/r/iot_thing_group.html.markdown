@@ -54,9 +54,9 @@ resource "aws_iot_thing_group" "example" {
 
 * `attributes` - (Optional) Key-value map.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the Thing Group.
 * `id` - The Thing Group ID.
@@ -64,8 +64,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT Things Groups can be imported using the name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Things Groups using the name. For example:
 
+```terraform
+import {
+  to = aws_iot_thing_group.example
+  id = "example"
+}
 ```
-$ terraform import aws_iot_thing_group.example example
+
+Using `terraform import`, import IoT Things Groups using the name. For example:
+
+```console
+% terraform import aws_iot_thing_group.example example
 ```

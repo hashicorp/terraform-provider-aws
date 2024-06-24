@@ -30,7 +30,7 @@ func TestAccQuickSightRefreshSchedule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,12 +38,12 @@ func TestAccQuickSightRefreshSchedule_basic(t *testing.T) {
 				Config: testAccRefreshScheduleConfigBasic(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight",
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.time_of_the_day", "12:00"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.timezone", "Europe/London"),
@@ -68,7 +68,7 @@ func TestAccQuickSightRefreshSchedule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,13 +102,13 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 				Config: testAccRefreshScheduleConfigWeeklyRefresh(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight",
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "WEEKLY"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week", "MONDAY"),
 				),
 			},
@@ -131,7 +131,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -139,14 +139,14 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 				Config: testAccRefreshScheduleConfigMonthlyRefresh(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight",
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "MONTHLY"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", acctest.Ct1),
 				),
 			},
 			{

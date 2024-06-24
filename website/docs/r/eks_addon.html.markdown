@@ -124,7 +124,7 @@ The following arguments are required:
 
 * `addon_name` – (Required) Name of the EKS add-on. The name must match one of
   the names returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
-* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `cluster_name` – (Required) Name of the EKS Cluster.
 
 The following arguments are optional:
 
@@ -148,9 +148,9 @@ The following arguments are optional:
   for service accounts on your cluster](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html)
   in the Amazon EKS User Guide.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS add-on.
 * `id` - EKS Cluster name and EKS Addon name separated by a colon (`:`).
@@ -169,8 +169,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_addon.my_eks_addon
+  id = "my_cluster_name:my_addon_name"
+}
 ```
-$ terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
+
+Using `terraform import`, import EKS add-on using the `cluster_name` and `addon_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name
 ```

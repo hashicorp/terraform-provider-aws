@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -29,7 +29,7 @@ import (
 )
 
 func targets() []string {
-	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target", "iceberg_target"}
+	return []string{"s3_target", "dynamodb_target", "mongodb_target", "jdbc_target", "catalog_target", "delta_target", "iceberg_target", "hudi_target"}
 }
 
 // @SDKResource("aws_glue_crawler", name="Crawler")
@@ -48,7 +48,7 @@ func ResourceCrawler() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceCrawler() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -90,7 +90,7 @@ func ResourceCrawler() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
@@ -100,7 +100,7 @@ func ResourceCrawler() *schema.Resource {
 				},
 				ValidateFunc: validation.StringIsJSON,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -132,7 +132,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -144,7 +144,7 @@ func ResourceCrawler() *schema.Resource {
 				AtLeastOneOf: targets(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -157,6 +157,35 @@ func ResourceCrawler() *schema.Resource {
 							Type:         schema.TypeFloat,
 							Optional:     true,
 							ValidateFunc: validation.FloatBetween(0.1, 1.5),
+						},
+					},
+				},
+			},
+			"hudi_target": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				MinItems:     1,
+				AtLeastOneOf: targets(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"connection_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"exclusions": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"maximum_traversal_depth": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 20),
+						},
+						"paths": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -214,7 +243,7 @@ func ResourceCrawler() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -228,7 +257,7 @@ func ResourceCrawler() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"account_id": {
+						names.AttrAccountID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -268,7 +297,7 @@ func ResourceCrawler() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -280,13 +309,13 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9-_$#\/]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#\/-]+$`), ""),
 				),
 			},
 			"recrawl_policy": {
@@ -305,7 +334,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Required: true,
 				// Glue API always returns name
@@ -345,7 +374,7 @@ func ResourceCrawler() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -357,7 +386,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -401,7 +430,7 @@ func ResourceCrawler() *schema.Resource {
 func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueConn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	crawlerInput, err := createCrawlerInput(ctx, d, name)
 	if err != nil {
@@ -473,16 +502,16 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("crawler/%s", d.Id()),
 	}.String()
-	d.Set("arn", crawlerARN)
-	d.Set("name", crawler.Name)
-	d.Set("database_name", crawler.DatabaseName)
-	d.Set("role", crawler.Role)
-	d.Set("configuration", crawler.Configuration)
-	d.Set("description", crawler.Description)
+	d.Set(names.AttrARN, crawlerARN)
+	d.Set(names.AttrName, crawler.Name)
+	d.Set(names.AttrDatabaseName, crawler.DatabaseName)
+	d.Set(names.AttrRole, crawler.Role)
+	d.Set(names.AttrConfiguration, crawler.Configuration)
+	d.Set(names.AttrDescription, crawler.Description)
 	d.Set("security_configuration", crawler.CrawlerSecurityConfiguration)
-	d.Set("schedule", "")
+	d.Set(names.AttrSchedule, "")
 	if crawler.Schedule != nil {
-		d.Set("schedule", crawler.Schedule.ScheduleExpression)
+		d.Set(names.AttrSchedule, crawler.Schedule.ScheduleExpression)
 	}
 	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting classifiers: %s", err)
@@ -520,6 +549,10 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "setting delta_target: %s", err)
 		}
 
+		if err := d.Set("hudi_target", flattenHudiTargets(crawler.Targets.HudiTargets)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting hudi_target: %s", err)
+		}
+
 		if err := d.Set("iceberg_target", flattenIcebergTargets(crawler.Targets.IcebergTargets)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting iceberg_target: %s", err)
 		}
@@ -543,9 +576,9 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueConn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		updateCrawlerInput, err := updateCrawlerInput(d, name)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
@@ -619,15 +652,15 @@ func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta int
 func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName string) (*glue.CreateCrawlerInput, error) {
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
-		DatabaseName: aws.String(d.Get("database_name").(string)),
-		Role:         aws.String(d.Get("role").(string)),
+		DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Tags:         getTagsIn(ctx),
 		Targets:      expandCrawlerTargets(d),
 	}
-	if description, ok := d.GetOk("description"); ok {
+	if description, ok := d.GetOk(names.AttrDescription); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
-	if schedule, ok := d.GetOk("schedule"); ok {
+	if schedule, ok := d.GetOk(names.AttrSchedule); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	}
 	if classifiers, ok := d.GetOk("classifiers"); ok {
@@ -639,11 +672,11 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
 		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
 	}
-	if configuration, ok := d.GetOk("configuration"); ok {
+	if configuration, ok := d.GetOk(names.AttrConfiguration); ok {
 		crawlerInput.Configuration = aws.String(configuration.(string))
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return nil, fmt.Errorf("configuration contains an invalid JSON: %v", err)
@@ -673,15 +706,15 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.UpdateCrawlerInput, error) {
 	crawlerInput := &glue.UpdateCrawlerInput{
 		Name:         aws.String(crawlerName),
-		DatabaseName: aws.String(d.Get("database_name").(string)),
-		Role:         aws.String(d.Get("role").(string)),
+		DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
+		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Targets:      expandCrawlerTargets(d),
 	}
-	if description, ok := d.GetOk("description"); ok {
+	if description, ok := d.GetOk(names.AttrDescription); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
 
-	if schedule, ok := d.GetOk("schedule"); ok {
+	if schedule, ok := d.GetOk(names.AttrSchedule); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	} else {
 		crawlerInput.Schedule = aws.String("")
@@ -695,7 +728,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 
 	crawlerInput.TablePrefix = aws.String(d.Get("table_prefix").(string))
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
@@ -772,6 +805,10 @@ func expandCrawlerTargets(d *schema.ResourceData) *glue.CrawlerTargets {
 		crawlerTargets.DeltaTargets = expandDeltaTargets(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("hudi_target"); ok {
+		crawlerTargets.HudiTargets = expandHudiTargets(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("iceberg_target"); ok {
 		crawlerTargets.IcebergTargets = expandIcebergTargets(v.([]interface{}))
 	}
@@ -794,7 +831,7 @@ func expandDynamoDBTargets(targets []interface{}) []*glue.DynamoDBTarget {
 
 func expandDynamoDBTarget(cfg map[string]interface{}) *glue.DynamoDBTarget {
 	target := &glue.DynamoDBTarget{
-		Path:    aws.String(cfg["path"].(string)),
+		Path:    aws.String(cfg[names.AttrPath].(string)),
 		ScanAll: aws.Bool(cfg["scan_all"].(bool)),
 	}
 
@@ -820,7 +857,7 @@ func expandS3Targets(targets []interface{}) []*glue.S3Target {
 
 func expandS3Target(cfg map[string]interface{}) *glue.S3Target {
 	target := &glue.S3Target{
-		Path: aws.String(cfg["path"].(string)),
+		Path: aws.String(cfg[names.AttrPath].(string)),
 	}
 
 	if v, ok := cfg["connection_name"]; ok {
@@ -861,7 +898,7 @@ func expandJDBCTargets(targets []interface{}) []*glue.JdbcTarget {
 
 func expandJDBCTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 	target := &glue.JdbcTarget{
-		Path:           aws.String(cfg["path"].(string)),
+		Path:           aws.String(cfg[names.AttrPath].(string)),
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
 	}
 
@@ -891,7 +928,7 @@ func expandCatalogTargets(targets []interface{}) []*glue.CatalogTarget {
 
 func expandCatalogTarget(cfg map[string]interface{}) *glue.CatalogTarget {
 	target := &glue.CatalogTarget{
-		DatabaseName: aws.String(cfg["database_name"].(string)),
+		DatabaseName: aws.String(cfg[names.AttrDatabaseName].(string)),
 		Tables:       flex.ExpandStringList(cfg["tables"].([]interface{})),
 	}
 
@@ -926,7 +963,7 @@ func expandMongoDBTargets(targets []interface{}) []*glue.MongoDBTarget {
 func expandMongoDBTarget(cfg map[string]interface{}) *glue.MongoDBTarget {
 	target := &glue.MongoDBTarget{
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
-		Path:           aws.String(cfg["path"].(string)),
+		Path:           aws.String(cfg[names.AttrPath].(string)),
 		ScanAll:        aws.Bool(cfg["scan_all"].(bool)),
 	}
 
@@ -951,6 +988,36 @@ func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 		CreateNativeDeltaTable: aws.Bool(cfg["create_native_delta_table"].(bool)),
 		DeltaTables:            flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
 		WriteManifest:          aws.Bool(cfg["write_manifest"].(bool)),
+	}
+
+	if v, ok := cfg["connection_name"].(string); ok {
+		target.ConnectionName = aws.String(v)
+	}
+
+	return target
+}
+
+func expandHudiTargets(targets []interface{}) []*glue.HudiTarget {
+	if len(targets) < 1 {
+		return []*glue.HudiTarget{}
+	}
+
+	perms := make([]*glue.HudiTarget, len(targets))
+	for i, rawCfg := range targets {
+		cfg := rawCfg.(map[string]interface{})
+		perms[i] = expandHudiTarget(cfg)
+	}
+	return perms
+}
+
+func expandHudiTarget(cfg map[string]interface{}) *glue.HudiTarget {
+	target := &glue.HudiTarget{
+		Paths:                 flex.ExpandStringSet(cfg["paths"].(*schema.Set)),
+		MaximumTraversalDepth: aws.Int64(int64(cfg["maximum_traversal_depth"].(int))),
+	}
+
+	if v, ok := cfg["exclusions"]; ok {
+		target.Exclusions = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -996,7 +1063,7 @@ func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 	for _, s3Target := range s3Targets {
 		attrs := make(map[string]interface{})
 		attrs["exclusions"] = flex.FlattenStringList(s3Target.Exclusions)
-		attrs["path"] = aws.StringValue(s3Target.Path)
+		attrs[names.AttrPath] = aws.StringValue(s3Target.Path)
 		attrs["connection_name"] = aws.StringValue(s3Target.ConnectionName)
 
 		if s3Target.SampleSize != nil {
@@ -1018,7 +1085,7 @@ func flattenCatalogTargets(CatalogTargets []*glue.CatalogTarget) []map[string]in
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.StringValue(catalogTarget.ConnectionName)
 		attrs["tables"] = flex.FlattenStringList(catalogTarget.Tables)
-		attrs["database_name"] = aws.StringValue(catalogTarget.DatabaseName)
+		attrs[names.AttrDatabaseName] = aws.StringValue(catalogTarget.DatabaseName)
 		attrs["event_queue_arn"] = aws.StringValue(catalogTarget.EventQueueArn)
 		attrs["dlq_event_queue_arn"] = aws.StringValue(catalogTarget.DlqEventQueueArn)
 
@@ -1032,7 +1099,7 @@ func flattenDynamoDBTargets(dynamodbTargets []*glue.DynamoDBTarget) []map[string
 
 	for _, dynamodbTarget := range dynamodbTargets {
 		attrs := make(map[string]interface{})
-		attrs["path"] = aws.StringValue(dynamodbTarget.Path)
+		attrs[names.AttrPath] = aws.StringValue(dynamodbTarget.Path)
 		attrs["scan_all"] = aws.BoolValue(dynamodbTarget.ScanAll)
 		attrs["scan_rate"] = aws.Float64Value(dynamodbTarget.ScanRate)
 
@@ -1049,7 +1116,7 @@ func flattenJDBCTargets(jdbcTargets []*glue.JdbcTarget) []map[string]interface{}
 		attrs["connection_name"] = aws.StringValue(jdbcTarget.ConnectionName)
 		attrs["exclusions"] = flex.FlattenStringList(jdbcTarget.Exclusions)
 		attrs["enable_additional_metadata"] = flex.FlattenStringList(jdbcTarget.EnableAdditionalMetadata)
-		attrs["path"] = aws.StringValue(jdbcTarget.Path)
+		attrs[names.AttrPath] = aws.StringValue(jdbcTarget.Path)
 
 		result = append(result, attrs)
 	}
@@ -1062,7 +1129,7 @@ func flattenMongoDBTargets(mongoDBTargets []*glue.MongoDBTarget) []map[string]in
 	for _, mongoDBTarget := range mongoDBTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.StringValue(mongoDBTarget.ConnectionName)
-		attrs["path"] = aws.StringValue(mongoDBTarget.Path)
+		attrs[names.AttrPath] = aws.StringValue(mongoDBTarget.Path)
 		attrs["scan_all"] = aws.BoolValue(mongoDBTarget.ScanAll)
 
 		result = append(result, attrs)
@@ -1079,6 +1146,21 @@ func flattenDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interfac
 		attrs["create_native_delta_table"] = aws.BoolValue(deltaTarget.CreateNativeDeltaTable)
 		attrs["delta_tables"] = flex.FlattenStringSet(deltaTarget.DeltaTables)
 		attrs["write_manifest"] = aws.BoolValue(deltaTarget.WriteManifest)
+
+		result = append(result, attrs)
+	}
+	return result
+}
+
+func flattenHudiTargets(hudiTargets []*glue.HudiTarget) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0)
+
+	for _, hudiTarget := range hudiTargets {
+		attrs := make(map[string]interface{})
+		attrs["connection_name"] = aws.StringValue(hudiTarget.ConnectionName)
+		attrs["maximum_traversal_depth"] = aws.Int64Value(hudiTarget.MaximumTraversalDepth)
+		attrs["paths"] = flex.FlattenStringSet(hudiTarget.Paths)
+		attrs["exclusions"] = flex.FlattenStringList(hudiTarget.Exclusions)
 
 		result = append(result, attrs)
 	}
@@ -1139,7 +1221,7 @@ func expandLakeFormationConfiguration(cfg []interface{}) *glue.LakeFormationConf
 
 	target := &glue.LakeFormationConfiguration{}
 
-	if v, ok := m["account_id"].(string); ok {
+	if v, ok := m[names.AttrAccountID].(string); ok {
 		target.AccountId = aws.String(v)
 	}
 
@@ -1156,7 +1238,7 @@ func flattenLakeFormationConfiguration(cfg *glue.LakeFormationConfiguration) []m
 	}
 
 	m := map[string]interface{}{
-		"account_id":                     aws.StringValue(cfg.AccountId),
+		names.AttrAccountID:              aws.StringValue(cfg.AccountId),
 		"use_lake_formation_credentials": aws.BoolValue(cfg.UseLakeFormationCredentials),
 	}
 

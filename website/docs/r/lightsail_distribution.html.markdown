@@ -121,7 +121,7 @@ resource "aws_lightsail_instance" "test" {
   name              = "test-instance"
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 
 resource "aws_lightsail_lb_attachment" "test" {
@@ -159,10 +159,7 @@ The following arguments are optional:
 * `certificate_name` - (Optional) The name of the SSL/TLS certificate attached to the distribution, if any.
 * `ip_address_type` - (Optional) The IP address type of the distribution. Default: `dualstack`.
 * `is_enabled` - (Optional) Indicates whether the distribution is enabled. Default: `true`.
-* `tags` - (Optional) Map of tags for the Lightsail Distribution. If
-  configured with a provider
-  [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
-  present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags for the Lightsail Distribution. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### default_cache_behavior
 
@@ -206,9 +203,9 @@ The following arguments are optional:
 * `behavior` - (Required) The cache behavior for the specified path.
 * `path` - (Required) The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/\*), and file types (\*.html, \*jpg, \*js). Directories and file paths are case-sensitive.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alternative_domain_names` - The alternate domain names of the distribution.
 * `arn` - The Amazon Resource Name (ARN) of the distribution.
@@ -236,8 +233,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lightsail Distribution can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Distribution using the `id`. For example:
 
+```terraform
+import {
+  to = aws_lightsail_distribution.example
+  id = "rft-8012925589"
+}
 ```
-$ terraform import aws_lightsail_distribution.example rft-8012925589
+
+Using `terraform import`, import Lightsail Distribution using the `id`. For example:
+
+```console
+% terraform import aws_lightsail_distribution.example rft-8012925589
 ```

@@ -102,16 +102,16 @@ resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `load_balancer_name` - (Required) The load balancer on which the policy is defined.
 * `policy_name` - (Required) The name of the load balancer policy.
 * `policy_type_name` - (Required) The policy type.
 * `policy_attribute` - (Optional) Policy attribute to apply to the policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `policy_name` - The name of the stickiness policy.

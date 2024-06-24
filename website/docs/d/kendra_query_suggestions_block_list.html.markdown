@@ -21,14 +21,14 @@ data "aws_kendra_query_suggestions_block_list" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `index_id` - (Required) Identifier of the index that contains the block list.
 * `query_suggestions_block_list_id` - (Required) Identifier of the block list.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the block list.
 * `created_at` - Date-time a block list was created.

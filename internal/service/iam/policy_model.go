@@ -6,11 +6,11 @@ package iam
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"sort"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/jmespath/go-jmespath"
 )
 
@@ -157,6 +157,7 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 				for _, v := range value.([]interface{}) {
 					values = append(values, v.(string))
 				}
+				sort.Strings(values)
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
 			default:
 				return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet.Identifiers", vt)
@@ -177,17 +178,27 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 		if _, ok := raw[c.Test]; !ok {
 			raw[c.Test] = map[string]interface{}{}
 		}
+		if _, ok := raw[c.Test][c.Variable]; !ok {
+			raw[c.Test][c.Variable] = []string{}
+		}
 		switch i := c.Values.(type) {
 		case []string:
-			if _, ok := raw[c.Test][c.Variable]; !ok {
-				raw[c.Test][c.Variable] = make([]string, 0, len(i))
-			}
 			// order matters with values so not sorting here
 			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i...)
 		case string:
-			raw[c.Test][c.Variable] = i
+			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i)
 		default:
 			return nil, fmt.Errorf("Unsupported data type for IAMPolicyStatementConditionSet: %s", i)
+		}
+	}
+
+	// flatten entries with a single item to match AWS IAM syntax
+	for k1 := range raw {
+		for k2 := range raw[k1] {
+			items := raw[k1][k2].([]string)
+			if len(items) == 1 {
+				raw[k1][k2] = items[0]
+			}
 		}
 	}
 
@@ -259,12 +270,12 @@ func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	for _, principal := range principals {
 		switch x := principal.(type) {
 		case string:
-			if !isValidPolicyAWSPrincipal(x) {
+			if !IsValidPolicyAWSPrincipal(x) {
 				return false, nil
 			}
 		case []string:
 			for _, s := range x {
-				if !isValidPolicyAWSPrincipal(s) {
+				if !IsValidPolicyAWSPrincipal(s) {
 					return false, nil
 				}
 			}
@@ -274,16 +285,16 @@ func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.
 	return true, nil
 }
 
-// isValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
+// IsValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
 // That is: either an ARN, an AWS account ID, or `*`
-func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+func IsValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
 	if principal == "*" {
 		return true
 	}
 	if arn.IsARN(principal) {
 		return true
 	}
-	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
+	if regexache.MustCompile(`^\d{12}$`).MatchString(principal) {
 		return true
 	}
 	return false

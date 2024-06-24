@@ -21,15 +21,15 @@ resource "aws_db_cluster_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
 * `tags` - (Optional) A map of tags to assign to the DB cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `allocated_storage` - Allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.
@@ -53,8 +53,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_db_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_db_cluster_snapshot` using the cluster snapshot identifier. For example:
 
+```terraform
+import {
+  to = aws_db_cluster_snapshot.example
+  id = "my-cluster-snapshot"
+}
 ```
-$ terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
+
+Using `terraform import`, import `aws_db_cluster_snapshot` using the cluster snapshot identifier. For example:
+
+```console
+% terraform import aws_db_cluster_snapshot.example my-cluster-snapshot
 ```

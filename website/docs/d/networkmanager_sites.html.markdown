@@ -27,8 +27,8 @@ data "aws_networkmanager_sites" "example" {
 * `global_network_id` - (Required) ID of the Global Network of the sites to retrieve.
 * `tags` - (Optional) Restricts the list to the sites with these tags.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - IDs of the sites.

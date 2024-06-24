@@ -21,14 +21,14 @@ data "aws_service_discovery_service" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the service.
 * `namespace_id` - (Required) ID of the namespace that the service belongs to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the service.
 * `arn` - ARN of the service.
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ### dns_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `namespace_id` - ID of the namespace to use for DNS configuration.
 * `dns_records` - An array that contains one DnsRecord object for each resource record set.
@@ -49,14 +49,14 @@ The following arguments are supported:
 
 #### dns_records
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `ttl` - Amount of time, in seconds, that you want DNS resolvers to cache the settings for this resource record set.
 * `type` - Type of the resource, which indicates the value that Amazon Route 53 returns in response to DNS queries. Valid Values: A, AAAA, SRV, CNAME
 
 ### health_check_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `failure_threshold` - Number of consecutive health checks. Maximum value of 10.
 * `resource_path` - Path that you want Route 53 to request when performing health checks. Route 53 automatically adds the DNS name for the service. If you don't specify a value, the default value is /.
@@ -64,6 +64,6 @@ The following arguments are supported:
 
 ### health_check_custom_config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `failure_threshold` -  The number of 30-second intervals that you want service discovery to wait before it changes the health status of a service instance.  Maximum value of 10.

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func visualCustomActionsSchema(maxItems int) *schema.Schema {
@@ -124,7 +125,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"destination_parameter_name": parameterNameSchema(true),
-													"value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DestinationParameterValueConfiguration.html
+													names.AttrValue: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DestinationParameterValueConfiguration.html
 														Type:     schema.TypeList,
 														MinItems: 1,
 														MaxItems: 1,
@@ -223,9 +224,9 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 					},
 				},
 				"custom_action_id": idSchema(),
-				"name":             stringSchema(true, validation.StringLenBetween(1, 256)),
+				names.AttrName:     stringSchema(true, validation.StringLenBetween(1, 256)),
 				"trigger":          stringSchema(true, validation.StringInSlice(quicksight.VisualCustomActionTrigger_Values(), false)),
-				"status":           stringSchema(true, validation.StringInSlice(quicksight.Status_Values(), false)),
+				names.AttrStatus:   stringSchema(true, validation.StringInSlice(quicksight.Status_Values(), false)),
 			},
 		},
 	}
@@ -264,13 +265,13 @@ func expandVisualCustomAction(tfMap map[string]interface{}) *quicksight.VisualCu
 	if v, ok := tfMap["custom_action_id"].(string); ok && v != "" {
 		action.CustomActionId = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		action.Name = aws.String(v)
 	}
 	if v, ok := tfMap["trigger"].(string); ok && v != "" {
 		action.Trigger = aws.String(v)
 	}
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		action.Status = aws.String(v)
 	}
 	if v, ok := tfMap["action_operations"].([]interface{}); ok && len(v) > 0 {
@@ -500,7 +501,7 @@ func expandSetParameterValueConfiguration(tfMap map[string]interface{}) *quicksi
 	if v, ok := tfMap["destination_parameter_name"].(string); ok && v != "" {
 		config.DestinationParameterName = aws.String(v)
 	}
-	if v, ok := tfMap["value"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValue].([]interface{}); ok && len(v) > 0 {
 		config.Value = expandDestinationParameterValueConfiguration(v)
 	}
 
@@ -620,8 +621,8 @@ func flattenVisualCustomAction(apiObject []*quicksight.VisualCustomAction) []int
 
 		tfMap := map[string]interface{}{
 			"custom_action_id": aws.StringValue(config.CustomActionId),
-			"name":             aws.StringValue(config.Name),
-			"status":           aws.StringValue(config.Status),
+			names.AttrName:     aws.StringValue(config.Name),
+			names.AttrStatus:   aws.StringValue(config.Status),
 			"trigger":          aws.StringValue(config.Trigger),
 		}
 		if config.ActionOperations != nil {
@@ -778,7 +779,7 @@ func flattenSetParameterValueConfiguration(apiObject []*quicksight.SetParameterV
 			"destination_parameter_name": aws.StringValue(config.DestinationParameterName),
 		}
 		if config.Value != nil {
-			tfMap["value"] = flattenDestinationParameterValueConfiguration(config.Value)
+			tfMap[names.AttrValue] = flattenDestinationParameterValueConfiguration(config.Value)
 		}
 
 		tfList = append(tfList, tfMap)

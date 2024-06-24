@@ -29,7 +29,7 @@ resource "aws_macie2_custom_data_identifier" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `regex` - (Optional) The regular expression (regex) that defines the pattern to match. The expression can contain as many as 512 characters.
 * `keywords` -  (Optional) An array that lists specific character sequences (keywords), one of which must be within proximity (`maximum_match_distance`) of the regular expression to match. The array can contain as many as 50 keywords. Each keyword can contain 3 - 90 characters. Keywords aren't case sensitive.
@@ -40,9 +40,9 @@ The following arguments are supported:
 * `maximum_match_distance` - (Optional) The maximum number of characters that can exist between text that matches the regex pattern and the character sequences specified by the keywords array. Macie includes or excludes a result based on the proximity of a keyword to text that matches the regex pattern. The distance can be 1 - 300 characters. The default value is 50.
 * `tags` - (Optional) A map of key-value pairs that specifies the tags to associate with the custom data identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie custom data identifier.
 * `deleted` - Specifies whether the custom data identifier was deleted. If you delete a custom data identifier, Amazon Macie doesn't delete it permanently. Instead, it soft deletes the identifier.
@@ -51,8 +51,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_custom_data_identifier` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_custom_data_identifier` using the id. For example:
 
+```terraform
+import {
+  to = aws_macie2_custom_data_identifier.example
+  id = "abcd1"
+}
 ```
-$ terraform import aws_macie2_custom_data_identifier.example abcd1
+
+Using `terraform import`, import `aws_macie2_custom_data_identifier` using the id. For example:
+
+```console
+% terraform import aws_macie2_custom_data_identifier.example abcd1
 ```

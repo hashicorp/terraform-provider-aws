@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_fsx_ontap_file_system: Increase maximum value of `disk_iops_configuration.iops` to `160000`
+```

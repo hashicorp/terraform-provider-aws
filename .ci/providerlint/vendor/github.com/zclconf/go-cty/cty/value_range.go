@@ -21,6 +21,10 @@ import (
 // offered by ranges and so can share code between both known and unknown
 // values.
 func (v Value) Range() ValueRange {
+	if v.IsMarked() {
+		panic("Value.Range on marked value; must be unmarked first")
+	}
+
 	// For an unknown value we just use its own refinements.
 	if unk, isUnk := v.v.(*unknownType); isUnk {
 		refinement := unk.refinement

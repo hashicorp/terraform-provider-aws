@@ -6,8 +6,8 @@ package sagemaker
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -35,7 +35,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"content": {
+						names.AttrContent: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -56,7 +56,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -69,7 +69,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-z0-9](-*[a-z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z](-*[0-9a-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -119,7 +119,7 @@ func resourceHumanTaskUIRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := aws.StringValue(humanTaskUi.HumanTaskUiArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("human_task_ui_name", humanTaskUi.HumanTaskUiName)
 
 	if err := d.Set("ui_template", flattenHumanTaskUiUiTemplate(humanTaskUi.UiTemplate, d.Get("ui_template.0.content").(string))); err != nil {
@@ -165,7 +165,7 @@ func expandHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.UiTemplate{
-		Content: aws.String(m["content"].(string)),
+		Content: aws.String(m[names.AttrContent].(string)),
 	}
 
 	return config
@@ -177,9 +177,9 @@ func flattenHumanTaskUiUiTemplate(config *sagemaker.UiTemplateInfo, content stri
 	}
 
 	m := map[string]interface{}{
-		"content_sha256": aws.StringValue(config.ContentSha256),
-		"url":            aws.StringValue(config.Url),
-		"content":        content,
+		"content_sha256":  aws.StringValue(config.ContentSha256),
+		names.AttrURL:     aws.StringValue(config.Url),
+		names.AttrContent: content,
 	}
 
 	return []map[string]interface{}{m}

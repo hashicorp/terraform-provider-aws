@@ -49,7 +49,7 @@ resource "aws_amplify_domain_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_id` - (Required) Unique ID for an Amplify app.
 * `domain_name` - (Required) Domain name for the domain association.
@@ -62,22 +62,31 @@ The `sub_domain` configuration block supports the following arguments:
 * `branch_name` - (Required) Branch name setting for the subdomain.
 * `prefix` - (Required) Prefix setting for the subdomain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the domain association.
-* `certificate_verification_dns_record` - The DNS record for certificate verification.
+* `certificate_verification_dns_record` - DNS records for certificate verification in a space-delimited format (`<record> CNAME <target>`).
 
 The `sub_domain` configuration block exports the following attributes:
 
-* `dns_record` - DNS record for the subdomain.
+* `dns_record` - DNS record for the subdomain in a space-prefixed and space-delimited format (` CNAME <target>`).
 * `verified` - Verified status of the subdomain.
 
 ## Import
 
-Amplify domain association can be imported using `app_id` and `domain_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amplify domain association using `app_id` and `domain_name`. For example:
 
+```terraform
+import {
+  to = aws_amplify_domain_association.app
+  id = "d2ypk4k47z8u6/example.com"
+}
 ```
-$ terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
+
+Using `terraform import`, import Amplify domain association using `app_id` and `domain_name`. For example:
+
+```console
+% terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
 ```

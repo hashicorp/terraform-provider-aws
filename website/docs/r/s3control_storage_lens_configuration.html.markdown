@@ -60,7 +60,7 @@ resource "aws_s3control_storage_lens_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the S3 Storage Lens configuration. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `config_id` - (Required) The ID of the S3 Storage Lens configuration.
@@ -200,17 +200,26 @@ The `include` block supports the following:
 * `buckets` (Optional) List of S3 bucket ARNs.
 * `regions` (Optional) List of AWS Regions.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the S3 Storage Lens configuration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-S3 Storage Lens configurations can be imported using the `account_id` and `config_id`, separated by a colon (`:`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Storage Lens configurations using the `account_id` and `config_id`, separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_s3control_storage_lens_configuration.example
+  id = "123456789012:example-1"
+}
 ```
-$ terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1
+
+Using `terraform import`, import S3 Storage Lens configurations using the `account_id` and `config_id`, separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_s3control_storage_lens_configuration.example 123456789012:example-1
 ```

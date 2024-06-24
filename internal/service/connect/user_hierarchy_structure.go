@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_user_hierarchy_structure")
@@ -56,7 +58,7 @@ func ResourceUserHierarchyStructure() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -74,15 +76,15 @@ func userHierarchyLevelSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"id": {
+				names.AttrID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 50),
@@ -93,9 +95,11 @@ func userHierarchyLevelSchema() *schema.Schema {
 }
 
 func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.UpdateUserHierarchyStructureInput{
 		HierarchyStructure: expandUserHierarchyStructure(d.Get("hierarchy_structure").([]interface{})),
@@ -106,15 +110,17 @@ func resourceUserHierarchyStructureCreate(ctx context.Context, d *schema.Resourc
 	_, err := conn.UpdateUserHierarchyStructureWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
 	}
 
 	d.SetId(instanceID)
 
-	return resourceUserHierarchyStructureRead(ctx, d, meta)
+	return append(diags, resourceUserHierarchyStructureRead(ctx, d, meta)...)
 }
 
 func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
@@ -126,27 +132,29 @@ func resourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceD
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect User Hierarchy Structure (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Connect User Hierarchy Structure (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Structure (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.HierarchyStructure == nil {
-		return diag.Errorf("getting Connect User Hierarchy Structure (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Structure (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("hierarchy_structure", flattenUserHierarchyStructure(resp.HierarchyStructure)); err != nil {
-		return diag.Errorf("setting Connect User Hierarchy Structure hierarchy_structure for Connect instance: (%s)", d.Id())
+		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Structure hierarchy_structure for Connect instance: (%s)", d.Id())
 	}
 
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 
-	return nil
+	return diags
 }
 
 func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
@@ -158,14 +166,16 @@ func resourceUserHierarchyStructureUpdate(ctx context.Context, d *schema.Resourc
 		})
 
 		if err != nil {
-			return diag.Errorf("updating UserHierarchyStructure Name (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating UserHierarchyStructure Name (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceUserHierarchyStructureRead(ctx, d, meta)
+	return append(diags, resourceUserHierarchyStructureRead(ctx, d, meta)...)
 }
 
 func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Id()
@@ -176,10 +186,10 @@ func resourceUserHierarchyStructureDelete(ctx context.Context, d *schema.Resourc
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting UserHierarchyStructure (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting UserHierarchyStructure (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandUserHierarchyStructure(userHierarchyStructure []interface{}) *connect.HierarchyStructureUpdate {
@@ -216,7 +226,7 @@ func expandUserHierarchyStructureLevel(userHierarchyStructureLevel []interface{}
 	}
 
 	result := &connect.HierarchyLevelUpdate{
-		Name: aws.String(tfMap["name"].(string)),
+		Name: aws.String(tfMap[names.AttrName].(string)),
 	}
 
 	return result
@@ -258,9 +268,9 @@ func flattenUserHierarchyStructureLevel(userHierarchyStructureLevel *connect.Hie
 	}
 
 	level := map[string]interface{}{
-		"arn":  aws.StringValue(userHierarchyStructureLevel.Arn),
-		"id":   aws.StringValue(userHierarchyStructureLevel.Id),
-		"name": aws.StringValue(userHierarchyStructureLevel.Name),
+		names.AttrARN:  aws.StringValue(userHierarchyStructureLevel.Arn),
+		names.AttrID:   aws.StringValue(userHierarchyStructureLevel.Id),
+		names.AttrName: aws.StringValue(userHierarchyStructureLevel.Name),
 	}
 
 	return []interface{}{level}

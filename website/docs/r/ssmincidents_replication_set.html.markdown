@@ -97,9 +97,9 @@ The following arguments are optional:
 
 For information about the maximum allowed number of Regions and tag value constraints, see [CreateReplicationSet in the *AWS Systems Manager Incident Manager API Reference*](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateReplicationSet.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the preceding arguments, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the replication set.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -132,8 +132,17 @@ In addition to the preceding arguments, the `region` configuration block exports
 
 ## Import
 
-Use the following command to import an Incident Manager replication set:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an Incident Manager replication. For example:
 
+```terraform
+import {
+  to = aws_ssmincidents_replication_set.replicationSetName
+  id = "import"
+}
 ```
-$ terraform import aws_ssmincidents_replication_set.replicationSetName import
+
+Using `terraform import`, import an Incident Manager replication. For example:
+
+```console
+% terraform import aws_ssmincidents_replication_set.replicationSetName import
 ```

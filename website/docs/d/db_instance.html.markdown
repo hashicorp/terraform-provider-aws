@@ -20,15 +20,16 @@ data "aws_db_instance" "database" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `db_instance_identifier` - (Required) Name of the RDS instance
+* `db_instance_identifier` - (Optional) Name of the RDS instance.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired instance.
 
-## Attributes Reference
+## Attribute Reference
 
 ~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `create-db-cluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `address` - Hostname of the RDS instance. See also `endpoint` and `port`.
 * `allocated_storage` - Allocated storage size specified in gigabytes.
@@ -52,6 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 * `license_model` - License model information for this DB instance.
 * `master_username` - Contains the master username for the DB instance.
 * `master_user_secret` - Provides the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret).
+* `max_allocated_storage` - The upper limit to which Amazon RDS can automatically scale the storage of the DB instance.
 * `monitoring_interval` - Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - If the DB instance is a Multi-AZ deployment.

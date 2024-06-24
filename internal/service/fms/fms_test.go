@@ -14,15 +14,25 @@ func TestAccFMS_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AdminAccount": {
-			"basic": testAccAdminAccount_basic,
+			acctest.CtBasic:      testAccAdminAccount_basic,
+			acctest.CtDisappears: testAccAdminAccount_disappears,
 		},
 		"Policy": {
-			"basic":                  testAccPolicy_basic,
+			"alb":                    testAccPolicy_alb,
+			acctest.CtBasic:          testAccPolicy_basic,
 			"cloudfrontDistribution": testAccPolicy_cloudFrontDistribution,
+			acctest.CtDisappears:     testAccPolicy_disappears,
 			"includeMap":             testAccPolicy_includeMap,
-			"update":                 testAccPolicy_update,
+			"policyOption":           testAccPolicy_policyOption,
 			"resourceTags":           testAccPolicy_resourceTags,
+			"securityGroup":          testAccPolicy_securityGroup,
 			"tags":                   testAccPolicy_tags,
+			"update":                 testAccPolicy_update,
+		},
+		"ResourceSet": {
+			acctest.CtBasic:      testAccFMSResourceSet_basic,
+			acctest.CtDisappears: testAccFMSResourceSet_disappears,
+			"tags":               testAccFMSResourceSet_tags,
 		},
 	}
 

@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Respect valid values for the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable when configuring the S3 API client
+```

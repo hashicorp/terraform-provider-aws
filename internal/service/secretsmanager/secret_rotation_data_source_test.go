@@ -5,13 +5,13 @@ package secretsmanager_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
@@ -22,12 +22,12 @@ func TestAccSecretsManagerSecretRotationDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSecretRotationDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`couldn't find resource`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
 				Config: testAccSecretRotationDataSourceConfig_default(rName, 7),

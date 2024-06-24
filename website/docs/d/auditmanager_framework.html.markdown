@@ -28,6 +28,6 @@ The following arguments are required:
 * `name` - (Required) Name of the framework.
 * `type` - (Required) Type of framework. Valid values are `Custom` and `Standard`.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [`aws_auditmanager_framework` resource](/docs/providers/aws/r/auditmanager_framework.html) for details on the returned attributes - they are identical.

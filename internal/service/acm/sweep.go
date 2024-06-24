@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package acm
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_acm_certificate", &resource.Sweeper{
 		Name: "aws_acm_certificate",
 		F:    sweepCertificates,
@@ -34,6 +32,7 @@ func init() {
 			"aws_elb",
 			"aws_iam_server_certificate",
 			"aws_iam_signing_certificate",
+			"aws_iot_domain_configuration",
 			"aws_lb",
 			"aws_lb_listener",
 		},
@@ -54,7 +53,7 @@ func sweepCertificates(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping ACM Certificate sweep for %s: %s", region, err)
 			return nil
 		}

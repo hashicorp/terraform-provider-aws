@@ -11,9 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,31 +23,23 @@ func DataSourceReplicationInstance() *schema.Resource {
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"apply_immediately": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,11 +47,15 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			"network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPreferredMaintenanceWindow: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -89,80 +85,64 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_security_group_ids": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameReplicationInstance = "Replication Instance Data Source"
-)
-
 func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	rID := d.Get("replication_instance_id").(string)
-
 	instance, err := FindReplicationInstanceByID(ctx, conn, rID)
+
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Instance (%s): %s", rID, err)
 	}
 
 	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
-
-	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
-	d.Set("engine_version", instance.EngineVersion)
-	d.Set("kms_key_arn", instance.KmsKeyId)
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
+	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", instance.PubliclyAccessible)
-	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
+	d.Set("network_type", instance.NetworkType)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
+	arn := aws.StringValue(instance.ReplicationInstanceArn)
+	d.Set("replication_instance_arn", arn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
+	d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses))
+	d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses))
+	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
+	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
+		return aws.StringValue(sg.VpcSecurityGroupId)
+	})
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
-	tags, err := listTags(ctx, conn, aws.StringValue(instance.ReplicationInstanceArn))
+	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationInstance, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Replication Instance (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameReplicationInstance, d.Id(), err)
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
-}
-
-func FindReplicationInstanceByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationInstance, error) {
-	input := &dms.DescribeReplicationInstancesInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-instance-id"),
-				Values: []*string{aws.String(id)},
-			},
-		},
-	}
-	response, err := conn.DescribeReplicationInstancesWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if response == nil || len(response.ReplicationInstances) == 0 || response.ReplicationInstances[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return response.ReplicationInstances[0], nil
+	return diags
 }

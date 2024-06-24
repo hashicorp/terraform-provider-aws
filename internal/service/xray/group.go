@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_xray_group", name="Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;types.Group")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -38,11 +39,11 @@ func resourceGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,7 +81,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	name := d.Get("group_name").(string)
+	name := d.Get(names.AttrGroupName).(string)
 	input := &xray.CreateGroupInput{
 		GroupName:        aws.String(name),
 		FilterExpression: aws.String(d.Get("filter_expression").(string)),
@@ -118,9 +119,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading XRay Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", group.GroupARN)
+	d.Set(names.AttrARN, group.GroupARN)
 	d.Set("filter_expression", group.FilterExpression)
-	d.Set("group_name", group.GroupName)
+	d.Set(names.AttrGroupName, group.GroupName)
 	if err := d.Set("insights_configuration", flattenInsightsConfig(group.InsightsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting insights_configuration: %s", err)
 	}
@@ -132,7 +133,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
 
 		if v, ok := d.GetOk("filter_expression"); ok {
@@ -161,6 +162,10 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.DeleteGroup(ctx, &xray.DeleteGroupInput{
 		GroupARN: aws.String(d.Id()),
 	})
+
+	if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Group not found") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting XRay Group (%s): %s", d.Id(), err)

@@ -31,20 +31,29 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule group namespace
 * `workspace_id` - (Required) ID of the prometheus workspace the rule group namespace should be linked to
 * `data` - (Required) the rule group namespace data that you want to be applied. See more [in AWS Docs](https://docs.aws.amazon.com/prometheus/latest/userguide/AMP-Ruler.html).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The prometheus rule group namespace can be imported using the arn, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the prometheus rule group namespace using the arn. For example:
 
+```terraform
+import {
+  to = aws_prometheus_rule_group_namespace.demo
+  id = "arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name"
+}
 ```
-$ terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name
+
+Using `terraform import`, import the prometheus rule group namespace using the arn. For example:
+
+```console
+% terraform import aws_prometheus_rule_group_namespace.demo arn:aws:aps:us-west-2:123456789012:rulegroupsnamespace/IDstring/namespace_name
 ```

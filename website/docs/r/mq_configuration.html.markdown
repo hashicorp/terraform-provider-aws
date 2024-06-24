@@ -14,12 +14,14 @@ For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aw
 
 ## Example Usage
 
+### ActiveMQ
+
 ```terraform
 resource "aws_mq_configuration" "example" {
   description    = "Example Configuration"
   name           = "example"
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -34,11 +36,27 @@ DATA
 }
 ```
 
+### RabbitMQ
+
+```terraform
+resource "aws_mq_configuration" "example" {
+  description    = "Example Configuration"
+  name           = "example"
+  engine_type    = "RabbitMQ"
+  engine_version = "3.11.20"
+
+  data = <<DATA
+# Default RabbitMQ delivery acknowledgement timeout is 30 minutes in milliseconds
+consumer_timeout = 1800000
+DATA
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `data` - (Required) Broker configuration in XML format. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
+* `data` - (Required) Broker configuration in XML format for `ActiveMQ` or [Cuttlefish](https://github.com/Kyorai/cuttlefish) format for `RabbitMQ`. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
 * `engine_version` - (Required) Version of the broker engine.
 * `name` - (Required) Name of the configuration.
@@ -49,9 +67,9 @@ The following arguments are optional:
 * `description` - (Optional) Description of the configuration.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the configuration.
 * `id` - Unique ID that Amazon MQ generates for the configuration.
@@ -60,8 +78,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MQ Configurations can be imported using the configuration ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MQ Configurations using the configuration ID. For example:
 
+```terraform
+import {
+  to = aws_mq_configuration.example
+  id = "c-0187d1eb-88c8-475a-9b79-16ef5a10c94f"
+}
 ```
-$ terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
+
+Using `terraform import`, import MQ Configurations using the configuration ID. For example:
+
+```console
+% terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
 ```

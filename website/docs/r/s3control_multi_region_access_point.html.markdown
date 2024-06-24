@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to manage an S3 Multi-Region Access Point associated with specified buckets.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Multiple AWS Buckets in Different Regions
@@ -54,7 +56,7 @@ resource "aws_s3control_multi_region_access_point" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID for the owner of the buckets for which you want to create a Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `details` - (Required) A configuration block containing details about the Multi-Region Access Point. See [Details Configuration Block](#details-configuration) below for more details
@@ -96,10 +98,11 @@ The `public_access_block` block supports the following:
 The `region` block supports the following:
 
 * `bucket` - (Required) The name of the associated bucket for the Region.
+* `bucket_account_id` - (Optional) The AWS account ID that owns the Amazon S3 bucket that's associated with this Multi-Region Access Point.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alias` - The alias for the Multi-Region Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Multi-Region Access Point.
@@ -109,8 +112,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Multi-Region Access Points can be imported using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`), e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_s3control_multi_region_access_point.example
+  id = "123456789012:example"
+}
 ```
-$ terraform import aws_s3control_multi_region_access_point.example 123456789012:example
+
+Using `terraform import`, import Multi-Region Access Points using the `account_id` and `name` of the Multi-Region Access Point separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_s3control_multi_region_access_point.example 123456789012:example
 ```

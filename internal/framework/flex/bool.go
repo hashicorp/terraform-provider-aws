@@ -8,26 +8,27 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // BoolFromFramework converts a Framework Bool value to a bool pointer.
 // A null Bool is converted to a nil bool pointer.
-func BoolFromFramework(_ context.Context, v types.Bool) *bool {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
+func BoolFromFramework(ctx context.Context, v basetypes.BoolValuable) *bool {
+	var output *bool
 
-	return aws.Bool(v.ValueBool())
+	must(Expand(ctx, v, &output))
+
+	return output
 }
 
 // BoolToFramework converts a bool pointer to a Framework Bool value.
 // A nil bool pointer is converted to a null Bool.
-func BoolToFramework(_ context.Context, v *bool) types.Bool {
-	if v == nil {
-		return types.BoolNull()
-	}
+func BoolToFramework(ctx context.Context, v *bool) types.Bool {
+	var output types.Bool
 
-	return types.BoolValue(aws.ToBool(v))
+	must(Flatten(ctx, v, &output))
+
+	return output
 }
 
 // BoolToFrameworkLegacy converts a bool pointer to a Framework Bool value.

@@ -9,7 +9,7 @@ description: |-
 # Resource: aws_ami_from_instance
 
 The "AMI from instance" resource allows the creation of an Amazon Machine
-Image (AMI) modelled after an existing EBS-backed EC2 instance.
+Image (AMI) modeled after an existing EBS-backed EC2 instance.
 
 The created AMI will refer to implicitly-created snapshots of the instance's
 EBS volumes and mimick its assigned block device configuration at the time
@@ -37,7 +37,7 @@ resource "aws_ami_from_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Region-unique name for the AMI.
 * `source_instance_id` - (Required) ID of the instance to use as the basis of the AMI.
@@ -55,9 +55,9 @@ The following arguments are supported:
 * `update` - (Default `40m`)
 * `delete` - (Default `90m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AMI.
 * `id` - ID of the created AMI.

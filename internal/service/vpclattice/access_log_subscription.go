@@ -5,8 +5,8 @@ package vpclattice
 
 import (
 	"context"
-	"errors"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,7 +26,7 @@ import (
 
 // @SDKResource("aws_vpclattice_access_log_subscription", name="Access Log Subscription")
 // @Tags(identifierAttribute="arn")
-func ResourceAccessLogSubscription() *schema.Resource {
+func resourceAccessLogSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessLogSubscriptionCreate,
 		ReadWithoutTimeout:   resourceAccessLogSubscriptionRead,
@@ -37,24 +38,26 @@ func ResourceAccessLogSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+			names.AttrDestinationARN: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateFunc:     verify.ValidARN,
+				DiffSuppressFunc: suppressEquivalentCloudWatchLogsLogGroupARN,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"resource_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -69,11 +72,12 @@ const (
 )
 
 func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
 		ClientToken:        aws.String(id.UniqueId()),
-		DestinationArn:     aws.String(d.Get("destination_arn").(string)),
+		DestinationArn:     aws.String(d.Get(names.AttrDestinationARN).(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -81,15 +85,16 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get("destination_arn").(string), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get(names.AttrDestinationARN).(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
-	return resourceAccessLogSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceAccessLogSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findAccessLogSubscriptionByID(ctx, conn, d.Id())
@@ -97,19 +102,19 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice AccessLogSubscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("destination_arn", out.DestinationArn)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrDestinationARN, out.DestinationArn)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("resource_identifier", out.ResourceId)
 
-	return nil
+	return diags
 }
 
 func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -118,6 +123,7 @@ func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AccessLogSubscription %s", d.Id())
@@ -125,16 +131,15 @@ func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.Resource
 		AccessLogSubscriptionIdentifier: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
+	}
+
+	return diags
 }
 
 func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetAccessLogSubscriptionOutput, error) {
@@ -142,15 +147,15 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 		AccessLogSubscriptionIdentifier: aws.String(id),
 	}
 	out, err := conn.GetAccessLogSubscription(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -159,4 +164,10 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 	}
 
 	return out, nil
+}
+
+// suppressEquivalentCloudWatchLogsLogGroupARN provides custom difference suppression
+// for strings that represent equal CloudWatch Logs log group ARNs.
+func suppressEquivalentCloudWatchLogsLogGroupARN(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.TrimSuffix(old, ":*") == strings.TrimSuffix(new, ":*")
 }

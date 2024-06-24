@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"sort"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelastictranscoder "github.com/hashicorp/terraform-provider-aws/internal/service/elastictranscoder"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +39,7 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
 				),
 			},
 			{
@@ -59,7 +60,7 @@ func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 				Config: testAccPipelineConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -88,7 +89,7 @@ func TestAccElasticTranscoderPipeline_notifications(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ func TestAccElasticTranscoderPipeline_withContent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -192,7 +193,7 @@ func TestAccElasticTranscoderPipeline_withPermissions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -219,7 +220,7 @@ func TestAccElasticTranscoderPipeline_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -337,11 +338,6 @@ EOF
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, rName)
 }
 
@@ -399,11 +395,6 @@ EOF
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, rName)
 }
 
@@ -449,27 +440,12 @@ resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
 }
 
-resource "aws_s3_bucket_acl" "content_bucket_acl" {
-  bucket = aws_s3_bucket.content_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
 }
 
-resource "aws_s3_bucket_acl" "input_bucket_acl" {
-  bucket = aws_s3_bucket.input_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
-}
-
-resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
-  bucket = aws_s3_bucket.thumb_bucket.id
-  acl    = "private"
 }
 `, rName)
 }
@@ -516,27 +492,12 @@ resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
 }
 
-resource "aws_s3_bucket_acl" "content_bucket_acl" {
-  bucket = aws_s3_bucket.content_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
 }
 
-resource "aws_s3_bucket_acl" "input_bucket_acl" {
-  bucket = aws_s3_bucket.input_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
-}
-
-resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
-  bucket = aws_s3_bucket.thumb_bucket.id
-  acl    = "private"
 }
 `, rName)
 }
@@ -594,11 +555,6 @@ EOF
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, rName)
 }
 
@@ -638,11 +594,6 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_sns_topic" "test" {
@@ -702,11 +653,6 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_sns_topic" "test" {

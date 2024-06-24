@@ -6,8 +6,9 @@ package sdkdiag
 import (
 	"errors"
 	"fmt"
+	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -24,41 +25,83 @@ func Warnings(diags diag.Diagnostics) diag.Diagnostics {
 	return tfslices.Filter(diags, severityFilter(diag.Warning))
 }
 
-func severityFilter(s diag.Severity) tfslices.FilterFunc[diag.Diagnostic] {
+func severityFilter(s diag.Severity) tfslices.Predicate[diag.Diagnostic] {
 	return func(d diag.Diagnostic) bool {
 		return d.Severity == s
 	}
 }
 
-// DiagnosticsError returns an error containing all Diagnostic with SeverityError
-func DiagnosticsError(diags diag.Diagnostics) error {
-	if !diags.HasError() {
-		return nil
-	}
-
-	errDiags := Errors(diags)
-
-	if len(errDiags) == 1 {
-		return diagnosticError(errDiags[0])
-	}
-
-	var errs error
-	for _, d := range errDiags {
-		errs = multierror.Append(errs, diagnosticError(d))
-	}
-
-	return errs
+func DiagnosticError(diag diag.Diagnostic) error {
+	return errors.New(DiagnosticString(diag))
 }
 
-func diagnosticError(diag diag.Diagnostic) error {
-	return errors.New(DiagnosticString(diag))
+// DiagnosticsError returns an error containing all Diagnostic with SeverityError
+func DiagnosticsError(diags diag.Diagnostics) error {
+	var errs []error
+
+	for _, d := range Errors(diags) {
+		errs = append(errs, DiagnosticError(d))
+	}
+
+	return errors.Join(errs...)
 }
 
 // DiagnosticString formats a Diagnostic
 // If there is no `Detail`, only prints summary, otherwise prints both
 func DiagnosticString(d diag.Diagnostic) string {
-	if d.Detail == "" {
-		return d.Summary
+	var buf strings.Builder
+
+	fmt.Fprint(&buf, d.Summary)
+	if d.Detail != "" {
+		fmt.Fprintf(&buf, "\n\n%s", d.Detail)
 	}
-	return fmt.Sprintf("%s\n\n%s", d.Summary, d.Detail)
+	if len(d.AttributePath) > 0 {
+		fmt.Fprintf(&buf, "\n%s", pathString(d.AttributePath))
+	}
+
+	return buf.String()
+}
+
+func pathString(path cty.Path) string {
+	var buf strings.Builder
+	for i, step := range path {
+		switch x := step.(type) {
+		case cty.GetAttrStep:
+			if i != 0 {
+				buf.WriteString(".")
+			}
+			buf.WriteString(x.Name)
+		case cty.IndexStep:
+			val := x.Key
+			typ := val.Type()
+			var s string
+			switch {
+			case typ == cty.String:
+				s = val.AsString()
+			case typ == cty.Number:
+				num := val.AsBigFloat()
+				s = num.String()
+			default:
+				s = fmt.Sprintf("<unexpected index: %s>", typ.FriendlyName())
+			}
+			buf.WriteString(fmt.Sprintf("[%s]", s))
+		default:
+			if i != 0 {
+				buf.WriteString(".")
+			}
+			buf.WriteString(fmt.Sprintf("<unexpected step: %[1]T %[1]v>", x))
+		}
+	}
+	return buf.String()
+}
+
+// DiagnosticsString formats a Diagnostics
+func DiagnosticsString(diags diag.Diagnostics) string {
+	var buf strings.Builder
+
+	for _, d := range diags {
+		fmt.Fprintln(&buf, DiagnosticString(d))
+	}
+
+	return buf.String()
 }

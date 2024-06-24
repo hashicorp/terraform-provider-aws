@@ -26,8 +26,8 @@ The following arguments are required:
 
 * `contact_id` - (Required) The Amazon Resource Name (ARN) of the contact or escalation plan.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `stage` - List of stages. A contact has an engagement plan with stages that contact specified contact channels. An escalation plan uses stages that contact specified contacts.

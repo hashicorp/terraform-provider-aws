@@ -38,10 +38,25 @@ The following arguments are optional:
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
 * `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
+* `image_scanning_configuration` - (Optional) Configuration block with image scanning configuration. Detailed below.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `schedule` - (Optional) Configuration block with schedule settings. Detailed below.
 * `status` - (Optional) Status of the image pipeline. Valid values are `DISABLED` and `ENABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags for the image pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### image_scanning_configuration
+
+The following arguments are optional:
+
+* `image_scanning_enabled` - (Optional) Whether image scans are enabled. Defaults to `false`.
+* `ecr_configuration` - (Optional) Configuration block with ECR configuration for image scanning. Detailed below.
+
+### ecr_configuration
+
+The following arguments are optional:
+
+* `container tags` - (Optional) list of tags to apply to scanned images
+* `repository_name` - (Optional) The name of the repository to scan
 
 ### image_tests_configuration
 
@@ -62,9 +77,9 @@ The following arguments are optional:
 
 * `timezone` - (Optional) The timezone that applies to the scheduling expression. For example, "Etc/UTC", "America/Los_Angeles" in the [IANA timezone format](https://www.joda.org/joda-time/timezones.html). If not specified this defaults to UTC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the image pipeline.
 * `date_created` - Date the image pipeline was created.
@@ -76,8 +91,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_imagebuilder_image_pipeline` resources can be imported using the Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_imagebuilder_image_pipeline.example
+  id = "arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example"
+}
 ```
-$ terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example
+
+Using `terraform import`, import `aws_imagebuilder_image_pipeline` resources using the Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_imagebuilder_image_pipeline.example arn:aws:imagebuilder:us-east-1:123456789012:image-pipeline/example
 ```

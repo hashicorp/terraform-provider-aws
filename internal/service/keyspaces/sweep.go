@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package keyspaces
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	// No need to have separate sweeper for table as would be destroyed as part of keyspace
 	resource.AddTestSweepers("aws_keyspaces_keyspace", &resource.Sweeper{
 		Name: "aws_keyspaces_keyspace",
@@ -38,7 +36,7 @@ func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-nam
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Keyspaces Keyspace sweep for %s: %s", region, err)
 			return nil
 		}

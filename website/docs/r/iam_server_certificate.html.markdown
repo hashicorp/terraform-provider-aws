@@ -91,7 +91,7 @@ resource "aws_elb" "ourapp" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the Server Certificate. Do not include the
   path in this value. If omitted, Terraform will assign a random, unique name.
@@ -111,9 +111,9 @@ The following arguments are supported:
 
 ~> **NOTE:** AWS performs behind-the-scenes modifications to some certificate files if they do not adhere to a specific format. These modifications will result in terraform forever believing that it needs to update the resources since the local and AWS file contents will not match after theses modifications occur. In order to prevent this from happening you must ensure that all your PEM-encoded files use UNIX line-breaks and that `certificate_body` contains only one certificate. All other certificates should go in `certificate_chain`. It is common for some Certificate Authorities to issue certificate files that have DOS line-breaks and that are actually multiple certificates concatenated together in order to form a full certificate chain.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the server certificate.
 * `expiration` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) on which the certificate is set to expire.
@@ -124,10 +124,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Server Certificates can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Server Certificates using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iam_server_certificate.certificate
+  id = "example.com-certificate-until-2018"
+}
 ```
-$ terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018
+
+Using `terraform import`, import IAM Server Certificates using the `name`. For example:
+
+```console
+% terraform import aws_iam_server_certificate.certificate example.com-certificate-until-2018
 ```
 
 [1]: https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html

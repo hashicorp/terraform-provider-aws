@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the response plan.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the preceding arguments, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `name` - The name of the response plan.
 * `tags` - The tags applied to the response plan.

@@ -118,8 +118,8 @@ The following arguments are optional:
 
 * `mask_config` - (Required) An empty object that configures masking.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `json` - Standard JSON policy document rendered based on the arguments above.

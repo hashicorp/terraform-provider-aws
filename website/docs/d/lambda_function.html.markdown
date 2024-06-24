@@ -24,17 +24,18 @@ data "aws_lambda_function" "existing" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `function_name` - (Required) Name of the lambda function.
 * `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`. When not included: the data source resolves to the most recent published version; if no published version exists: it resolves to the most recent unpublished version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `architectures` - Instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
+* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `code_signing_config_arn` - ARN for a Code Signing Configuration.
 * `dead_letter_config` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
@@ -47,6 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_arn` - ARN for the KMS encryption key.
 * `last_modified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
+* `logging_config` - Advanced logging settings.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
 * `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
@@ -55,7 +57,7 @@ In addition to all arguments above, the following attributes are exported:
 * `runtime` - Runtime environment for the Lambda function.
 * `signing_job_arn` - ARN of a signing job.
 * `signing_profile_version_arn` - The ARN for a signing profile version.
-* `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.
+* `source_code_hash` - (**Deprecated** use `code_sha256` instead) Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - Size in bytes of the function .zip file.
 * `timeout` - Function execution time at which Lambda should terminate the function.
 * `tracing_config` - Tracing settings of the function.

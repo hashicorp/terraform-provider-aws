@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `logging_config` configuration block in support of [advanced logging controls](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced)
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `logging_config` attribute
+```

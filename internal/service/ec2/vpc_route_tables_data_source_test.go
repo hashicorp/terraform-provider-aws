@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCRouteTablesDataSource_basic(t *testing.T) {
@@ -19,17 +19,17 @@ func TestAccVPCRouteTablesDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTablesDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_route_tables.by_vpc_id", "ids.#", "2"), // Add the default route table.
-					resource.TestCheckResourceAttr("data.aws_route_tables.by_tags", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_route_tables.by_vpc_id", "ids.#", acctest.Ct2), // Add the default route table.
+					resource.TestCheckResourceAttr("data.aws_route_tables.by_tags", "ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr("data.aws_route_tables.by_filter", "ids.#", "6"), // Add the default route tables.
-					resource.TestCheckResourceAttr("data.aws_route_tables.empty", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_route_tables.empty", "ids.#", acctest.Ct0),
 				),
 			},
 		},

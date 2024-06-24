@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_datasync_agent: Prevent persistent diffs when `private_link_endpoint` is not explicitly configured.
+```

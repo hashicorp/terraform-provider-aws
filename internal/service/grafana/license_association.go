@@ -111,6 +111,7 @@ func resourceLicenseAssociationRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("license_expiration", nil)
 	}
 	d.Set("license_type", workspace.LicenseType)
+	d.Set("workspace_id", d.Id())
 
 	return diags
 }

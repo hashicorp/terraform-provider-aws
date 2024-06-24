@@ -45,7 +45,7 @@ resource "aws_kms_replica_external_key" "replica" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the key policy lockout safety check.
 Setting this value to true increases the risk that the KMS key becomes unmanageable. Do not set this value to true indiscriminately.
@@ -62,9 +62,9 @@ For more information about building policy documents with Terraform, see the [AW
 * `tags` - (Optional) A map of tags to assign to the replica key. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `valid_to` - (Optional) Time at which the imported key material expires. When the key material expires, AWS KMS deletes the key material and the key becomes unusable. If not specified, key material does not expire. Valid values: [RFC3339 time string](https://tools.ietf.org/html/rfc3339#section-5.8) (`YYYY-MM-DDTHH:MM:SSZ`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the replica key. The key ARNs of related multi-Region keys differ only in the Region value.
 * `expiration_model` - Whether the key material expires. Empty when pending key material import, otherwise `KEY_MATERIAL_EXPIRES` or `KEY_MATERIAL_DOES_NOT_EXPIRE`.
@@ -75,8 +75,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-KMS multi-Region replica keys can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import KMS multi-Region replica keys using the `id`. For example:
 
+```terraform
+import {
+  to = aws_kms_replica_external_key.example
+  id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+}
 ```
-$ terraform import aws_kms_replica_external_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
+
+Using `terraform import`, import KMS multi-Region replica keys using the `id`. For example:
+
+```console
+% terraform import aws_kms_replica_external_key.example 1234abcd-12ab-34cd-56ef-1234567890ab
 ```

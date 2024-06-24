@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unicode/utf8"
 
-	"github.com/apparentlymart/go-textseg/v13/textseg"
+	"github.com/apparentlymart/go-textseg/v15/textseg"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -26,10 +26,6 @@ import (
 // application can guarantee that the remainder of the string will not begin
 // with combining marks then it is safe to instead just normalize the prefix
 // string with [Normalize].
-//
-// Note that this function only takes into account normalization boundaries
-// and does _not_ take into account grapheme cluster boundaries as defined
-// by Unicode Standard Annex #29.
 func SafeKnownPrefix(prefix string) string {
 	prefix = Normalize(prefix)
 

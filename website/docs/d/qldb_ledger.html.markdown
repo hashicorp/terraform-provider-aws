@@ -22,7 +22,7 @@ data "aws_qldb_ledger" "example" {
 
 * `name` - (Required) Friendly name of the ledger to match.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [QLDB Ledger Resource](/docs/providers/aws/r/qldb_ledger.html) for details on the
 returned attributes - they are identical.

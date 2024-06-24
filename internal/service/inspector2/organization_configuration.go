@@ -56,6 +56,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"lambda_code": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -73,11 +78,16 @@ const (
 )
 
 func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	d.SetId(meta.(*conns.AWSClient).AccountID)
-	return resourceOrganizationConfigurationUpdate(ctx, d, meta)
+
+	return append(diags, resourceOrganizationConfigurationUpdate(ctx, d, meta)...)
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
@@ -85,23 +95,25 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Inspector2 OrganizationConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	if err := d.Set("auto_enable", []interface{}{flattenAutoEnable(out.AutoEnable)}); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionSetting, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionSetting, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	d.Set("max_account_limit_reached", out.MaxAccountLimitReached)
 
-	return nil
+	return diags
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	update := false
@@ -114,7 +126,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
@@ -123,17 +135,19 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	log.Printf("[DEBUG] Updating Inspector2 Organization Configuration (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateOrganizationConfiguration(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Get("auto_enable.0.lambda").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Get("auto_enable.0.lambda").(bool), d.Get("auto_enable.0.lambda_code").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	return resourceOrganizationConfigurationRead(ctx, d, meta)
+	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
@@ -141,37 +155,46 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 
 	in := &inspector2.UpdateOrganizationConfigurationInput{
 		AutoEnable: &types.AutoEnable{
-			Ec2:    aws.Bool(false),
-			Ecr:    aws.Bool(false),
-			Lambda: aws.Bool(false),
+			Ec2:        aws.Bool(false),
+			Ecr:        aws.Bool(false),
+			Lambda:     aws.Bool(false),
+			LambdaCode: aws.Bool(false),
 		},
 	}
 
 	log.Printf("[DEBUG] Setting Inspector2 Organization Configuration (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateOrganizationConfiguration(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr, lambda bool, timeout time.Duration) error {
-	needle := fmt.Sprintf("%t:%t:%t", ec2, ecr, lambda)
+func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr, lambda, lambda_code bool, timeout time.Duration) error {
+	needle := fmt.Sprintf("%t:%t:%t:%t", ec2, ecr, lambda, lambda_code)
 
 	all := []string{
-		fmt.Sprintf("%t:%t:%t", false, false, false),
-		fmt.Sprintf("%t:%t:%t", false, true, false),
-		fmt.Sprintf("%t:%t:%t", false, false, true),
-		fmt.Sprintf("%t:%t:%t", false, true, true),
-		fmt.Sprintf("%t:%t:%t", true, false, false),
-		fmt.Sprintf("%t:%t:%t", true, false, true),
-		fmt.Sprintf("%t:%t:%t", true, true, false),
-		fmt.Sprintf("%t:%t:%t", true, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, false, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", false, true, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, false, true, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, false, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, false, true),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, true, false),
+		fmt.Sprintf("%t:%t:%t:%t", true, true, true, true),
 	}
 
 	for i, v := range all {
@@ -207,7 +230,7 @@ func statusOrganizationConfiguration(ctx context.Context, conn *inspector2.Clien
 			return nil, "", err
 		}
 
-		return out, fmt.Sprintf("%t:%t:%t", aws.ToBool(out.AutoEnable.Ec2), aws.ToBool(out.AutoEnable.Ecr), aws.ToBool(out.AutoEnable.Lambda)), nil
+		return out, fmt.Sprintf("%t:%t:%t:%t", aws.ToBool(out.AutoEnable.Ec2), aws.ToBool(out.AutoEnable.Ecr), aws.ToBool(out.AutoEnable.Lambda), aws.ToBool(out.AutoEnable.LambdaCode)), nil
 	}
 }
 
@@ -230,6 +253,10 @@ func flattenAutoEnable(apiObject *types.AutoEnable) map[string]interface{} {
 		m["lambda"] = aws.ToBool(v)
 	}
 
+	if v := apiObject.LambdaCode; v != nil {
+		m["lambda_code"] = aws.ToBool(v)
+	}
+
 	return m
 }
 
@@ -250,6 +277,10 @@ func expandAutoEnable(tfMap map[string]interface{}) *types.AutoEnable {
 
 	if v, ok := tfMap["lambda"].(bool); ok {
 		a.Lambda = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["lambda_code"].(bool); ok {
+		a.LambdaCode = aws.Bool(v)
 	}
 
 	return a

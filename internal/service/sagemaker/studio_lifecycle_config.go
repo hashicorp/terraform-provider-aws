@@ -6,8 +6,8 @@ package sagemaker
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -35,7 +35,7 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,7 +57,7 @@ func ResourceStudioLifecycleConfig() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -112,7 +112,7 @@ func resourceStudioLifecycleConfigRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("studio_lifecycle_config_name", image.StudioLifecycleConfigName)
 	d.Set("studio_lifecycle_config_app_type", image.StudioLifecycleConfigAppType)
 	d.Set("studio_lifecycle_config_content", image.StudioLifecycleConfigContent)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }

@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `name` - (Required) Unique name describing the cluster.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cluster
 * `cluster_endpoints` - List of 5 endpoints in 5 regions that can be used to talk to the cluster. See below.
@@ -39,8 +39,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Recovery Control Config cluster can be imported via the cluster ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Control Config cluster using the cluster ARN. For example:
 
+```terraform
+import {
+  to = aws_route53recoverycontrolconfig_cluster.mycluster
+  id = "arn:aws:route53-recovery-control::313517334327:cluster/f9ae13be-a11e-4ec7-8522-94a70468e6ea"
+}
 ```
-$ terraform import aws_route53recoverycontrolconfig_cluster.mycluster arn:aws:route53-recovery-control::313517334327:cluster/f9ae13be-a11e-4ec7-8522-94a70468e6ea
+
+Using `terraform import`, import Route53 Recovery Control Config cluster using the cluster ARN. For example:
+
+```console
+% terraform import aws_route53recoverycontrolconfig_cluster.mycluster arn:aws:route53-recovery-control::313517334327:cluster/f9ae13be-a11e-4ec7-8522-94a70468e6ea
 ```

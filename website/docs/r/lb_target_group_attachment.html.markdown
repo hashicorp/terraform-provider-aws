@@ -60,6 +60,32 @@ resource "aws_lb_target_group_attachment" "test" {
 }
 ```
 
+### Registering Multiple Targets
+
+```terraform
+resource "aws_instance" "example" {
+  count = 3
+  # ... other configuration ...
+}
+
+resource "aws_lb_target_group" "example" {
+  # ... other configuration ...
+}
+
+resource "aws_lb_target_group_attachment" "example" {
+  # covert a list of instance objects to a map with instance ID as the key, and an instance
+  # object as the value.
+  for_each = {
+    for k, v in aws_instance.example :
+    k => v
+  }
+
+  target_group_arn = aws_lb_target_group.example.arn
+  target_id        = each.value.id
+  port             = 80
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -72,12 +98,12 @@ The following arguments are optional:
 * `availability_zone` - (Optional) The Availability Zone where the IP address of the target is to be registered. If the private IP address is outside of the VPC scope, this value must be set to `all`.
 * `port` - (Optional) The port on which targets receive traffic.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier for the attachment.
 
 ## Import
 
-Target Group Attachments cannot be imported.
+You cannot import Target Group Attachments.

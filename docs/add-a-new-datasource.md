@@ -1,3 +1,4 @@
+<!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Data Source
 
 New data sources are required when AWS adds a new service, or adds new features within an existing service which would require a new data source to allow practitioners to query existing resources of that type for use in their configurations. Anything with a Describe or Get endpoint could make a data source, but some are more useful than others.
@@ -20,13 +21,13 @@ For a new data source use a branch named `f-{datasource name}` for example: `f-e
 
 See the [Naming Guide](naming.md#resources-and-data-sources) for details on how to name the new resource and the resource file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
 
-Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
+Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming are done for you and always represent our most current standards.
 
 ### Fill out the Data Source Schema
 
 In the `internal/service/<service>/<service>_data_source.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, and choose the correct data type.
 
-Attribute names are to specified in `snake_case` as opposed to the AWS API which is `CamelCase`
+Attribute names are to be specified in `snake_case` as opposed to the AWS API which is `CamelCase`.
 
 ### Implement Read Handler
 
@@ -34,30 +35,56 @@ These will map the AWS API response to the data source schema. You will also nee
 
 ### Register Data Source to the provider
 
-Data Sources use a self registration process that adds them to the provider using the `@SDKDataSource()` annotation in the datasource's comments. Run `make gen` to register the datasource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Data Sources use a self-registration process that adds them to the provider using the `@SDKDataSource()` annotation in the data source's comments. Run `make gen` to register the data source. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
-```
-package something
+=== "Terraform Plugin Framework (Preferred)"
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+    ```go
+    package something
 
-// @SDKDataSource("aws_something_example", name="Example")
-func DataSourceExample() *schema.Resource {
-	return &schema.Resource{
-	    // some configuration
-	}
-}
-```
+    import (
+        "github.com/hashicorp/terraform-plugin-framework/datasource"
+        "github.com/hashicorp/terraform-provider-aws/internal/framework"
+    )
+
+    // @FrameworkDataSource(name="Example")
+    func newResourceExample(_ context.Context) (datasource.ResourceWithConfigure, error) {
+    	return &dataSourceExample{}, nil
+    }
+
+    type dataSourceExample struct {
+	    framework.DataSourceWithConfigure
+    }
+
+    func (r *dataSourceExample) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+    	response.TypeName = "aws_something_example"
+    }
+    ```
+
+=== "Terraform Plugin SDK V2"
+
+    ```go
+    package something
+
+    import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+    // @SDKDataSource("aws_something_example", name="Example")
+    func DataSourceExample() *schema.Resource {
+    	return &schema.Resource{
+    	    // some configuration
+    	}
+    }
+    ```
 
 ### Write Passing Acceptance Tests
 
-In order to adequately test the data source we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the provider to read to state of the associated resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
+To adequately test the data source we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the provider to read to state of the associated resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
-You will need at minimum:
+You will need at a minimum:
 
 - Basic Test - Tests full lifecycle (CRUD + Import) of a minimal configuration (all required fields, no optional).
 - Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.
-- Per Attribute Tests - For each attribute a test should exists which tests that particular attribute in isolation alongside any required fields.
+- Per Attribute Tests - For each attribute a test should exist which tests that particular attribute in isolation alongside any required fields.
 
 ### Create Documentation for the Data Source
 

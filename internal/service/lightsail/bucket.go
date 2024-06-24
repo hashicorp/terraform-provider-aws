@@ -5,6 +5,7 @@ package lightsail
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,27 +24,24 @@ import (
 )
 
 // @SDKResource("aws_lightsail_bucket", name="Bucket")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Bucket")
 func ResourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
 		ReadWithoutTimeout:   resourceBucketRead,
 		UpdateWithoutTimeout: resourceBucketUpdate,
 		DeleteWithoutTimeout: resourceBucketDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_at": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,12 +49,21 @@ func ResourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrCreatedAt: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrForceDelete: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,20 +73,23 @@ func ResourceBucket() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.CreateBucketInput{
-		BucketName: aws.String(d.Get("name").(string)),
+		BucketName: aws.String(d.Get(names.AttrName).(string)),
 		BundleId:   aws.String(d.Get("bundle_id").(string)),
 		Tags:       getTagsIn(ctx),
 	}
@@ -87,10 +97,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	out, err := conn.CreateBucket(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateBucket), ResBucket, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateBucket), ResBucket, d.Get(names.AttrName).(string), err)
 	}
 
-	id := d.Get("name").(string)
+	id := d.Get(names.AttrName).(string)
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateBucket, ResBucket, id)
 
 	if diag != nil {
@@ -99,10 +109,12 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(id)
 
-	return resourceBucketRead(ctx, d, meta)
+	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindBucketById(ctx, conn, d.Id())
@@ -110,28 +122,30 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResBucket, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResBucket, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResBucket, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("availability_zone", out.Location.AvailabilityZone)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrAvailabilityZone, out.Location.AvailabilityZone)
 	d.Set("bundle_id", out.BundleId)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("region", out.Location.RegionName)
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrRegion, out.Location.RegionName)
 	d.Set("support_code", out.SupportCode)
-	d.Set("url", out.Url)
+	d.Set(names.AttrURL, out.Url)
 
 	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	if d.HasChange("bundle_id") {
@@ -142,31 +156,36 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		out, err := conn.UpdateBucketBundle(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateBucket), ResBucket, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateBucket), ResBucket, d.Get(names.AttrName).(string), err)
 		}
 
-		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateBucket, ResBucket, d.Get("name").(string))
+		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateBucket, ResBucket, d.Get(names.AttrName).(string))
 
 		if diag != nil {
 			return diag
 		}
 	}
 
-	return resourceBucketRead(ctx, d, meta)
+	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
+
+	log.Printf("[DEBUG] Deleting Lightsail Bucket: %s", d.Id())
 	out, err := conn.DeleteBucket(ctx, &lightsail.DeleteBucketInput{
-		BucketName: aws.String(d.Id()),
+		BucketName:  aws.String(d.Id()),
+		ForceDelete: aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResBucket, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResBucket, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteBucket, ResBucket, d.Id())
@@ -175,7 +194,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindBucketById(ctx context.Context, conn *lightsail.Client, id string) (*types.Bucket, error) {

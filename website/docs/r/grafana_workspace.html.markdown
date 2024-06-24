@@ -53,7 +53,7 @@ The following arguments are optional:
 * `configuration` - (Optional) The configuration string for the workspace that you create. For more information about the format and configuration options available, see [Working in your Grafana workspace](https://docs.aws.amazon.com/grafana/latest/userguide/AMG-configure-workspace.html).
 * `data_sources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `ATHENA`, `CLOUDWATCH`, `PROMETHEUS`, `REDSHIFT`, `SITEWISE`, `TIMESTREAM`, `XRAY`
 * `description` - (Optional) The workspace description.
-* `grafana_version` - (Optional) Specifies the version of Grafana to support in the new workspace. Supported values are `8.4` and `9.4`. If not specified, defaults to `8.4`. Upgrading the workspace version isn't supported, however it's possible to copy content from the old version to the new one using AWS official [migration tool](https://github.com/aws-observability/amazon-managed-grafana-migrator).
+* `grafana_version` - (Optional) Specifies the version of Grafana to support in the new workspace. Supported values are `8.4`, `9.4` and `10.4`. If not specified, defaults to `9.4`.
 * `name` - (Optional) The Grafana workspace name.
 * `network_access_control` - (Optional) Configuration for network access to your workspace.See [Network Access Control](#network-access-control) below.
 * `notification_destinations` - (Optional) The notification destinations. If a data source is specified here, Amazon Managed Grafana will create IAM roles and permissions needed to use these destinations. Must be set to `SNS`.
@@ -74,9 +74,9 @@ The following arguments are optional:
 * `security_group_ids` - (Required) - The list of Amazon EC2 security group IDs attached to the Amazon VPC for your Grafana workspace to connect.
 * `subnet_ids` - (Required) - The list of Amazon EC2 subnet IDs created in the Amazon VPC for your Grafana workspace to connect.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Grafana workspace.
 * `endpoint` - The endpoint of the Grafana workspace.
@@ -85,8 +85,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Grafana Workspace can be imported using the workspace's `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Grafana Workspace using the workspace's `id`. For example:
 
+```terraform
+import {
+  to = aws_grafana_workspace.example
+  id = "g-2054c75a02"
+}
 ```
-$ terraform import aws_grafana_workspace.example g-2054c75a02
+
+Using `terraform import`, import Grafana Workspace using the workspace's `id`. For example:
+
+```console
+% terraform import aws_grafana_workspace.example g-2054c75a02
 ```

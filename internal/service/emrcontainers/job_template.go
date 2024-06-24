@@ -6,9 +6,9 @@ package emrcontainers
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -43,7 +44,7 @@ func ResourceJobTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +86,7 @@ func ResourceJobTemplate() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"properties": {
+															names.AttrProperties: {
 																Type:     schema.TypeMap,
 																Optional: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
@@ -93,7 +94,7 @@ func ResourceJobTemplate() *schema.Resource {
 														},
 													},
 												},
-												"properties": {
+												names.AttrProperties: {
 													Type:     schema.TypeMap,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -115,7 +116,7 @@ func ResourceJobTemplate() *schema.Resource {
 													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"log_group_name": {
+															names.AttrLogGroupName: {
 																Type:     schema.TypeString,
 																Required: true,
 																ForceNew: true,
@@ -155,7 +156,7 @@ func ResourceJobTemplate() *schema.Resource {
 								},
 							},
 						},
-						"execution_role_arn": {
+						names.AttrExecutionRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -233,19 +234,19 @@ func ResourceJobTemplate() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`[.\-_/#A-Za-z0-9]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, hyphen, underscore, dot and # characters"),
 				),
 			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
@@ -257,9 +258,11 @@ func ResourceJobTemplate() *schema.Resource {
 }
 
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateJobTemplateInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
@@ -270,22 +273,24 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.JobTemplateData = expandJobTemplateData(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyArn = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateJobTemplateWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EMR Containers Job Template (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EMR Containers Job Template (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
-	return resourceJobTemplateRead(ctx, d, meta)
+	return append(diags, resourceJobTemplateRead(ctx, d, meta)...)
 }
 
 func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	vc, err := FindJobTemplateByID(ctx, conn, d.Id())
@@ -293,35 +298,32 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Job Template %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EMR Containers Job Template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Job Template (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vc.Arn)
+	d.Set(names.AttrARN, vc.Arn)
 	if vc.JobTemplateData != nil {
 		if err := d.Set("job_template_data", []interface{}{flattenJobTemplateData(vc.JobTemplateData)}); err != nil {
-			return diag.Errorf("setting job_template_data: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting job_template_data: %s", err)
 		}
 	} else {
 		d.Set("job_template_data", nil)
 	}
-	d.Set("name", vc.Name)
-	d.Set("kms_key_arn", vc.KmsKeyArn)
+	d.Set(names.AttrName, vc.Name)
+	d.Set(names.AttrKMSKeyARN, vc.KmsKeyArn)
 
 	setTagsOut(ctx, vc.Tags)
 
-	return nil
+	return diags
 }
 
-// func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	// Tags only.
-// 	return resourceJobTemplateRead(ctx, d, meta)
-// }
-
 func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Job Template: %s", d.Id())
@@ -330,18 +332,23 @@ func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
+	}
+
+	// Not actually a validation exception
+	if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeValidationException, "Template does not exist") {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EMR Containers Job Template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EMR Containers Job Template (%s): %s", d.Id(), err)
 	}
 
 	// if _, err = waitJobTemplateDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 	// 	return diag.Errorf("waiting for EMR Containers Job Template (%s) delete: %s", d.Id(), err)
 	// }
 
-	return nil
+	return diags
 }
 
 func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTemplateData {
@@ -355,7 +362,7 @@ func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTempl
 		apiObject.ConfigurationOverrides = expandConfigurationOverrides(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExecutionRoleARN].(string); ok && v != "" {
 		apiObject.ExecutionRoleArn = aws.String(v)
 	}
 
@@ -432,7 +439,7 @@ func expandConfiguration(tfMap map[string]interface{}) *emrcontainers.Configurat
 		apiObject.Configurations = expandConfigurations(v)
 	}
 
-	if v, ok := tfMap["properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrProperties].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Properties = flex.ExpandStringMap(v)
 	}
 
@@ -563,7 +570,7 @@ func flattenJobTemplateData(apiObject *emrcontainers.JobTemplateData) map[string
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap["execution_role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.JobDriver; v != nil {
@@ -629,7 +636,7 @@ func flattenConfiguration(apiObject *emrcontainers.Configuration) map[string]int
 	}
 
 	if v := apiObject.Properties; v != nil {
-		tfMap["properties"] = aws.StringValueMap(v)
+		tfMap[names.AttrProperties] = aws.StringValueMap(v)
 	}
 
 	return tfMap
@@ -665,7 +672,7 @@ func flattenCloudWatchMonitoringConfiguration(apiObject *emrcontainers.Parametri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LogStreamNamePrefix; v != nil {

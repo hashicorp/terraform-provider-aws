@@ -11,16 +11,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -37,6 +39,7 @@ const (
 
 // @SDKResource("aws_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Vpc")
 func ResourceVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -60,7 +63,7 @@ func ResourceVPC() *schema.Resource {
 		// Keep in sync with aws_default_vpc's schema.
 		// See notes in default_vpc.go.
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +72,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"ipv6_ipam_pool_id"},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -111,8 +114,8 @@ func ResourceVPC() *schema.Resource {
 			"instance_tenancy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      ec2.TenancyDefault,
-				ValidateFunc: validation.StringInSlice([]string{ec2.TenancyDefault, ec2.TenancyDedicated}, false),
+				Default:      types.TenancyDefault,
+				ValidateFunc: validation.StringInSlice(enum.Slice(types.TenancyDefault, types.TenancyDedicated), false),
 			},
 			"ipv4_ipam_pool_id": {
 				Type:     schema.TypeString,
@@ -124,7 +127,7 @@ func ResourceVPC() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ValidateFunc:  validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
-				ConflictsWith: []string{"cidr_block"},
+				ConflictsWith: []string{names.AttrCIDRBlock},
 				RequiredWith:  []string{"ipv4_ipam_pool_id"},
 			},
 			"ipv6_association_id": {
@@ -163,7 +166,7 @@ func ResourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -175,15 +178,15 @@ func ResourceVPC() *schema.Resource {
 
 func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),
-		InstanceTenancy:             aws.String(d.Get("instance_tenancy").(string)),
-		TagSpecifications:           getTagSpecificationsIn(ctx, ec2.ResourceTypeVpc),
+		InstanceTenancy:             types.Tenancy(d.Get("instance_tenancy").(string)),
+		TagSpecifications:           getTagSpecificationsInV2(ctx, types.ResourceTypeVpc),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -192,7 +195,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("ipv4_netmask_length"); ok {
-		input.Ipv4NetmaskLength = aws.Int64(int64(v.(int)))
+		input.Ipv4NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("ipv6_cidr_block"); ok {
@@ -208,12 +211,12 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("ipv6_netmask_length"); ok {
-		input.Ipv6NetmaskLength = aws.Int64(int64(v.(int)))
+		input.Ipv6NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
+	// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return conn.CreateVpcWithContext(ctx, input)
-		// "UnsupportedOperation: The operation AllocateIpamPoolCidr is not supported. Account 123456789012 is not monitored by IPAM ipam-07b079e3392782a55."
+		return conn.CreateVpc(ctx, input)
 	}, errCodeUnsupportedOperation, "is not monitored by IPAM")
 
 	if err != nil {
@@ -222,21 +225,19 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	output := outputRaw.(*ec2.CreateVpcOutput)
 
-	d.SetId(aws.StringValue(output.Vpc.VpcId))
+	d.SetId(aws.ToString(output.Vpc.VpcId))
 
-	vpc, err := WaitVPCCreated(ctx, conn, d.Id())
+	vpc, err := waitVPCCreated(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) create: %s", d.Id(), err)
 	}
 
-	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 && vpc.Ipv6CidrBlockAssociationSet[0] != nil {
-		associationID := aws.StringValue(output.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
+	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 {
+		associationID := aws.ToString(output.Vpc.Ipv6CidrBlockAssociationSet[0].AssociationId)
 
-		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPv6 CIDR block (%s) to become associated: %s", d.Id(), associationID, err)
+		if _, err := waitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPv6 CIDR block (%s) associated: %s", d.Id(), associationID, err)
 		}
 	}
 
@@ -256,10 +257,10 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPCByID(ctx, conn, d.Id())
+		return findVPCByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -272,53 +273,53 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s): %s", d.Id(), err)
 	}
 
-	vpc := outputRaw.(*ec2.Vpc)
+	vpc := outputRaw.(*types.Vpc)
 
-	ownerID := aws.StringValue(vpc.OwnerId)
+	ownerID := aws.ToString(vpc.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("cidr_block", vpc.CidrBlock)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames)
+		return findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames)
 	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport)
+		return findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport)
 	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics)
+		return findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics)
 	}, d.IsNewResource()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)
 	}
 
-	if v, err := FindVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCDefaultNetworkACL(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) default NACL: %s", d.Id(), err)
 	} else {
 		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
-	if v, err := FindVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
 		d.Set("default_route_table_id", nil)
 		d.Set("main_route_table_id", nil)
@@ -327,7 +328,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
-	if v, err := FindVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCDefaultSecurityGroup(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
 		d.Set("default_security_group_id", nil)
 	} else {
@@ -342,8 +343,8 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("ipv6_ipam_pool_id", nil)
 		d.Set("ipv6_netmask_length", nil)
 	} else {
-		cidrBlock := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
-		ipv6PoolID := aws.StringValue(ipv6CIDRBlockAssociation.Ipv6Pool)
+		cidrBlock := aws.ToString(ipv6CIDRBlockAssociation.Ipv6CidrBlock)
+		ipv6PoolID := aws.ToString(ipv6CIDRBlockAssociation.Ipv6Pool)
 		isAmazonIPv6Pool := ipv6PoolID == amazonIPv6PoolID
 		d.Set("assign_generated_ipv6_cidr_block", isAmazonIPv6Pool)
 		d.Set("ipv6_association_id", ipv6CIDRBlockAssociation.AssociationId)
@@ -373,14 +374,14 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		}
 	}
 
-	setTagsOut(ctx, vpc.Tags)
+	setTagsOutV2(ctx, vpc.Tags)
 
 	return diags
 }
 
 func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChange("enable_dns_hostnames") {
 		if err := modifyVPCDNSHostnames(ctx, conn, d.Id(), d.Get("enable_dns_hostnames").(bool)); err != nil {
@@ -443,7 +444,7 @@ func resourceVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DeleteVpcInput{
 		VpcId: aws.String(d.Id()),
@@ -451,10 +452,10 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, vpcDeletedTimeout, func() (interface{}, error) {
-		return conn.DeleteVpcWithContext(ctx, input)
+		return conn.DeleteVpc(ctx, input)
 	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 		return diags
 	}
 
@@ -463,7 +464,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, vpcDeletedTimeout, func() (interface{}, error) {
-		return FindVPCByID(ctx, conn, d.Id())
+		return findVPCByID(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -482,7 +483,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
 		const (
-			timeout = 20 * time.Minute // IPAM eventual consistency
+			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)
 		_, err := tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
 			return findIPAMPoolAllocationsForVPC(ctx, conn, ipamPoolID, d.Id())
@@ -513,18 +514,18 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 
 	if diff.HasChange("instance_tenancy") {
 		old, new := diff.GetChange("instance_tenancy")
-		if old.(string) != ec2.TenancyDedicated || new.(string) != ec2.TenancyDefault {
+		if old.(string) != string(types.TenancyDedicated) || new.(string) != string(types.TenancyDefault) {
 			diff.ForceNew("instance_tenancy")
 		}
 	}
 
 	// cidr_block can be set by a value returned from IPAM or explicitly in config.
-	if diff.Id() != "" && diff.HasChange("cidr_block") {
+	if diff.Id() != "" && diff.HasChange(names.AttrCIDRBlock) {
 		// If netmask is set then cidr_block is derived from IPAM, ignore changes.
 		if diff.Get("ipv4_netmask_length") != 0 {
-			return diff.Clear("cidr_block")
+			return diff.Clear(names.AttrCIDRBlock)
 		}
-		return diff.ForceNew("cidr_block")
+		return diff.ForceNew(names.AttrCIDRBlock)
 	}
 
 	return nil
@@ -533,32 +534,31 @@ func resourceVPCCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v in
 // defaultIPv6CIDRBlockAssociation returns the "default" IPv6 CIDR block.
 // Try and find IPv6 CIDR block information, first by any stored association ID.
 // Then if no IPv6 CIDR block information is available, use the first associated IPv6 CIDR block.
-func defaultIPv6CIDRBlockAssociation(vpc *ec2.Vpc, associationID string) *ec2.VpcIpv6CidrBlockAssociation {
-	var ipv6CIDRBlockAssociation *ec2.VpcIpv6CidrBlockAssociation
+func defaultIPv6CIDRBlockAssociation(vpc *types.Vpc, associationID string) *types.VpcIpv6CidrBlockAssociation {
+	var ipv6CIDRBlockAssociation types.VpcIpv6CidrBlockAssociation
 
 	if associationID != "" {
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
-			if state := aws.StringValue(v.Ipv6CidrBlockState.State); state == ec2.VpcCidrBlockStateCodeAssociated && aws.StringValue(v.AssociationId) == associationID {
+			if state := string(v.Ipv6CidrBlockState.State); state == string(types.VpcCidrBlockStateCodeAssociated) && aws.ToString(v.AssociationId) == associationID {
 				ipv6CIDRBlockAssociation = v
-
 				break
 			}
 		}
 	}
 
-	if ipv6CIDRBlockAssociation == nil {
+	if ipv6CIDRBlockAssociation == (types.VpcIpv6CidrBlockAssociation{}) {
 		for _, v := range vpc.Ipv6CidrBlockAssociationSet {
-			if aws.StringValue(v.Ipv6CidrBlockState.State) == ec2.VpcCidrBlockStateCodeAssociated {
+			if string(v.Ipv6CidrBlockState.State) == string(types.VpcCidrBlockStateCodeAssociated) {
 				ipv6CIDRBlockAssociation = v
 			}
 		}
 	}
 
-	return ipv6CIDRBlockAssociation
+	return &ipv6CIDRBlockAssociation
 }
 
 type vpcInfo struct {
-	vpc                              *ec2.Vpc
+	vpc                              *types.Vpc
 	enableDnsHostnames               bool
 	enableDnsSupport                 bool
 	enableNetworkAddressUsageMetrics bool
@@ -566,7 +566,7 @@ type vpcInfo struct {
 
 // modifyVPCAttributesOnCreate sets VPC attributes on resource Create.
 // Called after new VPC creation or existing default VPC adoption.
-func modifyVPCAttributesOnCreate(ctx context.Context, conn *ec2.EC2, d *schema.ResourceData, vpcInfo *vpcInfo) error {
+func modifyVPCAttributesOnCreate(ctx context.Context, conn *ec2.Client, d *schema.ResourceData, vpcInfo *vpcInfo) error {
 	if new, old := d.Get("enable_dns_hostnames").(bool), vpcInfo.enableDnsHostnames; old != new {
 		if err := modifyVPCDNSHostnames(ctx, conn, d.Id(), new); err != nil {
 			return err
@@ -588,57 +588,57 @@ func modifyVPCAttributesOnCreate(ctx context.Context, conn *ec2.EC2, d *schema.R
 	return nil
 }
 
-func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.EC2, vpcID string, v bool) error {
+func modifyVPCDNSHostnames(ctx context.Context, conn *ec2.Client, vpcID string, v bool) error {
 	input := &ec2.ModifyVpcAttributeInput{
-		EnableDnsHostnames: &ec2.AttributeBooleanValue{
+		EnableDnsHostnames: &types.AttributeBooleanValue{
 			Value: aws.Bool(v),
 		},
 		VpcId: aws.String(vpcID),
 	}
 
-	if _, err := conn.ModifyVpcAttributeWithContext(ctx, input); err != nil {
+	if _, err := conn.ModifyVpcAttribute(ctx, input); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: %w", err)
 	}
 
-	if _, err := WaitVPCAttributeUpdated(ctx, conn, vpcID, ec2.VpcAttributeNameEnableDnsHostnames, v); err != nil {
+	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsHostnames, v); err != nil {
 		return fmt.Errorf("modifying EnableDnsHostnames: waiting for completion: %w", err)
 	}
 
 	return nil
 }
 
-func modifyVPCDNSSupport(ctx context.Context, conn *ec2.EC2, vpcID string, v bool) error {
+func modifyVPCDNSSupport(ctx context.Context, conn *ec2.Client, vpcID string, v bool) error {
 	input := &ec2.ModifyVpcAttributeInput{
-		EnableDnsSupport: &ec2.AttributeBooleanValue{
+		EnableDnsSupport: &types.AttributeBooleanValue{
 			Value: aws.Bool(v),
 		},
 		VpcId: aws.String(vpcID),
 	}
 
-	if _, err := conn.ModifyVpcAttributeWithContext(ctx, input); err != nil {
+	if _, err := conn.ModifyVpcAttribute(ctx, input); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: %w", err)
 	}
 
-	if _, err := WaitVPCAttributeUpdated(ctx, conn, vpcID, ec2.VpcAttributeNameEnableDnsSupport, v); err != nil {
+	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, types.VpcAttributeNameEnableDnsSupport, v); err != nil {
 		return fmt.Errorf("modifying EnableDnsSupport: waiting for completion: %w", err)
 	}
 
 	return nil
 }
 
-func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.EC2, vpcID string, v bool) error {
+func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.Client, vpcID string, v bool) error {
 	input := &ec2.ModifyVpcAttributeInput{
-		EnableNetworkAddressUsageMetrics: &ec2.AttributeBooleanValue{
+		EnableNetworkAddressUsageMetrics: &types.AttributeBooleanValue{
 			Value: aws.Bool(v),
 		},
 		VpcId: aws.String(vpcID),
 	}
 
-	if _, err := conn.ModifyVpcAttributeWithContext(ctx, input); err != nil {
+	if _, err := conn.ModifyVpcAttribute(ctx, input); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: %w", err)
 	}
 
-	if _, err := WaitVPCAttributeUpdated(ctx, conn, vpcID, ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
+	if _, err := waitVPCAttributeUpdated(ctx, conn, vpcID, types.VpcAttributeNameEnableNetworkAddressUsageMetrics, v); err != nil {
 		return fmt.Errorf("modifying EnableNetworkAddressUsageMetrics: waiting for completion: %w", err)
 	}
 
@@ -647,21 +647,19 @@ func modifyVPCNetworkAddressUsageMetrics(ctx context.Context, conn *ec2.EC2, vpc
 
 // modifyVPCIPv6CIDRBlockAssociation modify's a VPC's IPv6 CIDR block association.
 // Any exiting association is deleted and any new association's ID is returned.
-func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.EC2, vpcID, associationID string, amazonProvidedCIDRBlock bool, cidrBlock, ipamPoolID string, netmaskLength int, networkBorderGroup string) (string, error) {
+func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.Client, vpcID, associationID string, amazonProvidedCIDRBlock bool, cidrBlock, ipamPoolID string, netmaskLength int, networkBorderGroup string) (string, error) {
 	if associationID != "" {
 		input := &ec2.DisassociateVpcCidrBlockInput{
 			AssociationId: aws.String(associationID),
 		}
 
-		_, err := conn.DisassociateVpcCidrBlockWithContext(ctx, input)
+		_, err := conn.DisassociateVpcCidrBlock(ctx, input)
 
 		if err != nil {
 			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): %w", associationID, err)
 		}
 
-		_, err = WaitVPCIPv6CIDRBlockAssociationDeleted(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout)
-
-		if err != nil {
+		if _, err := waitVPCIPv6CIDRBlockAssociationDeleted(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationDeletedTimeout); err != nil {
 			return "", fmt.Errorf("disassociating IPv6 CIDR block (%s): waiting for completion: %w", associationID, err)
 		}
 	}
@@ -688,20 +686,18 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.EC2, vpcID
 		}
 
 		if netmaskLength > 0 {
-			input.Ipv6NetmaskLength = aws.Int64(int64(netmaskLength))
+			input.Ipv6NetmaskLength = aws.Int32(int32(netmaskLength))
 		}
 
-		output, err := conn.AssociateVpcCidrBlockWithContext(ctx, input)
+		output, err := conn.AssociateVpcCidrBlock(ctx, input)
 
 		if err != nil {
 			return "", fmt.Errorf("associating IPv6 CIDR block: %w", err)
 		}
 
-		associationID = aws.StringValue(output.Ipv6CidrBlockAssociation.AssociationId)
+		associationID = aws.ToString(output.Ipv6CidrBlockAssociation.AssociationId)
 
-		_, err = WaitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout)
-
-		if err != nil {
+		if _, err := waitVPCIPv6CIDRBlockAssociationCreated(ctx, conn, associationID, vpcIPv6CIDRBlockAssociationCreatedTimeout); err != nil {
 			return "", fmt.Errorf("associating IPv6 CIDR block: waiting for completion: %w", err)
 		}
 	}
@@ -709,32 +705,32 @@ func modifyVPCIPv6CIDRBlockAssociation(ctx context.Context, conn *ec2.EC2, vpcID
 	return associationID, nil
 }
 
-func modifyVPCTenancy(ctx context.Context, conn *ec2.EC2, vpcID string, v string) error {
+func modifyVPCTenancy(ctx context.Context, conn *ec2.Client, vpcID string, v string) error {
 	input := &ec2.ModifyVpcTenancyInput{
-		InstanceTenancy: aws.String(v),
+		InstanceTenancy: types.VpcTenancy(v),
 		VpcId:           aws.String(vpcID),
 	}
 
-	if _, err := conn.ModifyVpcTenancyWithContext(ctx, input); err != nil {
+	if _, err := conn.ModifyVpcTenancy(ctx, input); err != nil {
 		return fmt.Errorf("modifying Tenancy: %w", err)
 	}
 
 	return nil
 }
 
-func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.EC2, poolID, vpcID string) ([]*ec2.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationsForVPC(ctx context.Context, conn *ec2.Client, poolID, vpcID string) ([]types.IpamPoolAllocation, error) {
 	input := &ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(poolID),
 	}
 
-	output, err := FindIPAMPoolAllocations(ctx, conn, input)
+	output, err := findIPAMPoolAllocations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	output = slices.Filter(output, func(v *ec2.IpamPoolAllocation) bool {
-		return aws.StringValue(v.ResourceType) == ec2.IpamPoolAllocationResourceTypeVpc && aws.StringValue(v.ResourceId) == vpcID
+	output = slices.Filter(output, func(v types.IpamPoolAllocation) bool {
+		return string(v.ResourceType) == string(types.IpamPoolAllocationResourceTypeVpc) && aws.ToString(v.ResourceId) == vpcID
 	})
 
 	if len(output) == 0 {

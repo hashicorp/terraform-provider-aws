@@ -18,7 +18,7 @@ resource "aws_sns_sms_preferences" "update_sms_prefs" {}
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `monthly_spend_limit` - (Optional) The maximum amount in USD that you are willing to spend each month to send SMS messages.
 * `delivery_status_iam_role_arn` - (Optional) The ARN of the IAM role that allows Amazon SNS to write logs about SMS deliveries in CloudWatch Logs.
@@ -27,6 +27,10 @@ The following arguments are supported:
 * `default_sms_type` - (Optional) The type of SMS message that you will send by default. Possible values are: Promotional, Transactional
 * `usage_report_s3_bucket` - (Optional) The name of the Amazon S3 bucket to receive daily SMS usage reports from Amazon SNS.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
+
+## Import
+
+You cannot import the SMS preferences.

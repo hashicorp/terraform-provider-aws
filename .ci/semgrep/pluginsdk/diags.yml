@@ -1,0 +1,87 @@
+rules:
+  - id: avoid-return-diag_FromErr
+    languages: [go]
+    message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
+    pattern: return diag.FromErr($ERR)
+    fix: return sdkdiag.AppendFromErr(diags, $ERR)
+    severity: WARNING
+
+  - id: avoid-append-diag_FromErr
+    languages: [go]
+    message: Prefer `sdkdiag.AppendFromErr` to `diag.FromErr`
+    pattern: append(diags, diag.FromErr($ERR)...)
+    fix: sdkdiag.AppendFromErr(diags, $ERR)
+    severity: WARNING
+
+  - id: avoid-diag_Errorf
+    languages: [go]
+    message: Prefer `sdkdiag.AppendErrorf` to `diag.Errorf`
+    pattern: diag.Errorf($...ARGS)
+    fix: sdkdiag.AppendErrorf(diags, $...ARGS)
+    severity: WARNING
+
+  - id: avoid-return-create_DiagError
+    languages: [go]
+    message: Prefer `create.AppendDiagError` to `create.DiagError`
+    pattern: return create.DiagError($...ARGS)
+    fix: return create.AppendDiagError(diags, $...ARGS)
+    severity: WARNING
+
+  - id: avoid-append-create_DiagError
+    languages: [go]
+    message: Prefer `create.AppendDiagError` to `create.DiagError`
+    pattern: append(diags, create.DiagError($...ARGS)...)
+    fix: create.AppendDiagError(diags, $...ARGS)
+    severity: WARNING
+
+  - id: append-Read-to-diags
+    languages: [go]
+    message: Append results of $READFN to diags instead of returning directly
+    patterns:
+      - pattern: return $READFN($...ARGS)
+      - metavariable-regex:
+          metavariable: "$READFN"
+          regex: resource\w+Read
+      - pattern-not-inside: |
+          func $UPDATEFN(...) {
+            return $READFN($...ARGS)
+          }
+    fix: return append(diags, $READFN($...ARGS)...)
+    severity: WARNING
+
+  - id: append-Update-to-diags
+    languages: [go]
+    message: Append results of $UPDATEFN to diags instead of returning directly
+    patterns:
+      - pattern: return $UPDATEFN($...ARGS)
+      - metavariable-regex:
+          metavariable: "$UPDATEFN"
+          regex: resource\w+Update
+      - pattern-not-inside: |
+          func $CREATEFN(...) {
+            d.SetId(...)
+            return $UPDATEFN($...ARGS)
+          }
+    fix: return append(diags, $UPDATEFN($...ARGS)...)
+    severity: WARNING
+
+  - id: return-diags-not-nil
+    languages: [go]
+    message: Return diags instead of nil
+    paths:
+      include:
+        - internal/service
+      exclude:
+        - internal/service/o*
+    patterns:
+      - pattern: return nil
+      - pattern-not-inside: |
+          func(...) {
+            ...
+          }
+      - pattern-inside: |
+          func $F(...) diag.Diagnostics {
+            ...
+          }
+    fix: return diags
+    severity: WARNING

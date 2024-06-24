@@ -38,13 +38,13 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `plaintext` - (Required) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.
 * `key_id` - (Required) Globally unique key ID for the customer master key.
 * `context` - (Optional) An optional mapping that makes up the encryption context.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes are also exported as result attributes.
 

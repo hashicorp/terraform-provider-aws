@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -28,10 +28,10 @@ func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCSubnetsDataSourceConfig_dataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", "4"),
-					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", acctest.Ct4),
+					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", acctest.Ct2),
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", 0),
-					resource.TestCheckResourceAttr("data.aws_subnets.none", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_subnets.none", "ids.#", acctest.Ct0),
 				),
 			},
 		},
@@ -44,13 +44,13 @@ func TestAccVPCSubnetsDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSubnetsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_subnets.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_subnets.test", "ids.#", acctest.Ct2),
 				),
 			},
 		},

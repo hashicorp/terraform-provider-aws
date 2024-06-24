@@ -24,6 +24,8 @@ data "aws_location_map" "example" {
 
 ## Attribute Reference
 
+This data source exports the following attributes in addition to the arguments above:
+
 * `configuration` - List of configurations that specify the map tile style selected from a partner data provider.
     * `style` - The map style selected from an available data provider.
 * `create_time` - Timestamp for when the map resource was created in ISO 8601 format.

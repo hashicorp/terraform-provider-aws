@@ -41,7 +41,7 @@ resource "aws_eip" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocation_id` - (Optional) The allocation ID. This is required for EC2-VPC.
 * `allow_reassociation` - (Optional, Boolean) Whether to allow an Elastic IP to
@@ -59,9 +59,9 @@ specified, the Elastic IP address is associated with the primary private IP
 address.
 * `public_ip` - (Optional) The Elastic IP address. This is required for EC2-Classic.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `association_id` - The ID that represents the association of the Elastic IP
 address with an instance.
@@ -73,8 +73,17 @@ address with an instance.
 
 ## Import
 
-EIP Assocations can be imported using their association ID.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIP Assocations using their association IDs. For example:
 
+```terraform
+import {
+  to = aws_eip_association.test
+  id = "eipassoc-ab12c345"
+}
 ```
-$ terraform import aws_eip_association.test eipassoc-ab12c345
+
+Using `terraform import`, import EIP Assocations using their association IDs. For example:
+
+```console
+% terraform import aws_eip_association.test eipassoc-ab12c345
 ```

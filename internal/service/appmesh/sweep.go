@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package appmesh
 
 import (
@@ -15,9 +12,11 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_appmesh_gateway_route", &resource.Sweeper{
 		Name: "aws_appmesh_gateway_route",
 		F:    sweepGatewayRoutes,
@@ -82,7 +81,7 @@ func sweepMeshes(region string) error {
 		}
 
 		for _, v := range page.Meshes {
-			r := ResourceMesh()
+			r := resourceMesh()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.MeshName))
 
@@ -92,7 +91,7 @@ func sweepMeshes(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Mesh Service Mesh sweep for %s: %s", region, err)
 		return nil
 	}
@@ -139,11 +138,11 @@ func sweepVirtualGateways(region string) error {
 
 				for _, v := range page.VirtualGateways {
 					virtualGatewayName := aws.StringValue(v.VirtualGatewayName)
-					r := ResourceVirtualGateway()
+					r := resourceVirtualGateway()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualGatewayName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualGatewayName)
+					d.Set(names.AttrName, virtualGatewayName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -151,7 +150,7 @@ func sweepVirtualGateways(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -163,7 +162,7 @@ func sweepVirtualGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Mesh Virtual Gateway sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -210,11 +209,11 @@ func sweepVirtualNodes(region string) error {
 
 				for _, v := range page.VirtualNodes {
 					virtualNodeName := aws.StringValue(v.VirtualNodeName)
-					r := ResourceVirtualNode()
+					r := resourceVirtualNode()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualNodeName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualNodeName)
+					d.Set(names.AttrName, virtualNodeName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -222,7 +221,7 @@ func sweepVirtualNodes(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -234,7 +233,7 @@ func sweepVirtualNodes(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Mesh Virtual Node sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -281,11 +280,11 @@ func sweepVirtualRouters(region string) error {
 
 				for _, v := range page.VirtualRouters {
 					virtualRouterName := aws.StringValue(v.VirtualRouterName)
-					r := ResourceVirtualRouter()
+					r := resourceVirtualRouter()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualRouterName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualRouterName)
+					d.Set(names.AttrName, virtualRouterName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -293,7 +292,7 @@ func sweepVirtualRouters(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -305,7 +304,7 @@ func sweepVirtualRouters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Mesh Virtual Router sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -352,11 +351,11 @@ func sweepVirtualServices(region string) error {
 
 				for _, v := range page.VirtualServices {
 					virtualServiceName := aws.StringValue(v.VirtualServiceName)
-					r := ResourceVirtualService()
+					r := resourceVirtualService()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualServiceName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set("name", virtualServiceName)
+					d.Set(names.AttrName, virtualServiceName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -364,7 +363,7 @@ func sweepVirtualServices(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -376,7 +375,7 @@ func sweepVirtualServices(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Mesh Virtual Service sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -435,11 +434,11 @@ func sweepGatewayRoutes(region string) error {
 
 						for _, v := range page.GatewayRoutes {
 							gatewayRouteName := aws.StringValue(v.GatewayRouteName)
-							r := ResourceGatewayRoute()
+							r := resourceGatewayRoute()
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualGatewayName, gatewayRouteName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
-							d.Set("name", gatewayRouteName)
+							d.Set(names.AttrName, gatewayRouteName)
 							d.Set("virtual_gateway_name", virtualGatewayName)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -448,7 +447,7 @@ func sweepGatewayRoutes(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -460,7 +459,7 @@ func sweepGatewayRoutes(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -472,7 +471,7 @@ func sweepGatewayRoutes(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Mesh Gateway Route sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -531,11 +530,11 @@ func sweepRoutes(region string) error {
 
 						for _, v := range page.Routes {
 							routeName := aws.StringValue(v.RouteName)
-							r := ResourceRoute()
+							r := resourceRoute()
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualRouterName, routeName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
-							d.Set("name", routeName)
+							d.Set(names.AttrName, routeName)
 							d.Set("virtual_router_name", virtualRouterName)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -544,7 +543,7 @@ func sweepRoutes(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -556,7 +555,7 @@ func sweepRoutes(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -568,7 +567,7 @@ func sweepRoutes(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping App Mesh Route sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}

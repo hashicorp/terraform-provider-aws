@@ -4,14 +4,15 @@
 package schema
 
 import (
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const customActionsMaxItems = 10
@@ -22,7 +23,7 @@ func visualsSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 		Type:     schema.TypeList,
 		MinItems: 1,
-		MaxItems: 30,
+		MaxItems: 50,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -108,7 +109,7 @@ func tooltipOptionsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column":      columnSchema(),                   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+													"column":      columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 													"aggregation": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 													"label": {
 														Type:     schema.TypeString,
@@ -156,7 +157,7 @@ func visualPaletteSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"chart_color": stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+				"chart_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 				"color_map": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathColor.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -164,7 +165,7 @@ func visualPaletteSchema() *schema.Schema {
 					MaxItems: 5000,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":            stringSchema(true, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+							"color":            stringSchema(true, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 							"element":          dataPathValueSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
 							"time_granularity": stringSchema(false, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
 						},
@@ -383,7 +384,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 3,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+							"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -398,7 +399,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+							"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -488,7 +489,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"label_color":              stringSchema(false, validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), "")),
+				"label_color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 				"label_content":            stringSchema(false, validation.StringInSlice(quicksight.DataLabelContent_Values(), false)),
 				"label_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 				"measure_label_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
@@ -1283,7 +1284,7 @@ func expandComparisonConfiguration(tfList []interface{}) *quicksight.ComparisonC
 
 	config := &quicksight.ComparisonConfiguration{}
 
-	if v, ok := tfMap["config"].(string); ok && v != "" {
+	if v, ok := tfMap["comparison_method"].(string); ok && v != "" {
 		config.ComparisonMethod = aws.String(v)
 	}
 	if v, ok := tfMap["comparison_format"].([]interface{}); ok && len(v) > 0 {
@@ -1476,7 +1477,7 @@ func flattenDataLabelOptions(apiObject *quicksight.DataLabelOptions) []interface
 		tfMap["label_font_configuration"] = flattenFontConfiguration(apiObject.LabelFontConfiguration)
 	}
 	if apiObject.MeasureLabelVisibility != nil {
-		tfMap["measure_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
+		tfMap["measure_label_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
 	}
 	if apiObject.Overlap != nil {
 		tfMap["overlap"] = aws.StringValue(apiObject.Overlap)
@@ -1911,7 +1912,7 @@ func flattenNumericEqualityDrillDownFilter(apiObject *quicksight.NumericEquality
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
+		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}

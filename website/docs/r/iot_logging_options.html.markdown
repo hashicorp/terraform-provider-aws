@@ -25,6 +25,6 @@ resource "aws_iot_logging_options" "example" {
 * `disable_all_logs` - (Optional) If `true` all logs are disabled. The default is `false`.
 * `role_arn` - (Required) The ARN of the role that allows IoT to write to Cloudwatch logs.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

@@ -105,7 +105,7 @@ resource "aws_wafregional_web_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_action` - (Required) The action that you want AWS WAF Regional to take when a request doesn't match the criteria in any of the rules that are associated with the web ACL.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this web ACL.
@@ -149,9 +149,9 @@ The following arguments are supported:
 
 * `type` - (Required) Specifies how you want AWS WAF Regional to respond to requests that match the settings in a rule. Valid values for `action` are `ALLOW`, `BLOCK` or `COUNT`. Valid values for `override_action` are `COUNT` and `NONE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the WAF Regional WebACL.
 * `id` - The ID of the WAF Regional WebACL.
@@ -159,8 +159,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF Regional Web ACL can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Web ACL using the id. For example:
 
+```terraform
+import {
+  to = aws_wafregional_web_acl.wafacl
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_wafregional_web_acl.wafacl a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import WAF Regional Web ACL using the id. For example:
+
+```console
+% terraform import aws_wafregional_web_acl.wafacl a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `detector_id` - (Required) ID of the GuardDuty detector.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `has_findings` - Indicates whether findings are present for the specified detector.
 * `finding_ids` - A list of finding IDs for the specified detector.

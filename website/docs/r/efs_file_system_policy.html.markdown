@@ -59,16 +59,25 @@ The following arguments are optional:
 
 * `bypass_policy_lockout_safety_check` - (Optional) A flag to indicate whether to bypass the `aws_efs_file_system_policy` lockout safety check. The policy lockout safety check determines whether the policy in the request will prevent the principal making the request will be locked out from making future `PutFileSystemPolicy` requests on the file system. Set `bypass_policy_lockout_safety_check` to `true` only when you intend to prevent the principal that is making the request from making a subsequent `PutFileSystemPolicy` request on the file system. The default value is `false`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID that identifies the file system (e.g., fs-ccfc0d65).
 
 ## Import
 
-The EFS file system policies can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EFS file system policies using the `id`. For example:
 
+```terraform
+import {
+  to = aws_efs_file_system_policy.foo
+  id = "fs-6fa144c6"
+}
 ```
-$ terraform import aws_efs_file_system_policy.foo fs-6fa144c6
+
+Using `terraform import`, import the EFS file system policies using the `id`. For example:
+
+```console
+% terraform import aws_efs_file_system_policy.foo fs-6fa144c6
 ```

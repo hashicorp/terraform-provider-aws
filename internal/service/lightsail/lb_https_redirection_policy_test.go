@@ -5,10 +5,10 @@ package lightsail_test
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,7 +18,6 @@ import (
 func testAccLoadBalancerHTTPSRedirectionPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	enabled := "true"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -31,8 +30,8 @@ func testAccLoadBalancerHTTPSRedirectionPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccLoadBalancerHTTPSRedirectionPolicyConfig_basic(rName, enabled),
-				ExpectError: regexp.MustCompile(`cannot enable https redirection while https is disabled.`),
+				Config:      testAccLoadBalancerHTTPSRedirectionPolicyConfig_basic(rName, acctest.CtTrue),
+				ExpectError: regexache.MustCompile(`cannot enable https redirection while https is disabled.`),
 			},
 		},
 	})

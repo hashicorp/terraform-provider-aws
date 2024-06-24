@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_app_cookie_stickiness_policy")
@@ -49,13 +50,13 @@ func ResourceAppCookieStickinessPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
 					value := v.(string)
-					if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+					if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 						es = append(es, fmt.Errorf(
 							"only alphanumeric characters and hyphens allowed in %q", k))
 					}
@@ -72,7 +73,7 @@ func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.Reso
 
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
-	policyName := d.Get("name").(string)
+	policyName := d.Get(names.AttrName).(string)
 	id := AppCookieStickinessPolicyCreateResourceID(lbName, lbPort, policyName)
 	{
 		input := &elb.CreateAppCookieStickinessPolicyInput{
@@ -132,7 +133,7 @@ func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.Resour
 	d.Set("cookie_name", cookieAttr.AttributeValue)
 	d.Set("lb_port", lbPort)
 	d.Set("load_balancer", lbName)
-	d.Set("name", policyName)
+	d.Set(names.AttrName, policyName)
 
 	return diags
 }

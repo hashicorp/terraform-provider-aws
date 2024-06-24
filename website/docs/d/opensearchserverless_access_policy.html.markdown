@@ -28,9 +28,9 @@ The following arguments are required:
 * `name` - (Required) Name of the policy.
 * `type` - (Required) Type of access policy. Must be `data`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the policy. Typically used to store information about the permissions defined in the policy.
 * `policy` - JSON policy document to use as the content for the new policy.

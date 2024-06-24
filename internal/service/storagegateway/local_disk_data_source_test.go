@@ -5,14 +5,14 @@ package storagegateway_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
@@ -22,21 +22,21 @@ func TestAccStorageGatewayLocalDiskDataSource_diskNode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_nodeNonExistent(rName),
-				ExpectError: regexp.MustCompile(`no results found`),
+				ExpectError: regexache.MustCompile(`no results found`),
 			},
 			{
 				Config: testAccLocalDiskDataSourceConfig_node(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccLocalDiskExistsDataSource(dataSourceName),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexache.MustCompile(`.+`)),
 				),
 			},
 		},
@@ -50,21 +50,21 @@ func TestAccStorageGatewayLocalDiskDataSource_diskPath(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLocalDiskDataSourceConfig_pathNonExistent(rName),
-				ExpectError: regexp.MustCompile(`no results found`),
+				ExpectError: regexache.MustCompile(`no results found`),
 			},
 			{
 				Config: testAccLocalDiskDataSourceConfig_path(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccLocalDiskExistsDataSource(dataSourceName),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexp.MustCompile(`.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexp.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_id", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_node", regexache.MustCompile(`.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "disk_path", regexache.MustCompile(`.+`)),
 				),
 			},
 		},

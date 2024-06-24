@@ -32,7 +32,7 @@ resource "aws_api_gateway_model" "MyDemoModel" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API
 * `name` - (Required) Name of the model
@@ -40,16 +40,25 @@ The following arguments are supported:
 * `content_type` - (Required) Content type of the model
 * `schema` - (Required) Schema of the model in a JSON form
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the model
 
 ## Import
 
-`aws_api_gateway_model` can be imported using `REST-API-ID/NAME`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_model` using `REST-API-ID/NAME`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_model.example
+  id = "12345abcde/example"
+}
 ```
-$ terraform import aws_api_gateway_model.example 12345abcde/example
+
+Using `terraform import`, import `aws_api_gateway_model` using `REST-API-ID/NAME`. For example:
+
+```console
+% terraform import aws_api_gateway_model.example 12345abcde/example
 ```

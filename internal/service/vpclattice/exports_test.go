@@ -5,7 +5,21 @@ package vpclattice
 
 // Exports for use in tests only.
 var (
-	FindTargetByThreePartKey = findTargetByThreePartKey
+	FindAccessLogSubscriptionByID            = findAccessLogSubscriptionByID
+	FindServiceByID                          = findServiceByID
+	FindServiceNetworkByID                   = findServiceNetworkByID
+	FindServiceNetworkServiceAssociationByID = findServiceNetworkServiceAssociationByID
+	FindServiceNetworkVPCAssociationByID     = findServiceNetworkVPCAssociationByID
+	FindTargetByThreePartKey                 = findTargetByThreePartKey
 
-	ResourceTargetGroupAttachment = resourceTargetGroupAttachment
+	IDFromIDOrARN                               = idFromIDOrARN
+	SuppressEquivalentCloudWatchLogsLogGroupARN = suppressEquivalentCloudWatchLogsLogGroupARN
+	SuppressEquivalentIDOrARN                   = suppressEquivalentIDOrARN
+
+	ResourceAccessLogSubscription            = resourceAccessLogSubscription
+	ResourceService                          = resourceService
+	ResourceServiceNetwork                   = resourceServiceNetwork
+	ResourceServiceNetworkServiceAssociation = resourceServiceNetworkServiceAssociation
+	ResourceServiceNetworkVPCAssociation     = resourceServiceNetworkVPCAssociation
+	ResourceTargetGroupAttachment            = resourceTargetGroupAttachment
 )

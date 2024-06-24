@@ -6,9 +6,10 @@ package sfn_test
 import (
 	"context"
 	"fmt"
-	"regexp"
+	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSFNStateMachine_createUpdate(t *testing.T) {
@@ -29,58 +31,60 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_basic(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination", ""),
-					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "revision_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "state_machine_version_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccStateMachineConfig_basic(rName, 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "states", fmt.Sprintf("stateMachine:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 10.*`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination", ""),
-					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "state_machine_version_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 				),
 			},
 		},
@@ -95,33 +99,48 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "EXPRESS"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttr(resourceName, "revision_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrWith(resourceName, "state_machine_version_arn", func(value string) error {
+						if !strings.HasSuffix(value, ":1") {
+							return fmt.Errorf("incorrect version number: %s", value)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EXPRESS"),
 				),
 			},
 			{
 				Config: testAccStateMachineConfig_typed(rName, "EXPRESS", 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "EXPRESS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 10.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrWith(resourceName, "state_machine_version_arn", func(value string) error {
+						if !strings.HasSuffix(value, ":2") {
+							return fmt.Errorf("incorrect version number: %s", value)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EXPRESS"),
 				),
 			},
 		},
@@ -136,41 +155,50 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					//resource.TestCheckResourceAttrSet(resourceName, "version_description"),
-					//resource.TestCheckResourceAttrSet(resourceName, "revision_id"),
-					//resource.TestCheckResourceAttrSet(resourceName, "state_machine_version_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "revision_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrWith(resourceName, "state_machine_version_arn", func(value string) error {
+						if !strings.HasSuffix(value, ":1") {
+							return fmt.Errorf("incorrect version number: %s", value)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 				),
 			},
 			{
 				Config: testAccStateMachineConfig_typed(rName, "STANDARD", 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					//resource.TestCheckResourceAttrSet(resourceName, "version_description"),
-					//resource.TestCheckResourceAttrSet(resourceName, "revision_id"),
-					//resource.TestCheckResourceAttrSet(resourceName, "state_machine_version_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 10.*`)),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttrWith(resourceName, "state_machine_version_arn", func(value string) error {
+						if !strings.HasSuffix(value, ":2") {
+							return fmt.Errorf("incorrect version number: %s", value)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 				),
 			},
 		},
@@ -185,7 +213,7 @@ func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,15 +221,14 @@ func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
 				Config: testAccStateMachineConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -215,7 +242,7 @@ func TestAccSFNStateMachine_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,15 +250,14 @@ func TestAccSFNStateMachine_namePrefix(t *testing.T) {
 				Config: testAccStateMachineConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -245,7 +271,7 @@ func TestAccSFNStateMachine_publish(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -253,14 +279,15 @@ func TestAccSFNStateMachine_publish(t *testing.T) {
 				Config: testAccStateMachineConfig_publish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
+					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, "state_machine_version_arn"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
+				ImportStateVerifyIgnore: []string{"publish"},
 			},
 		},
 	})
@@ -274,39 +301,38 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStateMachineConfig_tags1(rName, "key1", "value1"),
+				Config: testAccStateMachineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStateMachineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStateMachineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccStateMachineConfig_tags1(rName, "key2", "value2"),
+				Config: testAccStateMachineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -321,7 +347,7 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -329,22 +355,21 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 				Config: testAccStateMachineConfig_tracingDisable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"publish", "state_machine_version_arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccStateMachineConfig_tracingEnable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tracing_configuration.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -359,7 +384,7 @@ func TestAccSFNStateMachine_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -383,7 +408,7 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -391,13 +416,13 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 				Config: testAccStateMachineConfig_expressLogConfiguration(rName, sfn.LogLevelError),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", sfn.LogLevelError),
 				),
 			},
@@ -405,12 +430,12 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 				Config: testAccStateMachineConfig_expressLogConfiguration(rName, sfn.LogLevelAll),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
-					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, sfn.StateMachineStatusActive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestMatchResourceAttr(resourceName, "definition", regexache.MustCompile(`.*\"MaxAttempts\": 5.*`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", sfn.LogLevelAll),
 				),
 			},

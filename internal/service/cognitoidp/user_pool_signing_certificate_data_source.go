@@ -12,19 +12,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cognito_user_pool_signing_certificate")
-func DataSourceUserPoolSigningCertificate() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pool_signing_certificate", name="User Pool Signing Certificate")
+func dataSourceUserPoolSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolSigningCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -36,7 +37,7 @@ func dataSourceUserPoolSigningCertificateRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	userPoolID := d.Get("user_pool_id").(string)
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
 	input := &cognitoidentityprovider.GetSigningCertificateInput{
 		UserPoolId: aws.String(userPoolID),
 	}
@@ -48,7 +49,7 @@ func dataSourceUserPoolSigningCertificateRead(ctx context.Context, d *schema.Res
 	}
 
 	d.SetId(userPoolID)
-	d.Set("certificate", output.Certificate)
+	d.Set(names.AttrCertificate, output.Certificate)
 
 	return diags
 }

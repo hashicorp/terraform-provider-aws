@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_medialive_channel: Implement expand/flatten functions for `automatic_input_failover_settings` in `input_attachments`
+```

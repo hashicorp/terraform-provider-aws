@@ -5,18 +5,16 @@ package dms
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +24,7 @@ func DataSourceCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,9 +37,9 @@ func DataSourceCertificate() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
+					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
 			"certificate_owner": {
@@ -66,6 +64,7 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"valid_from_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -74,80 +73,47 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameCertificate = "Certificate Data Source"
-)
-
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	certificateID := d.Get("certificate_id").(string)
-
 	out, err := FindCertificateByID(ctx, conn, certificateID)
 
 	if err != nil {
-		create.DiagError(names.DMS, create.ErrActionReading, DSNameCertificate, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Certificate (%s): %s", certificateID, err)
 	}
 
 	d.SetId(aws.StringValue(out.CertificateIdentifier))
-
+	arn := aws.StringValue(out.CertificateArn)
+	d.Set(names.AttrCertificateARN, arn)
 	d.Set("certificate_id", out.CertificateIdentifier)
-	d.Set("certificate_arn", out.CertificateArn)
 	d.Set("certificate_pem", out.CertificatePem)
-
-	if out.CertificateWallet != nil && len(out.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", verify.Base64Encode(out.CertificateWallet))
+	if len(out.CertificateWallet) != 0 {
+		d.Set("certificate_wallet", itypes.Base64EncodeOnce(out.CertificateWallet))
 	}
-
 	d.Set("key_length", out.KeyLength)
 	d.Set("signing_algorithm", out.SigningAlgorithm)
+	d.Set("valid_from_date", out.ValidFromDate.String())
+	d.Set("valid_to_date", out.ValidToDate.String())
 
-	from_date := out.ValidFromDate.String()
-	d.Set("valid_from_date", from_date)
-	to_date := out.ValidToDate.String()
-	d.Set("valid_to_date", to_date)
-
-	tags, err := listTags(ctx, conn, aws.StringValue(out.CertificateArn))
-
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameCertificate, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Certificate (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameCertificate, d.Id(), err)
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
-}
-
-func FindCertificateByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.Certificate, error) {
-	input := &dms.DescribeCertificatesInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("certificate-id"),
-				Values: []*string{aws.String(id)},
-			},
-		},
-	}
-	response, err := conn.DescribeCertificatesWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if response == nil || len(response.Certificates) == 0 || response.Certificates[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return response.Certificates[0], nil
+	return diags
 }

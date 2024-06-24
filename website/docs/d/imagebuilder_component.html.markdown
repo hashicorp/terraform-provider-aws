@@ -22,9 +22,9 @@ data "aws_imagebuilder_component" "example" {
 
 * `arn` - (Required) ARN of the component.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `change_description` - Change description of the component.
 * `data` - Data of the component.

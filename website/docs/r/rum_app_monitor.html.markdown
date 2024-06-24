@@ -21,7 +21,7 @@ resource "aws_rum_app_monitor" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the log stream.
 * `domain` - (Required) The top-level internet domain name for which your application has administrative authority.
@@ -46,9 +46,9 @@ The following arguments are supported:
 
 * `status` - (Optional) Specifies whether this app monitor allows the web client to define and send custom events. The default is for custom events to be `DISABLED`. Valid values are `DISABLED` and `ENABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the app monitor.
 * `id` - The CloudWatch RUM name as it is the identifier of a RUM.
@@ -58,8 +58,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudwatch RUM App Monitor can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch RUM App Monitor using the `name`. For example:
 
+```terraform
+import {
+  to = aws_rum_app_monitor.example
+  id = "example"
+}
 ```
-$ terraform import aws_rum_app_monitor.example example
+
+Using `terraform import`, import Cloudwatch RUM App Monitor using the `name`. For example:
+
+```console
+% terraform import aws_rum_app_monitor.example example
 ```

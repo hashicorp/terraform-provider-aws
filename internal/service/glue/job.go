@@ -39,7 +39,7 @@ func ResourceJob() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,20 +49,26 @@ func ResourceJob() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "glueetl",
-						},
-						"script_location": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 						"python_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
+						},
+						"runtime": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+						},
+						"script_location": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -77,14 +83,9 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
 			},
 			"execution_class": {
 				Type:         schema.TypeString,
@@ -107,18 +108,27 @@ func ResourceJob() *schema.Resource {
 					},
 				},
 			},
-			"max_capacity": {
+			"glue_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"number_of_workers", "worker_type"},
+			},
+			"maintenance_window": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 10),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -147,17 +157,18 @@ func ResourceJob() *schema.Resource {
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
-				ValidateFunc:  validation.IntAtLeast(2),
+				Computed:      true,
+				ConflictsWith: []string{names.AttrMaxCapacity},
+				ValidateFunc:  validation.IntAtLeast(1),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -170,7 +181,8 @@ func ResourceJob() *schema.Resource {
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
+				Computed:      true,
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 			},
 		},
@@ -181,11 +193,11 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &glue.CreateJobInput{
 		Command: expandJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
-		Role:    aws.String(d.Get("role_arn").(string)),
+		Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:    getTagsIn(ctx),
 	}
 
@@ -199,7 +211,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.DefaultArguments = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -215,8 +227,12 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.GlueVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("max_capacity"); ok {
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
+	}
+
+	if v, ok := d.GetOk("maintenance_window"); ok {
+		input.MaintenanceWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -227,8 +243,8 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.NonOverridableArguments = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("notification_property"); ok {
-		input.NotificationProperty = expandNotificationProperty(v.([]interface{}))
+	if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.NotificationProperty = expandNotificationProperty(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("number_of_workers"); ok {
@@ -239,7 +255,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("timeout"); ok {
+	if v, ok := d.GetOk(names.AttrTimeout); ok {
 		input.Timeout = aws.Int64(int64(v.(int)))
 	}
 
@@ -247,7 +263,6 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.WorkerType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Job: %s", input)
 	output, err := conn.CreateJobWithContext(ctx, input)
 
 	if err != nil {
@@ -282,7 +297,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("job/%s", d.Id()),
 	}.String()
-	d.Set("arn", jobARN)
+	d.Set(names.AttrARN, jobARN)
 	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting command: %s", err)
 	}
@@ -290,23 +305,24 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting connections: %s", err)
 	}
 	d.Set("default_arguments", aws.StringValueMap(job.DefaultArguments))
-	d.Set("description", job.Description)
+	d.Set(names.AttrDescription, job.Description)
 	d.Set("execution_class", job.ExecutionClass)
 	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
-	d.Set("max_capacity", job.MaxCapacity)
+	d.Set("maintenance_window", job.MaintenanceWindow)
+	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
-	d.Set("name", job.Name)
+	d.Set(names.AttrName, job.Name)
 	d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments))
 	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting notification_property: %s", err)
 	}
 	d.Set("number_of_workers", job.NumberOfWorkers)
-	d.Set("role_arn", job.Role)
+	d.Set(names.AttrRoleARN, job.Role)
 	d.Set("security_configuration", job.SecurityConfiguration)
-	d.Set("timeout", job.Timeout)
+	d.Set(names.AttrTimeout, job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
 	return diags
@@ -316,10 +332,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		jobUpdate := &glue.JobUpdate{
 			Command: expandJobCommand(d.Get("command").([]interface{})),
-			Role:    aws.String(d.Get("role_arn").(string)),
+			Role:    aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
 		if v, ok := d.GetOk("connections"); ok {
@@ -332,7 +348,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.DefaultArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			jobUpdate.Description = aws.String(v.(string))
 		}
 
@@ -348,6 +364,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.GlueVersion = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("maintenance_window"); ok {
+			jobUpdate.MaintenanceWindow = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("max_retries"); ok {
 			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
 		}
@@ -356,14 +376,14 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.NonOverridableArguments = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("notification_property"); ok {
-			jobUpdate.NotificationProperty = expandNotificationProperty(v.([]interface{}))
+		if v, ok := d.GetOk("notification_property"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			jobUpdate.NotificationProperty = expandNotificationProperty(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk("number_of_workers"); ok {
 			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
 		} else {
-			if v, ok := d.GetOk("max_capacity"); ok {
+			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
 			}
 		}
@@ -372,7 +392,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("timeout"); ok {
+		if v, ok := d.GetOk(names.AttrTimeout); ok {
 			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
 		}
 
@@ -385,7 +405,6 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			JobUpdate: jobUpdate,
 		}
 
-		log.Printf("[DEBUG] Updating Glue Job: %s", input)
 		_, err := conn.UpdateJobWithContext(ctx, input)
 
 		if err != nil {
@@ -430,7 +449,7 @@ func expandJobCommand(l []interface{}) *glue.JobCommand {
 	m := l[0].(map[string]interface{})
 
 	jobCommand := &glue.JobCommand{
-		Name:           aws.String(m["name"].(string)),
+		Name:           aws.String(m[names.AttrName].(string)),
 		ScriptLocation: aws.String(m["script_location"].(string)),
 	}
 
@@ -438,14 +457,22 @@ func expandJobCommand(l []interface{}) *glue.JobCommand {
 		jobCommand.PythonVersion = aws.String(v)
 	}
 
+	if v, ok := m["runtime"].(string); ok && v != "" {
+		jobCommand.Runtime = aws.String(v)
+	}
+
 	return jobCommand
 }
 
-func expandNotificationProperty(l []interface{}) *glue.NotificationProperty {
-	m := l[0].(map[string]interface{})
+func expandNotificationProperty(tfMap map[string]interface{}) *glue.NotificationProperty {
+	if tfMap == nil {
+		return nil
+	}
 
-	notificationProperty := &glue.NotificationProperty{
-		NotifyDelayAfter: aws.Int64(int64(m["notify_delay_after"].(int))),
+	notificationProperty := &glue.NotificationProperty{}
+
+	if v, ok := tfMap["notify_delay_after"].(int); ok && v != 0 {
+		notificationProperty.NotifyDelayAfter = aws.Int64(int64(v))
 	}
 
 	return notificationProperty
@@ -477,9 +504,10 @@ func flattenJobCommand(jobCommand *glue.JobCommand) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"name":            aws.StringValue(jobCommand.Name),
+		names.AttrName:    aws.StringValue(jobCommand.Name),
 		"script_location": aws.StringValue(jobCommand.ScriptLocation),
 		"python_version":  aws.StringValue(jobCommand.PythonVersion),
+		"runtime":         aws.StringValue(jobCommand.Runtime),
 	}
 
 	return []map[string]interface{}{m}

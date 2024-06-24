@@ -1,79 +1,49 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package sqs
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_sqs_queue", &resource.Sweeper{
-		Name: "aws_sqs_queue",
-		F:    sweepQueues,
-		Dependencies: []string{
-			"aws_autoscaling_group",
-			"aws_cloudwatch_event_rule",
-			"aws_elastic_beanstalk_environment",
-			"aws_iot_topic_rule",
-			"aws_lambda_function",
-			"aws_s3_bucket",
-			"aws_sns_topic",
-		},
-	})
+func RegisterSweepers() {
+	sweep.Register("aws_sqs_queue", sweepQueues,
+		"aws_autoscaling_group",
+		"aws_cloudwatch_event_rule",
+		"aws_elastic_beanstalk_environment",
+		"aws_iot_topic_rule",
+		"aws_lambda_function",
+		"aws_s3_bucket",
+		"aws_sns_topic",
+	)
 }
 
-func sweepQueues(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.SQSConn(ctx)
-
+func sweepQueues(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.SQSClient(ctx)
 	input := &sqs.ListQueuesInput{}
-	var sweeperErrs *multierror.Error
+	var sweepResources []sweep.Sweepable
 
-	err = conn.ListQueuesPagesWithContext(ctx, input, func(page *sqs.ListQueuesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sqs.NewListQueuesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sweepResources, err
 		}
 
-		for _, queueUrl := range page.QueueUrls {
-			r := ResourceQueue()
+		for _, v := range page.QueueUrls {
+			r := resourceQueue()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(queueUrl))
-			err = sdk.DeleteResource(ctx, r, d, client)
+			d.SetId(v)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SQS Queue sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing SQS Queues: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
+	return sweepResources, nil
 }

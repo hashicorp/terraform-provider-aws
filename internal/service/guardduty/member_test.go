@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMember_basic(t *testing.T) {
@@ -24,8 +25,11 @@ func testAccMember_basic(t *testing.T) {
 	accountID := "111111111111"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,9 +37,9 @@ func testAccMember_basic(t *testing.T) {
 				Config: testAccMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "email", acctest.DefaultEmailAddress),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
 				),
 			},
@@ -54,8 +58,11 @@ func testAccMember_invite_disassociate(t *testing.T) {
 	accountID, email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,7 +70,7 @@ func testAccMember_invite_disassociate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
 			},
@@ -72,7 +79,7 @@ func testAccMember_invite_disassociate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Removed"),
 				),
 			},
@@ -94,8 +101,11 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 	accountID, email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +113,7 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Created"),
 				),
 			},
@@ -112,7 +122,7 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),
 			},
@@ -135,8 +145,11 @@ func testAccMember_invitationMessage(t *testing.T) {
 	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,11 +157,11 @@ func testAccMember_invitationMessage(t *testing.T) {
 				Config: testAccMemberConfig_invitationMessage(accountID, email, invitationMessage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
-					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", "true"),
-					resource.TestCheckResourceAttr(resourceName, "email", email),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_email_notification", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "invitation_message", invitationMessage),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", "Invited"),
 				),

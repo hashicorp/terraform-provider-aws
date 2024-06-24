@@ -7,13 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/schemas"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/schemas"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/schemas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,28 +25,27 @@ import (
 
 // @SDKResource("aws_schemas_discoverer", name="Discoverer")
 // @Tags(identifierAttribute="arn")
-func ResourceDiscoverer() *schema.Resource {
+func resourceDiscoverer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDiscovererCreate,
 		ReadWithoutTimeout:   resourceDiscovererRead,
 		UpdateWithoutTimeout: resourceDiscovererUpdate,
 		DeleteWithoutTimeout: resourceDiscovererDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-
 			"source_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -61,7 +62,7 @@ func ResourceDiscoverer() *schema.Resource {
 
 func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
 	sourceARN := d.Get("source_arn").(string)
 	input := &schemas.CreateDiscovererInput{
@@ -69,27 +70,26 @@ func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EventBridge Schemas Discoverer: %s", input)
-	output, err := conn.CreateDiscovererWithContext(ctx, input)
+	output, err := conn.CreateDiscoverer(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Schemas Discoverer (%s): %s", sourceARN, err)
 	}
 
-	d.SetId(aws.StringValue(output.DiscovererId))
+	d.SetId(aws.ToString(output.DiscovererId))
 
 	return append(diags, resourceDiscovererRead(ctx, d, meta)...)
 }
 
 func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	output, err := FindDiscovererByID(ctx, conn, d.Id())
+	output, err := findDiscovererByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Discoverer (%s) not found, removing from state", d.Id())
@@ -101,8 +101,8 @@ func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Schemas Discoverer (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.DiscovererArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.DiscovererArn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("source_arn", output.SourceArn)
 
 	return diags
@@ -110,16 +110,15 @@ func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &schemas.UpdateDiscovererInput{
 			DiscovererId: aws.String(d.Id()),
-			Description:  aws.String(d.Get("description").(string)),
+			Description:  aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
-		log.Printf("[DEBUG] Updating EventBridge Schemas Discoverer: %s", input)
-		_, err := conn.UpdateDiscovererWithContext(ctx, input)
+		_, err := conn.UpdateDiscoverer(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Schemas Discoverer (%s): %s", d.Id(), err)
@@ -131,14 +130,14 @@ func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDiscovererDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Discoverer (%s)", d.Id())
-	_, err := conn.DeleteDiscovererWithContext(ctx, &schemas.DeleteDiscovererInput{
+	_, err := conn.DeleteDiscoverer(ctx, &schemas.DeleteDiscovererInput{
 		DiscovererId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -147,4 +146,29 @@ func resourceDiscovererDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func findDiscovererByID(ctx context.Context, conn *schemas.Client, id string) (*schemas.DescribeDiscovererOutput, error) {
+	input := &schemas.DescribeDiscovererInput{
+		DiscovererId: aws.String(id),
+	}
+
+	output, err := conn.DescribeDiscoverer(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

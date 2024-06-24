@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
@@ -23,27 +24,27 @@ func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2:us-west-2:123456789012:instance/i-12345678", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service cloudformation`),
+			ExpectedError: regexache.MustCompile(`expected service cloudformation`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
 			InputARN:      "arn:aws:cloudformation:us-west-2:123456789012:type/resource/HashiCorp-TerraformAwsProvider-TfAccTestzwv6r2i7", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected 4 resource parts`),
+			ExpectedError: regexache.MustCompile(`expected 4 resource parts`),
 		},
 		{
 			TestName:      "invalid ARN resource prefix",
 			InputARN:      "arn:aws:cloudformation:us-west-2:123456789012:stack/name/1/2", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected resource prefix type`),
+			ExpectedError: regexache.MustCompile(`expected resource prefix type`),
 		},
 		{
 			TestName:          "valid ARN",

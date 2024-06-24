@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_vpc_ipam_pools: Add `id` attribute for individual IPAM pools
+```

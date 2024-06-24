@@ -5,24 +5,27 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"os"
-	"regexp"
+	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -93,8 +96,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"http_proxy": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Description: "The address of an HTTP proxy to use when accessing the AWS API. " +
-					"Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
+				Description: "URL of a proxy to use for HTTP requests when accessing the AWS API. " +
+					"Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.",
+			},
+			"https_proxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "URL of a proxy to use for HTTPS requests when accessing the AWS API. " +
+					"Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.",
 			},
 			"ignore_tags": {
 				Type:        schema.TypeList,
@@ -131,6 +140,12 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					"being executed. If the API request still fails, an error is\n" +
 					"thrown.",
 			},
+			"no_proxy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Comma-separated list of hosts that should not use HTTP or HTTPS proxies. " +
+					"Can also be set using the `NO_PROXY` or `no_proxy` environment variables.",
+			},
 			"profile": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -156,6 +171,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
 					"(https://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
+			},
+			"s3_us_east_1_regional_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: "Specifies whether S3 API calls in the `us-east-1` region use the legacy global endpoint or a regional endpoint. " + //lintignore:AWSAT003
+					"Valid values are `legacy` or `regional`. " +
+					"Can also be configured using the `AWS_S3_US_EAST_1_REGIONAL_ENDPOINT` environment variable or the `s3_us_east_1_regional_endpoint` shared config file parameter",
 			},
 			"secret_key": {
 				Type:     schema.TypeString,
@@ -212,6 +234,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
 			},
+			"token_bucket_rate_limiter_capacity": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The capacity of the AWS SDK's token bucket rate limiter.",
+			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -235,7 +262,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		return configure(ctx, provider, d)
 	}
 
-	var errs *multierror.Error
+	var errs []error
 	servicePackageMap := make(map[string]conns.ServicePackage)
 
 	for _, sp := range servicePackages(ctx) {
@@ -247,7 +274,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			typeName := v.TypeName
 
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
-				errs = multierror.Append(errs, fmt.Errorf("duplicate data source: %s", typeName))
+				errs = append(errs, fmt.Errorf("duplicate data source: %s", typeName))
 				continue
 			}
 
@@ -255,7 +282,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Read != nil || r.ReadContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
 				continue
 			}
 
@@ -264,11 +291,37 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = v.RegisterLogger(ctx)
 				}
 
 				return ctx
 			}
 			interceptors := interceptorItems{}
+
+			if v.Tags != nil {
+				schema := r.SchemaMap()
+
+				// The data source has opted in to transparent tagging.
+				// Ensure that the schema look OK.
+				if v, ok := schema[names.AttrTags]; ok {
+					if !v.Computed {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						continue
+					}
+				} else {
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					continue
+				}
+
+				interceptors = append(interceptors, interceptorItem{
+					when: Before | After,
+					why:  Read,
+					interceptor: tagsDataSourceInterceptor{
+						tags: v.Tags,
+					},
+				})
+			}
+
 			ds := &wrappedDataSource{
 				bootstrapContext: bootstrapContext,
 				interceptors:     interceptors,
@@ -286,7 +339,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			typeName := v.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {
-				errs = multierror.Append(errs, fmt.Errorf("duplicate resource: %s", typeName))
+				errs = append(errs, fmt.Errorf("duplicate resource: %s", typeName))
 				continue
 			}
 
@@ -294,19 +347,19 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			// Ensure that the correct CRUD handler variants are used.
 			if r.Create != nil || r.CreateContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Create handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Create handler variant: %s", typeName))
 				continue
 			}
 			if r.Read != nil || r.ReadContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Read handler variant: %s", typeName))
 				continue
 			}
 			if r.Update != nil || r.UpdateContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Update handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Update handler variant: %s", typeName))
 				continue
 			}
 			if r.Delete != nil || r.DeleteContext != nil {
-				errs = multierror.Append(errs, fmt.Errorf("incorrect Delete handler variant: %s", typeName))
+				errs = append(errs, fmt.Errorf("incorrect Delete handler variant: %s", typeName))
 				continue
 			}
 
@@ -315,6 +368,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
 					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = v.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -328,27 +382,27 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				// Ensure that the schema look OK.
 				if v, ok := schema[names.AttrTags]; ok {
 					if v.Computed {
-						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
 						continue
 					}
 				} else {
-					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTags, typeName))
 					continue
 				}
 				if v, ok := schema[names.AttrTagsAll]; ok {
 					if !v.Computed {
-						errs = multierror.Append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
 					}
 				} else {
-					errs = multierror.Append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
+					errs = append(errs, fmt.Errorf("no `%s` attribute defined in schema: %s", names.AttrTagsAll, typeName))
 					continue
 				}
 
 				interceptors = append(interceptors, interceptorItem{
 					when: Before | After | Finally,
 					why:  Create | Read | Update,
-					interceptor: tagsInterceptor{
+					interceptor: tagsResourceInterceptor{
 						tags:       v.Tags,
 						updateFunc: tagsUpdateFunc,
 						readFunc:   tagsReadFunc,
@@ -391,7 +445,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		}
 	}
 
-	if err := errs.ErrorOrNil(); err != nil {
+	if err := errors.Join(errs...); err != nil {
 		return nil, err
 	}
 
@@ -412,6 +466,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 // configure ensures that the provider is fully configured.
 func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	terraformVersion := provider.TerraformVersion
 	if terraformVersion == "" {
 		// Terraform 0.12 introduced this field to the protocol
@@ -425,7 +481,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
-		HTTPProxy:                      d.Get("http_proxy").(string),
 		Insecure:                       d.Get("insecure").(bool),
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
@@ -438,6 +493,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		STSRegion:                      d.Get("sts_region").(string),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
+		TokenBucketRateLimiterCapacity: d.Get("token_bucket_rate_limiter_capacity").(int),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
@@ -445,9 +501,13 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	if v, ok := d.Get("retry_mode").(string); ok && v != "" {
 		mode, err := aws.ParseRetryMode(v)
 		if err != nil {
-			return nil, diag.FromErr(err)
+			return nil, sdkdiag.AppendFromErr(diags, err)
 		}
 		config.RetryMode = mode
+	}
+
+	if v, ok := d.Get("s3_us_east_1_regional_endpoint").(string); ok && v != "" {
+		config.S3USEast1RegionalEndpoint = conns.NormalizeS3USEast1RegionalEndpoint(v)
 	}
 
 	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -476,18 +536,31 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
-		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
-
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-
-		config.Endpoints = endpoints
+	v := d.Get("endpoints")
+	endpoints, dx := expandEndpoints(ctx, v.(*schema.Set).List())
+	diags = append(diags, dx...)
+	if diags.HasError() {
+		return nil, diags
 	}
+	config.Endpoints = endpoints
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
 		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOkExists("http_proxy"); ok {
+		if s, sok := v.(string); sok {
+			config.HTTPProxy = aws.String(s)
+		}
+	}
+	if v, ok := d.GetOkExists("https_proxy"); ok {
+		if s, sok := v.(string); sok {
+			config.HTTPSProxy = aws.String(s)
+		}
+	}
+
+	if v, ok := d.Get("no_proxy").(string); ok && v != "" {
+		config.NoProxy = v
 	}
 
 	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -506,7 +579,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).ValueBool(); !null {
 		if v {
 			config.EC2MetadataServiceEnableState = imds.ClientDisabled
 		} else {
@@ -520,7 +593,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	} else {
 		meta = new(conns.AWSClient)
 	}
-	meta, diags := config.ConfigureProvider(ctx, meta)
+	meta, ds := config.ConfigureProvider(ctx, meta)
+	diags = append(diags, ds...)
 
 	if diags.HasError() {
 		return nil, diags
@@ -548,7 +622,7 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "A unique identifier that might be required when you assume a role in another account.",
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 1224),
-						validation.StringMatch(regexp.MustCompile(`[\w+=,.@:\/\-]*`), ""),
+						validation.StringMatch(regexache.MustCompile(`[\w+=,.@:\/\-]*`), ""),
 					),
 				},
 				"policy": {
@@ -796,33 +870,69 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 	return ignoreConfig
 }
 
-func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, error) {
-	if len(tfList) == 0 {
-		return nil, nil
+func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	endpointsPath := cty.GetAttrPath("endpoints")
+
+	if l := len(tfList); l > 1 {
+		diags = append(diags, errs.NewAttributeWarningDiagnostic(
+			endpointsPath,
+			"Invalid Attribute Value",
+			fmt.Sprintf("Attribute %q should have at most 1 element, got %d."+
+				"\n\nThis will be an error in a future release.",
+				errs.PathString(endpointsPath), l),
+		))
 	}
 
 	endpoints := make(map[string]string)
 
-	for _, tfMapRaw := range tfList {
+	for i, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 
 		if !ok {
 			continue
 		}
 
-		for _, alias := range names.Aliases() {
-			pkg, err := names.ProviderPackageForAlias(alias)
+		elementPath := endpointsPath.IndexInt(i)
 
-			if err != nil {
-				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", alias, err)
+		for _, endpoint := range names.Endpoints() {
+			pkg := endpoint.ProviderPackage
+
+			if len(endpoint.Aliases) > 0 {
+				count := 0
+				attrs := []string{pkg}
+				if tfMap[pkg] != "" {
+					count++
+				}
+				for _, alias := range endpoint.Aliases {
+					attrs = append(attrs, alias)
+					if tfMap[alias] != "" {
+						count++
+					}
+				}
+
+				if count > 1 {
+					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
+				}
 			}
 
 			if endpoints[pkg] == "" {
-				if v := tfMap[alias].(string); v != "" {
+				if v := tfMap[pkg].(string); v != "" {
 					endpoints[pkg] = v
+				} else {
+					for _, alias := range endpoint.Aliases {
+						if v := tfMap[alias].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
 				}
 			}
 		}
+	}
+	if diags.HasError() {
+		return nil, diags
 	}
 
 	for _, pkg := range names.ProviderPackages() {
@@ -830,22 +940,59 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 			continue
 		}
 
-		envVar := names.EnvVar(pkg)
-		if envVar != "" {
-			if v := os.Getenv(envVar); v != "" {
+		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
+		tfAwsEnvVar := names.TFAWSEnvVar(pkg)
+		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
+		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
+			continue
+		}
+
+		awsEnvVar := names.AWSServiceEnvVar(pkg)
+		if awsEnvVar != "" {
+			if v := os.Getenv(awsEnvVar); v != "" {
 				endpoints[pkg] = v
 				continue
 			}
 		}
 
-		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
-			if v := os.Getenv(deprecatedEnvVar); v != "" {
-				// TODO: Make this a Warning Diagnostic
-				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
+		if tfAwsEnvVar != "" {
+			if v := os.Getenv(tfAwsEnvVar); v != "" {
+				diags = append(diags, DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar))
 				endpoints[pkg] = v
+				continue
+			}
+		}
+
+		if deprecatedEnvVar != "" {
+			if v := os.Getenv(deprecatedEnvVar); v != "" {
+				diags = append(diags, DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar))
+				endpoints[pkg] = v
+				continue
 			}
 		}
 	}
 
-	return endpoints, nil
+	return endpoints, diags
+}
+
+func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {
+	return errs.NewWarningDiagnostic(
+		"Deprecated Environment Variable",
+		fmt.Sprintf(`The environment variable "%s" is deprecated. Use environment variable "%s" instead.`, envvar, replacement),
+	)
+}
+
+func ConflictingEndpointsWarningDiag(elementPath cty.Path, attrs ...string) diag.Diagnostic {
+	attrPaths := make([]string, len(attrs))
+	for i, attr := range attrs {
+		path := elementPath.GetAttr(attr)
+		attrPaths[i] = `"` + errs.PathString(path) + `"`
+	}
+	return errs.NewAttributeWarningDiagnostic(
+		elementPath,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("Only one of the following attributes should be set: %s"+
+			"\n\nThis will be an error in a future release.",
+			strings.Join(attrPaths, ", ")),
+	)
 }

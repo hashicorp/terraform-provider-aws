@@ -5,8 +5,8 @@ package servicecatalog
 
 import (
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -25,7 +25,7 @@ func validSharePrincipal(v interface{}, k string) (ws []string, errors []error) 
 	errors = append(errors, errorsARN...)
 
 	pattern := `^arn:[\w-]+:organizations:.*:(ou|organization)/`
-	if !regexp.MustCompile(pattern).MatchString(value) {
+	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q does not look like an OU or organization: %q", k, value))
 	}
 

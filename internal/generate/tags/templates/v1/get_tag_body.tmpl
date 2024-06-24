@@ -17,13 +17,31 @@ func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{
 				Values: []*string{aws.String(identifier)},
 			},
 			{
-				Name:   aws.String("key"),
+				Name:   aws.String(names.AttrKey),
 				Values: []*string{aws.String(key)},
 			},
 		},
 	}
 
+	{{ if .RetryTagsListTagsType }}
+	output, err := tfresource.RetryGWhenMessageContains(ctx, {{ .RetryTagsTimeout }},
+		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+			return conn.{{ .ListTagsOp }}WithContext(ctx, input)
+		},
+		[]string{
+			{{- range .RetryTagsErrorCodes }}
+			{{ . }},
+			{{- end }}
+		},
+		[]string{
+			{{- range .RetryTagsErrorMessages }}
+			"{{ . }}",
+			{{- end }}
+		},
+	)
+	{{ else }}
 	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
+	{{- end }}
 
 	if err != nil {
 		return nil, err

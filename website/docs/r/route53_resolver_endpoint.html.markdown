@@ -31,6 +31,8 @@ resource "aws_route53_resolver_endpoint" "foo" {
     ip        = "10.0.64.4"
   }
 
+  protocols = ["Do53", "DoH"]
+
   tags = {
     Environment = "Prod"
   }
@@ -39,7 +41,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `direction` - (Required) The direction of DNS queries to or from the Route 53 Resolver endpoint.
 Valid values are `INBOUND` (resolver forwards DNS queries to the DNS service for a VPC from your network or another VPC)
@@ -48,6 +50,8 @@ or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to y
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
 * `security_group_ids` - (Required) The ID of one or more security groups that you want to use to control access to this VPC.
 * `name` - (Optional) The friendly name of the Route 53 Resolver endpoint.
+* `protocols` - (Optional) The protocols you want to use for the Route 53 Resolver endpoint. Valid values: `DoH`, `Do53`, `DoH-FIPS`.
+* `resolver_endpoint_type` - (Optional) The Route 53 Resolver endpoint IP address type. Valid values: `IPV4`, `IPV6`, `DUALSTACK`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `ip_address` object supports the following:
@@ -55,9 +59,9 @@ The `ip_address` object supports the following:
 * `subnet_id` - (Required) The ID of the subnet that contains the IP address.
 * `ip` - (Optional) The IP address in the subnet that you want to use for DNS queries.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Route 53 Resolver endpoint.
 * `arn` - The ARN of the Route 53 Resolver endpoint.
@@ -74,8 +78,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
- Route 53 Resolver endpoints can be imported using the Route 53 Resolver endpoint ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
 
+```terraform
+import {
+  to = aws_route53_resolver_endpoint.foo
+  id = "rslvr-in-abcdef01234567890"
+}
 ```
-$ terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
+
+Using `terraform import`, import  Route 53 Resolver endpoints using the Route 53 Resolver endpoint ID. For example:
+
+```console
+% terraform import aws_route53_resolver_endpoint.foo rslvr-in-abcdef01234567890
 ```

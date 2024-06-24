@@ -49,16 +49,25 @@ The following arguments are optional:
 * `with_event` - (Optional) A value that indicates whether to send an event to the Amazon EventBridge event bus after the SQL statement runs.
 * `workgroup_name` - (Optional) The serverless workgroup name. This parameter is required when connecting to a serverless workgroup and authenticating using either Secrets Manager or temporary credentials.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Redshift Data Statement ID.
 
 ## Import
 
-Redshift Data Statements can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Data Statements using the `id`. For example:
 
+```terraform
+import {
+  to = aws_redshiftdata_statement.example
+  id = "example"
+}
 ```
-$ terraform import aws_redshiftdata_statement.example example
+
+Using `terraform import`, import Redshift Data Statements using the `id`. For example:
+
+```console
+% terraform import aws_redshiftdata_statement.example example
 ```

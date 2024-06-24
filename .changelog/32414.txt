@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_signer_signing_profile: Update `platform_id` validation.
+```
+
+```release-note:enhancement
+resource/aws_signer_signing_profile: Add `signing_material` attribute.
+```

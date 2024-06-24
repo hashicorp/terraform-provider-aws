@@ -32,7 +32,7 @@ data "aws_s3_object" "object_info" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bucket` - (Required) Lists object keys in this S3 bucket. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `prefix` - (Optional) Limits results to object keys with this prefix (Default: none)
@@ -42,9 +42,9 @@ The following arguments are supported:
 * `start_after` - (Optional) Returns key names lexicographically after a specific object key in your bucket (Default: none; S3 lists object keys in UTF-8 character encoding in lexicographical order)
 * `fetch_owner` - (Optional) Boolean specifying whether to populate the owner list (Default: false)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `keys` - List of strings representing object keys
 * `common_prefixes` - List of any keys between `prefix` and the next occurrence of `delimiter` (i.e., similar to subdirectories of the `prefix` "directory"); the list is only returned when you specify `delimiter`

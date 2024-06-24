@@ -77,16 +77,18 @@ resource "aws_db_instance" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional, Forces new resource) The name of the DB parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required, Forces new resource) The family of the DB parameter group.
 * `description` - (Optional, Forces new resource) The description of the DB parameter group. Defaults to "Managed by Terraform".
-* `parameter` - (Optional) A list of DB parameters to apply. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-parameters.html) after initial creation of the group.
+* `parameter` - (Optional) The DB parameters to apply. See [`parameter` Block](#parameter-block) below for more details. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-parameters.html) after initial creation of the group.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Parameter blocks support the following:
+### `parameter` Block
+
+The `parameter` blocks support the following arguments:
 
 * `name` - (Required) The name of the DB parameter.
 * `value` - (Required) The value of the DB parameter.
@@ -94,9 +96,9 @@ Parameter blocks support the following:
     engines can't apply some parameters without a reboot, and you will need to
     specify "pending-reboot" here.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The db parameter group name.
 * `arn` - The ARN of the db parameter group.
@@ -104,8 +106,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DB Parameter groups can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Parameter groups using the `name`. For example:
 
+```terraform
+import {
+  to = aws_db_parameter_group.rds_pg
+  id = "rds-pg"
+}
 ```
-$ terraform import aws_db_parameter_group.rds_pg rds-pg
+
+Using `terraform import`, import DB Parameter groups using the `name`. For example:
+
+```console
+% terraform import aws_db_parameter_group.rds_pg rds-pg
 ```

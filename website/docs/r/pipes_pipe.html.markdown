@@ -23,7 +23,7 @@ EventBridge Pipes are very configurable, and may require IAM permissions to work
 ```terraform
 data "aws_caller_identity" "main" {}
 
-resource "aws_iam_role" "test" {
+resource "aws_iam_role" "example" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = {
@@ -42,7 +42,7 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_role_policy" "source" {
-  role = aws_iam_role.test.id
+  role = aws_iam_role.example.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "source" {
 resource "aws_sqs_queue" "source" {}
 
 resource "aws_iam_role_policy" "target" {
-  role = aws_iam_role.test.id
+  role = aws_iam_role.example.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -104,16 +104,18 @@ resource "aws_pipes_pipe" "example" {
   enrichment = aws_cloudwatch_event_api_destination.example.arn
 
   enrichment_parameters {
-    http_parameters = {
-      "example-header"        = "example-value"
-      "second-example-header" = "second-example-value"
-    }
+    http_parameters {
+      path_parameter_values = ["example-path-param"]
 
-    path_parameter_values = ["example-path-param"]
+      header_parameters = {
+        "example-header"        = "example-value"
+        "second-example-header" = "second-example-value"
+      }
 
-    query_string_parameters = {
-      "example-query-string"        = "example-value"
-      "second-example-query-string" = "second-example-value"
+      query_string_parameters = {
+        "example-query-string"        = "example-value"
+        "second-example-query-string" = "second-example-value"
+      }
     }
   }
 }
@@ -170,7 +172,7 @@ resource "aws_pipes_pipe" "example" {
 The following arguments are required:
 
 * `role_arn` - (Required) ARN of the role that allows the pipe to send data to the target.
-* `source` - (Required) Source resource of the pipe (typically an ARN).
+* `source` - (Required) Source resource of the pipe. This field typically requires an ARN (Amazon Resource Name). However, when using a self-managed Kafka cluster, you should use a different format. Instead of an ARN, use 'smk://' followed by the bootstrap server's address.
 * `target` - (Required) Target resource of the pipe (typically an ARN).
 
 The following arguments are optional:
@@ -179,6 +181,7 @@ The following arguments are optional:
 * `desired_state` - (Optional) The state the pipe should be in. One of: `RUNNING`, `STOPPED`.
 * `enrichment` - (Optional) Enrichment resource of the pipe (typically an ARN). Read more about enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes.html#pipes-enrichment).
 * `enrichment_parameters` - (Optional) Parameters to configure enrichment for your pipe. Detailed below.
+* `log_configuration` - (Optional) Logging configuration settings for the pipe. Detailed below.
 * `name` - (Optional) Name of the pipe. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `source_parameters` - (Optional) Parameters to configure a source for the pipe. Detailed below.
@@ -197,6 +200,30 @@ You can find out more about EventBridge Pipes Enrichment in the [User Guide](htt
 * `header_parameters` - (Optional) Key-value mapping of the headers that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination.
 * `path_parameter_values` - (Optional) The path parameter values to be used to populate API Gateway REST API or EventBridge ApiDestination path wildcards ("*").
 * `query_string_parameters` - (Optional) Key-value mapping of the query strings that need to be sent as part of request invoking the API Gateway REST API or EventBridge ApiDestination.
+
+### log_configuration Configuration Block
+
+You can find out more about EventBridge Pipes Enrichment in the [User Guide](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-pipes-logs.html).
+
+* `level` - (Required) The level of logging detail to include. Valid values `OFF`, `ERROR`, `INFO` and `TRACE`.
+* `cloudwatch_logs_log_destination` - (Optional) Amazon CloudWatch Logs logging configuration settings for the pipe. Detailed below.
+* `firehose_log_destination` - (Optional) Amazon Kinesis Data Firehose logging configuration settings for the pipe. Detailed below.
+* `s3_log_destination` - (Optional) Amazon S3 logging configuration settings for the pipe. Detailed below.
+
+#### log_configuration.cloudwatch_logs_log_destination Configuration Block
+
+* `log_group_arn` - (Required) Amazon Web Services Resource Name (ARN) for the CloudWatch log group to which EventBridge sends the log records.
+
+#### log_configuration.firehose_log_destination Configuration Block
+
+* `delivery_stream_arn` - (Required) Amazon Resource Name (ARN) of the Kinesis Data Firehose delivery stream to which EventBridge delivers the pipe log records.
+
+#### log_configuration.s3_log_destination Configuration Block
+
+* `bucket_name` - (Required) Name of the Amazon S3 bucket to which EventBridge delivers the log records for the pipe.
+* `bucket_owner` - (Required) Amazon Web Services account that owns the Amazon S3 bucket to which EventBridge delivers the log records for the pipe.
+* `output_format` - (Optional) EventBridge format for the log records. Valid values `json`, `plain` and `w3c`.
+* `prefix` - (Optional) Prefix text with which to begin Amazon S3 log object names.
 
 ### source_parameters Configuration Block
 
@@ -516,9 +543,9 @@ You can find out more about EventBridge Pipes Targets in the [User Guide](https:
 
 * `invocation_type` - (Optional) Specify whether to invoke the function synchronously or asynchronously. Valid Values: REQUEST_RESPONSE, FIRE_AND_FORGET.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of this pipe.
 * `id` - Same as `name`.
@@ -534,8 +561,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Pipes can be imported using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import pipes using the `name`. For example:
 
+```terraform
+import {
+  to = aws_pipes_pipe.example
+  id = "my-pipe"
+}
 ```
-$ terraform import aws_pipes_pipe.example my-pipe
+
+Using `terraform import`, import pipes using the `name`. For example:
+
+```console
+% terraform import aws_pipes_pipe.example my-pipe
 ```

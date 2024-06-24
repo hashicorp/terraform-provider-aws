@@ -11,11 +11,11 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
 //go:embed resource.tmpl
@@ -36,6 +36,7 @@ type TemplateData struct {
 	ResourceSnake        string
 	HumanFriendlyService string
 	IncludeComments      bool
+	IncludeTags          bool
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
@@ -46,31 +47,7 @@ type TemplateData struct {
 	ProviderResourceName string
 }
 
-func ToSnakeCase(upper string, snakeName string) string {
-	if snakeName != "" {
-		return snakeName
-	}
-
-	re := regexp.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1}_${2}`)
-
-	re2 := regexp.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
-}
-
-func HumanResName(upper string) string {
-	re := regexp.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1} ${2}`)
-
-	re2 := regexp.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(re2.ReplaceAllString(upper, ` $1`), " ")
-}
-
-func ProviderResourceName(servicePackage, snakeName string) string {
-	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
-}
-
-func Create(resName, snakeName string, comments, force, v2, pluginFramework bool) error {
+func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -90,7 +67,7 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework bool
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = ToSnakeCase(resName, snakeName)
+	snakeName = convert.ToSnakeCase(resName, snakeName)
 
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
@@ -113,14 +90,15 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework bool
 		ResourceSnake:        snakeName,
 		HumanFriendlyService: hf,
 		IncludeComments:      comments,
+		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
 		Service:              s,
 		ServiceLower:         strings.ToLower(s),
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
-		HumanResourceName:    HumanResName(resName),
-		ProviderResourceName: ProviderResourceName(servicePackage, snakeName),
+		HumanResourceName:    convert.ToHumanResName(resName),
+		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := resourceTmpl

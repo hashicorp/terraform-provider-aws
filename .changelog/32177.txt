@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_vpclattice_service: Add ability to find by `name`
+```

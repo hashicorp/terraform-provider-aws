@@ -95,7 +95,7 @@ resource "aws_eip" "byoip-ip" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `address` - (Optional) IP address from an EC2 BYOIP pool. This option is only available for VPC EIPs.
 * `associate_with_private_ip` - (Optional) User-specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
@@ -115,9 +115,9 @@ The following arguments are supported:
 ~> **NOTE:** Specifying both `public_ipv4_pool` and `address` won't cause an error but `address` will be used in the
 case both options are defined as the api only requires one or the other.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `allocation_id` - ID that AWS assigns to represent the allocation of the Elastic IP address for use with instances in a VPC.
 * `association_id` - ID representing the association of the address with an instance in a VPC.
@@ -126,6 +126,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Contains the EIP allocation ID.
 * `private_dns` - The Private DNS associated with the Elastic IP address (if in VPC).
 * `private_ip` - Contains the private IP address (if in VPC).
+* `ptr_record` - The DNS pointer (PTR) record for the IP address.
 * `public_dns` - Public DNS associated with the Elastic IP address.
 * `public_ip` - Contains the public IP address.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -142,16 +143,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EIPs in a VPC can be imported using their Allocation ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIPs in a VPC using their Allocation ID. For example:
 
-```
-$ terraform import aws_eip.bar eipalloc-00a10e96
+```terraform
+import {
+  to = aws_eip.bar
+  id = "eipalloc-00a10e96"
+}
 ```
 
-EIPs in EC2-Classic can be imported using their Public IP, e.g.,
+Using `terraform import`, import EIPs in a VPC using their Allocation ID. For example:
 
-```
-$ terraform import aws_eip.bar 52.0.0.0
+```console
+% terraform import aws_eip.bar eipalloc-00a10e96
 ```
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html

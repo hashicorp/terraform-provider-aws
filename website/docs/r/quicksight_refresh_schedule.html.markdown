@@ -103,17 +103,26 @@ The following arguments are optional:
 * `day_of_month` - (Optional) The day of the month that you want to schedule refresh on.
 * `day_of_week` - (Optional) The day of the week that you want to schedule a refresh on. Valid values are `SUNDAY`, `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY` and `SATURDAY`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the refresh schedule.
 * `id` - A comma-delimited string joining AWS account ID, data set ID & refresh schedule ID.
 
 ## Import
 
-A QuickSight Refresh Schedule can be imported using the AWS account ID, data set ID and schedule ID separated by commas (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Refresh Schedule using the AWS account ID, data set ID and schedule ID separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_refresh_schedule.example
+  id = "123456789012,dataset-id,schedule-id"
+}
 ```
-$ terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
+
+Using `terraform import`, import a QuickSight Refresh Schedule using the AWS account ID, data set ID and schedule ID separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_refresh_schedule.example 123456789012,dataset-id,schedule-id
 ```

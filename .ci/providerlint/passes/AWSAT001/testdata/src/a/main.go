@@ -1,14 +1,13 @@
 package a
 
 import (
-	"regexp"
-
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const resourceName = `aws_example_thing.test`
 
-var testRegexp = regexp.MustCompile(`.*`)
+var testRegexp = regexache.MustCompile(`.*`)
 
 func f() {
 	/* Passing cases */

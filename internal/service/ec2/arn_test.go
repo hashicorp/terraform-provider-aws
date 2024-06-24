@@ -1,13 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ec2_test
+package ec2
 
 import (
 	"regexp"
 	"testing"
 
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestInstanceProfileARNToName(t *testing.T) {
@@ -22,37 +23,37 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2:us-east-1:123456789012:instance/i-12345678", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service iam`),
+			ExpectedError: regexache.MustCompile(`expected service iam`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
 			InputARN:      "arn:aws:iam:us-east-1:123456789012:name", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected at least 2 resource parts`),
+			ExpectedError: regexache.MustCompile(`expected at least 2 resource parts`),
 		},
 		{
 			TestName:      "invalid ARN resource prefix",
 			InputARN:      "arn:aws:iam:us-east-1:123456789012:role/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected resource prefix instance-profile`),
+			ExpectedError: regexache.MustCompile(`expected resource prefix instance-profile`),
 		},
 		{
 			TestName:     "valid ARN",
 			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedName: "name",
+			ExpectedName: names.AttrName,
 		},
 		{
 			TestName:     "valid ARN with multiple parts",
 			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedName: "name",
+			ExpectedName: names.AttrName,
 		},
 	}
 
@@ -61,7 +62,7 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfec2.InstanceProfileARNToName(testCase.InputARN)
+			got, err := instanceProfileARNToName(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())

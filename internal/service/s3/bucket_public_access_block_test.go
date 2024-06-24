@@ -7,42 +7,41 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketPublicAccessBlock_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
-	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketExists(ctx, "aws_s3_bucket.bucket"),
+					testAccCheckBucketExists(ctx, "aws_s3_bucket.test"),
 					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "bucket", name),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtFalse),
 				),
 			},
 			{
@@ -56,21 +55,21 @@ func TestAccS3BucketPublicAccessBlock_basic(t *testing.T) {
 
 func TestAccS3BucketPublicAccessBlock_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
-	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
-					testAccCheckBucketPublicAccessBlockDisappears(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketPublicAccessBlock(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,19 +79,19 @@ func TestAccS3BucketPublicAccessBlock_disappears(t *testing.T) {
 
 func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
-	resourceName := "aws_s3_bucket_public_access_block.bucket"
-	bucketResourceName := "aws_s3_bucket.bucket"
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
+	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
@@ -105,21 +104,21 @@ func TestAccS3BucketPublicAccessBlock_Disappears_bucket(t *testing.T) {
 
 func TestAccS3BucketPublicAccessBlock_blockPublicACLs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
-	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "true", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, true, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config1),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtTrue),
 				),
 			},
 			{
@@ -128,17 +127,17 @@ func TestAccS3BucketPublicAccessBlock_blockPublicACLs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config2),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "true", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, true, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config3),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtTrue),
 				),
 			},
 		},
@@ -147,21 +146,21 @@ func TestAccS3BucketPublicAccessBlock_blockPublicACLs(t *testing.T) {
 
 func TestAccS3BucketPublicAccessBlock_blockPublicPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
-	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "true", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, true, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config1),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtTrue),
 				),
 			},
 			{
@@ -170,17 +169,17 @@ func TestAccS3BucketPublicAccessBlock_blockPublicPolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config2),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "true", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, true, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config3),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtTrue),
 				),
 			},
 		},
@@ -189,21 +188,21 @@ func TestAccS3BucketPublicAccessBlock_blockPublicPolicy(t *testing.T) {
 
 func TestAccS3BucketPublicAccessBlock_ignorePublicACLs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
-	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "true", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config1),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtTrue),
 				),
 			},
 			{
@@ -212,17 +211,17 @@ func TestAccS3BucketPublicAccessBlock_ignorePublicACLs(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config2),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "true", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, true, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config3),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtTrue),
 				),
 			},
 		},
@@ -231,21 +230,21 @@ func TestAccS3BucketPublicAccessBlock_ignorePublicACLs(t *testing.T) {
 
 func TestAccS3BucketPublicAccessBlock_restrictPublicBuckets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1, config2, config3 s3.PublicAccessBlockConfiguration
-	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
-	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	var config types.PublicAccessBlockConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_public_access_block.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		CheckDestroy:             testAccCheckBucketPublicAccessBlockDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "true"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config1),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtTrue),
 				),
 			},
 			{
@@ -254,128 +253,119 @@ func TestAccS3BucketPublicAccessBlock_restrictPublicBuckets(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "false"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config2),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccBucketPublicAccessBlockConfig_basic(name, "false", "false", "false", "true"),
+				Config: testAccBucketPublicAccessBlockConfig_basic(rName, false, false, false, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config3),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
+					testAccCheckBucketPublicAccessBlockExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtTrue),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, config *s3.PublicAccessBlockConfiguration) resource.TestCheckFunc {
+func TestAccS3BucketPublicAccessBlock_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	name := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketPublicAccessBlockConfig_directoryBucket(name, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse, acctest.CtFalse),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+			},
+		},
+	})
+}
+
+func testAccCheckBucketPublicAccessBlockDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Bucket ID is set")
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_public_access_block" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+			_, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
 
-		input := &s3.GetPublicAccessBlockInput{
-			Bucket: aws.String(rs.Primary.ID),
-		}
-
-		var output *s3.GetPublicAccessBlockOutput
-		err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-			var err error
-			output, err = conn.GetPublicAccessBlockWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
-				return retry.RetryableError(err)
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				return retry.NonRetryableError(err)
+				return err
 			}
 
-			return nil
-		})
-
-		if err != nil {
-			return err
+			return fmt.Errorf("S3 Bucket Public Access Block %s still exists", rs.Primary.ID)
 		}
-
-		if output == nil || output.PublicAccessBlockConfiguration == nil {
-			return fmt.Errorf("S3 Bucket Public Access Block not found")
-		}
-
-		*config = *output.PublicAccessBlockConfiguration
 
 		return nil
 	}
 }
 
-func testAccCheckBucketPublicAccessBlockDisappears(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, v *types.PublicAccessBlockConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Bucket ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn(ctx)
+		output, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
 
-		deleteInput := &s3.DeletePublicAccessBlockInput{
-			Bucket: aws.String(rs.Primary.ID),
-		}
-
-		if _, err := conn.DeletePublicAccessBlockWithContext(ctx, deleteInput); err != nil {
+		if err != nil {
 			return err
 		}
 
-		getInput := &s3.GetPublicAccessBlockInput{
-			Bucket: aws.String(rs.Primary.ID),
-		}
+		*v = *output
 
-		return retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-			_, err := conn.GetPublicAccessBlockWithContext(ctx, getInput)
-
-			if tfawserr.ErrCodeEquals(err, tfs3.ErrCodeNoSuchPublicAccessBlockConfiguration) {
-				return nil
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return retry.RetryableError(fmt.Errorf("S3 Bucket Public Access Block (%s) still exists", rs.Primary.ID))
-		})
+		return nil
 	}
 }
 
-func testAccBucketPublicAccessBlockConfig_basic(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {
+func testAccBucketPublicAccessBlockConfig_basic(bucketName string, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets bool) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
+resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-
-  tags = {
-    TestName = %[1]q
-  }
 }
 
-resource "aws_s3_bucket_public_access_block" "bucket" {
-  bucket = aws_s3_bucket.bucket.bucket
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.bucket
 
-  block_public_acls       = %[2]q
-  block_public_policy     = %[3]q
-  ignore_public_acls      = %[4]q
-  restrict_public_buckets = %[5]q
+  block_public_acls       = %[2]t
+  block_public_policy     = %[3]t
+  ignore_public_acls      = %[4]t
+  restrict_public_buckets = %[5]t
 }
 `, bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets)
+}
+
+func testAccBucketPublicAccessBlockConfig_directoryBucket(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+  location {
+    name = local.location_name
+  }
+}
+resource "aws_s3_bucket_public_access_block" "bucket" {
+  bucket                  = aws_s3_directory_bucket.test.bucket
+  block_public_acls       = %[1]q
+  block_public_policy     = %[2]q
+  ignore_public_acls      = %[3]q
+  restrict_public_buckets = %[4]q
+}
+`, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets))
 }

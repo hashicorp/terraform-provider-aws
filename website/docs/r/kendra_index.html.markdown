@@ -597,7 +597,7 @@ resource "aws_kendra_index" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `capacity_units` - (Optional) A block that sets the number of additional document storage and query capacity units that should be used by the index. [Detailed below](#capacity_units).
 * `description` - (Optional) The description of the Index.
@@ -693,9 +693,9 @@ A `jwt_token_type_configuration` block supports the following arguments:
 * `delete` - (Default `40m`)
 * `update` - (Default `40m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Index.
 * `created_at` - The Unix datetime that the index was created.
@@ -728,8 +728,17 @@ A `text_document_statistics` block supports the following attributes:
 
 ## Import
 
-Amazon Kendra Indexes can be imported using its `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Kendra Indexes using its `id`. For example:
 
+```terraform
+import {
+  to = aws_kendra_index.example
+  id = "12345678-1234-5678-9123-123456789123"
+}
 ```
-$ terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
+
+Using `terraform import`, import Amazon Kendra Indexes using its `id`. For example:
+
+```console
+% terraform import aws_kendra_index.example 12345678-1234-5678-9123-123456789123
 ```

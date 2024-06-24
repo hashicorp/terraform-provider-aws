@@ -7,17 +7,19 @@ import (
 	"context"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_msk_broker_nodes")
-func DataSourceBrokerNodes() *schema.Resource {
+// @SDKDataSource("aws_msk_broker_nodes", name="Broker Nodes")
+func dataSourceBrokerNodes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerNodesRead,
 
@@ -27,7 +29,6 @@ func DataSourceBrokerNodes() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"node_info_list": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -49,7 +50,7 @@ func DataSourceBrokerNodes() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -67,53 +68,48 @@ func DataSourceBrokerNodes() *schema.Resource {
 
 func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	clusterARN := d.Get("cluster_arn").(string)
 	input := &kafka.ListNodesInput{
 		ClusterArn: aws.String(clusterARN),
 	}
-	var nodeInfos []*kafka.NodeInfo
+	var nodeInfos []types.NodeInfo
 
-	err := conn.ListNodesPagesWithContext(ctx, input, func(page *kafka.ListNodesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := kafka.NewListNodesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing MSK Cluster (%s) Broker Nodes: %s", clusterARN, err)
 		}
 
 		nodeInfos = append(nodeInfos, page.NodeInfoList...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing MSK Cluster (%s) Broker Nodes: %s", clusterARN, err)
 	}
 
 	// node list is returned unsorted sort on broker id
 	sort.Slice(nodeInfos, func(i, j int) bool {
-		iBrokerId := aws.Float64Value(nodeInfos[i].BrokerNodeInfo.BrokerId)
-		jBrokerId := aws.Float64Value(nodeInfos[j].BrokerNodeInfo.BrokerId)
+		iBrokerId := aws.ToFloat64(nodeInfos[i].BrokerNodeInfo.BrokerId)
+		jBrokerId := aws.ToFloat64(nodeInfos[j].BrokerNodeInfo.BrokerId)
 		return iBrokerId < jBrokerId
 	})
 
-	tfList := make([]interface{}, len(nodeInfos))
-
-	for i, apiObject := range nodeInfos {
-		brokerNodeInfo := apiObject.BrokerNodeInfo
-		tfMap := map[string]interface{}{
-			"attached_eni_id":       aws.StringValue(brokerNodeInfo.AttachedENIId),
-			"broker_id":             aws.Float64Value(brokerNodeInfo.BrokerId),
-			"client_subnet":         aws.StringValue(brokerNodeInfo.ClientSubnet),
-			"client_vpc_ip_address": aws.StringValue(brokerNodeInfo.ClientVpcIpAddress),
-			"endpoints":             aws.StringValueSlice(brokerNodeInfo.Endpoints),
-			"node_arn":              aws.StringValue(apiObject.NodeARN),
+	tfList := []interface{}{}
+	for _, apiObject := range nodeInfos {
+		if brokerNodeInfo := apiObject.BrokerNodeInfo; brokerNodeInfo != nil {
+			tfMap := map[string]interface{}{
+				"attached_eni_id":       aws.ToString(brokerNodeInfo.AttachedENIId),
+				"broker_id":             aws.ToFloat64(brokerNodeInfo.BrokerId),
+				"client_subnet":         aws.ToString(brokerNodeInfo.ClientSubnet),
+				"client_vpc_ip_address": aws.ToString(brokerNodeInfo.ClientVpcIpAddress),
+				names.AttrEndpoints:     brokerNodeInfo.Endpoints,
+				"node_arn":              aws.ToString(apiObject.NodeARN),
+			}
+			tfList = append(tfList, tfMap)
 		}
-
-		tfList[i] = tfMap
 	}
 
 	d.SetId(clusterARN)
-
 	if err := d.Set("node_info_list", tfList); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting node_info_list: %s", err)
 	}

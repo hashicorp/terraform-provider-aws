@@ -105,7 +105,7 @@ resource "aws_glue_trigger" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `actions` – (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
 * `description` – (Optional) A description of the new trigger.
@@ -150,9 +150,9 @@ The following arguments are supported:
 * `batch_size` - (Required)Number of events that must be received from Amazon EventBridge before EventBridge  event trigger fires.
 * `batch_window` - (Optional) Window of time in seconds after which EventBridge event trigger fires. Window starts when first event is received. Default value is `900`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Glue Trigger
 * `id` - Trigger name
@@ -164,12 +164,22 @@ In addition to all arguments above, the following attributes are exported:
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
+- `update` - (Default `5m`)
 - `delete` - (Default `5m`)
 
 ## Import
 
-Glue Triggers can be imported using `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Triggers using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_trigger.MyTrigger
+  id = "MyTrigger"
+}
 ```
-$ terraform import aws_glue_trigger.MyTrigger MyTrigger
+
+Using `terraform import`, import Glue Triggers using `name`. For example:
+
+```console
+% terraform import aws_glue_trigger.MyTrigger MyTrigger
 ```

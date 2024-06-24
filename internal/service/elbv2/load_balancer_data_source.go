@@ -6,7 +6,6 @@ package elbv2
 import (
 	"context"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,14 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_alb")
 // @SDKDataSource("aws_lb")
+// @Testing(tagsTest=true)
 func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
@@ -37,22 +38,22 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -62,6 +63,30 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"client_keep_alive": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"connection_logs": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrBucket: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						names.AttrPrefix: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"customer_owned_ipv4_pool": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -70,7 +95,11 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dns_name": {
+			names.AttrDNSName: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dns_record_client_routing_policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,6 +131,10 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enforce_security_group_inbound_rules_on_private_link_traffic": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"idle_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -110,7 +143,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,7 +151,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -127,7 +160,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -153,20 +186,20 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"subnets": {
+			names.AttrSubnets: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,17 +220,17 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elbv2.DescribeLoadBalancersInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.LoadBalancerArns = aws.StringSlice([]string{v.(string)})
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	results, err := FindLoadBalancers(ctx, conn, input)
+	results, err := findLoadBalancers(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancers: %s", err)
@@ -233,97 +266,46 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	lb := results[0]
-
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
-
-	d.Set("arn", lb.LoadBalancerArn)
+	d.Set(names.AttrARN, lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
-	d.Set("name", lb.LoadBalancerName)
-	d.Set("internal", lb.Scheme != nil && aws.StringValue(lb.Scheme) == "internal")
-	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
-	d.Set("vpc_id", lb.VpcId)
-	d.Set("zone_id", lb.CanonicalHostedZoneId)
-	d.Set("dns_name", lb.DNSName)
-	d.Set("ip_address_type", lb.IpAddressType)
-	d.Set("load_balancer_type", lb.Type)
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
-
-	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting subnets: %s", err)
-	}
-
+	d.Set(names.AttrDNSName, lb.DNSName)
+	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
+	d.Set(names.AttrIPAddressType, lb.IpAddressType)
+	d.Set(names.AttrName, lb.LoadBalancerName)
+	d.Set("internal", aws.StringValue(lb.Scheme) == "internal")
+	d.Set("load_balancer_type", lb.Type)
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(lb.SecurityGroups))
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
+	if err := d.Set(names.AttrSubnets, flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting subnets: %s", err)
+	}
+	d.Set(names.AttrVPCID, lb.VpcId)
+	d.Set("zone_id", lb.CanonicalHostedZoneId)
 
-	attributesResp, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, &elbv2.DescribeLoadBalancerAttributesInput{
-		LoadBalancerArn: aws.String(d.Id()),
-	})
+	attributes, err := FindLoadBalancerAttributesByARN(ctx, conn, d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving LB Attributes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancer (%s) attributes: %s", d.Id(), err)
 	}
 
-	accessLogMap := map[string]interface{}{
-		"bucket":  "",
-		"enabled": false,
-		"prefix":  "",
-	}
-
-	for _, attr := range attributesResp.Attributes {
-		switch aws.StringValue(attr.Key) {
-		case "access_logs.s3.enabled":
-			accessLogMap["enabled"] = flex.StringToBoolValue(attr.Value)
-		case "access_logs.s3.bucket":
-			accessLogMap["bucket"] = aws.StringValue(attr.Value)
-		case "access_logs.s3.prefix":
-			accessLogMap["prefix"] = aws.StringValue(attr.Value)
-		case "idle_timeout.timeout_seconds":
-			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "parsing ALB timeout: %s", err)
-			}
-			d.Set("idle_timeout", timeout)
-		case "routing.http.drop_invalid_header_fields.enabled":
-			dropInvalidHeaderFieldsEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
-		case "routing.http.preserve_host_header.enabled":
-			preserveHostHeaderEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("preserve_host_header", preserveHostHeaderEnabled)
-		case "deletion_protection.enabled":
-			protectionEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_deletion_protection", protectionEnabled)
-		case "routing.http2.enabled":
-			http2Enabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_http2", http2Enabled)
-		case "waf.fail_open.enabled":
-			wafFailOpenEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_waf_fail_open", wafFailOpenEnabled)
-		case "load_balancing.cross_zone.enabled":
-			crossZoneLbEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_cross_zone_load_balancing", crossZoneLbEnabled)
-		case "routing.http.desync_mitigation_mode":
-			desyncMitigationMode := aws.StringValue(attr.Value)
-			d.Set("desync_mitigation_mode", desyncMitigationMode)
-		case "routing.http.x_amzn_tls_version_and_cipher_suite.enabled":
-			tlsVersionAndCipherEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_tls_version_and_cipher_suite_headers", tlsVersionAndCipherEnabled)
-		case "routing.http.xff_client_port.enabled":
-			xffClientPortEnabled := flex.StringToBoolValue(attr.Value)
-			d.Set("enable_xff_client_port", xffClientPortEnabled)
-		case "routing.http.xff_header_processing.mode":
-			xffHeaderProcMode := aws.StringValue(attr.Value)
-			d.Set("xff_header_processing_mode", xffHeaderProcMode)
-		}
-	}
-
-	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
+	if err := d.Set("access_logs", []interface{}{flattenLoadBalancerAccessLogsAttributes(attributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
 
+	if err := d.Set("connection_logs", []interface{}{flattenLoadBalancerConnectionLogsAttributes(attributes)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting connection_logs: %s", err)
+	}
+
+	loadBalancerAttributes.flatten(d, attributes)
+
 	tags, err := listTags(ctx, conn, d.Id())
 
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer (%s): %s", d.Id(), err)
 		return diags
 	}
 
@@ -331,7 +313,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

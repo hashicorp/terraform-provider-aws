@@ -20,7 +20,7 @@ resource "aws_ec2_transit_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `amazon_side_asn` - (Optional) Private Autonomous System Number (ASN) for the Amazon side of a BGP session. The range is `64512` to `65534` for 16-bit ASNs and `4200000000` to `4294967294` for 32-bit ASNs. Default value: `64512`.
 
@@ -36,9 +36,9 @@ The following arguments are supported:
 * `transit_gateway_cidr_blocks` - (Optional) One or more IPv4 or IPv6 CIDR blocks for the transit gateway. Must be a size /24 CIDR block or larger for IPv4, or a size /64 CIDR block or larger for IPv6.
 * `vpn_ecmp_support` - (Optional) Whether VPN Equal Cost Multipath Protocol support is enabled. Valid values: `disable`, `enable`. Default value: `enable`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - EC2 Transit Gateway Amazon Resource Name (ARN)
 * `association_default_route_table_id` - Identifier of the default association route table
@@ -57,8 +57,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_ec2_transit_gateway` can be imported by using the EC2 Transit Gateway identifier, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway` using the EC2 Transit Gateway identifier. For example:
 
+```terraform
+import {
+  to = aws_ec2_transit_gateway.example
+  id = "tgw-12345678"
+}
 ```
-$ terraform import aws_ec2_transit_gateway.example tgw-12345678
+
+Using `terraform import`, import `aws_ec2_transit_gateway` using the EC2 Transit Gateway identifier. For example:
+
+```console
+% terraform import aws_ec2_transit_gateway.example tgw-12345678
 ```

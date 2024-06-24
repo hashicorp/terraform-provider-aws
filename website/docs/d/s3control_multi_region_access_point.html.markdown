@@ -20,14 +20,14 @@ data "aws_s3control_multi_region_access_point" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `account_id` - (Optional) The AWS account ID of the S3 Multi-Region Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `name` - (Required) The name of the Multi-Region Access Point.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `alias` - The alias for the Multi-Region Access Point.
 * `arn` - Amazon Resource Name (ARN) of the Multi-Region Access Point.
@@ -53,4 +53,5 @@ In addition to all arguments above, the following attributes are exported:
 ### regions
 
 * `bucket` - The name of the bucket.
+* `bucket_account_id` - The AWS account ID that owns the bucket.
 * `region` - The name of the region.

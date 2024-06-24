@@ -30,7 +30,7 @@ func waitWorkspaceCreated(ctx context.Context, conn *managedgrafana.ManagedGrafa
 
 func waitWorkspaceUpdated(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{managedgrafana.WorkspaceStatusUpdating},
+		Pending: []string{managedgrafana.WorkspaceStatusUpdating, managedgrafana.WorkspaceStatusVersionUpdating},
 		Target:  []string{managedgrafana.WorkspaceStatusActive},
 		Refresh: statusWorkspaceStatus(ctx, conn, id),
 		Timeout: timeout,

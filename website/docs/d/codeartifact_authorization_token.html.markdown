@@ -20,15 +20,15 @@ data "aws_codeartifact_authorization_token" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `domain` - (Required) Name of the domain that is in scope for the generated authorization token.
 * `domain_owner` - (Optional) Account number of the AWS account that owns the domain.
 * `duration_seconds` - (Optional) Time, in seconds, that the generated authorization token is valid. Valid values are `0` and between `900` and `43200`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `authorization_token` - Temporary authorization token.
 * `expiration` - Time in UTC RFC3339 format when the authorization token expires.

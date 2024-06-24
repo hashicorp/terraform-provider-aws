@@ -29,7 +29,7 @@ resource "aws_cur_report_definition" "example_cur_report_definition" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `report_name` - (Required) Unique name for the report. Must start with a number/letter and is case sensitive. Limited to 256 characters.
 * `time_unit` - (Required) The frequency on which report data are measured and displayed.  Valid values are: `DAILY`, `HOURLY`, `MONTHLY`.
@@ -43,16 +43,25 @@ The following arguments are supported:
 * `refresh_closed_reports` - (Optional) Set to true to update your reports after they have been finalized if AWS detects charges related to previous months.
 * `report_versioning` - (Optional) Overwrite the previous version of each report or to deliver the report in addition to the previous versions. Valid values are: `CREATE_NEW_REPORT` and `OVERWRITE_REPORT`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the cur report.
 
 ## Import
 
-Report Definitions can be imported using the `report_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Report Definitions using the `report_name`. For example:
 
+```terraform
+import {
+  to = aws_cur_report_definition.example_cur_report_definition
+  id = "example-cur-report-definition"
+}
 ```
-$ terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
+
+Using `terraform import`, import Report Definitions using the `report_name`. For example:
+
+```console
+% terraform import aws_cur_report_definition.example_cur_report_definition example-cur-report-definition
 ```

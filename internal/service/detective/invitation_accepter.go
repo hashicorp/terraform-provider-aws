@@ -13,6 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -22,9 +25,11 @@ func ResourceInvitationAccepter() *schema.Resource {
 		CreateWithoutTimeout: resourceInvitationAccepterCreate,
 		ReadWithoutTimeout:   resourceInvitationAccepterRead,
 		DeleteWithoutTimeout: resourceInvitationAccepterDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"graph_arn": {
 				Type:         schema.TypeString,
@@ -37,57 +42,107 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	graphArn := d.Get("graph_arn").(string)
-
-	acceptInvitationInput := &detective.AcceptInvitationInput{
-		GraphArn: aws.String(graphArn),
+	graphARN := d.Get("graph_arn").(string)
+	input := &detective.AcceptInvitationInput{
+		GraphArn: aws.String(graphARN),
 	}
 
-	_, err := conn.AcceptInvitationWithContext(ctx, acceptInvitationInput)
+	_, err := conn.AcceptInvitationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("accepting Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "accepting Detective Invitation (%s): %s", graphARN, err)
 	}
 
-	d.SetId(graphArn)
+	d.SetId(graphARN)
 
-	return resourceInvitationAccepterRead(ctx, d, meta)
+	return append(diags, resourceInvitationAccepterRead(ctx, d, meta)...)
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	graphArn, err := FindInvitationByGraphARN(ctx, conn, d.Id())
+	member, err := FindInvitationByGraphARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Detective InvitationAccepter (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Detective Invitation Accepter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("listing Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Detective Invitation Accepter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("graph_arn", graphArn)
-	return nil
+	d.Set("graph_arn", member.GraphArn)
+
+	return diags
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	input := &detective.DisassociateMembershipInput{
+	log.Printf("[DEBUG] Deleting Detective Invitation Accepter: %s", d.Id())
+	_, err := conn.DisassociateMembershipWithContext(ctx, &detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
+		return diags
 	}
 
-	_, err := conn.DisassociateMembershipWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.Errorf("disassociating Detective InvitationAccepter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disassociating Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
-	return nil
+
+	return diags
+}
+
+func FindInvitationByGraphARN(ctx context.Context, conn *detective.Detective, graphARN string) (*detective.MemberDetail, error) {
+	input := &detective.ListInvitationsInput{}
+
+	return findInvitation(ctx, conn, input, func(v *detective.MemberDetail) bool {
+		return aws.StringValue(v.GraphArn) == graphARN
+	})
+}
+
+func findInvitation(ctx context.Context, conn *detective.Detective, input *detective.ListInvitationsInput, filter tfslices.Predicate[*detective.MemberDetail]) (*detective.MemberDetail, error) {
+	output, err := findInvitations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findInvitations(ctx context.Context, conn *detective.Detective, input *detective.ListInvitationsInput, filter tfslices.Predicate[*detective.MemberDetail]) ([]*detective.MemberDetail, error) {
+	var output []*detective.MemberDetail
+
+	err := conn.ListInvitationsPagesWithContext(ctx, input, func(page *detective.ListInvitationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Invitations {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

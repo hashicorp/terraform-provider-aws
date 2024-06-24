@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const measureFieldsMaxItems5 = 5
@@ -33,7 +34,7 @@ func dimensionFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
 							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
 							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
@@ -47,7 +48,7 @@ func dimensionFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
 							"date_granularity":     stringSchema(false, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
 							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
@@ -62,7 +63,7 @@ func dimensionFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
 							"format_configuration": numberFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 							"hierarchy_id":         stringSchema(false, validation.StringLenBetween(1, 512)),
@@ -89,8 +90,8 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"expression": stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"field_id":   stringSchema(true, validation.StringLenBetween(1, 512)),
+							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
+							"field_id":           stringSchema(true, validation.StringLenBetween(1, 512)),
 						},
 					},
 				},
@@ -101,7 +102,7 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
 							"aggregation_function": stringSchema(false, validation.StringInSlice(quicksight.CategoricalAggregationFunction_Values(), false)),
 							"format_configuration": stringFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringFormatConfiguration.html
@@ -115,7 +116,7 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
 							"aggregation_function": stringSchema(false, validation.StringInSlice(quicksight.DateAggregationFunction_Values(), false)),
 							"format_configuration": dateTimeFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeFormatConfiguration.html
@@ -129,7 +130,7 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"field_id":             stringSchema(true, validation.StringLenBetween(1, 512)),
 							"aggregation_function": numericalAggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
 							"format_configuration": numberFormatConfigurationSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
@@ -362,7 +363,7 @@ func expandCalculatedMeasureField(tfList []interface{}) *quicksight.CalculatedMe
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		field.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		field.Expression = aws.String(v)
 	}
 
@@ -632,7 +633,7 @@ func flattenCalculatedMeasureField(apiObject *quicksight.CalculatedMeasureField)
 		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
 	}
 	if apiObject.Expression != nil {
-		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.StringValue(apiObject.Expression)
 	}
 
 	return []interface{}{tfMap}

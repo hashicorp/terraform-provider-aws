@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_instance: Add `http_protocol_ipv6` attribute to `metadata_options` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `metadata_options.http_protocol_ipv6` attribute
+```

@@ -1,4 +1,5 @@
 name: "Pull Request Feed"
+
 on:
   pull_request_target:
     types: [opened, closed]
@@ -12,12 +13,15 @@ jobs:
   community_check:
     uses: ./.github/workflows/community-check.yml
     secrets: inherit
+    with:
+      username: ${{ github.event.pull_request.user.login }}
+
   NotificationPRMerged:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Notification PR Merged
-        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         with:
           payload: |
             {
@@ -31,12 +35,13 @@ jobs:
                 }
               ]
             }
+
   NotificationMaintainerPROpened:
     needs: community_check
     runs-on: ubuntu-latest
     steps:
       - name: Notification Maintainer PR Opened
-        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         if: github.event.action == 'opened' && needs.community_check.outputs.maintainer == 'true' && github.actor != 'dependabot[bot]'
         with:
           payload: |
@@ -51,12 +56,13 @@ jobs:
                 }
               ]
             }
+
   NotificationPartnerPROpened:
     needs: community_check
     runs-on: ubuntu-latest
     steps:
       - name: Notification Partner PR Opened
-        uses: slackapi/slack-github-action@e28cf165c92ffef168d23c5c9000cffc8a25e117
+        uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
         if: github.event.action == 'opened' && needs.community_check.outputs.partner == 'true'
         with:
           payload: |

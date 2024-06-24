@@ -90,7 +90,7 @@ resource "aws_appsync_function" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `api_id` - (Required) ID of the associated AppSync API.
 * `code` - (Optional) The function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
@@ -106,14 +106,14 @@ The following arguments are supported:
 
 ### Runtime
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `name` - (Optional) The name of the runtime to use. Currently, the only allowed value is `APPSYNC_JS`.
 * `runtime_version` - (Optional) The version of the runtime to use. Currently, the only allowed version is `1.0.0`.
 
 ### Sync Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `conflict_detection` - (Optional) Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
 * `conflict_handler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
@@ -121,13 +121,13 @@ The following arguments are supported:
 
 #### Lambda Conflict Handler Config
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `lambda_conflict_handler_arn` - (Optional) ARN for the Lambda function to use as the Conflict Handler.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - API Function ID (Formatted as ApiId-FunctionId)
 * `arn` - ARN of the Function object.
@@ -135,8 +135,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_appsync_function` can be imported using the AppSync API ID and Function ID separated by `-`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appsync_function` using the AppSync API ID and Function ID separated by `-`. For example:
 
+```terraform
+import {
+  to = aws_appsync_function.example
+  id = "xxxxx-yyyyy"
+}
 ```
-$ terraform import aws_appsync_function.example xxxxx-yyyyy
+
+Using `terraform import`, import `aws_appsync_function` using the AppSync API ID and Function ID separated by `-`. For example:
+
+```console
+% terraform import aws_appsync_function.example xxxxx-yyyyy
 ```

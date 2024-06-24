@@ -24,8 +24,8 @@ data "aws_networkmanager_global_networks" "example" {
 
 * `tags` - (Optional) Restricts the list to the global networks with these tags.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `ids` - IDs of the global networks.

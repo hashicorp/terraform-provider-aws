@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,22 +21,22 @@ func DataSourceEndpoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"elasticsearch_settings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"endpoint_uri": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"error_retry_duration": {
 							Type:     schema.TypeInt,
@@ -48,7 +48,7 @@ func DataSourceEndpoint() *schema.Resource {
 						},
 						"service_access_role_arn": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
@@ -61,7 +61,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,16 +71,16 @@ func DataSourceEndpoint() *schema.Resource {
 			},
 			"extra_connection_attributes": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"kafka_settings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"broker": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"include_control_details": {
 							Type:     schema.TypeBool,
@@ -190,20 +190,20 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"mongodb_settings": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_mechanism": {
@@ -233,13 +233,85 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"postgres_settings": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"babelfish_database_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"capture_ddls": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"database_mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ddl_artifacts_schema": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"fail_tasks_on_lob_truncation": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"heartbeat_enable": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"heartbeat_frequency": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"heartbeat_schema": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"map_boolean_as_boolean": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"map_jsonb_as_clob": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"map_long_varchar_as": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"plugin_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"slot_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"redis_settings": {
 				Type:     schema.TypeList,
@@ -258,7 +330,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -286,7 +358,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -318,7 +390,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -406,6 +478,10 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"glue_catalog_generation": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"ignore_headers_row": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -485,59 +561,55 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameEndpoint = "Endpoint Data Source"
-)
-
 func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	endptID := d.Get("endpoint_id").(string)
-
 	out, err := FindEndpointByID(ctx, conn, endptID)
+
 	if err != nil {
-		create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", endptID, err)
 	}
 
 	d.SetId(aws.StringValue(out.EndpointIdentifier))
-
 	d.Set("endpoint_id", out.EndpointIdentifier)
-	d.Set("endpoint_arn", out.EndpointArn)
-	d.Set("endpoint_type", out.EndpointType)
-	d.Set("database_name", out.DatabaseName)
+	arn := aws.StringValue(out.EndpointArn)
+	d.Set("endpoint_arn", arn)
+	d.Set(names.AttrEndpointType, out.EndpointType)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("engine_name", out.EngineName)
-	d.Set("port", out.Port)
+	d.Set(names.AttrPort, out.Port)
 	d.Set("server_name", out.ServerName)
 	d.Set("ssl_mode", out.SslMode)
-	d.Set("username", out.Username)
+	d.Set(names.AttrUsername, out.Username)
 
-	err = resourceEndpointSetState(d, out)
-	if err != nil {
-		create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
+	if err := resourceEndpointSetState(d, out); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tags, err := listTags(ctx, conn, aws.StringValue(out.EndpointArn))
+	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameEndpoint, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameEndpoint, d.Id(), err)
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

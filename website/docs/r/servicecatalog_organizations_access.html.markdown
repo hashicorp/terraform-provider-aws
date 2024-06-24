@@ -28,9 +28,9 @@ The following arguments are required:
 
 * `enabled` - (Required) Whether to enable AWS Organizations access.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Account ID for the account using the resource.
 

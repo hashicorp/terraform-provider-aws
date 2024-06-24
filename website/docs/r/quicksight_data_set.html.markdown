@@ -167,7 +167,7 @@ The following arguments are required:
 * `data_set_id` - (Required, Forces new resource) Identifier for the data set.
 * `import_mode` - (Required) Indicates whether you want to import the data into SPICE. Valid values are `SPICE` and `DIRECT_QUERY`.
 * `name` - (Required) Display name for the dataset.
-* `physical_table_map` - (Required) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
+* `physical_table_map` - (Optional) Declares the physical tables that are available in the underlying data sources. See [physical_table_map](#physical_table_map).
 
 The following arguments are optional:
 
@@ -388,9 +388,9 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `match_all_value` - (Optional) A string that you want to use to filter by all the values in a column in the dataset and don’t want to list the values one by one.
 * `tag_multi_value_delimiter` - (Optional) A string that you want to use to delimit the values when you pass the values at run time.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the data set.
 * `id` - A comma-delimited string joining AWS account ID and data set ID.
@@ -398,8 +398,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight Data Set can be imported using the AWS account ID and data set ID separated by a comma (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_data_set.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_data_set.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight Data Set using the AWS account ID and data set ID separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_data_set.example 123456789012,example-id
 ```

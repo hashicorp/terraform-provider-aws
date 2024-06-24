@@ -23,7 +23,9 @@ data "aws_glue_connection" "example" {
 * `id` - (Required) Concatenation of the catalog ID and connection name. For example, if your account ID is
 `123456789123` and the connection name is `conn` then the ID is `123456789123:conn`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Glue Connection.
 * `catalog_id` - Catalog ID of the Glue Connection.

@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +23,7 @@ import (
 
 // @SDKResource("aws_default_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceDefaultVPC() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -49,7 +51,7 @@ func ResourceDefaultVPC() *schema.Resource {
 		//   - existing_default_vpc Computed-only, set in resourceDefaultVPCCreate
 		//   - force_destroy Optional
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +60,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"ipv6_ipam_pool_id"},
 			},
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +99,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -142,7 +144,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,10 +156,10 @@ func ResourceDefaultVPC() *schema.Resource {
 
 func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterListV2(
 			map[string]string{
 				"isDefault": "true",
 			},
@@ -165,36 +167,34 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	vpcInfo := &vpcInfo{}
-	vpc, err := FindVPC(ctx, conn, input)
+	vpc, err := findVPC(ctx, conn, input)
 
 	if err == nil {
-		log.Printf("[INFO] Found existing EC2 Default VPC")
-		d.SetId(aws.StringValue(vpc.VpcId))
+		d.SetId(aws.ToString(vpc.VpcId))
 		d.Set("existing_default_vpc", true)
 
 		vpcInfo.vpc = vpc
 
-		if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames); err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
+		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames, err)
 		} else {
 			vpcInfo.enableDnsHostnames = v
 		}
 
-		if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport); err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
+		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsSupport); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableDnsSupport, err)
 		} else {
 			vpcInfo.enableDnsSupport = v
 		}
-		if v, err := FindVPCAttribute(ctx, conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+		if v, err := findVPCAttribute(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), awstypes.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 		} else {
 			vpcInfo.enableNetworkAddressUsageMetrics = v
 		}
 	} else if tfresource.NotFound(err) {
 		input := &ec2.CreateDefaultVpcInput{}
 
-		log.Printf("[DEBUG] Creating EC2 Default VPC: %s", input)
-		output, err := conn.CreateDefaultVpcWithContext(ctx, input)
+		output, err := conn.CreateDefaultVpc(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Default VPC: %s", err)
@@ -202,10 +202,10 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 		vpc = output.Vpc
 
-		d.SetId(aws.StringValue(vpc.VpcId))
+		d.SetId(aws.ToString(vpc.VpcId))
 		d.Set("existing_default_vpc", false)
 
-		vpc, err = WaitVPCCreated(ctx, conn, d.Id())
+		vpc, err = waitVPCCreated(ctx, conn, d.Id())
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Default VPC (%s) create: %s", d.Id(), err)
@@ -228,10 +228,10 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var oldAssignGeneratedIPv6CIDRBlock bool
 
 	if v := defaultIPv6CIDRBlockAssociation(vpcInfo.vpc, ""); v != nil {
-		associationID = aws.StringValue(v.AssociationId)
-		oldIPv6CIDRBlock = aws.StringValue(v.Ipv6CidrBlock)
-		oldIPv6CIDRBlockNetworkBorderGroup = aws.StringValue(v.NetworkBorderGroup)
-		if ipv6PoolID := aws.StringValue(v.Ipv6Pool); ipv6PoolID == amazonIPv6PoolID {
+		associationID = aws.ToString(v.AssociationId)
+		oldIPv6CIDRBlock = aws.ToString(v.Ipv6CidrBlock)
+		oldIPv6CIDRBlockNetworkBorderGroup = aws.ToString(v.NetworkBorderGroup)
+		if ipv6PoolID := aws.ToString(v.Ipv6Pool); ipv6PoolID == amazonIPv6PoolID {
 			oldAssignGeneratedIPv6CIDRBlock = true
 		} else {
 			oldIPv6PoolID = ipv6PoolID
@@ -272,11 +272,11 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Configure tags.
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := KeyValueTags(ctx, getTagsIn(ctx))
-	oldTags := KeyValueTags(ctx, vpc.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
+	newTags := keyValueTagsV2(ctx, getTagsInV2(ctx))
+	oldTags := keyValueTagsV2(ctx, vpc.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {
-		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+		if err := updateTagsV2(ctx, conn, d.Id(), oldTags, newTags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Default VPC (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -286,7 +286,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDefaultVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		return append(diags, resourceVPCDelete(ctx, d, meta)...)
 	}
 

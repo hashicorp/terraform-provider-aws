@@ -99,9 +99,9 @@ The following arguments are optional:
 
 * `tags` - (Optional) A map of tags to assign to the LanguageModel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - LanguageModel name.
 * `arn` - ARN of the LanguageModel.
@@ -114,8 +114,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transcribe LanguageModel can be imported using the `model_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transcribe LanguageModel using the `model_name`. For example:
 
+```terraform
+import {
+  to = aws_transcribe_language_model.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_transcribe_language_model.example example-name
+
+Using `terraform import`, import Transcribe LanguageModel using the `model_name`. For example:
+
+```console
+% terraform import aws_transcribe_language_model.example example-name
 ```

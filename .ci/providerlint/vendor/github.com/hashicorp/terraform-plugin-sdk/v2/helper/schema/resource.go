@@ -595,6 +595,79 @@ type Resource struct {
 	// See github.com/hashicorp/terraform-plugin-sdk/issues/655 for more
 	// details.
 	UseJSONNumber bool
+
+	// EnableLegacyTypeSystemApplyErrors when enabled will prevent the SDK from
+	// setting the legacy type system flag in the protocol during
+	// ApplyResourceChange (Create, Update, and Delete) operations. Before
+	// enabling this setting in a production release for a resource, the
+	// resource should be exhaustively acceptance tested with the setting
+	// enabled in an environment where it is easy to clean up resources,
+	// potentially outside of Terraform, since these errors may be unavoidable
+	// in certain cases.
+	//
+	// Disabling the legacy type system protocol flag is an unsafe operation
+	// when using this SDK as there are certain unavoidable behaviors imposed
+	// by the SDK, however this option is surfaced to allow provider developers
+	// to try to discover fixable data inconsistency errors more easily.
+	// Terraform, when encountering an enabled legacy type system protocol flag,
+	// will demote certain schema and data consistency errors into warning logs
+	// containing the text "legacy plugin SDK". Some errors for errant schema
+	// definitions, such as when an attribute is not marked as Computed as
+	// expected by Terraform, can only be resolved by migrating to
+	// terraform-plugin-framework since that SDK does not impose behavior
+	// changes with it enabled. However, data-based errors typically require
+	// logic fixes that should be applicable for both SDKs to be resolved.
+	EnableLegacyTypeSystemApplyErrors bool
+
+	// EnableLegacyTypeSystemPlanErrors when enabled will prevent the SDK from
+	// setting the legacy type system flag in the protocol during
+	// PlanResourceChange operations. Before enabling this setting in a
+	// production release for a resource, the resource should be exhaustively
+	// acceptance tested with the setting enabled in an environment where it is
+	// easy to clean up resources, potentially outside of Terraform, since these
+	// errors may be unavoidable in certain cases.
+	//
+	// Disabling the legacy type system protocol flag is an unsafe operation
+	// when using this SDK as there are certain unavoidable behaviors imposed
+	// by the SDK, however this option is surfaced to allow provider developers
+	// to try to discover fixable data inconsistency errors more easily.
+	// Terraform, when encountering an enabled legacy type system protocol flag,
+	// will demote certain schema and data consistency errors into warning logs
+	// containing the text "legacy plugin SDK". Some errors for errant schema
+	// definitions, such as when an attribute is not marked as Computed as
+	// expected by Terraform, can only be resolved by migrating to
+	// terraform-plugin-framework since that SDK does not impose behavior
+	// changes with it enabled. However, data-based errors typically require
+	// logic fixes that should be applicable for both SDKs to be resolved.
+	EnableLegacyTypeSystemPlanErrors bool
+
+	// ResourceBehavior is used to control SDK-specific logic when
+	// interacting with this resource.
+	ResourceBehavior ResourceBehavior
+}
+
+// ResourceBehavior controls SDK-specific logic when interacting
+// with a resource.
+type ResourceBehavior struct {
+	// ProviderDeferred enables provider-defined logic to be executed
+	// in the case of a deferred response from (Provider).ConfigureProvider.
+	//
+	// NOTE: This functionality is related to deferred action support, which is currently experimental and is subject
+	// to change or break without warning. It is not protected by version compatibility guarantees.
+	ProviderDeferred ProviderDeferredBehavior
+}
+
+// ProviderDeferredBehavior enables provider-defined logic to be executed
+// in the case of a deferred response from provider configuration.
+//
+// NOTE: This functionality is related to deferred action support, which is currently experimental and is subject
+// to change or break without warning. It is not protected by version compatibility guarantees.
+type ProviderDeferredBehavior struct {
+	// When EnablePlanModification is true, the SDK will execute provider-defined logic
+	// during plan (CustomizeDiff, Default, DiffSupressFunc, etc.) if ConfigureProvider
+	// returns a deferred response. The SDK will then automatically return a deferred response
+	// along with the modified plan.
+	EnablePlanModification bool
 }
 
 // SchemaMap returns the schema information for this Resource whether it is

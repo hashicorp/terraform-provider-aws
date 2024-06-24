@@ -31,8 +31,8 @@ You can specify any of the following taggable resources.
 * Root – specify the root ID that begins with `r-` and looks similar to: `r-1a2b`
 * Policy – specify the policy ID that begins with `p-` and looks similar to: `p-12abcdefg3`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `tags` - Map of key=value pairs for each tag set on the resource.

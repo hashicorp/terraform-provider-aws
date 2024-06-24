@@ -6,31 +6,40 @@ package s3
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	s3_sdkv1 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*s3_sdkv1.S3, error) {
-	sess := m["session"].(*session_sdkv1.Session)
-	config := &aws_sdkv1.Config{
-		Endpoint:         aws_sdkv1.String(m["endpoint"].(string)),
-		S3ForcePathStyle: aws_sdkv1.Bool(m["s3_use_path_style"].(bool)),
-	}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return s3_sdkv1.New(sess.Copy(config)), nil
-}
+	return s3.NewFromConfig(cfg,
+		s3.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *s3.Options) {
+			if o.Region == names.USEast1RegionID && config["s3_us_east_1_regional_endpoint"].(string) != "regional" {
+				// Maintain the AWS SDK for Go v1 default of using the global endpoint in us-east-1.
+				// See https://github.com/hashicorp/terraform-provider-aws/issues/33028.
+				tflog.Info(ctx, "overriding region", map[string]any{
+					"original_region": cfg.Region,
+					"override_region": names.GlobalRegionID,
+				})
+				o.Region = names.GlobalRegionID
+			}
+			o.UsePathStyle = config["s3_use_path_style"].(bool)
 
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *s3_sdkv1.S3) (*s3_sdkv1.S3, error) {
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		if tfawserr.ErrMessageContains(r.Error, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
-			r.Retryable = aws_sdkv1.Bool(true)
-		}
-	})
-
-	return conn, nil
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if tfawserr.ErrMessageContains(err, errCodeOperationAborted, "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

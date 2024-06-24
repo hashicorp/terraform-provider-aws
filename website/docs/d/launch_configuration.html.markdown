@@ -20,13 +20,13 @@ data "aws_launch_configuration" "ubuntu" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the launch configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the launch configuration.
 * `arn` - Amazon Resource Name of the launch configuration.

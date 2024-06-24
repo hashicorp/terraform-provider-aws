@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package scheduler
 
 import (
@@ -12,12 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_scheduler_schedule_group", &resource.Sweeper{
 		Name: "aws_scheduler_schedule_group",
 		F:    sweepScheduleGroups,
@@ -42,16 +39,17 @@ func sweepScheduleGroups(region string) error {
 
 	conn := client.SchedulerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	paginator := scheduler.NewListScheduleGroupsPaginator(conn, &scheduler.ListScheduleGroupsInput{})
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
-
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Schedule Group sweep for %s: %s", region, err)
+			return nil
+		}
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("listing Schedule Groups for %s: %w", region, err))
-			break
+			return fmt.Errorf("listing Schedule Groups for %s: %w", region, err)
 		}
 
 		for _, it := range page.ScheduleGroups {
@@ -71,15 +69,10 @@ func sweepScheduleGroups(region string) error {
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule Group for %s: %w", region, err))
+		return fmt.Errorf("sweeping Schedule Group for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Schedule Group sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepSchedules(region string) error {
@@ -92,16 +85,17 @@ func sweepSchedules(region string) error {
 
 	conn := client.SchedulerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	paginator := scheduler.NewListSchedulesPaginator(conn, &scheduler.ListSchedulesInput{})
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
-
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Schedule sweep for %s: %s", region, err)
+			return nil
+		}
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("listing Schedules for %s: %w", region, err))
-			break
+			return fmt.Errorf("listing Schedules for %s: %w", region, err)
 		}
 
 		for _, it := range page.Schedules {
@@ -117,13 +111,8 @@ func sweepSchedules(region string) error {
 	}
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule for %s: %w", region, err))
+		return fmt.Errorf("sweeping Schedule for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Schedule sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

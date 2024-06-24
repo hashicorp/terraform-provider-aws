@@ -6,17 +6,21 @@ package vpclattice
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpclattice_service")
-func DataSourceService() *schema.Resource {
+// @Tags
+func dataSourceService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceServiceRead,
 
@@ -29,7 +33,7 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,69 +46,105 @@ func DataSourceService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{names.AttrName, "service_identifier"},
 			},
 			"service_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{names.AttrName, "service_identifier"},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameService = "Service Data Source"
-)
-
 func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	service_id := d.Get("service_identifier").(string)
-	out, err := findServiceByID(ctx, conn, service_id)
-	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameService, service_id, err)
+	var out *vpclattice.GetServiceOutput
+	if v, ok := d.GetOk("service_identifier"); ok {
+		serviceID := v.(string)
+		service, err := findServiceByID(ctx, conn, serviceID)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		out = service
+	} else if v, ok := d.GetOk(names.AttrName); ok {
+		filter := func(x types.ServiceSummary) bool {
+			return aws.ToString(x.Name) == v.(string)
+		}
+		output, err := findService(ctx, conn, filter)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		service, err := findServiceByID(ctx, conn, aws.ToString(output.Id))
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		out = service
 	}
 
-	//
-	// If you don't set the ID, the data source will not be stored in state. In
-	// fact, that's how a resource can be removed from state - clearing its ID.
-	//
-	// If this data source is a companion to a resource, often both will use the
-	// same ID. Otherwise, the ID will be a unique identifier such as an AWS
-	// identifier, ARN, or name.
-	d.SetId(aws.StringValue(out.Id))
-
-	d.Set("arn", out.Arn)
+	d.SetId(aws.ToString(out.Id))
+	serviceARN := aws.ToString(out.Arn)
+	d.Set(names.AttrARN, serviceARN)
 	d.Set("auth_type", out.AuthType)
-	d.Set("certificate_arn", out.CertificateArn)
+	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
 		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
-			return diag.Errorf("setting dns_entry: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
 		d.Set("dns_entry", nil)
 	}
-	d.Set("name", out.Name)
-	d.Set("status", out.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set("service_identifier", out.Id)
+	d.Set(names.AttrStatus, out.Status)
 
-	return nil
+	// https://docs.aws.amazon.com/vpc-lattice/latest/ug/sharing.html#sharing-perms
+	// Owners and consumers can list tags and can tag/untag resources in a service network that the account created.
+	// They can't list tags and tag/untag resources in a service network that aren't created by the account.
+	parsedARN, err := arn.Parse(serviceARN)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
+		tags, err := listTags(ctx, conn, serviceARN)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing tags for VPC Lattice Service (%s): %s", serviceARN, err)
+		}
+
+		setTagsOut(ctx, Tags(tags))
+	}
+
+	return diags
 }

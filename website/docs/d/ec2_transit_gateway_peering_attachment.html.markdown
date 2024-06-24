@@ -33,7 +33,7 @@ data "aws_ec2_transit_gateway_peering_attachment" "attachment" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Peering Attachment.
@@ -50,7 +50,7 @@ which take the following arguments:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `peer_account_id` - Identifier of the peer AWS account
 * `peer_region` - Identifier of the peer AWS region

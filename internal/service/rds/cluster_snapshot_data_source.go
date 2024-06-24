@@ -14,47 +14,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_db_cluster_snapshot")
+// @SDKDataSource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
+// @Tags
+// @Testing(tagsTest=false)
 func DataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_cluster_identifier", "db_cluster_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"db_cluster_snapshot_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_cluster_identifier", "db_cluster_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,12 +74,12 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -93,16 +95,16 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +115,6 @@ func DataSourceClusterSnapshot() *schema.Resource {
 func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -132,52 +133,55 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Snapshots: %s", err)
+	f := tfslices.PredicateTrue[*rds.DBClusterSnapshot]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		f = func(v *rds.DBClusterSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		}
 	}
 
-	if len(output.DBClusterSnapshots) < 1 {
+	snapshots, err := findDBClusterSnapshots(ctx, conn, input, f)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshots: %s", err)
+	}
+
+	if len(snapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBClusterSnapshot
-	if len(output.DBClusterSnapshots) > 1 {
-		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentClusterSnapshot(output.DBClusterSnapshots)
+	if len(snapshots) > 1 {
+		if d.Get(names.AttrMostRecent).(bool) {
+			snapshot = mostRecentClusterSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = output.DBClusterSnapshots[0]
+		snapshot = snapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set("availability_zones", aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
-	d.Set("engine", snapshot.Engine)
-	d.Set("engine_version", snapshot.EngineVersion)
-	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set(names.AttrEngine, snapshot.Engine)
+	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
+	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
-	d.Set("port", snapshot.Port)
+	d.Set(names.AttrPort, snapshot.Port)
 	if snapshot.SnapshotCreateTime != nil {
 		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
 	}
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
-	d.Set("status", snapshot.Status)
-	d.Set("storage_encrypted", snapshot.StorageEncrypted)
-	d.Set("vpc_id", snapshot.VpcId)
+	d.Set(names.AttrStatus, snapshot.Status)
+	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
+	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	tags := KeyValueTags(ctx, snapshot.TagList)
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }

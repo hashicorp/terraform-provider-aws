@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `arn` - (Required) ARN of the infrastructure configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `date_created` - Date the infrastructure configuration was created.
 * `date_created` - Date the infrastructure configuration was updated.

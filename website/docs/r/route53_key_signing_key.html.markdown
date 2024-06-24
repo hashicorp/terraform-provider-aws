@@ -104,9 +104,9 @@ The following arguments are optional:
 
 * `status` - (Optional) Status of the key-signing key (KSK). Valid values: `ACTIVE`, `INACTIVE`. Defaults to `ACTIVE`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `digest_algorithm_mnemonic` - A string used to represent the delegation signer digest algorithm. This value must follow the guidelines provided by [RFC-8624 Section 3.3](https://tools.ietf.org/html/rfc8624#section-3.3).
 * `digest_algorithm_type` - An integer used to represent the delegation signer digest algorithm. This value must follow the guidelines provided by [RFC-8624 Section 3.3](https://tools.ietf.org/html/rfc8624#section-3.3).
@@ -122,8 +122,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_route53_key_signing_key` resources can be imported by using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_route53_key_signing_key` resources using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_route53_key_signing_key.example
+  id = "Z1D633PJN98FT9,example"
+}
 ```
-$ terraform import aws_route53_key_signing_key.example Z1D633PJN98FT9,example
+
+Using `terraform import`, import `aws_route53_key_signing_key` resources using the Route 53 Hosted Zone identifier and KMS Key identifier, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_route53_key_signing_key.example Z1D633PJN98FT9,example
 ```

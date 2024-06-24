@@ -24,7 +24,7 @@ resource "aws_dx_hosted_connection" "hosted" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the connection.
 * `bandwidth` - (Required) The bandwidth of the connection. Valid values for dedicated connections: 1Gbps, 10Gbps. Valid values for hosted connections: 50Mbps, 100Mbps, 200Mbps, 300Mbps, 400Mbps, 500Mbps, 1Gbps, 2Gbps, 5Gbps and 10Gbps. Case sensitive.
@@ -32,9 +32,9 @@ The following arguments are supported:
 * `owner_account_id` - (Required) The ID of the AWS account of the customer for the connection.
 * `vlan` - (Required) The dedicated VLAN provisioned to the hosted connection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the connection.
 * `jumbo_frame_capable` - Boolean value representing if jumbo frames have been enabled for this connection.

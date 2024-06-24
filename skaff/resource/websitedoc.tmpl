@@ -38,13 +38,19 @@ The following arguments are required:
 The following arguments are optional:
 
 * `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+{{- if .IncludeTags }}
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+{{- end }}
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the {{ .HumanResourceName }}. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+{{- if .IncludeTags }}
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+{{- end }}
 
 ## Timeouts
 
@@ -56,8 +62,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-{{ .HumanFriendlyService }} {{ .HumanResourceName }} can be imported using the `example_id_arg`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import {{ .HumanFriendlyService }} {{ .HumanResourceName }} using the `example_id_arg`. For example:
 
+```terraform
+import {
+  to = aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example
+  id = "{{ .ResourceSnake }}-id-12345678"
+}
 ```
-$ terraform import aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example rft-8012925589
+
+Using `terraform import`, import {{ .HumanFriendlyService }} {{ .HumanResourceName }} using the `example_id_arg`. For example:
+
+```console
+% terraform import aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example {{ .ResourceSnake }}-id-12345678
 ```

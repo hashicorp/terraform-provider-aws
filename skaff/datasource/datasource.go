@@ -15,7 +15,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/hashicorp/terraform-provider-aws/skaff/resource"
+	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
 //go:embed datasource.tmpl
@@ -35,6 +35,7 @@ type TemplateData struct {
 	DataSourceLower      string
 	DataSourceSnake      string
 	IncludeComments      bool
+	IncludeTags          bool
 	HumanFriendlyService string
 	ServicePackage       string
 	Service              string
@@ -46,7 +47,7 @@ type TemplateData struct {
 	ProviderResourceName string
 }
 
-func Create(dsName, snakeName string, comments, force, v2, pluginFramework bool) error {
+func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -66,7 +67,7 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework bool)
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = resource.ToSnakeCase(dsName, snakeName)
+	snakeName = convert.ToSnakeCase(dsName, snakeName)
 
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
@@ -89,14 +90,15 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework bool)
 		DataSourceSnake:      snakeName,
 		HumanFriendlyService: hf,
 		IncludeComments:      comments,
+		IncludeTags:          tags,
 		ServicePackage:       servicePackage,
 		Service:              s,
 		ServiceLower:         strings.ToLower(s),
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
-		HumanDataSourceName:  resource.HumanResName(dsName),
-		ProviderResourceName: resource.ProviderResourceName(servicePackage, snakeName),
+		HumanDataSourceName:  convert.ToHumanResName(dsName),
+		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := datasourceTmpl

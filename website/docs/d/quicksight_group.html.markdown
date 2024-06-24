@@ -33,7 +33,9 @@ The following arguments are optional:
 * `aws_account_id` - (Optional) AWS account ID.
 * `namespace` - (Optional) QuickSight namespace. Defaults to `default`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) for the group.
 * `description` - The group description.

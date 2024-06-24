@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_secretsmanager_secret_rotation: Add `rotate_immediately` argument
+```

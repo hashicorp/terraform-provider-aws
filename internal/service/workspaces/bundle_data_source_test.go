@@ -6,13 +6,14 @@ package workspaces_test
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
@@ -28,14 +29,14 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 				Config: testAccBundleDataSourceConfig_basic("wsb-b0s22j3d7"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-b0s22j3d7"),
-					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.0.name", "PERFORMANCE"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", "Performance with Windows 7"),
-					resource.TestCheckResourceAttr(dataSourceName, "owner", "Amazon"),
-					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", "1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Performance with Windows 7"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrOwner, "Amazon"),
+					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "root_storage.0.capacity", "80"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "user_storage.0.capacity", "100"),
 				),
 			},
@@ -56,15 +57,15 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 				Config: testAccBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-df76rqys9"),
-					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.0.name", "VALUE"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", "Value with Windows 10 and Office 2016"),
-					resource.TestCheckResourceAttr(dataSourceName, "owner", "Amazon"),
-					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", "1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Value with Windows 10 and Office 2016"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrOwner, "Amazon"),
+					resource.TestCheckResourceAttr(dataSourceName, "root_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "root_storage.0.capacity", "80"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_storage.0.capacity", "10"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "user_storage.0.capacity", acctest.Ct10),
 				),
 			},
 		},
@@ -80,7 +81,7 @@ func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBundleDataSourceConfig_idAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
-				ExpectError: regexp.MustCompile("\"bundle_id\": conflicts with owner"),
+				ExpectError: regexache.MustCompile("\"bundle_id\": conflicts with owner"),
 			},
 		},
 	})
@@ -102,7 +103,7 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 			{
 				Config: testAccBundleDataSourceConfig_privateOwner(bundleName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", bundleName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, bundleName),
 				),
 			},
 		},

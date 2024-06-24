@@ -48,9 +48,9 @@ One or more of the following arguments are required:
 * `arn` - ARN of the firewall policy.
 * `name` - Descriptive name of the firewall policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `description` - Description of the firewall policy.
 * `firewall_policy` - The [policy][2] for the specified firewall policy.

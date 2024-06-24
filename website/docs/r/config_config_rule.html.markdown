@@ -137,15 +137,20 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `description` - (Optional) Description of the rule
+* `evaluation_mode` - (Optional) The modes the Config rule can be evaluated in. See [Evaluation Mode](#evaluation-mode) for more details.
 * `input_parameters` - (Optional) A string in JSON format that is passed to the AWS Config rule Lambda function.
 * `maximum_execution_frequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule.
-* `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule. See [Source](#source) Below.
-* `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause the function to evaluate your AWS resources. See [Scope](#scope) Below.
+* `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule. See [Scope](#scope) Below.
+* `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause the function to evaluate your AWS resources. See [Source](#source) Below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Evaluation Mode
+
+* `mode` - (Optional) The mode of an evaluation.
 
 ### Scope
 
@@ -182,9 +187,9 @@ Provides the rule owner (AWS or customer), the rule identifier, and the notifica
 * `policy_runtime` - (Required) The runtime system for your Config Custom Policy rule. Guard is a policy-as-code language that allows you to write policies that are enforced by Config Custom Policy rules. For more information about Guard, see the [Guard GitHub Repository](https://github.com/aws-cloudformation/cloudformation-guard).
 * `policy_text` - (Required) The policy definition containing the logic for your Config Custom Policy rule.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the config rule
 * `rule_id` - The ID of the config rule
@@ -192,8 +197,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Config Rule can be imported using the name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Config Rule using the name. For example:
 
+```terraform
+import {
+  to = aws_config_config_rule.foo
+  id = "example"
+}
 ```
-$ terraform import aws_config_config_rule.foo example
+
+Using `terraform import`, import Config Rule using the name. For example:
+
+```console
+% terraform import aws_config_config_rule.foo example
 ```

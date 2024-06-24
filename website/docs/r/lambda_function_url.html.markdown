@@ -55,18 +55,27 @@ This configuration block supports the following attributes:
 * `expose_headers` - (Optional) The HTTP headers in your function response that you want to expose to origins that call the function URL.
 * `max_age` - (Optional) The maximum amount of time, in seconds, that web browsers can cache results of a preflight request. By default, this is set to `0`, which means that the browser doesn't cache results. The maximum value is `86400`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `function_arn` - The Amazon Resource Name (ARN) of the function.
-* `function_url` - The HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws`.
+* `function_url` - The HTTP URL endpoint for the function in the format `https://<url_id>.lambda-url.<region>.on.aws/`.
 * `url_id` - A generated ID for the endpoint.
 
 ## Import
 
-Lambda function URLs can be imported using the `function_name` or `function_name/qualifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lambda function URLs using the `function_name` or `function_name/qualifier`. For example:
 
+```terraform
+import {
+  to = aws_lambda_function_url.test_lambda_url
+  id = "my_test_lambda_function"
+}
 ```
-$ terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
+
+Using `terraform import`, import Lambda function URLs using the `function_name` or `function_name/qualifier`. For example:
+
+```console
+% terraform import aws_lambda_function_url.test_lambda_url my_test_lambda_function
 ```

@@ -13,10 +13,15 @@ Provides a AWS Transfer User SSH Key resource.
 ## Example Usage
 
 ```terraform
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
 resource "aws_transfer_ssh_key" "example" {
   server_id = aws_transfer_server.example.id
   user_name = aws_transfer_user.example.user_name
-  body      = "... SSH key ..."
+  body      = trimspace(tls_private_key.example.public_key_openssh)
 }
 
 resource "aws_transfer_server" "example" {
@@ -73,20 +78,29 @@ resource "aws_iam_role_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `server_id` - (Requirement) The Server ID of the Transfer Server (e.g., `s-12345678`)
 * `user_name` - (Requirement) The name of the user account that is assigned to one or more servers.
 * `body` - (Requirement) The public key portion of an SSH key pair.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-Transfer SSH Public Key can be imported using the `server_id` and `user_name` and `ssh_public_key_id` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer SSH Public Key using the `server_id` and `user_name` and `ssh_public_key_id` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_transfer_ssh_key.bar
+  id = "s-12345678/test-username/key-12345"
+}
 ```
-$ terraform import aws_transfer_ssh_key.bar s-12345678/test-username/key-12345
+
+Using `terraform import`, import Transfer SSH Public Key using the `server_id` and `user_name` and `ssh_public_key_id` separated by `/`. For example:
+
+```console
+% terraform import aws_transfer_ssh_key.bar s-12345678/test-username/key-12345
 ```

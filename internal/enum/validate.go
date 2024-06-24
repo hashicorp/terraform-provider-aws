@@ -10,10 +10,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func Validate[T valueser[T]]() schema.SchemaValidateDiagFunc {
-	return validation.ToDiagFunc(validation.StringInSlice(Values[T](), false))
+func Validate[T Valueser[T]]() schema.SchemaValidateDiagFunc {
+	return validate[T](false)
 }
 
-func FrameworkValidate[T valueser[T]]() validator.String {
+func ValidateIgnoreCase[T Valueser[T]]() schema.SchemaValidateDiagFunc {
+	return validate[T](true)
+}
+
+func validate[T Valueser[T]](ignoreCase bool) schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.StringInSlice(Values[T](), ignoreCase))
+}
+
+// TODO Move to internal/framework/validators or replace with custom types.
+func FrameworkValidate[T Valueser[T]]() validator.String {
 	return stringvalidator.OneOf(Values[T]()...)
 }

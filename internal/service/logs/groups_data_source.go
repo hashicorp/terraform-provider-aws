@@ -6,11 +6,14 @@ package logs
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_log_groups")
@@ -19,7 +22,7 @@ func dataSourceGroups() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -38,7 +41,9 @@ func dataSourceGroups() *schema.Resource {
 }
 
 func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
 
@@ -46,20 +51,17 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.LogGroupNamePrefix = aws.String(v.(string))
 	}
 
-	var output []*cloudwatchlogs.LogGroup
+	var output []types.LogGroup
 
-	err := conn.DescribeLogGroupsPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading CloudWatch Log Groups: %s", err)
 		}
 
 		output = append(output, page.LogGroups...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return diag.Errorf("reading CloudWatch Log Groups: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -67,12 +69,12 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var arns, logGroupNames []string
 
 	for _, r := range output {
-		arns = append(arns, TrimLogGroupARNWildcardSuffix(aws.StringValue(r.Arn)))
-		logGroupNames = append(logGroupNames, aws.StringValue(r.LogGroupName))
+		arns = append(arns, TrimLogGroupARNWildcardSuffix(aws.ToString(r.Arn)))
+		logGroupNames = append(logGroupNames, aws.ToString(r.LogGroupName))
 	}
 
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("log_group_names", logGroupNames)
 
-	return nil
+	return diags
 }

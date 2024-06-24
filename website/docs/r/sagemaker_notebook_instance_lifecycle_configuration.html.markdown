@@ -24,22 +24,31 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "lc" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Optional) The name of the lifecycle configuration (must be unique). If omitted, Terraform will assign a random, unique name.
 * `on_create` - (Optional) A shell script (base64-encoded) that runs only once when the SageMaker Notebook Instance is created.
 * `on_start` - (Optional) A shell script (base64-encoded) that runs every time the SageMaker Notebook Instance is started including the time it's created.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this lifecycle configuration.
 
 ## Import
 
-Models can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import models using the `name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_notebook_instance_lifecycle_configuration.lc
+  id = "foo"
+}
 ```
-$ terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo
+
+Using `terraform import`, import models using the `name`. For example:
+
+```console
+% terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo
 ```

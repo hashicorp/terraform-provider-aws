@@ -49,7 +49,7 @@ several valid keys, for a full reference, check out
 Terraform will fail. Ensure that your search is specific enough to return
 a single Instance ID only.
 
-## Attributes Reference
+## Attribute Reference
 
 `id` is set to the ID of the found Instance. In addition, the following attributes
 are exported:
@@ -88,10 +88,12 @@ interpolation.
 * `instance_type` - Type of the Instance.
 * `ipv6_addresses` - IPv6 addresses associated to the Instance, if applicable. **NOTE**: Unlike the IPv4 address, this doesn't change if you attach an EIP to the instance.
 * `key_name` - Key name of the Instance.
+* `launch_time` - Time the instance was launched.
 * `maintenance_options` - Maintenance and recovery options for the instance.
     * `auto_recovery` - Automatic recovery behavior of the instance.
 * `metadata_options` - Metadata options of the Instance.
     * `http_endpoint` - State of the metadata service: `enabled`, `disabled`.
+    * `http_protocol_ipv6` - Whether the IPv6 endpoint for the instance metadata service is `enabled` or `disabled`
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - Desired HTTP PUT response hop limit for instance metadata requests.
     * `instance_metadata_tags` - If access to instance tags is allowed from the metadata service: `enabled`, `disabled`.

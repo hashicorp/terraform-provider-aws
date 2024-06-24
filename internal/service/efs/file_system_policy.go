@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_file_system_policy")
@@ -27,6 +28,7 @@ func ResourceFileSystemPolicy() *schema.Resource {
 		ReadWithoutTimeout:   resourceFileSystemPolicyRead,
 		UpdateWithoutTimeout: resourceFileSystemPolicyPut,
 		DeleteWithoutTimeout: resourceFileSystemPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -37,12 +39,12 @@ func ResourceFileSystemPolicy() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -61,28 +63,29 @@ func resourceFileSystemPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	fsID := d.Get("file_system_id").(string)
+	fsID := d.Get(names.AttrFileSystemID).(string)
 	input := &efs.PutFileSystemPolicyInput{
 		BypassPolicyLockoutSafetyCheck: aws.Bool(d.Get("bypass_policy_lockout_safety_check").(bool)),
 		FileSystemId:                   aws.String(fsID),
 		Policy:                         aws.String(policy),
 	}
 
-	log.Printf("[DEBUG] Putting EFS File System Policy: %s", input)
-
-	_, err = conn.PutFileSystemPolicyWithContext(ctx, input)
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.PutFileSystemPolicyWithContext(ctx, input)
+	}, efs.ErrCodeInvalidPolicyException, "Policy contains invalid Principal block")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting EFS File System Policy (%s): %s", fsID, err)
 	}
 
-	d.SetId(fsID)
+	if d.IsNewResource() {
+		d.SetId(fsID)
+	}
 
 	return append(diags, resourceFileSystemPolicyRead(ctx, d, meta)...)
 }
@@ -103,21 +106,19 @@ func resourceFileSystemPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EFS File System Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("file_system_id", output.FileSystemId)
+	d.Set(names.AttrFileSystemID, output.FileSystemId)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(output.Policy))
-
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(output.Policy))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is an invalid JSON: %s", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return diags
 }

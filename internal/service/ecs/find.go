@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
@@ -25,7 +25,7 @@ func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (
 	output, err := conn.DescribeCapacityProvidersWithContext(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Capacity Provider (%s) with tags: %s; retrying without tags", arn, err)
 
 		input.Include = nil
@@ -55,14 +55,14 @@ func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (
 	return capacityProvider, nil
 }
 
-func FindServiceByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
+func findServiceByTwoPartKey(ctx context.Context, conn *ecs.ECS, serviceName, clusterNameOrARN string) (*ecs.Service, error) {
 	input := &ecs.DescribeServicesInput{
-		Cluster:  aws.String(cluster),
+		Cluster:  aws.String(clusterNameOrARN),
 		Include:  aws.StringSlice([]string{ecs.ServiceFieldTags}),
-		Services: aws.StringSlice([]string{id}),
+		Services: aws.StringSlice([]string{serviceName}),
 	}
 
-	return FindService(ctx, conn, input)
+	return findService(ctx, conn, input)
 }
 
 func FindServiceNoTagsByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
@@ -73,7 +73,7 @@ func FindServiceNoTagsByID(ctx context.Context, conn *ecs.ECS, id, cluster strin
 		input.Cluster = aws.String(cluster)
 	}
 
-	return FindService(ctx, conn, input)
+	return findService(ctx, conn, input)
 }
 
 type expectActiveError struct {
@@ -95,7 +95,7 @@ func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluste
 	// Use the retry.RetryContext function instead of WaitForState() because we don't want the timeout error, if any
 	err := retry.RetryContext(ctx, serviceDescribeTimeout, func() *retry.RetryError {
 		var err error
-		service, err = FindServiceByID(ctx, conn, id, cluster)
+		service, err = findServiceByTwoPartKey(ctx, conn, id, cluster)
 		if tfresource.NotFound(err) {
 			return retry.RetryableError(err)
 		}
@@ -110,19 +110,26 @@ func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluste
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		service, err = FindServiceByID(ctx, conn, id, cluster)
+		service, err = findServiceByTwoPartKey(ctx, conn, id, cluster)
 	}
 
 	return service, err
 }
 
-func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServicesInput) (*ecs.Service, error) {
+func findService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServicesInput) (*ecs.Service, error) {
+	output, err := findServices(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findServices(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServicesInput) ([]*ecs.Service, error) {
 	output, err := conn.DescribeServicesWithContext(ctx, input)
 
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) && input.Include != nil {
-		id := aws.StringValueSlice(input.Services)[0]
-		log.Printf("[WARN] failed describing ECS Service (%s) with tags: %s; retrying without tags", id, err)
-
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) && input.Include != nil {
 		input.Include = nil
 		output, err = conn.DescribeServicesWithContext(ctx, input)
 	}
@@ -135,8 +142,13 @@ func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServices
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	// When an ECS Service is not found by DescribeServices(), it will return a Failure struct with Reason = "MISSING"
@@ -148,12 +160,5 @@ func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServices
 		}
 	}
 
-	if len(output.Services) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-	if n := len(output.Services); n > 1 {
-		return nil, tfresource.NewTooManyResultsError(n, input)
-	}
-
-	return output.Services[0], nil
+	return output.Services, nil
 }

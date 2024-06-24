@@ -16,11 +16,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshiftserverless_endpoint_access")
-func ResourceEndpointAccess() *schema.Resource {
+// @SDKResource("aws_redshiftserverless_endpoint_access", name="Endpoint Access")
+func resourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAccessCreate,
 		ReadWithoutTimeout:   resourceEndpointAccessRead,
@@ -32,41 +35,53 @@ func ResourceEndpointAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"address": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			"endpoint_name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 30),
+			},
+			"owner_account": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
+			},
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			names.AttrSubnetIDs: {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"vpc_endpoint": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vpc_endpoint_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vpc_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"network_interface": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"network_interface_id": {
+									names.AttrNetworkInterfaceID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -74,22 +89,25 @@ func ResourceEndpointAccess() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"subnet_id": {
+									names.AttrSubnetID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
+						names.AttrVPCEndpointID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrVPCID: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
-			"workgroup_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -97,19 +115,10 @@ func ResourceEndpointAccess() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"subnet_ids": {
-				Type:     schema.TypeSet,
+			"workgroup_name": {
+				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"endpoint_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 30),
 			},
 		},
 	}
@@ -119,29 +128,34 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	input := redshiftserverless.CreateEndpointAccessInput{
+	endpointName := d.Get("endpoint_name").(string)
+	input := &redshiftserverless.CreateEndpointAccessInput{
+		EndpointName:  aws.String(endpointName),
 		WorkgroupName: aws.String(d.Get("workgroup_name").(string)),
-		EndpointName:  aws.String(d.Get("endpoint_name").(string)),
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("owner_account"); ok {
+		input.OwnerAccount = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	out, err := conn.CreateEndpointAccessWithContext(ctx, &input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Endpoint Access: %s", err)
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	d.SetId(aws.StringValue(out.Endpoint.EndpointName))
+	output, err := conn.CreateEndpointAccessWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Endpoint Access (%s): %s", endpointName, err)
+	}
+
+	d.SetId(aws.StringValue(output.Endpoint.EndpointName))
 
 	if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) to be created: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
@@ -151,9 +165,10 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	out, err := FindEndpointAccessByName(ctx, conn, d.Id())
+	endpointAccess, err := findEndpointAccessByName(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Redshift Serverless EndpointAccess (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Redshift Serverless Endpoint Access (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -162,23 +177,19 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set("address", out.Address)
-	d.Set("port", out.Port)
-	d.Set("arn", out.EndpointArn)
-	d.Set("endpoint_name", out.EndpointName)
-	d.Set("workgroup_name", out.WorkgroupName)
-	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
-
-	result := make([]*string, 0, len(out.VpcSecurityGroups))
-
-	for _, v := range out.VpcSecurityGroups {
-		result = append(result, v.VpcSecurityGroupId)
-	}
-	d.Set("vpc_security_group_ids", flex.FlattenStringSet(result))
-
-	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(out.VpcEndpoint)}); err != nil {
+	d.Set(names.AttrAddress, endpointAccess.Address)
+	d.Set(names.AttrARN, endpointAccess.EndpointArn)
+	d.Set("endpoint_name", endpointAccess.EndpointName)
+	d.Set("owner_account", d.Get("owner_account"))
+	d.Set(names.AttrPort, endpointAccess.Port)
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(endpointAccess.SubnetIds))
+	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(endpointAccess.VpcEndpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
 	}
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(endpointAccess.VpcSecurityGroups, func(v *redshiftserverless.VpcSecurityGroupMembership) string {
+		return aws.StringValue(v.VpcSecurityGroupId)
+	}))
+	d.Set("workgroup_name", endpointAccess.WorkgroupName)
 
 	return diags
 }
@@ -191,17 +202,18 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 		EndpointName: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	_, err := conn.UpdateEndpointAccessWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) to be updated: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
@@ -211,22 +223,21 @@ func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	deleteInput := redshiftserverless.DeleteEndpointAccessInput{
+	log.Printf("[DEBUG] Deleting Redshift Serverless Endpoint Access: %s", d.Id())
+	_, err := conn.DeleteEndpointAccessWithContext(ctx, &redshiftserverless.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Deleting Redshift Serverless EndpointAccess: %s", d.Id())
-	_, err := conn.DeleteEndpointAccessWithContext(ctx, &deleteInput)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEndpointAccessDeleted(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Redshift Serverless Endpoint Access (%s): waiting for completion: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags

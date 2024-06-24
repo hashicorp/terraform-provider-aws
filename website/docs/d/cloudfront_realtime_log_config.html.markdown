@@ -20,13 +20,13 @@ data "aws_cloudfront_realtime_log_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Unique name to identify this real-time log configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN (Amazon Resource Name) of the CloudFront real-time log configuration.
 * `endpoint` - (Required) Amazon Kinesis data streams where real-time log data is sent.
