@@ -196,6 +196,21 @@ rules:
     severity: ERROR
     fix: "names.AttrApplyImmediately"
 
+  - id: literal-approximate_creation_date_time_precision-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrApproximateCreationDateTimePrecision` for the string literal "approximate_creation_date_time_precision"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"approximate_creation_date_time_precision"'
+      - pattern-not-regex: '"approximate_creation_date_time_precision":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+    severity: ERROR
+    fix: "names.AttrApproximateCreationDateTimePrecision"
+
   - id: literal-association_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrAssociationID` for the string literal "association_id"
