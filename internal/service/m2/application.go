@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -155,17 +156,6 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	// AutoFlEx doesn't yet handle union types.
-	if !data.Definition.IsNull() {
-		definitionData, diags := data.Definition.ToPtr(ctx)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.Definition = expandDefinition(definitionData)
-	}
-
 	// Additional fields.
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
@@ -279,15 +269,10 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 		}
 
 		if !new.Definition.Equal(old.Definition) {
-			// AutoFlEx doesn't yet handle union types.
-			if !new.Definition.IsNull() {
-				definitionData, diags := new.Definition.ToPtr(ctx)
-				response.Diagnostics.Append(diags...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-				input.Definition = expandDefinition(definitionData)
+			d := fwflex.Expand(ctx, new.Definition, &input.Definition)
+			response.Diagnostics.Append(d...)
+			if response.Diagnostics.HasError() {
+				return
 			}
 		}
 
@@ -625,18 +610,22 @@ type definitionModel struct {
 	S3Location types.String `tfsdk:"s3_location"`
 }
 
-func expandDefinition(definitionData *definitionModel) awstypes.Definition {
-	if !definitionData.Content.IsNull() {
+var (
+	_ fwflex.Expander = definitionModel{}
+)
+
+func (m definitionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	if !m.Content.IsNull() {
 		return &awstypes.DefinitionMemberContent{
-			Value: definitionData.Content.ValueString(),
-		}
+			Value: m.Content.ValueString(),
+		}, diags
 	}
 
-	if !definitionData.S3Location.IsNull() {
+	if !m.S3Location.IsNull() {
 		return &awstypes.DefinitionMemberS3Location{
-			Value: definitionData.S3Location.ValueString(),
-		}
+			Value: m.S3Location.ValueString(),
+		}, diags
 	}
 
-	return nil
+	return nil, diags
 }
