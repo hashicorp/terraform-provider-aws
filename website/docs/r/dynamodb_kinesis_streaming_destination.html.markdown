@@ -45,7 +45,7 @@ This resource supports the following arguments:
   can only be one Kinesis streaming destination for a given DynamoDB table.
 
 * `approximate_creation_date_time_precision` - (Optional) Toggle for the precision of Kinesis data stream timestamp. The
-  values are either MILLISECOND or MICROSECOND.
+  values are either MILLISECOND or MICROSECOND. If no value is specified, the precision will be set to MILLISECOND.
 
 ## Attribute Reference
 

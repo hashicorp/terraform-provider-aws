@@ -76,6 +76,12 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 		TableName: aws.String(tableName),
 	}
 
+	if v, ok := d.GetOk(names.AttrApproximateCreationDateTimePrecision); ok {
+		input.EnableKinesisStreamingConfiguration = &awstypes.EnableKinesisStreamingConfiguration{
+			ApproximateCreationDateTimePrecision: awstypes.ApproximateCreationDateTimePrecision(v.(string)),
+		}
+	}
+
 	_, err := conn.EnableKinesisStreamingDestination(ctx, input)
 
 	if err != nil {
@@ -115,6 +121,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 
 	d.Set(names.AttrStreamARN, output.StreamArn)
 	d.Set(names.AttrTableName, tableName)
+	d.Set(names.AttrApproximateCreationDateTimePrecision, string(output.ApproximateCreationDateTimePrecision))
 
 	return diags
 }
