@@ -166,10 +166,10 @@ func testAccAccountSubscriptionConfig_basic(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_quicksight_account_subscription" "test" {
-  account_name          = %[1]q
-  authentication_method = "IAM_AND_QUICKSIGHT"
-  edition               = "ENTERPRISE"
-  notification_email    = %[2]q
+  account_name                     = %[1]q
+  authentication_method            = "IAM_AND_QUICKSIGHT"
+  edition                          = "ENTERPRISE"
+  notification_email               = %[2]q
   iam_identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 `, rName, acctest.DefaultEmailAddress)
