@@ -18,6 +18,7 @@ var (
 	ResourceUserPoolUICustomization = resourceUserPoolUICustomization
 
 	FindGroupByTwoPartKey                   = findGroupByTwoPartKey
+	FindGroupUserByThreePartKey             = findGroupUserByThreePartKey
 	FindIdentityProviderByTwoPartKey        = findIdentityProviderByTwoPartKey
 	FindResourceServerByTwoPartKey          = findResourceServerByTwoPartKey
 	FindRiskConfigurationByTwoPartKey       = findRiskConfigurationByTwoPartKey

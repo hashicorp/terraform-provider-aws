@@ -6,7 +6,6 @@ package cognitoidp
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -14,45 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// FindCognitoUserInGroup checks whether the specified user is present in the specified group. Returns boolean value accordingly.
-func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
-	input := &cognitoidentityprovider.AdminListGroupsForUserInput{
-		UserPoolId: aws.String(userPoolId),
-		Username:   aws.String(username),
-	}
-
-	found := false
-
-	err := conn.AdminListGroupsForUserPagesWithContext(ctx, input, func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, group := range page.Groups {
-			if group == nil {
-				continue
-			}
-
-			if aws.StringValue(group.GroupName) == groupName {
-				found = true
-				break
-			}
-		}
-
-		if found {
-			return false
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return false, fmt.Errorf("reading groups for user: %w", err)
-	}
-
-	return found, nil
-}
 
 // FindCognitoUserPoolClientByID returns a Cognito User Pool Client using the ClientId
 func FindCognitoUserPoolClientByID(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
