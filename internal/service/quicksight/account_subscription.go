@@ -108,9 +108,10 @@ func ResourceAccountSubscription() *schema.Resource {
 					ForceNew: true,
 				},
 				"iam_identity_center_instance_arn": {
-					Type:     schema.TypeString,
-					Optional: true,
-					ForceNew: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
 				},
 				"last_name": {
 					Type:     schema.TypeString,
