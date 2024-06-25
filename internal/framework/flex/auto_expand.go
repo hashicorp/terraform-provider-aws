@@ -398,6 +398,15 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 				return diags
 			}
 		}
+
+	case reflect.Interface:
+		//
+		// types.Object -> interface.
+		//
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
+			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{

@@ -1319,6 +1319,20 @@ func TestExpandInterface(t *testing.T) {
 				},
 			},
 		},
+		{
+			TestName: "object value Source and struct Target",
+			Source: testFlexTFInterfaceObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFInterfaceExpander{
+					Field1: types.StringValue("value1"),
+				}),
+			},
+			Target: &testFlexAWSInterfaceSingle{},
+			WantTarget: &testFlexAWSInterfaceSingle{
+				Field1: &testFlexAWSInterfaceInterfaceImpl{
+					AWSField: "value1",
+				},
+			},
+		},
 	}
 	runAutoExpandTestCases(t, testCases)
 }
@@ -1570,6 +1584,34 @@ func TestExpandExpander(t *testing.T) {
 					{
 						AWSField: "value2",
 					},
+				},
+			},
+		},
+		{
+			TestName: "object value Source and struct Target",
+			Source: testFlexTFExpanderObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFExpander{
+					Field1: types.StringValue("value1"),
+				}),
+			},
+			Target: &testFlexAWSExpanderSingleStruct{},
+			WantTarget: &testFlexAWSExpanderSingleStruct{
+				Field1: testFlexAWSExpander{
+					AWSField: "value1",
+				},
+			},
+		},
+		{
+			TestName: "object value Source and *struct Target",
+			Source: testFlexTFExpanderObjectValue{
+				Field1: fwtypes.NewObjectValueOfMust(ctx, &testFlexTFExpander{
+					Field1: types.StringValue("value1"),
+				}),
+			},
+			Target: &testFlexAWSExpanderSinglePtr{},
+			WantTarget: &testFlexAWSExpanderSinglePtr{
+				Field1: &testFlexAWSExpander{
+					AWSField: "value1",
 				},
 			},
 		},
