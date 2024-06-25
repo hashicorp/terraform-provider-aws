@@ -25,7 +25,7 @@ import (
 )
 
 // Acceptance test access AWS and cost money to run.
-func TestAccDataBrewDataset_basic(t *testing.T) {
+func TestAccDataBrewDataset_s3Input(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -46,9 +46,12 @@ func TestAccDataBrewDataset_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDatasetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatasetConfig_basic(rName),
+				Config: testAccDatasetConfig_s3Input(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatasetExists(ctx, resourceName, &dataset),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.key", rName),
+					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -83,10 +86,12 @@ func TestAccDataBrewDataset_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDatasetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatasetConfig_basic(rName),
+				Config: testAccDatasetConfig_dataCatalog(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatasetExists(ctx, resourceName, &dataset),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatabrew.ResourceDataset, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.key", rName),
+					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.bucket", rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -171,7 +176,7 @@ func testAccCheckDatasetNotRecreated(before, after *databrew.DescribeDatasetOutp
 	}
 }
 
-func testAccDatasetConfig_basic(rName string) string {
+func testAccDatasetConfig_s3Input(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -213,8 +218,88 @@ resource "aws_s3_object" "test" {
 resource "aws_databrew_dataset" "test" {
   name         = %[1]q
   input {
-	s3_input_definition {
+	data_catalog_input_definition {
 		bucket = aws_s3_bucket.test.id
+		temp_directory {
+			bucket = aws_s3_bucket.test.id
+			key = aws_s3_object.test.id
+		}
+	}
+  }
+
+  format_options = {
+	csv = {
+		delimiter = ","
+		header_row = "\n"
+	}
+  }
+}
+}
+`, rName)
+}
+
+func testAccDatasetConfig_database(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket         = aws_s3_bucket.test.bucket
+  key            = %[1]q
+  content_base64 = "dGVzdAo="
+}
+
+resource "aws_databrew_dataset" "test" {
+  name         = %[1]q
+  input {
+	database_input_definition {
+		bucket = aws_s3_bucket.test.id
+		temp_directory {
+			bucket = aws_s3_bucket.test.id
+			key = aws_s3_object.test.id
+		}
+	}
+  }
+
+format_options = {
+	excel = {
+		header_row = "\n"
+		sheet_indexes = "1"
+		sheet_names = "test"
+	}
+  }
+}
+`, rName)
+}
+
+func testAccDatasetConfig_metadata(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket         = aws_s3_bucket.test.bucket
+  key            = %[1]q
+  content_base64 = "dGVzdAo="
+}
+
+resource "aws_databrew_dataset" "test" {
+  name         = %[1]q
+  input {
+	database_input_definition {
+		bucket = aws_s3_bucket.test.id
+		temp_directory {
+			bucket = aws_s3_bucket.test.id
+			key = aws_s3_object.test.id
+		}
+	}
+  }
+
+  format_options = {
+	json = {
+		multi_line = "\n"
 	}
   }
 }

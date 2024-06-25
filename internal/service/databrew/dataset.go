@@ -8,6 +8,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	// "github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databrew"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databrew/types"
@@ -59,17 +64,13 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 			"name": schema.StringAttribute{
 				Required: true,
 			},
-			"input": schema.ListAttribute{
-				Required:   true,
-				CustomType: fwtypes.NewListNestedObjectTypeOf[inputModel](ctx),
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"s3_input_definition":           fwtypes.NewListNestedObjectTypeOf[s3LocationModel](ctx),
-						"data_catalog_input_definition": fwtypes.NewListNestedObjectTypeOf[dataCatalogInputDefinitionModel](ctx),
-						"database_input_definition":     fwtypes.NewListNestedObjectTypeOf[databaseInputDefinitionModel](ctx),
-						"metadata":                      fwtypes.NewListNestedObjectTypeOf[metadataModel](ctx),
-					},
-				},
+			"format": schema.StringAttribute{
+				Optional: true,
+			},
+			"tags": schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: "Dataset tags",
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -78,6 +79,203 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 				Update: true,
 				Delete: true,
 			}),
+			"format_options": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"csv": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"delimiter": schema.BoolAttribute{
+										Optional: true,
+									},
+									"header_row": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+						"excel": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"header_row": schema.StringAttribute{
+										Optional: true,
+									},
+									"sheet_indexes": schema.StringAttribute{
+										Optional: true,
+									},
+									"sheet_names": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+						"json": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"multi_line": schema.BoolAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"input": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"metadata": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"source_arn": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+						"database_input_definition": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"glue_connection_name": schema.StringAttribute{
+										Required: true,
+									},
+									"database_table_name": schema.StringAttribute{
+										Optional: true,
+									},
+									"query_string": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"temp_directory": schema.SetNestedBlock{
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"bucket": schema.StringAttribute{
+													Required: true,
+												},
+												"bucket_owner": schema.StringAttribute{
+													Optional: true,
+												},
+												"key": schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"data_catalog_input_definition": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"catalog_id": schema.StringAttribute{
+										Optional: true,
+									},
+									"database_name": schema.StringAttribute{
+										Required: true,
+									},
+									"table_name": schema.StringAttribute{
+										Required: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"temp_directory": schema.SetNestedBlock{
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"bucket": schema.StringAttribute{
+													Required: true,
+												},
+												"bucket_owner": schema.StringAttribute{
+													Optional: true,
+												},
+												"key": schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"s3_input_definition": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"bucket": schema.StringAttribute{
+										Required: true,
+									},
+									"bucket_owner": schema.StringAttribute{
+										Optional: true,
+									},
+									"key": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"path_options": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"parameters": schema.ObjectAttribute{
+							AttributeTypes: map[string]attr.Type{
+								"name": types.StringType,
+								"type": types.StringType,
+								"create_column": types.BoolType,
+								"datetime_options": types.ObjectType{
+									AttrTypes: map[string]attr.Type {
+										"format": types.StringType,
+										"locale_code": types.StringType,
+										"timezone_offset": types.StringType,
+									},
+								},
+								"filter": types.ObjectType{
+									AttrTypes: map[string]attr.Type {
+										"expression": types.StringType,
+										"values_map": types.MapType{},
+									},
+								},
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"files_limit": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"max_files": schema.Int64Attribute{
+										Required: true,
+									},
+									"order": schema.StringAttribute{
+										Optional: true,
+									},
+									"ordered_by": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+						"last_modified_date_condition": schema.SetNestedBlock{
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"expression": schema.StringAttribute{
+										Required: true,
+									},
+									"values_map": schema.MapAttribute{
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -92,9 +290,7 @@ func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	in := &databrew.CreateDatasetInput{
-		// Name: aws.String(plan.Name.ValueString()),
-	}
+	in := &databrew.CreateDatasetInput{}
 
 	// planInput, _ := plan.Input.ToPtr(ctx)
 
@@ -123,7 +319,6 @@ func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	plan.Name = flex.StringToFramework(ctx, out.Name)
-	plan.ID = flex.StringToFramework(ctx, out.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -257,36 +452,6 @@ func findDatasetByName(ctx context.Context, conn *databrew.Client, name string) 
 	return out, nil
 }
 
-func expandInput(ctx context.Context, model inputModel) *awstypes.Input {
-	obj := &awstypes.Input{}
-
-	s3InputDefinitionModelData, _ := model.S3InputDefinition.ToPtr(ctx)
-
-	if !model.S3InputDefinition.IsNull() {
-		obj.S3InputDefinition = expandInputS3InputDefinition(*s3InputDefinitionModelData)
-	}
-
-	return obj
-}
-
-func expandInputS3InputDefinition(model s3InputDefinitionModel) *awstypes.S3Location {
-	obj := &awstypes.S3Location{}
-
-	if !model.Bucket.IsNull() {
-		obj.Bucket = aws.String(model.Bucket.ValueString())
-	}
-
-	if !model.Key.IsNull() {
-		obj.Key = aws.String(model.Key.ValueString())
-	}
-
-	if !model.BucketOwner.IsNull() {
-		obj.BucketOwner = aws.String(model.BucketOwner.ValueString())
-	}
-
-	return obj
-}
-
 type s3LocationModel struct {
 	Bucket      types.String `tfsdk:"bucket"`
 	BucketOwner types.String `tfsdk:"bucket_owner"`
@@ -312,15 +477,63 @@ type metadataModel struct {
 }
 
 type inputModel struct {
-	S3InputDefinition          fwtypes.ListNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_input_definition"`
-	DataCatalogInputDefinition fwtypes.ListNestedObjectValueOf[dataCatalogInputDefinitionModel] `tfsdk:"data_catalog_input_definition"`
-	DatabaseInputDefinition    fwtypes.ListNestedObjectValueOf[databaseInputDefinitionModel]    `tfsdk:"database_input_definition"`
-	Metadata                   fwtypes.ListNestedObjectValueOf[metadataModel]                   `tfsdk:"metadata"`
+	S3InputDefinition          fwtypes.SetNestedObjectValueOf[s3LocationModel]                 `tfsdk:"s3_input_definition"`
+	DataCatalogInputDefinition fwtypes.SetNestedObjectValueOf[dataCatalogInputDefinitionModel] `tfsdk:"data_catalog_input_definition"`
+	DatabaseInputDefinition    fwtypes.SetNestedObjectValueOf[databaseInputDefinitionModel]    `tfsdk:"database_input_definition"`
+	Metadata                   fwtypes.SetNestedObjectValueOf[metadataModel]                   `tfsdk:"metadata"`
+}
+
+type formatOptionsModel struct {
+	CSV   fwtypes.SetNestedObjectValueOf[csvFormatOptionsModel]   `tfsdk:"csv"`
+	JSON  fwtypes.SetNestedObjectValueOf[jsonFormatOptionsModel]  `tfsdk:"json"`
+	Excel fwtypes.SetNestedObjectValueOf[excelFormatOptionsModel] `tfsdk:"excel"`
+}
+
+type csvFormatOptionsModel struct {
+	Delimiter types.Bool   `tfsdk:"delimiter"`
+	HeaderRow types.String `tfsdk:"header_row"`
+}
+
+type excelFormatOptionsModel struct {
+	SheetIndexes types.String `tfsdk:"sheet_indexes"`
+	SheetNames   types.String `tfsdk:"sheet_names"`
+	HeaderRow    types.String `tfsdk:"header_row"`
+}
+
+type jsonFormatOptionsModel struct {
+	MultiLine types.Bool `tfsdk:"multi_line"`
+}
+
+type pathOptionsModel struct {
+	FilesLimit                fwtypes.SetNestedObjectValueOf[filesLimitPathOptionsModel]         `tfsdk:"files_limit"`
+	LastModifiedDateCondition fwtypes.SetNestedObjectValueOf[expressionModel]                    `tfsdk:"last_modified_date_condition"`
+	Parameters                types.Object `tfsdk:"parameters"`
+}
+
+type filesLimitPathOptionsModel struct {
+	MaxFiles  types.Int64                            `tfsdk:"max_files"`
+	Order     fwtypes.StringEnum[awstypes.Order]     `tfsdk:"order"`
+	OrderedBy fwtypes.StringEnum[awstypes.OrderedBy] `tfsdk:"ordered_by"`
+}
+
+type expressionModel struct {
+	Expression types.String `tfsdk:"expression"`
+	ValuesMap  types.String `tfsdk:"values_map"`
+}
+
+type datetimeOptionsModel struct {
+	Format         types.String `tfsdk:"format"`
+	LocaleCode     types.String `tfsdk:"locale_code"`
+	TimezoneOffset types.String `tfsdk:"timezone_offset"`
 }
 
 type resourceDatasetModel struct {
-	ID       types.String                                `tfsdk:"id"`
-	Name     types.String                                `tfsdk:"name"`
-	Input    fwtypes.ListNestedObjectValueOf[inputModel] `tfsdk:"input"`
-	Timeouts timeouts.Value                              `tfsdk:"timeouts"`
+	ID            types.String                                        `tfsdk:"id"`
+	Name          types.String                                        `tfsdk:"name"`
+	Format        fwtypes.StringEnum[awstypes.InputFormat]            `tfsdk:"format"`
+	Tags          fwtypes.MapValueOf[types.String]                    `tfsdk:"tags"`
+	Input         fwtypes.ListNestedObjectValueOf[inputModel]         `tfsdk:"input"`
+	FormatOptions fwtypes.ListNestedObjectValueOf[formatOptionsModel] `tfsdk:"format_options"`
+	PathOptions   fwtypes.ListNestedObjectValueOf[pathOptionsModel]   `tfsdk:"path_options"`
+	Timeouts      timeouts.Value                                      `tfsdk:"timeouts"`
 }
