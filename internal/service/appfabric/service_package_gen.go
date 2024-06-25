@@ -39,6 +39,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newIngestionDestinationResource,
+			Name:    "Ingestion Destination",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory: newIngestionResource,
 			Name:    "Ingestion",
 			Tags: &types.ServicePackageResourceTags{
