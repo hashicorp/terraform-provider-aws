@@ -475,17 +475,17 @@ type s3LocationModel struct {
 }
 
 type dataCatalogInputDefinitionModel struct {
-	CatalogId     types.String                                     `tfsdk:"catalog_id"`
-	DatabaseName  types.String                                     `tfsdk:"database_name"`
-	TableName     types.String                                     `tfsdk:"table_name"`
-	TempDirectory fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"temp_directory"`
+	CatalogId     types.String                                    `tfsdk:"catalog_id"`
+	DatabaseName  types.String                                    `tfsdk:"database_name"`
+	TableName     types.String                                    `tfsdk:"table_name"`
+	TempDirectory fwtypes.SetNestedObjectValueOf[s3LocationModel] `tfsdk:"temp_directory"`
 }
 
 type databaseInputDefinitionModel struct {
-	GlueConnectionName types.String                                     `tfsdk:"glue_connection_name"`
-	DatabaseTableName  types.String                                     `tfsdk:"database_table_name"`
-	QueryString        types.String                                     `tfsdk:"query_string"`
-	TempDirectory      fwtypes.ListNestedObjectValueOf[s3LocationModel] `tfsdk:"temp_directory"`
+	GlueConnectionName types.String                                    `tfsdk:"glue_connection_name"`
+	DatabaseTableName  types.String                                    `tfsdk:"database_table_name"`
+	QueryString        types.String                                    `tfsdk:"query_string"`
+	TempDirectory      fwtypes.SetNestedObjectValueOf[s3LocationModel] `tfsdk:"temp_directory"`
 }
 
 type metadataModel struct {
@@ -544,6 +544,6 @@ type resourceDatasetModel struct {
 	Tags          types.Map                                           `tfsdk:"tags"`
 	Input         fwtypes.ListNestedObjectValueOf[inputModel]         `tfsdk:"input"`
 	FormatOptions fwtypes.ListNestedObjectValueOf[formatOptionsModel] `tfsdk:"format_options"`
-	PathOptions   fwtypes.ListNestedObjectValueOf[pathOptionsModel]   `tfsdk:"path_options"`
+	PathOptions   fwtypes.SetNestedObjectValueOf[pathOptionsModel]    `tfsdk:"path_options"`
 	Timeouts      timeouts.Value                                      `tfsdk:"timeouts"`
 }
