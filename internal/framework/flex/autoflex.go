@@ -124,6 +124,31 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		return diags
 	}
 
+	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		from, d := fromExpander.Expand(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		to := reflect.ValueOf(from)
+
+		toType := valTo.Type()
+		if toType.Kind() == reflect.Struct {
+			to = to.Elem()
+		}
+		fromType := to.Type() // TODO: yeah, this is a bad name
+
+		if !fromType.AssignableTo(toType) {
+			diags.Append(diagCannotBeAssigned(fromType, toType))
+			return diags
+		}
+
+		valTo.Set(to)
+
+		return diags
+	}
+
 	opts := flexer.getOptions()
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
 		field := typFrom.Field(i)

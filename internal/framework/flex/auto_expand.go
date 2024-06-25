@@ -66,6 +66,46 @@ func (expander autoExpander) getOptions() AutoFlexOptions {
 func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		from, d := fromExpander.Expand(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		toType := vTo.Type()
+		to := reflect.ValueOf(from)
+		if toType.Kind() == reflect.Interface {
+			fromType := reflect.TypeOf(from)
+			if !fromType.Implements(toType) {
+				diags.Append(diagExpandedTypeDoesNotImplement(fromType, toType))
+				return diags
+			}
+
+			if toType.Kind() == reflect.Struct {
+				vTo.Set(to.Elem())
+			} else {
+				vTo.Set(to)
+			}
+
+			return diags
+		}
+
+		if toType.Kind() == reflect.Struct {
+			to = to.Elem()
+		}
+		fromType := to.Type() // TODO: yeah, this is a bad name
+
+		if !fromType.AssignableTo(toType) {
+			diags.Append(diagCannotBeAssigned(fromType, toType))
+			return diags
+		}
+
+		vTo.Set(to)
+
+		return diags
+	}
+
 	vFrom, ok := valFrom.Interface().(attr.Value)
 	if !ok {
 		diags.AddError("AutoFlEx", fmt.Sprintf("does not implement attr.Value: %s", valFrom.Kind()))
@@ -818,13 +858,7 @@ func (expander autoExpander) toInterface(ctx context.Context, from any, toType r
 
 	fromType := reflect.TypeOf(from)
 	if !fromType.Implements(toType) {
-		diags.AddError(
-			"Incompatible Types",
-			"An unexpected error occurred while expanding configuration. "+ // TODO: rephrase
-				"This is always an error in the provider. "+
-				"Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Type %q does not implement %q", fullTypeName(fromType), fullTypeName(toType)),
-		)
+		diags.Append(diagExpandedTypeDoesNotImplement(fromType, toType))
 		return value, diags
 	}
 
@@ -999,4 +1033,24 @@ func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return reflect.Zero(reflect.TypeOf("")), diags
+}
+
+func diagExpandedTypeDoesNotImplement(expandedType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Type %q does not implement %q.", fullTypeName(expandedType), fullTypeName(targetType)),
+	)
+}
+
+func diagCannotBeAssigned(expandedType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Type %q cannot be assigned to %q.", fullTypeName(expandedType), fullTypeName(targetType)),
+	)
 }
