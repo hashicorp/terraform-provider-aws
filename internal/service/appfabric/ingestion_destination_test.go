@@ -5,26 +5,23 @@ package appfabric_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 )
 
 func TestAccAppFabricIngestionDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_ingestion_destination.test"
-	var ingestiondestination types.IngestionDestination
+	var ingestiondestination awstypes.IngestionDestination
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -63,7 +60,7 @@ func TestAccAppFabricIngestionDestination_basic(t *testing.T) {
 func TestAccAppFabricIngestionDestination_firehose(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_ingestion_destination.test"
-	var ingestiondestination types.IngestionDestination
+	var ingestiondestination awstypes.IngestionDestination
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -101,7 +98,7 @@ func TestAccAppFabricIngestionDestination_firehose(t *testing.T) {
 func TestAccAppFabricIngestionDestination_destinationUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_ingestion_destination.test"
-	var ingestiondestination types.IngestionDestination
+	var ingestiondestination awstypes.IngestionDestination
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -164,7 +161,7 @@ func TestAccAppFabricIngestionDestination_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var ingestiondestination types.IngestionDestination
+	var ingestiondestination awstypes.IngestionDestination
 	resourceName := "aws_appfabric_ingestion_destination.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,7 +193,7 @@ func testAccCheckIngestionDestinationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfappfabric.FindIngestionDestinationByID(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"], rs.Primary.Attributes["ingestion_identifier"])
+			_, err := tfappfabric.FindIngestionDestinationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"], rs.Primary.Attributes["ingestion_identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -206,29 +203,29 @@ func testAccCheckIngestionDestinationDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			return fmt.Errorf("Ingestion Destination %s still exists", rs.Primary.ID)
+			return fmt.Errorf("AppFabric Ingestion Destination %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIngestionDestinationExists(ctx context.Context, name string, ingestiondestination *types.IngestionDestination) resource.TestCheckFunc {
+func testAccCheckIngestionDestinationExists(ctx context.Context, n string, v *awstypes.IngestionDestination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.AppFabric, create.ErrActionCheckingExistence, tfappfabric.ResNameIngestionDestination, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 
-		output, err := tfappfabric.FindIngestionDestinationByID(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"], rs.Primary.Attributes["ingestion_identifier"])
+		output, err := tfappfabric.FindIngestionDestinationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"], rs.Primary.Attributes["ingestion_identifier"])
 
 		if err != nil {
 			return err
 		}
 
-		*ingestiondestination = *output
+		*v = *output
 
 		return nil
 	}
@@ -239,24 +236,23 @@ func testAccIngestionDestinationConfig_basic() string {
 resource "aws_appfabric_ingestion_destination" "test" {
   app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
   ingestion_identifier  = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633/ingestion/8b7895cf-171a-494c-9abb-7170eaed13b5"
+
   processing_configuration {
-	audit_log {
-		format = "json"
-		schema = "raw"	
-	}
-  }
-  destination_configuration {
     audit_log {
-		destination {
-			s3_bucket {
-				bucket_name = "s3-bucket-name"
-				prefix = "AuditLog"
-			}
-		}
+      format = "json"
+      schema = "raw"	
     }
   }
-  tags = {
-    environment = "test"
+
+  destination_configuration {
+    audit_log {
+      destination {
+        s3_bucket {
+          bucket_name = "s3-bucket-name"
+          prefix      = "AuditLog"
+        }
+      }
+    }
   }
 }
 `

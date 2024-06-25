@@ -9,11 +9,11 @@ var (
 	ResourceAppAuthorizationConnection = newAppAuthorizationConnectionResource
 	ResourceAppBundle                  = newAppBundleResource
 	ResourceIngestion                  = newIngestionResource
-	ResourceIngestionDestination       = newResourceIngestionDestination
+	ResourceIngestionDestination       = newIngestionDestinationResource
 
 	FindAppAuthorizationByTwoPartKey           = findAppAuthorizationByTwoPartKey
 	FindAppAuthorizationConnectionByTwoPartKey = findAppAuthorizationConnectionByTwoPartKey
 	FindAppBundleByID                          = findAppBundleByID
 	FindIngestionByTwoPartKey                  = findIngestionByTwoPartKey
-	FindIngestionDestinationByID               = findIngestionDestinationByID
+	FindIngestionDestinationByThreePartKey     = findIngestionDestinationByThreePartKey
 )
