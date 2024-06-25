@@ -5,7 +5,8 @@ package mediaconvert
 
 // Exports for use in tests only.
 var (
-	ResourceQueue = resourceQueue
+	ResourceQueue       = resourceQueue
+	ResourceJobTemplate = resourceJobTemplate
 
 	FindQueueByName = findQueueByName
 )
