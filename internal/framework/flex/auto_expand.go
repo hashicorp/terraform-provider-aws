@@ -765,7 +765,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			// types.List(OfObject) -> []interface.
 			//
-			diags.Append(expander.nestedObjectToInterfaceSlice(ctx, vFrom, tTo, tElem, vTo)...)
+			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 			return diags
 		}
 
@@ -773,7 +773,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 		//
 		// types.List(OfObject) -> interface.
 		//
-		diags.Append(expander.nestedObjectToInterface(ctx, vFrom, tTo, vTo)...)
+		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
 		return diags
 	}
 
@@ -799,10 +799,12 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 		return diags
 	}
 
-	// Set value (or pointer).
-	if vTo.Type().Kind() == reflect.Struct {
+	// Set value.
+	switch vTo.Type().Kind() {
+	case reflect.Struct, reflect.Interface:
 		vTo.Set(to.Elem())
-	} else {
+
+	default:
 		vTo.Set(to)
 	}
 
@@ -811,67 +813,6 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 
 type Expander interface {
 	Expand(ctx context.Context) (any, diag.Diagnostics)
-}
-
-// nestedObjectToInterface copies a Plugin Framework NestedObjectValue to a compatible AWS API interface value.
-func (expander autoExpander) nestedObjectToInterface(ctx context.Context, fromVal fwtypes.NestedObjectValue, toType reflect.Type, toVal reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Get the nested Object as a pointer.
-	from, d := fromVal.ToObjectPtr(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	to, d := expander.toInterface(ctx, from, toType)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Set value (or pointer).
-	if toVal.Type().Kind() == reflect.Struct {
-		toVal.Set(to.Elem())
-	} else {
-		toVal.Set(to)
-	}
-
-	return diags
-}
-
-func (expander autoExpander) toInterface(ctx context.Context, from any, toType reflect.Type) (value reflect.Value, diags diag.Diagnostics) {
-	fromExpander, ok := from.(Expander)
-	if !ok {
-		// TODO: skip silently but log
-		diags.AddError(
-			"AutoFlEx",
-			fmt.Sprintf("could not convert %T to Expander", from),
-		)
-		return value, diags
-	}
-	from, d := fromExpander.Expand(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return value, diags
-	}
-
-	fromType := reflect.TypeOf(from)
-	if !fromType.Implements(toType) {
-		diags.Append(diagExpandedTypeDoesNotImplement(fromType, toType))
-		return value, diags
-	}
-
-	value = reflect.ValueOf(from)
-
-	return value, diags
-}
-
-func fullTypeName(t reflect.Type) string {
-	if path := t.PkgPath(); path != "" {
-		return fmt.Sprintf("%s.%s", path, t.Name())
-	}
-	return t.Name()
 }
 
 // nestedObjectToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
@@ -897,50 +838,17 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 			return diags
 		}
 
-		// Set value (or pointer) in the target slice.
-		if vTo.Type().Elem().Kind() == reflect.Struct {
+		// Set value in the target slice.
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Struct, reflect.Interface:
 			t.Index(i).Set(target.Elem())
-		} else {
+
+		default:
 			t.Index(i).Set(target)
 		}
 	}
 
 	vTo.Set(t)
-
-	return diags
-}
-
-// nestedObjectToInterfaceSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API interface value.
-func (expander autoExpander) nestedObjectToInterfaceSlice(ctx context.Context, fromVal fwtypes.NestedObjectCollectionValue, toSliceType, toElemType reflect.Type, toVal reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Get the nested Objects as a slice.
-	from, d := fromVal.ToObjectSlice(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Create a new target slice and expand each element.
-	f := reflect.ValueOf(from)
-	n := f.Len()
-	t := reflect.MakeSlice(toSliceType, n, n)
-	for i := 0; i < n; i++ {
-		target, d := expander.toInterface(ctx, f.Index(i).Interface(), toElemType)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		// Set value (or pointer) in the target slice.
-		if toVal.Type().Elem().Kind() == reflect.Struct {
-			t.Index(i).Set(target.Elem())
-		} else {
-			t.Index(i).Set(target)
-		}
-	}
-
-	toVal.Set(t)
 
 	return diags
 }

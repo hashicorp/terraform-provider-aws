@@ -1391,7 +1391,7 @@ func TestExpandExpander(t *testing.T) {
 		},
 		{
 			TestName: "single set Source and single struct Target",
-			Source: testFlexTFExpanderSettNestedObject{
+			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
 					{
 						Field1: types.StringValue("value1"),
@@ -1423,7 +1423,7 @@ func TestExpandExpander(t *testing.T) {
 		},
 		{
 			TestName: "single set Source and single *struct Target",
-			Source: testFlexTFExpanderSettNestedObject{
+			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
 					{
 						Field1: types.StringValue("value1"),
@@ -1507,7 +1507,7 @@ func TestExpandExpander(t *testing.T) {
 		},
 		{
 			TestName: "empty set Source and empty struct Target",
-			Source: testFlexTFExpanderSettNestedObject{
+			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{}),
 			},
 			Target: &testFlexAWSExpanderStructSlice{},
@@ -1517,7 +1517,7 @@ func TestExpandExpander(t *testing.T) {
 		},
 		{
 			TestName: "non-empty set Source and non-empty struct Target",
-			Source: testFlexTFExpanderSettNestedObject{
+			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
 					{
 						Field1: types.StringValue("value1"),
@@ -1541,7 +1541,7 @@ func TestExpandExpander(t *testing.T) {
 		},
 		{
 			TestName: "empty set Source and empty *struct Target",
-			Source: testFlexTFExpanderSettNestedObject{
+			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{}),
 			},
 			Target: &testFlexAWSExpanderPtrSlice{},
@@ -1551,7 +1551,7 @@ func TestExpandExpander(t *testing.T) {
 		},
 		{
 			TestName: "non-empty set Source and non-empty *struct Target",
-			Source: testFlexTFExpanderSettNestedObject{
+			Source: testFlexTFExpanderSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFExpander{
 					{
 						Field1: types.StringValue("value1"),
