@@ -727,6 +727,13 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			return diags
 		}
 
+	case reflect.Interface:
+		//
+		// types.List(OfObject) -> interface.
+		//
+		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+		return diags
+
 	case reflect.Map:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
@@ -770,13 +777,6 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 			return diags
 		}
-
-	case reflect.Interface:
-		//
-		// types.List(OfObject) -> interface.
-		//
-		diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
-		return diags
 	}
 
 	diags.AddError("Incompatible types", fmt.Sprintf("nestedObjectCollection[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
