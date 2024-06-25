@@ -16,40 +16,41 @@ Terraform resource for managing an AWS AppFabric Ingestion Destination.
 
 ```terraform
 resource "aws_appfabric_ingestion_destination" "example" {
-  app_bundle_identifier             = "aws_appfabric_app_bundle.arn"
-  ingestion_identifier              = "aws_appfabric_ingestion.arn"
+  app_bundle_arn = aws_appfabric_app_bundle.example.arn
+  ingestion_arn  = aws_appfabric_ingestion.example.arn
+
   processing_configuration {
-	audit_log {
-		format = "json"
-		schema = "raw"	
-	}
+    audit_log {
+      format = "json"
+      schema = "raw"
+    }
   }
+
   destination_configuration {
     audit_log {
-		destination {
-			s3_bucket {
-				bucket_name = "examplebucketname"
-				prefix = "AuditLog"
-			}
-		}
+      destination {
+        s3_bucket {
+          bucket_name = aws_s3_bucket.example.bucket
+        }
+      }
     }
   }
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are required:
 
-* `app_bundle_identifier` - (Required) The Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app bundle to use for the request.
-* `ingestion_identifier` - (Required) The Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the ingestion to use for the request.
+* `app_bundle_arn` - (Required) The Amazon Resource Name (ARN) of the app bundle to use for the request.
+* `ingestion_arn` - (Required) The Amazon Resource Name (ARN) of the ingestion to use for the request.
 * `destination_configuration` - (Required) Contains information about the destination of ingested data.
 * `processing_configuration` - (Required) Contains information about how ingested data is processed.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Destination Configuration support the following:
 
-* `audit_log` - (Optional) Contains information about an audit log destination configuration.
+* `audit_log` - (Required) Contains information about an audit log destination configuration.
 
 Audit Log Destination Configuration support the following:
 
@@ -71,20 +72,19 @@ S3 Bucket support the following:
 
 Processing Configuration support the following:
 
-* `audit_log` - (optional) Contains information about an audit log processing configuration.
+* `audit_log` - (Required) Contains information about an audit log processing configuration.
 
 Audit Log Processing Configuration support the following:
 
-* `format` - (Required) The format in which the audit logs need to be formatted. Valid values: json | parquet
-* `schema` - (Required) The event schema in which the audit logs need to be formatted. Valid values: ocsf | raw
+* `format` - (Required) The format in which the audit logs need to be formatted. Valid values: `json`, `parquet`.
+* `schema` - (Required) The event schema in which the audit logs need to be formatted. Valid values: `ocsf`, `raw`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Ingestion Destination. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `app_bundle_arn` - The Amazon Resource Name (ARN) of the app bundle for the ingestion destination.
-* `ingestion_arn` - The Amazon Resource Name (ARN) of the ingestion for the ingestion destination.
+* `arn` - ARN of the Ingestion Destination.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
