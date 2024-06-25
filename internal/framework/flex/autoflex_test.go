@@ -372,6 +372,10 @@ type testFlexTFInterfaceSetNestedObject struct {
 	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFInterfaceExpander] `tfsdk:"field1"`
 }
 
+type testFlexTFInterfaceObjectValue struct {
+	Field1 fwtypes.ObjectValueOf[testFlexTFInterfaceExpander] `tfsdk:"field1"`
+}
+
 type testFlexTFInterfaceExpander struct {
 	Field1 types.String `tfsdk:"field1"`
 }
@@ -422,6 +426,10 @@ type testFlexTFExpanderListNestedObject struct {
 
 type testFlexTFExpanderSetNestedObject struct {
 	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFExpander] `tfsdk:"field1"`
+}
+
+type testFlexTFExpanderObjectValue struct {
+	Field1 fwtypes.ObjectValueOf[testFlexTFExpander] `tfsdk:"field1"`
 }
 
 type testFlexTFExpanderToString struct {
