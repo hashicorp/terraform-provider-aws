@@ -76,9 +76,9 @@ This resource supports the following arguments:
 * `ipv6_ipam_pool_id` - (Optional) IPAM Pool ID for a IPv6 pool. Conflicts with `assign_generated_ipv6_cidr_block`.
 * `ipv6_netmask_length` - (Optional) Netmask length to request from IPAM Pool. Conflicts with `ipv6_cidr_block`. This can be omitted if IPAM pool as a `allocation_default_netmask_length` set. Valid values: `56`.
 * `ipv6_cidr_block_network_border_group` - (Optional) By default when an IPv6 CIDR is assigned to a VPC a default ipv6_cidr_block_network_border_group will be set to the region of the VPC. This can be changed to restrict advertisement of public addresses to specific Network Border Groups such as LocalZones.
-* `enable_dns_support` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults to true.
-* `enable_network_address_usage_metrics` - (Optional) Indicates whether Network Address Usage metrics are enabled for your VPC. Defaults to false.
-* `enable_dns_hostnames` - (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false.
+* `enable_dns_support` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults to `true`.
+* `enable_network_address_usage_metrics` - (Optional) Indicates whether Network Address Usage metrics are enabled for your VPC. Defaults to `false`.
+* `enable_dns_hostnames` - (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults `false`.
 * `assign_generated_ipv6_cidr_block` - (Optional) Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or the size of the CIDR block. Default is `false`. Conflicts with `ipv6_ipam_pool_id`
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -87,20 +87,20 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of VPC
-* `id` - The ID of the VPC
-* `instance_tenancy` - Tenancy of instances spin up within VPC
-* `dhcp_options_id` - DHCP options id of the desired VPC.
+* `cidr_block` - The IPv4 CIDR block for the VPC.
+* `default_network_acl_id` - The ID of the network ACL created by default on VPC creation
+* `default_route_table_id` - The ID of the route table created by default on VPC creation
+* `default_security_group_id` - The ID of the security group created by default on VPC creation
+* `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
 * `enable_dns_support` - Whether or not the VPC has DNS support
 * `enable_network_address_usage_metrics` - Whether Network Address Usage metrics are enabled for the VPC
-* `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
+* `id` - The ID of the VPC
+* `instance_tenancy` - Tenancy of instances spin up within VPC
+* `ipv6_association_id` - The association ID for the IPv6 CIDR block.
+* `ipv6_cidr_block_network_border_group` - The Network Border Group Zone name
 * `main_route_table_id` - The ID of the main route table associated with
      this VPC. Note that you can change a VPC's main route table by using an
      [`aws_main_route_table_association`](/docs/providers/aws/r/main_route_table_association.html).
-* `default_network_acl_id` - The ID of the network ACL created by default on VPC creation
-* `default_security_group_id` - The ID of the security group created by default on VPC creation
-* `default_route_table_id` - The ID of the route table created by default on VPC creation
-* `ipv6_association_id` - The association ID for the IPv6 CIDR block.
-* `ipv6_cidr_block_network_border_group` - The Network Border Group Zone name
 * `owner_id` - The ID of the AWS account that owns the VPC.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
