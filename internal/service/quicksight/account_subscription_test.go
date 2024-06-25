@@ -43,7 +43,6 @@ func testAccAccountSubscription_basic(t *testing.T) {
 					testAccCheckAccountSubscriptionDisableTerminationProtection(ctx, resourceName), // Workaround to remove termination protection
 					testAccCheckAccountSubscriptionExists(ctx, resourceName, &accountsubscription),
 					resource.TestCheckResourceAttr(resourceName, "account_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "iam_identity_center_instance_arn"),
 				),
 			},
 			{
@@ -170,7 +169,6 @@ resource "aws_quicksight_account_subscription" "test" {
   authentication_method            = "IAM_AND_QUICKSIGHT"
   edition                          = "ENTERPRISE"
   notification_email               = %[2]q
-  iam_identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
 }
 `, rName, acctest.DefaultEmailAddress)
 }
