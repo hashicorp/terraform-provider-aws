@@ -186,6 +186,13 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	return diags
 }
 
+func fullTypeName(t reflect.Type) string {
+	if path := t.PkgPath(); path != "" {
+		return fmt.Sprintf("%s.%s", path, t.Name())
+	}
+	return t.Name()
+}
+
 func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) reflect.Value {
 	// first precedence is exact match (case sensitive)
 	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
