@@ -195,7 +195,7 @@ resource "aws_databrew_dataset" "test" {
   input {
 	s3_input_definition {
 		bucket = aws_s3_bucket.test.id
-		owner  = data.aws_caller_identity.current.account_id
+		bucket_owner  = data.aws_caller_identity.current.account_id
 		key    = %[1]q
 	}
   }
@@ -262,8 +262,8 @@ resource "aws_databrew_dataset" "test" {
 	}
   }
 
-format_options = {
-	excel = {
+format_options {
+	excel {
 		header_row = "\n"
 		sheet_indexes = "1"
 		sheet_names = "test"

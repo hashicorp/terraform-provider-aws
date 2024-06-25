@@ -58,6 +58,18 @@ func (r *resourceDataset) Metadata(_ context.Context, req resource.MetadataReque
 }
 
 func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	filterType := map[string]attr.Type{
+		"expression": types.StringType,
+		"values_map": types.ListType{
+			ElemType: types.ObjectType{
+				AttrTypes: map[string]attr.Type{
+					"Value":          types.StringType,
+					"ValueReference": types.StringType,
+				},
+			},
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -65,7 +77,8 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 				Required: true,
 			},
 			"format": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.StringEnumType[awstypes.InputFormat](),
+				Optional:   true,
 			},
 			"tags": schema.MapAttribute{
 				ElementType: types.StringType,
@@ -80,12 +93,14 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 				Delete: true,
 			}),
 			"format_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[formatOptionsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"csv": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[csvFormatOptionsModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"delimiter": schema.BoolAttribute{
@@ -98,6 +113,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 							},
 						},
 						"excel": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[excelFormatOptionsModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"header_row": schema.StringAttribute{
@@ -113,6 +129,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 							},
 						},
 						"json": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[jsonFormatOptionsModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"multi_line": schema.BoolAttribute{
@@ -125,12 +142,14 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"input": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[inputModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"metadata": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[metadataModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"source_arn": schema.StringAttribute{
@@ -140,6 +159,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 							},
 						},
 						"database_input_definition": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[databaseInputDefinitionModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"glue_connection_name": schema.StringAttribute{
@@ -154,6 +174,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 								},
 								Blocks: map[string]schema.Block{
 									"temp_directory": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[s3LocationModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"bucket": schema.StringAttribute{
@@ -186,6 +207,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 								},
 								Blocks: map[string]schema.Block{
 									"temp_directory": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[s3LocationModel](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"bucket": schema.StringAttribute{
@@ -204,6 +226,7 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 							},
 						},
 						"s3_input_definition": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[s3LocationModel](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"bucket": schema.StringAttribute{
@@ -222,27 +245,30 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 			},
 			"path_options": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[pathOptionsModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"parameters": schema.ObjectAttribute{
+							Optional: true,
 							AttributeTypes: map[string]attr.Type{
-								"name": types.StringType,
-								"type": types.StringType,
+								"name":          types.StringType,
+								"type":          types.StringType,
 								"create_column": types.BoolType,
 								"datetime_options": types.ObjectType{
-									AttrTypes: map[string]attr.Type {
-										"format": types.StringType,
-										"locale_code": types.StringType,
+									AttrTypes: map[string]attr.Type{
+										"format":          types.StringType,
+										"locale_code":     types.StringType,
 										"timezone_offset": types.StringType,
 									},
 								},
 								"filter": types.ObjectType{
-									AttrTypes: map[string]attr.Type {
-										"expression": types.StringType,
-										"values_map": types.MapType{},
-									},
+									AttrTypes: filterType,
 								},
 							},
+						},
+						"last_modified_date_condition": schema.ObjectAttribute{
+							Optional:       true,
+							AttributeTypes: filterType,
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -253,22 +279,12 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 										Required: true,
 									},
 									"order": schema.StringAttribute{
-										Optional: true,
+										CustomType: fwtypes.StringEnumType[awstypes.Order](),
+										Optional:   true,
 									},
 									"ordered_by": schema.StringAttribute{
-										Optional: true,
-									},
-								},
-							},
-						},
-						"last_modified_date_condition": schema.SetNestedBlock{
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"expression": schema.StringAttribute{
-										Required: true,
-									},
-									"values_map": schema.MapAttribute{
-										Required: true,
+										CustomType: fwtypes.StringEnumType[awstypes.OrderedBy](),
+										Optional:   true,
 									},
 								},
 							},
@@ -505,9 +521,9 @@ type jsonFormatOptionsModel struct {
 }
 
 type pathOptionsModel struct {
-	FilesLimit                fwtypes.SetNestedObjectValueOf[filesLimitPathOptionsModel]         `tfsdk:"files_limit"`
-	LastModifiedDateCondition fwtypes.SetNestedObjectValueOf[expressionModel]                    `tfsdk:"last_modified_date_condition"`
-	Parameters                types.Object `tfsdk:"parameters"`
+	FilesLimit                fwtypes.SetNestedObjectValueOf[filesLimitPathOptionsModel] `tfsdk:"files_limit"`
+	LastModifiedDateCondition fwtypes.SetNestedObjectValueOf[expressionModel]            `tfsdk:"last_modified_date_condition"`
+	Parameters                types.Object                                               `tfsdk:"parameters"`
 }
 
 type filesLimitPathOptionsModel struct {
@@ -518,20 +534,14 @@ type filesLimitPathOptionsModel struct {
 
 type expressionModel struct {
 	Expression types.String `tfsdk:"expression"`
-	ValuesMap  types.String `tfsdk:"values_map"`
-}
-
-type datetimeOptionsModel struct {
-	Format         types.String `tfsdk:"format"`
-	LocaleCode     types.String `tfsdk:"locale_code"`
-	TimezoneOffset types.String `tfsdk:"timezone_offset"`
+	ValuesMap  types.List   `tfsdk:"values_map"`
 }
 
 type resourceDatasetModel struct {
 	ID            types.String                                        `tfsdk:"id"`
 	Name          types.String                                        `tfsdk:"name"`
 	Format        fwtypes.StringEnum[awstypes.InputFormat]            `tfsdk:"format"`
-	Tags          fwtypes.MapValueOf[types.String]                    `tfsdk:"tags"`
+	Tags          types.Map                                           `tfsdk:"tags"`
 	Input         fwtypes.ListNestedObjectValueOf[inputModel]         `tfsdk:"input"`
 	FormatOptions fwtypes.ListNestedObjectValueOf[formatOptionsModel] `tfsdk:"format_options"`
 	PathOptions   fwtypes.ListNestedObjectValueOf[pathOptionsModel]   `tfsdk:"path_options"`
