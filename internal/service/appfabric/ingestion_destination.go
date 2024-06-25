@@ -100,7 +100,7 @@ func (r *ingestionDestinationResource) Schema(ctx context.Context, request resou
 							},
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
-									"destination": schema.ListNestedBlock{
+									names.AttrDestination: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[destinationModel](ctx),
 										Validators: []validator.List{
 											listvalidator.IsRequired(),
@@ -124,20 +124,20 @@ func (r *ingestionDestinationResource) Schema(ctx context.Context, request resou
 														},
 													},
 												},
-												"s3_bucket": schema.ListNestedBlock{
+												names.AttrS3Bucket: schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[s3BucketModel](ctx),
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
-															"bucket_name": schema.StringAttribute{
+															names.AttrBucketName: schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.LengthBetween(3, 63),
 																},
 															},
-															"prefix": schema.StringAttribute{
+															names.AttrPrefix: schema.StringAttribute{
 																Optional: true,
 																Validators: []validator.String{
 																	stringvalidator.LengthBetween(1, 120),
@@ -177,14 +177,14 @@ func (r *ingestionDestinationResource) Schema(ctx context.Context, request resou
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"format": schema.StringAttribute{
+									names.AttrFormat: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.Format](),
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"schema": schema.StringAttribute{
+									names.AttrSchema: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.Schema](),
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -437,8 +437,8 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, request resou
 func (r *ingestionDestinationResource) ConfigValidators(context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.AtLeastOneOf(
-			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName("destination").AtListIndex(0).AtName("firehose_stream"),
-			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName("destination").AtListIndex(0).AtName("s3_bucket"),
+			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName(names.AttrDestination).AtListIndex(0).AtName("firehose_stream"),
+			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName(names.AttrDestination).AtListIndex(0).AtName(names.AttrS3Bucket),
 		),
 	}
 }
