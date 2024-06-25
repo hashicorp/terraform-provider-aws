@@ -379,8 +379,8 @@ type testFlexTFInterfaceExpander struct {
 }
 
 func (t testFlexTFInterfaceExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	return &testFlexAWSInterfaceInterfaceImpl01{
-		Field1: t.Field1.ValueString(),
+	return &testFlexAWSInterfaceInterfaceImpl{
+		AWSField: t.Field1.ValueString(),
 	}, nil
 }
 
@@ -396,10 +396,62 @@ type testFlexAWSInterfaceInterface interface {
 	isTestFlexAWSInterfaceInterface()
 }
 
-type testFlexAWSInterfaceInterfaceImpl01 struct {
-	Field1 string
+type testFlexAWSInterfaceInterfaceImpl struct {
+	AWSField string
 }
 
-var _ testFlexAWSInterfaceInterface = &testFlexAWSInterfaceInterfaceImpl01{}
+var _ testFlexAWSInterfaceInterface = &testFlexAWSInterfaceInterfaceImpl{}
 
-func (t *testFlexAWSInterfaceInterfaceImpl01) isTestFlexAWSInterfaceInterface() {}
+func (t *testFlexAWSInterfaceInterfaceImpl) isTestFlexAWSInterfaceInterface() {}
+
+var _ Expander = testFlexTFExpander{}
+
+type testFlexTFExpander struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+func (t testFlexTFExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return &testFlexAWSExpander{
+		AWSField: t.Field1.ValueString(),
+	}, nil
+}
+
+type testFlexTFExpanderListNestedObject struct {
+	Field1 fwtypes.ListNestedObjectValueOf[testFlexTFExpander] `tfsdk:"field1"`
+}
+type testFlexTFExpanderSettNestedObject struct {
+	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFExpander] `tfsdk:"field1"`
+}
+
+var _ Expander = testFlexTFExpanderToString{}
+
+type testFlexTFExpanderToString struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+func (t testFlexTFExpanderToString) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return t.Field1.ValueString(), nil
+}
+
+type testFlexAWSExpander struct {
+	AWSField string
+}
+type testFlexAWSExpanderIncompatible struct {
+	Incompatible int
+}
+
+type testFlexAWSExpanderSingleStruct struct {
+	Field1 testFlexAWSExpander
+}
+
+type testFlexAWSExpanderSinglePtr struct {
+	Field1 *testFlexAWSExpander
+}
+
+type testFlexAWSExpanderStructSlice struct {
+	Field1 []testFlexAWSExpander
+}
+
+type testFlexAWSExpanderPtrSlice struct {
+	Field1 []*testFlexAWSExpander
+}
