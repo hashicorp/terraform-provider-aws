@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -253,7 +254,9 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 	}
 
 	// Additional fields.
+	input.AppBundleIdentifier = aws.String(data.AppBundleARN.ValueString())
 	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
+	input.IngestionIdentifier = aws.String(data.IngestionARN.ValueString())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIngestionDestination(ctx, input)
@@ -269,6 +272,7 @@ func (r *ingestionDestinationResource) Create(ctx context.Context, request resou
 	data.setID()
 
 	if _, err := waitIngestionDestinationActive(ctx, conn, data.AppBundleARN.ValueString(), data.IngestionARN.ValueString(), data.ARN.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for AppFabric Ingestion Destination (%s) create", data.ID.ValueString()), err.Error())
 
 		return
@@ -373,6 +377,11 @@ func (r *ingestionDestinationResource) Update(ctx context.Context, request resou
 
 			input.DestinationConfiguration = destinationConfiguration
 		}
+
+		// Additional fields.
+		input.AppBundleIdentifier = aws.String(new.AppBundleARN.ValueString())
+		input.IngestionDestinationIdentifier = aws.String(new.ARN.ValueString())
+		input.IngestionIdentifier = aws.String(new.IngestionARN.ValueString())
 
 		_, err := conn.UpdateIngestionDestination(ctx, input)
 
@@ -704,6 +713,7 @@ func flattenDestination(ctx context.Context, apiObject awstypes.Destination) (*d
 
 		destinationData = &destinationModel{
 			FirehoseStream: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &firehoseStreamData),
+			S3Bucket:       fwtypes.NewListNestedObjectValueOfNull[s3BucketModel](ctx),
 		}
 
 	case *awstypes.DestinationMemberS3Bucket:
@@ -715,7 +725,8 @@ func flattenDestination(ctx context.Context, apiObject awstypes.Destination) (*d
 		}
 
 		destinationData = &destinationModel{
-			S3Bucket: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3BucketData),
+			FirehoseStream: fwtypes.NewListNestedObjectValueOfNull[firehoseStreamModel](ctx),
+			S3Bucket:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3BucketData),
 		}
 	}
 
