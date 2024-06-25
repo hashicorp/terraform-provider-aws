@@ -67,54 +67,7 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 	var diags diag.Diagnostics
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
-		from, d := fromExpander.Expand(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		toType := vTo.Type()
-		to := reflect.ValueOf(from)
-		if toType.Kind() == reflect.Interface {
-			fromType := reflect.TypeOf(from)
-			if !fromType.Implements(toType) {
-				diags.AddError(
-					"Incompatible Types",
-					"An unexpected error occurred while expanding configuration. "+ // TODO: rephrase
-						"This is always an error in the provider. "+
-						"Please report the following to the provider developer:\n\n"+
-						fmt.Sprintf("Type %q does not implement %q", fullTypeName(fromType), fullTypeName(toType)),
-				)
-				return diags
-			}
-
-			if toType.Kind() == reflect.Struct {
-				vTo.Set(to.Elem())
-			} else {
-				vTo.Set(to)
-			}
-
-			return diags
-		}
-
-		if toType.Kind() == reflect.Struct {
-			to = to.Elem()
-		}
-		fromType := to.Type() // TODO: yeah, this is a bad name
-
-		if !fromType.AssignableTo(toType) {
-			diags.AddError(
-				"Incompatible Types",
-				"An unexpected error occurred while expanding configuration. "+ // TODO: rephrase
-					"This is always an error in the provider. "+
-					"Please report the following to the provider developer:\n\n"+
-					fmt.Sprintf("Type %q cannot be assigned to %q", fullTypeName(fromType), fullTypeName(toType)),
-			)
-			return diags
-		}
-
-		vTo.Set(to)
-
+		diags.Append(expandExpander(ctx, fromExpander, vTo)...)
 		return diags
 	}
 
@@ -943,4 +896,55 @@ func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
 	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
 
 	return reflect.Zero(reflect.TypeOf("")), diags
+}
+
+func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	expanded, d := fromExpander.Expand(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	expandedVal := reflect.ValueOf(expanded)
+
+	targetType := toVal.Type()
+	if targetType.Kind() == reflect.Interface {
+		expandedType := reflect.TypeOf(expanded)
+		if !expandedType.Implements(targetType) {
+			diags.AddError(
+				"Incompatible Types",
+				"An unexpected error occurred while expanding configuration. "+
+					"This is always an error in the provider. "+
+					"Please report the following to the provider developer:\n\n"+
+					fmt.Sprintf("Type %q does not implement %q", fullTypeName(expandedType), fullTypeName(targetType)),
+			)
+			return diags
+		}
+
+		toVal.Set(expandedVal)
+
+		return diags
+	}
+
+	if targetType.Kind() == reflect.Struct {
+		expandedVal = expandedVal.Elem()
+	}
+	expandedType := expandedVal.Type()
+
+	if !expandedType.AssignableTo(targetType) {
+		diags.AddError(
+			"Incompatible Types",
+			"An unexpected error occurred while expanding configuration. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Type %q cannot be assigned to %q", fullTypeName(expandedType), fullTypeName(targetType)),
+		)
+		return diags
+	}
+
+	toVal.Set(expandedVal)
+
+	return diags
 }
