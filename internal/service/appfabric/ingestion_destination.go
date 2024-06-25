@@ -490,7 +490,7 @@ func statusIngestionDestination(ctx context.Context, conn *appfabric.Client, app
 	}
 }
 
-func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string, timeout time.Duration) (*awstypes.IngestionDestination, error) {
+func waitIngestionDestinationActive(ctx context.Context, conn *appfabric.Client, appBundleARN, ingestionARN, arn string, timeout time.Duration) (*awstypes.IngestionDestination, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
 		Target:  enum.Slice(awstypes.IngestionDestinationStatusActive),
