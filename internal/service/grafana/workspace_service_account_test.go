@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
+func TestAccGrafanaWorkspaceServiceAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_grafana_workspace_service_account.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -30,12 +30,12 @@ func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Grafana) },
 		ErrorCheck:               acctest.ErrorCheck(t, grafana.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
+		CheckDestroy:             testAccCheckGrafanaWorkspaceServiceAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceServiceAccountConfig_basic(rName),
+				Config: testAccGrafanaWorkspaceServiceAccountConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
+					testAccCheckGrafanaWorkspaceServiceAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "grafana_role"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
@@ -44,7 +44,7 @@ func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccCheckGrafanaWorkspaceServiceAccountImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -52,7 +52,7 @@ func TestAccWorkspaceServiceAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccWorkspaceServiceAccount_disappears(t *testing.T) {
+func TestAccGrafanaWorkspaceServiceAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.ServiceAccountSummary
 	resourceName := "aws_grafana_workspace_service_account.test"
@@ -67,16 +67,16 @@ func TestAccWorkspaceServiceAccount_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),
+				Config: testAccGrafanaWorkspaceServiceAccountConfig_basic(resourceName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceServiceAccountExists(ctx, resourceName, &v),
+					testAccCheckGrafanaWorkspaceServiceAccountExists(ctx, resourceName, &v),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v *types.ServiceAccountSummary) resource.TestCheckFunc {
+func testAccCheckGrafanaWorkspaceServiceAccountExists(ctx context.Context, n string, v *types.ServiceAccountSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -95,7 +95,7 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckGrafanaWorkspaceServiceAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
 
@@ -121,7 +121,7 @@ func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccCheckGrafanaWorkspaceServiceAccountImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -132,10 +132,10 @@ func testAccCheckWorkspaceServiceAccountImportStateIdFunc(resourceName string) r
 	}
 }
 
-func testAccWorkspaceServiceAccountConfig_basic(rName string) string {
+func testAccGrafanaWorkspaceServiceAccountConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"), fmt.Sprintf(`
 resource "aws_grafana_workspace_service_account" "test" {
-  name = %[1]q
+  name         = %[1]q
   grafana_role = "ADMIN"
   workspace_id = aws_grafana_workspace.test.id
 }
