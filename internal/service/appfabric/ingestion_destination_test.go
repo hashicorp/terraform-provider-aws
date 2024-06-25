@@ -522,6 +522,17 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     role_arn   = aws_iam_role.test.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
+
+  tags = {
+    AWSAppFabricManaged = "placeholder"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to AWSAppFabricManaged tag as API adds this tag when ingestion destination is created
+      tags["AWSAppFabricManaged"],
+    ]
+  }
 }
 `, rName)
 }
