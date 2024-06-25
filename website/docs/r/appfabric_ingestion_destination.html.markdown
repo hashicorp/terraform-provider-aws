@@ -54,7 +54,7 @@ Destination Configuration support the following:
 
 Audit Log Destination Configuration support the following:
 
-* `destination` - (Required) Contains information about an audit log destination. Only one destination (Firehose Stream) or (S3 Bucket) can be specified. 
+* `destination` - (Required) Contains information about an audit log destination. Only one destination (Firehose Stream) or (S3 Bucket) can be specified.
 
 Destination support the following:
 
