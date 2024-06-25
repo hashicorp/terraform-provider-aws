@@ -42,6 +42,13 @@ func TestAccAppFabric_serial(t *testing.T) {
 			acctest.CtDisappears: testAccIngestion_disappears,
 			"tags":               testAccIngestion_tags,
 		},
+		"IngestionDestination": {
+			acctest.CtBasic:      testAccIngestionDestination_basic,
+			acctest.CtDisappears: testAccIngestionDestination_disappears,
+			"tags":               testAccIngestionDestination_tags,
+			"update":             testAccIngestionDestination_update,
+			"firehose":           testAccIngestionDestination_firehose,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, serializeDelay)

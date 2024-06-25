@@ -15,6 +15,7 @@ import (
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -430,6 +431,15 @@ func (r *ingestionDestinationResource) Delete(ctx context.Context, request resou
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for AppFabric Ingestion Destination (%s) delete", data.ID.ValueString()), err.Error())
 
 		return
+	}
+}
+
+func (r *ingestionDestinationResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.AtLeastOneOf(
+			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName("destination").AtListIndex(0).AtName("firehose_stream"),
+			path.MatchRoot("destination_configuration").AtListIndex(0).AtName("audit_log").AtListIndex(0).AtName("destination").AtListIndex(0).AtName("s3_bucket"),
+		),
 	}
 }
 

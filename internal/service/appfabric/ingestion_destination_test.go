@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,167 +19,228 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAppFabricIngestionDestination_basic(t *testing.T) {
+func testAccIngestionDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_appfabric_ingestion_destination.test"
 	var ingestiondestination awstypes.IngestionDestination
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIngestionDestinationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIngestionDestinationConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", "s3-bucket-name"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix", "AuditLog"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"processing_configuration"},
-			},
-		},
-	})
-}
-
-func TestAccAppFabricIngestionDestination_firehose(t *testing.T) {
-	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_ingestion_destination.test"
-	var ingestiondestination awstypes.IngestionDestination
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIngestionDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngestionDestinationConfig_firehose(),
+				Config: testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
+					resource.TestCheckResourceAttrSet(resourceName, "app_bundle_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name", "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"processing_configuration"},
-			},
-		},
-	})
-}
-
-func TestAccAppFabricIngestionDestination_destinationUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_appfabric_ingestion_destination.test"
-	var ingestiondestination awstypes.IngestionDestination
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIngestionDestinationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccIngestionDestinationConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", "s3-bucket-name"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix", "AuditLog"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix"),
+					resource.TestCheckResourceAttrSet(resourceName, "ingestion_arn"),
+					resource.TestCheckResourceAttr(resourceName, "processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.0.format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "processing_configuration.0.audit_log.0.schema", "raw"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"processing_configuration"},
-			},
-			{
-				Config: testAccIngestionDestinationConfig_destinationUpdate(),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name", "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"processing_configuration"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAppFabricIngestionDestination_disappears(t *testing.T) {
+func testAccIngestionDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var ingestiondestination awstypes.IngestionDestination
 	resourceName := "aws_appfabric_ingestion_destination.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIngestionDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIngestionDestinationConfig_basic(),
+				Config: testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceIngestionDestination, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccIngestionDestination_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ingestiondestination awstypes.IngestionDestination
+	resourceName := "aws_appfabric_ingestion_destination.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngestionDestinationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIngestionDestinationConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIngestionDestinationConfig_tags2(rName, tenantID, serviceAccountToken, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccIngestionDestinationConfig_tags1(rName, tenantID, serviceAccountToken, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func testAccIngestionDestination_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ingestiondestination awstypes.IngestionDestination
+	resourceName := "aws_appfabric_ingestion_destination.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngestionDestinationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIngestionDestinationConfig_s3Prefix(rName, tenantID, serviceAccountToken, "testing"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.0.prefix", "testing"),
+				),
+			},
+		},
+	})
+}
+
+func testAccIngestionDestination_firehose(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ingestiondestination awstypes.IngestionDestination
+	resourceName := "aws_appfabric_ingestion_destination.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// See https://docs.aws.amazon.com/appfabric/latest/adminguide/terraform.html#terraform-appfabric-connecting.
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_TENANT_ID")
+	serviceAccountToken := acctest.SkipIfEnvVarNotSet(t, "AWS_APPFABRIC_TERRAFORMCLOUD_SERVICE_ACCOUNT_TOKEN")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIngestionDestinationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIngestionDestinationConfig_firehose(rName, tenantID, serviceAccountToken),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIngestionDestinationExists(ctx, resourceName, &ingestiondestination),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_configuration.0.audit_log.0.destination.0.firehose_stream.0.stream_name"),
+					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.audit_log.0.destination.0.s3_bucket.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -193,7 +255,7 @@ func testAccCheckIngestionDestinationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfappfabric.FindIngestionDestinationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"], rs.Primary.Attributes["ingestion_identifier"])
+			_, err := tfappfabric.FindIngestionDestinationByThreePartKey(ctx, conn, rs.Primary.Attributes["app_bundle_arn"], rs.Primary.Attributes["ingestion_arn"], rs.Primary.Attributes[names.AttrARN])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -219,7 +281,7 @@ func testAccCheckIngestionDestinationExists(ctx context.Context, n string, v *aw
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 
-		output, err := tfappfabric.FindIngestionDestinationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"], rs.Primary.Attributes["ingestion_identifier"])
+		output, err := tfappfabric.FindIngestionDestinationByThreePartKey(ctx, conn, rs.Primary.Attributes["app_bundle_arn"], rs.Primary.Attributes["ingestion_arn"], rs.Primary.Attributes[names.AttrARN])
 
 		if err != nil {
 			return err
@@ -231,16 +293,35 @@ func testAccCheckIngestionDestinationExists(ctx context.Context, n string, v *aw
 	}
 }
 
-func testAccIngestionDestinationConfig_basic() string {
-	return `
+func testAccIngestionDestinationConfig_base(rName, tenantID, serviceAccountToken string) string {
+	return acctest.ConfigCompose(testAccIngestionConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
+resource "aws_appfabric_ingestion" "test" {
+  app            = aws_appfabric_app_authorization_connection.test.app
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  tenant_id      = %[2]q
+  ingestion_type = "auditLog"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, tenantID))
+}
+
+func testAccIngestionDestinationConfig_basic(rName, tenantID, serviceAccountToken string) string {
+	return acctest.ConfigCompose(testAccIngestionDestinationConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
 resource "aws_appfabric_ingestion_destination" "test" {
-  app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
-  ingestion_identifier  = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633/ingestion/8b7895cf-171a-494c-9abb-7170eaed13b5"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  ingestion_arn  = aws_appfabric_ingestion.test.arn
 
   processing_configuration {
     audit_log {
       format = "json"
-      schema = "raw"	
+      schema = "raw"
     }
   }
 
@@ -248,66 +329,229 @@ resource "aws_appfabric_ingestion_destination" "test" {
     audit_log {
       destination {
         s3_bucket {
-          bucket_name = "s3-bucket-name"
-          prefix      = "AuditLog"
+          bucket_name = aws_s3_bucket.test.bucket
         }
       }
     }
   }
 }
-`
+`, rName))
 }
 
-func testAccIngestionDestinationConfig_firehose() string {
-	return `
+func testAccIngestionDestinationConfig_s3Prefix(rName, tenantID, serviceAccountToken, prefix string) string {
+	return acctest.ConfigCompose(testAccIngestionDestinationConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
 resource "aws_appfabric_ingestion_destination" "test" {
-  app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
-  ingestion_identifier  = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633/ingestion/8b7895cf-171a-494c-9abb-7170eaed13b5"
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  ingestion_arn  = aws_appfabric_ingestion.test.arn
+
   processing_configuration {
-	audit_log {
-		format = "json"
-		schema = "ocsf"	
-	}
-  }
-  destination_configuration {
     audit_log {
-		destination {
-			firehose_stream {
-				stream_name = "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"
-			}
-		}
+      format = "json"
+      schema = "raw"
     }
   }
-  tags = {
-    environment = "test"
+
+  destination_configuration {
+    audit_log {
+      destination {
+        s3_bucket {
+          bucket_name = aws_s3_bucket.test.bucket
+          prefix      = %[2]q
+        }
+      }
+    }
   }
 }
-`
+`, rName, prefix))
 }
 
-func testAccIngestionDestinationConfig_destinationUpdate() string {
-	return `
+func testAccIngestionDestinationConfig_tags1(rName, tenantID, serviceAccountToken, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccIngestionDestinationConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
 resource "aws_appfabric_ingestion_destination" "test" {
-	app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
-	ingestion_identifier  = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633/ingestion/8b7895cf-171a-494c-9abb-7170eaed13b5"
-	processing_configuration {
-	audit_log {
-		format = "json"
-		schema = "ocsf"	
-	}
-	}
-	destination_configuration {
-	audit_log {
-		destination {
-			firehose_stream {
-				stream_name = "OpenSearchStack-FirehoseStream-bL4BiszVyNNC"
-			}
-		}
-	}
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  ingestion_arn  = aws_appfabric_ingestion.test.arn
+
+  processing_configuration {
+    audit_log {
+      format = "json"
+      schema = "raw"
+    }
   }
+
+  destination_configuration {
+    audit_log {
+      destination {
+        s3_bucket {
+          bucket_name = aws_s3_bucket.test.bucket
+        }
+      }
+    }
+  }
+
   tags = {
-    environment = "test"
+    %[2]q = %[3]q
   }
 }
-`
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccIngestionDestinationConfig_tags2(rName, tenantID, serviceAccountToken, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccIngestionDestinationConfig_base(rName, tenantID, serviceAccountToken), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_appfabric_ingestion_destination" "test" {
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  ingestion_arn  = aws_appfabric_ingestion.test.arn
+
+  processing_configuration {
+    audit_log {
+      format = "json"
+      schema = "raw"
+    }
+  }
+
+  destination_configuration {
+    audit_log {
+      destination {
+        s3_bucket {
+          bucket_name = aws_s3_bucket.test.bucket
+        }
+      }
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccIngestionDestinationConfig_baseFirehose(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "firehose.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*"
+      ]
+    },
+    {
+      "Sid": "GlueAccess",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTableVersions"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.test]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.test.arn
+    bucket_arn = aws_s3_bucket.test.arn
+  }
+}
+`, rName)
+}
+
+func testAccIngestionDestinationConfig_firehose(rName, tenantID, serviceAccountToken string) string {
+	return acctest.ConfigCompose(testAccIngestionDestinationConfig_base(rName, tenantID, serviceAccountToken), testAccIngestionDestinationConfig_baseFirehose(rName), fmt.Sprintf(`
+resource "aws_appfabric_ingestion_destination" "test" {
+  app_bundle_arn = aws_appfabric_app_bundle.test.arn
+  ingestion_arn  = aws_appfabric_ingestion.test.arn
+
+  processing_configuration {
+    audit_log {
+      format = "json"
+      schema = "raw"
+    }
+  }
+
+  destination_configuration {
+    audit_log {
+      destination {
+        firehose_stream {
+          stream_name = aws_kinesis_firehose_delivery_stream.test.name
+        }
+      }
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
