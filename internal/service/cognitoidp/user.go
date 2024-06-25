@@ -471,7 +471,7 @@ func flattenAttributeTypes(apiObjects []awstypes.AttributeType) map[string]inter
 			if k, v := aws.ToString(apiObject.Name), aws.ToString(apiObject.Value); userAttributeKeyMatchesStandardAttribute(k) {
 				tfMap[k] = v
 			} else {
-				k := strings.TrimPrefix(strings.TrimPrefix(k, userAttributeDevPrefix), userAttributeCustomPrefix)
+				k := strings.TrimPrefix(strings.TrimPrefix(k, attributeDevPrefix), attributeCustomPrefix)
 				tfMap[k] = v
 			}
 		}
@@ -510,13 +510,13 @@ func expandUpdateUserAttributes(oldMap, newMap map[string]interface{}) (map[stri
 }
 
 const (
-	userAttributeCustomPrefix = "custom:"
-	userAttributeDevPrefix    = "dev:"
+	attributeCustomPrefix = "custom:"
+	attributeDevPrefix    = "dev:"
 )
 
 func normalizeUserAttributeKey(k string) string {
-	if !userAttributeKeyMatchesStandardAttribute(k) && !strings.HasPrefix(k, userAttributeCustomPrefix) {
-		return userAttributeCustomPrefix + k
+	if !userAttributeKeyMatchesStandardAttribute(k) && !strings.HasPrefix(k, attributeCustomPrefix) {
+		return attributeCustomPrefix + k
 	}
 
 	return k
