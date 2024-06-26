@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -678,7 +677,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsApplicationID(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIdentityProvider(ctx, t)
-			testAccPreCheckPinpointApp(ctx, t)
+			acctest.PreCheckPinpointApp(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -746,7 +745,7 @@ func TestAccCognitoIDPUserPoolClient_analyticsWithARN(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckIdentityProvider(ctx, t)
-			testAccPreCheckPinpointApp(ctx, t)
+			acctest.PreCheckPinpointApp(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1535,20 +1534,4 @@ resource "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 }
 `, rName))
-}
-
-func testAccPreCheckPinpointApp(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-	input := &pinpoint.GetAppsInput{}
-
-	_, err := conn.GetAppsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
