@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/drs/types"
-	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,13 +20,26 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
+// TestAccDRSReplicationConfigurationTemplate_serial serializes the tests
+// since the account limit tends to be 1.
+func TestAccDRSReplicationConfigurationTemplate_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccReplicationConfigurationTemplate_basic,
+		acctest.CtDisappears: testAccReplicationConfigurationTemplate_disappears,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 5*time.Second)
+}
+
+func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_drs_replication_configuration_template.test"
 	var rct awstypes.ReplicationConfigurationTemplate
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -48,13 +61,27 @@ func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "use_dedicated_replication_server", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replication_server_instance_type", "t3.small"),
 					resource.TestCheckResourceAttr(resourceName, "replication_servers_security_groups_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "staging_area_subnet_id", aws.StringValue(rct.StagingAreaSubnetId)),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy", map[string]string{
-						names.AttrEnabled:    acctest.CtFalse,
-						names.AttrInterval:   "14",
-						"retention_duration": "21",
-						"units":              "DAY",
+					resource.TestCheckResourceAttrPair(resourceName, "staging_area_subnet_id", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy.*", map[string]string{
+						names.AttrEnabled:    acctest.CtTrue,
+						names.AttrInterval:   "10",
+						"retention_duration": "60",
+						"units":              "MINUTE",
 						"rule_id":            acctest.Ct1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy.*", map[string]string{
+						names.AttrEnabled:    acctest.CtTrue,
+						names.AttrInterval:   "1",
+						"retention_duration": "24",
+						"units":              "HOUR",
+						"rule_id":            acctest.Ct2,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy.*", map[string]string{
+						names.AttrEnabled:    acctest.CtTrue,
+						names.AttrInterval:   "1",
+						"retention_duration": "3",
+						"units":              "DAY",
+						"rule_id":            acctest.Ct3,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.Name", rName),
@@ -64,6 +91,30 @@ func TestAccDRSReplicationConfigurationTemplate_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccReplicationConfigurationTemplate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_drs_replication_configuration_template.test"
+	var rct awstypes.ReplicationConfigurationTemplate
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DRSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationConfigurationTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigurationTemplateConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdrs.ResourceReplicationConfigurationTemplate, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -145,11 +196,27 @@ resource "aws_drs_replication_configuration_template" "test" {
   staging_area_subnet_id                  = aws_subnet.test[0].id
 
   pit_policy {
-    enabled            = false
-    interval           = 14
-    retention_duration = 21
-    units              = "DAY"
+    enabled            = true
+    interval           = 10
+    retention_duration = 60
+    units              = "MINUTE"
     rule_id            = 1
+  }
+
+  pit_policy {
+    enabled            = true
+    interval           = 1
+    retention_duration = 24
+    units              = "HOUR"
+    rule_id            = 2
+  }
+
+  pit_policy {
+    enabled            = true
+    interval           = 1
+    retention_duration = 3
+    units              = "DAY"
+    rule_id            = 3
   }
 
   staging_area_tags = {
