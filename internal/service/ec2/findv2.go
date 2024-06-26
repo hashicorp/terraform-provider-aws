@@ -686,6 +686,16 @@ func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Clien
 	return output, nil
 }
 
+func findLocalGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) (*awstypes.LocalGateway, error) {
+	output, err := findLocalGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
 func findLocalGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewaysInput) ([]awstypes.LocalGateway, error) {
 	var output []awstypes.LocalGateway
 
