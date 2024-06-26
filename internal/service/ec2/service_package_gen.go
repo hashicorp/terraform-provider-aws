@@ -195,6 +195,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceLocalGatewayRouteTable,
 			TypeName: "aws_ec2_local_gateway_route_table",
+			Name:     "Local Gateway Route Table",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceLocalGatewayRouteTables,

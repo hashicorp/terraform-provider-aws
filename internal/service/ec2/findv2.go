@@ -652,6 +652,16 @@ func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client
 	return output, nil
 }
 
+func findLocalGatewayRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) (*awstypes.LocalGatewayRouteTable, error) {
+	output, err := findLocalGatewayRouteTables(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
 func findLocalGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTablesInput) ([]awstypes.LocalGatewayRouteTable, error) {
 	var output []awstypes.LocalGatewayRouteTable
 

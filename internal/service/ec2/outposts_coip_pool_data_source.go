@@ -44,7 +44,6 @@ func dataSourceCoIPPool() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 			"pool_id": {
 				Type:     schema.TypeString,
