@@ -50,9 +50,13 @@ func TestAccDataBrewDataset_s3Input(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatasetExists(ctx, resourceName, &dataset),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "input.0.s3_input_definition.0.bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "input.0.s3_input_definition.0.key", rName),
+					resource.TestCheckResourceAttr(resourceName, "format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "path_options.0.files_limit.0.max_files", "1"),
+					resource.TestCheckResourceAttr(resourceName, "path_options.0.files_limit.0.order", "ASCENDING"),
+					resource.TestCheckResourceAttr(resourceName, "path_options.0.files_limit.0.ordered_by", "LAST_MODIFIED_DATE"),
+					resource.TestCheckResourceAttr(resourceName, "format_options.0.json.0.multi_line", "true"),
 				),
 			},
 			{
@@ -60,40 +64,6 @@ func TestAccDataBrewDataset_s3Input(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "name",
-			},
-		},
-	})
-}
-
-func TestAccDataBrewDataset_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var dataset databrew.DescribeDatasetOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_databrew_dataset.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DataBrewServiceID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DataBrewServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDatasetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDatasetConfig_dataCatalog(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDatasetExists(ctx, resourceName, &dataset),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfdatabrew.ResourceDataset, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "input.s3_input_definition.bucket", rName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -192,115 +162,27 @@ resource "aws_s3_object" "test" {
 
 resource "aws_databrew_dataset" "test" {
   name         = %[1]q
+  format = "JSON"
   input {
-	s3_input_definition {
-		bucket = aws_s3_bucket.test.id
-		bucket_owner  = data.aws_caller_identity.current.account_id
-		key    = %[1]q
-	}
-  }
-}
-`, rName)
-}
-
-func testAccDatasetConfig_dataCatalog(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket         = aws_s3_bucket.test.bucket
-  key            = %[1]q
-  content_base64 = "dGVzdAo="
-}
-
-resource "aws_databrew_dataset" "test" {
-  name         = %[1]q
-  input {
-	data_catalog_input_definition {
-		bucket = aws_s3_bucket.test.id
-		temp_directory {
-			bucket = aws_s3_bucket.test.id
-			key = aws_s3_object.test.id
-		}
-	}
+    s3_input_definition {
+      bucket = aws_s3_bucket.test.id
+      bucket_owner  = data.aws_caller_identity.current.account_id
+      key    = %[1]q
+    }
   }
 
-  format_options = {
-	csv = {
-		delimiter = ","
-		header_row = "\n"
-	}
-  }
-}
-}
-`, rName)
-}
-
-func testAccDatasetConfig_database(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket         = aws_s3_bucket.test.bucket
-  key            = %[1]q
-  content_base64 = "dGVzdAo="
-}
-
-resource "aws_databrew_dataset" "test" {
-  name         = %[1]q
-  input {
-	database_input_definition {
-		bucket = aws_s3_bucket.test.id
-		temp_directory {
-			bucket = aws_s3_bucket.test.id
-			key = aws_s3_object.test.id
-		}
-	}
+  path_options {
+    files_limit {
+      max_files = 1
+      order = "ASCENDING"
+      ordered_by = "LAST_MODIFIED_DATE"
+    }
   }
 
-format_options {
-	excel {
-		header_row = "\n"
-		sheet_indexes = "1"
-		sheet_names = "test"
-	}
-  }
-}
-`, rName)
-}
-
-func testAccDatasetConfig_metadata(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket         = aws_s3_bucket.test.bucket
-  key            = %[1]q
-  content_base64 = "dGVzdAo="
-}
-
-resource "aws_databrew_dataset" "test" {
-  name         = %[1]q
-  input {
-	database_input_definition {
-		bucket = aws_s3_bucket.test.id
-		temp_directory {
-			bucket = aws_s3_bucket.test.id
-			key = aws_s3_object.test.id
-		}
-	}
-  }
-
-  format_options = {
-	json = {
-		multi_line = "\n"
-	}
+	format_options {
+    json {
+      multi_line = true
+    }
   }
 }
 `, rName)

@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	debugFlag := flag.Bool("debug", false, "Start provider in debug mode.")
+	debugFlag := flag.Bool("debug", true, "Start provider in debug mode.")
 	flag.Parse()
 
 	serverFactory, _, err := provider.ProtoV5ProviderServerFactory(context.Background())

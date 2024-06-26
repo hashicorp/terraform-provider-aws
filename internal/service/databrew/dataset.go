@@ -6,7 +6,6 @@ package databrew
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	// "github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -16,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/databrew"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/databrew/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	// "github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -37,10 +36,6 @@ import (
 func newResourceDataset(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDataset{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -50,7 +45,6 @@ const (
 
 type resourceDataset struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *resourceDataset) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -58,18 +52,6 @@ func (r *resourceDataset) Metadata(_ context.Context, req resource.MetadataReque
 }
 
 func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	filterType := map[string]attr.Type{
-		"expression": types.StringType,
-		"values_map": types.ListType{
-			ElemType: types.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"Value":          types.StringType,
-					"ValueReference": types.StringType,
-				},
-			},
-		},
-	}
-
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
@@ -80,18 +62,10 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 				CustomType: fwtypes.StringEnumType[awstypes.InputFormat](),
 				Optional:   true,
 			},
-			"tags": schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Description: "Dataset tags",
-			},
+			// TODO: Put tags back
+			// names.AttrTags:    tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 			"format_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[formatOptionsModel](ctx),
 				Validators: []validator.List{
@@ -244,33 +218,9 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"path_options": schema.SetNestedBlock{
-				CustomType: fwtypes.NewSetNestedObjectTypeOf[pathOptionsModel](ctx),
+			"path_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[pathOptionsModel](ctx),
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"parameters": schema.ObjectAttribute{
-							Optional: true,
-							AttributeTypes: map[string]attr.Type{
-								"name":          types.StringType,
-								"type":          types.StringType,
-								"create_column": types.BoolType,
-								"datetime_options": types.ObjectType{
-									AttrTypes: map[string]attr.Type{
-										"format":          types.StringType,
-										"locale_code":     types.StringType,
-										"timezone_offset": types.StringType,
-									},
-								},
-								"filter": types.ObjectType{
-									AttrTypes: filterType,
-								},
-							},
-						},
-						"last_modified_date_condition": schema.ObjectAttribute{
-							Optional:       true,
-							AttributeTypes: filterType,
-						},
-					},
 					Blocks: map[string]schema.Block{
 						"files_limit": schema.SetNestedBlock{
 							NestedObject: schema.NestedBlockObject{
@@ -297,58 +247,56 @@ func (r *resourceDataset) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 func (r *resourceDataset) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().DataBrewClient(ctx)
-
 	var plan resourceDatasetModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().DataBrewClient(ctx)
+
 	in := &databrew.CreateDatasetInput{}
 
-	// planInput, _ := plan.Input.ToPtr(ctx)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
-	// Todo: Test if Expand works
-	// if !plan.Input.IsNull() {
-	// 	in.Input = expandInput(ctx, *planInput)
-	// }
-
-	resp.Diagnostics.Append(flex.Expand(ctx, in, &plan)...)
-	// resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	out, err := conn.CreateDataset(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataBrew, create.ErrActionCreating, ResNameDataset, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.DataBrew, create.ErrActionCreating, "Create Dataset", plan.Name.String(), nil),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil || out.Name == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataBrew, create.ErrActionCreating, ResNameDataset, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+
+	var state resourceDatasetModel
+	dataset, _ := findDatasetByName(ctx, conn, *out.Name)
+
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.Name = flex.StringToFramework(ctx, out.Name)
+	state.ID = flex.StringToFramework(ctx, dataset.Name)
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataset, &state)...)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceDataset) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().DataBrewClient(ctx)
 
-	var state resourceDatasetModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var data resourceDatasetModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findDatasetByName(ctx, conn, state.Name.ValueString())
+	dataset, err := findDatasetByName(ctx, conn, data.Name.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -357,17 +305,36 @@ func (r *resourceDataset) Read(ctx context.Context, req resource.ReadRequest, re
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataBrew, create.ErrActionSetting, ResNameDataset, state.Name.String(), err),
+			create.ProblemStandardMessage(names.DataBrew, create.ErrActionSetting, ResNameDataset, data.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.Name = flex.StringToFramework(ctx, out.Name)
-	state.ID = flex.StringToFramework(ctx, out.Name)
+	input := &inputModel{}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.S3InputDefinition, &input.S3InputDefinition)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.DataCatalogInputDefinition, &input.DataCatalogInputDefinition)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.Metadata, &input.Metadata)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.DatabaseInputDefinition, &input.DatabaseInputDefinition)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// setTagsOut(ctx, dataset.Tags)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourceDataset) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -521,9 +488,7 @@ type jsonFormatOptionsModel struct {
 }
 
 type pathOptionsModel struct {
-	FilesLimit                fwtypes.SetNestedObjectValueOf[filesLimitPathOptionsModel] `tfsdk:"files_limit"`
-	LastModifiedDateCondition fwtypes.SetNestedObjectValueOf[expressionModel]            `tfsdk:"last_modified_date_condition"`
-	Parameters                types.Object                                               `tfsdk:"parameters"`
+	FilesLimit fwtypes.SetNestedObjectValueOf[filesLimitPathOptionsModel] `tfsdk:"files_limit"`
 }
 
 type filesLimitPathOptionsModel struct {
@@ -532,18 +497,11 @@ type filesLimitPathOptionsModel struct {
 	OrderedBy fwtypes.StringEnum[awstypes.OrderedBy] `tfsdk:"ordered_by"`
 }
 
-type expressionModel struct {
-	Expression types.String `tfsdk:"expression"`
-	ValuesMap  types.List   `tfsdk:"values_map"`
-}
-
 type resourceDatasetModel struct {
 	ID            types.String                                        `tfsdk:"id"`
 	Name          types.String                                        `tfsdk:"name"`
 	Format        fwtypes.StringEnum[awstypes.InputFormat]            `tfsdk:"format"`
-	Tags          types.Map                                           `tfsdk:"tags"`
 	Input         fwtypes.ListNestedObjectValueOf[inputModel]         `tfsdk:"input"`
 	FormatOptions fwtypes.ListNestedObjectValueOf[formatOptionsModel] `tfsdk:"format_options"`
-	PathOptions   fwtypes.SetNestedObjectValueOf[pathOptionsModel]    `tfsdk:"path_options"`
-	Timeouts      timeouts.Value                                      `tfsdk:"timeouts"`
+	PathOptions   fwtypes.ListNestedObjectValueOf[pathOptionsModel]   `tfsdk:"path_options"`
 }
