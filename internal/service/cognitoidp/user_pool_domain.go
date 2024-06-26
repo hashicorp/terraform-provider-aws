@@ -198,7 +198,10 @@ func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito User Pool Domain (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitUserPoolDomainDeleted(ctx, conn, d.Id(), 1*time.Minute); err != nil {
+	const (
+		timeout = 1 * time.Minute
+	)
+	if _, err := waitUserPoolDomainDeleted(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Cognito User Pool Domain (%s) delete: %s", d.Id(), err)
 	}
 
@@ -227,7 +230,7 @@ func findUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.Clien
 	// {
 	// 	"DomainDescription": {}
 	// }
-	if output == nil || output.DomainDescription == nil {
+	if output == nil || output.DomainDescription == nil || output.DomainDescription.Status == "" {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
