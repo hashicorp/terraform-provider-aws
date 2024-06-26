@@ -1057,7 +1057,6 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("verification_message_template"); ok {
 			if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
-
 				if d.HasChange("email_verification_message") {
 					v["email_message"] = d.Get("email_verification_message")
 				}
