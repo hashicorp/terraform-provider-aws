@@ -39,6 +39,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	timeUnitsType = fwtypes.StringEnumType[awstypes.TimeUnitsType]()
+)
+
 // @FrameworkResource(name="User Pool Client")
 func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userPoolClientResource{}
@@ -48,6 +52,8 @@ func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure,
 
 type userPoolClientResource struct {
 	framework.ResourceWithConfigure
+	userPoolClientResourceWithImport
+	userPoolClientResourceWithConfigValidators
 }
 
 func (*userPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -55,9 +61,235 @@ func (*userPoolClientResource) Metadata(_ context.Context, request resource.Meta
 }
 
 func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = userPoolClientResourceSchema(ctx)
+}
+
+func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data userPoolClientResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CognitoIDPClient(ctx)
+
+	name := data.ClientName.ValueString()
+	input := &cognitoidentityprovider.CreateUserPoolClientInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := conn.CreateUserPoolClient(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Cognito User Pool Client (%s)", name), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.UserPoolClient, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+}
+
+func (r *userPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data userPoolClientResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CognitoIDPClient(ctx)
+
+	output, err := findUserPoolClientByTwoPartKey(ctx, conn, data.UserPoolID.ValueString(), data.ClientID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito User Pool Client (%s)", data.ClientID.ValueString()), err.Error())
+
+		return
+	}
+
+	// Set attributes for import.
+	// if isDefaultTokenValidityUnits(output.TokenValidityUnits) {
+	// 	output.TokenValidityUnits = nil
+	// }
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new userPoolClientResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CognitoIDPClient(ctx)
+
+	input := &cognitoidentityprovider.UpdateUserPoolClientInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// If removing `token_validity_units`, reset to defaults.
+	// if !old.TokenValidityUnits.IsNull() && new.TokenValidityUnits.IsNull() {
+	// 	input.TokenValidityUnits.AccessToken = awstypes.TimeUnitsTypeHours
+	// 	input.TokenValidityUnits.IdToken = awstypes.TimeUnitsTypeHours
+	// 	input.TokenValidityUnits.RefreshToken = awstypes.TimeUnitsTypeDays
+	// }
+
+	const (
+		timeout = 2 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
+		return conn.UpdateUserPoolClient(ctx, input)
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito User Pool Client (%s)", new.ClientID.ValueString()), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputRaw.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data userPoolClientResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CognitoIDPClient(ctx)
+
+	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
+		names.AttrID:         data.ClientID.ValueString(),
+		names.AttrUserPoolID: data.UserPoolID.ValueString(),
+	})
+
+	_, err := conn.DeleteUserPoolClient(ctx, &cognitoidentityprovider.DeleteUserPoolClientInput{
+		ClientId:   fwflex.StringFromFramework(ctx, data.ClientID),
+		UserPoolId: fwflex.StringFromFramework(ctx, data.UserPoolID),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Cognito User Pool Client (%s)", data.ClientID.ValueString()), err.Error())
+
+		return
+	}
+}
+
+type userPoolClientResourceWithImport struct{}
+
+func (r *userPoolClientResourceWithImport) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	const (
+		separator = "/"
+	)
+	parts := strings.Split(request.ID, separator)
+
+	if len(parts) != 2 {
+		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("unexpected format for ID (%[1]s), expected UserPoolID%[2]sClientID", request.ID, separator))
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), parts[0])...)
+}
+
+type userPoolClientResourceWithConfigValidators struct{}
+
+func (r *userPoolClientResourceWithConfigValidators) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		userPoolClientResourceAccessTokenValidityValidator{
+			userPoolClientResourceValidityValidator{
+				attr:        "access_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
+			},
+		},
+		userPoolClientResourceIDTokenValidityValidator{
+			userPoolClientResourceValidityValidator{
+				attr:        "id_token_validity",
+				min:         5 * time.Minute,
+				max:         24 * time.Hour,
+				defaultUnit: time.Hour,
+			},
+		},
+		userPoolClientResourceRefreshTokenValidityValidator{
+			userPoolClientResourceValidityValidator{
+				attr:        "refresh_token_validity",
+				min:         60 * time.Minute,
+				max:         315360000 * time.Second,
+				defaultUnit: 24 * time.Hour,
+			},
+		},
+	}
+}
+
+func findUserPoolClientByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, clientID string) (*awstypes.UserPoolClientType, error) {
+	input := &cognitoidentityprovider.DescribeUserPoolClientInput{
+		ClientId:   aws.String(clientID),
+		UserPoolId: aws.String(userPoolID),
+	}
+
+	output, err := conn.DescribeUserPoolClient(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.UserPoolClient == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.UserPoolClient, nil
+}
+
+func userPoolClientResourceSchema(ctx context.Context) schema.Schema {
 	timeUnitsType := fwtypes.StringEnumType[awstypes.TimeUnitsType]()
 
-	s := schema.Schema{
+	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
 				Optional: true,
@@ -331,222 +563,6 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 			},
 		},
 	}
-
-	response.Schema = s
-}
-
-func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data userPoolClientResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().CognitoIDPClient(ctx)
-
-	name := data.ClientName.ValueString()
-	input := &cognitoidentityprovider.CreateUserPoolClientInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	output, err := conn.CreateUserPoolClient(ctx, input)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating Cognito User Pool Client (%s)", name), err.Error())
-
-		return
-	}
-
-	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.UserPoolClient, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
-}
-
-func (r *userPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data userPoolClientResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().CognitoIDPClient(ctx)
-
-	output, err := findUserPoolClientByTwoPartKey(ctx, conn, data.UserPoolID.ValueString(), data.ClientID.ValueString())
-
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
-
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito User Pool Client (%s)", data.ClientID.ValueString()), err.Error())
-
-		return
-	}
-
-	// Set attributes for import.
-	// if isDefaultTokenValidityUnits(output.TokenValidityUnits) {
-	// 	output.TokenValidityUnits = nil
-	// }
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
-}
-
-func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new userPoolClientResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().CognitoIDPClient(ctx)
-
-	input := &cognitoidentityprovider.UpdateUserPoolClientInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	// If removing `token_validity_units`, reset to defaults.
-	// if !old.TokenValidityUnits.IsNull() && new.TokenValidityUnits.IsNull() {
-	// 	input.TokenValidityUnits.AccessToken = awstypes.TimeUnitsTypeHours
-	// 	input.TokenValidityUnits.IdToken = awstypes.TimeUnitsTypeHours
-	// 	input.TokenValidityUnits.RefreshToken = awstypes.TimeUnitsTypeDays
-	// }
-
-	const (
-		timeout = 2 * time.Minute
-	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, timeout, func() (interface{}, error) {
-		return conn.UpdateUserPoolClient(ctx, input)
-	})
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Cognito User Pool Client (%s)", new.ClientID.ValueString()), err.Error())
-
-		return
-	}
-
-	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, outputRaw.(*cognitoidentityprovider.UpdateUserPoolClientOutput).UserPoolClient, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
-}
-
-func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data userPoolClientResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().CognitoIDPClient(ctx)
-
-	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
-		names.AttrID:         data.ClientID.ValueString(),
-		names.AttrUserPoolID: data.UserPoolID.ValueString(),
-	})
-
-	_, err := conn.DeleteUserPoolClient(ctx, &cognitoidentityprovider.DeleteUserPoolClientInput{
-		ClientId:   fwflex.StringFromFramework(ctx, data.ClientID),
-		UserPoolId: fwflex.StringFromFramework(ctx, data.UserPoolID),
-	})
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Cognito User Pool Client (%s)", data.ClientID.ValueString()), err.Error())
-
-		return
-	}
-}
-
-func (r *userPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	parts := strings.Split(request.ID, "/")
-	if len(parts) != 2 {
-		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
-		return
-	}
-	userPoolId := parts[0]
-	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrUserPoolID), userPoolId)...)
-}
-
-func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourceUserPoolClientAccessTokenValidityValidator{
-			resourceUserPoolClientValidityValidator{
-				attr:        "access_token_validity",
-				min:         5 * time.Minute,
-				max:         24 * time.Hour,
-				defaultUnit: time.Hour,
-			},
-		},
-		resourceUserPoolClientIDTokenValidityValidator{
-			resourceUserPoolClientValidityValidator{
-				attr:        "id_token_validity",
-				min:         5 * time.Minute,
-				max:         24 * time.Hour,
-				defaultUnit: time.Hour,
-			},
-		},
-		resourceUserPoolClientRefreshTokenValidityValidator{
-			resourceUserPoolClientValidityValidator{
-				attr:        "refresh_token_validity",
-				min:         60 * time.Minute,
-				max:         315360000 * time.Second,
-				defaultUnit: 24 * time.Hour,
-			},
-		},
-	}
-}
-
-func findUserPoolClientByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, clientID string) (*awstypes.UserPoolClientType, error) {
-	input := &cognitoidentityprovider.DescribeUserPoolClientInput{
-		ClientId:   aws.String(clientID),
-		UserPoolId: aws.String(userPoolID),
-	}
-
-	output, err := conn.DescribeUserPoolClient(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.UserPoolClient == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.UserPoolClient, nil
 }
 
 type userPoolClientResourceModel struct {
@@ -600,13 +616,13 @@ func isDefaultTokenValidityUnits(apiObject *awstypes.TokenValidityUnitsType) boo
 		apiObject.RefreshToken == awstypes.TimeUnitsTypeDays
 }
 
-var _ resource.ConfigValidator = &resourceUserPoolClientAccessTokenValidityValidator{}
+var _ resource.ConfigValidator = &userPoolClientResourceAccessTokenValidityValidator{}
 
-type resourceUserPoolClientAccessTokenValidityValidator struct {
-	resourceUserPoolClientValidityValidator
+type userPoolClientResourceAccessTokenValidityValidator struct {
+	userPoolClientResourceValidityValidator
 }
 
-func (v resourceUserPoolClientAccessTokenValidityValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+func (v userPoolClientResourceAccessTokenValidityValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	v.validate(ctx, request, response,
 		func(v userPoolClientResourceModel) types.Int64 {
 			return v.AccessTokenValidity
@@ -617,13 +633,13 @@ func (v resourceUserPoolClientAccessTokenValidityValidator) ValidateResource(ctx
 	)
 }
 
-var _ resource.ConfigValidator = &resourceUserPoolClientIDTokenValidityValidator{}
+var _ resource.ConfigValidator = &userPoolClientResourceIDTokenValidityValidator{}
 
-type resourceUserPoolClientIDTokenValidityValidator struct {
-	resourceUserPoolClientValidityValidator
+type userPoolClientResourceIDTokenValidityValidator struct {
+	userPoolClientResourceValidityValidator
 }
 
-func (v resourceUserPoolClientIDTokenValidityValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+func (v userPoolClientResourceIDTokenValidityValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	v.validate(ctx, request, response,
 		func(v userPoolClientResourceModel) types.Int64 {
 			return v.IDTokenValidity
@@ -634,13 +650,13 @@ func (v resourceUserPoolClientIDTokenValidityValidator) ValidateResource(ctx con
 	)
 }
 
-var _ resource.ConfigValidator = &resourceUserPoolClientRefreshTokenValidityValidator{}
+var _ resource.ConfigValidator = &userPoolClientResourceRefreshTokenValidityValidator{}
 
-type resourceUserPoolClientRefreshTokenValidityValidator struct {
-	resourceUserPoolClientValidityValidator
+type userPoolClientResourceRefreshTokenValidityValidator struct {
+	userPoolClientResourceValidityValidator
 }
 
-func (v resourceUserPoolClientRefreshTokenValidityValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+func (v userPoolClientResourceRefreshTokenValidityValidator) ValidateResource(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
 	v.validate(ctx, request, response,
 		func(v userPoolClientResourceModel) types.Int64 {
 			return v.RefreshTokenValidity
@@ -651,22 +667,22 @@ func (v resourceUserPoolClientRefreshTokenValidityValidator) ValidateResource(ct
 	)
 }
 
-type resourceUserPoolClientValidityValidator struct {
+type userPoolClientResourceValidityValidator struct {
 	min         time.Duration
 	max         time.Duration
 	attr        string
 	defaultUnit time.Duration
 }
 
-func (v resourceUserPoolClientValidityValidator) Description(ctx context.Context) string {
+func (v userPoolClientResourceValidityValidator) Description(ctx context.Context) string {
 	return v.MarkdownDescription(ctx)
 }
 
-func (v resourceUserPoolClientValidityValidator) MarkdownDescription(_ context.Context) string {
+func (v userPoolClientResourceValidityValidator) MarkdownDescription(_ context.Context) string {
 	return fmt.Sprintf("must have a duration between %s and %s", v.min, v.max)
 }
 
-func (v resourceUserPoolClientValidityValidator) validate(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse, valF func(userPoolClientResourceModel) types.Int64, unitF func(*tokenValidityUnitsTypeModel) awstypes.TimeUnitsType) {
+func (v userPoolClientResourceValidityValidator) validate(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse, valF func(userPoolClientResourceModel) types.Int64, unitF func(*tokenValidityUnitsTypeModel) awstypes.TimeUnitsType) {
 	var data userPoolClientResourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -686,8 +702,7 @@ func (v resourceUserPoolClientValidityValidator) validate(ctx context.Context, r
 	}
 
 	var duration time.Duration
-	val := x.ValueInt64()
-	if units == nil {
+	if val := x.ValueInt64(); units == nil {
 		duration = time.Duration(val * int64(v.defaultUnit))
 	} else {
 		switch unitF(units) {

@@ -24,6 +24,7 @@ var (
 	FindRiskConfigurationByTwoPartKey       = findRiskConfigurationByTwoPartKey
 	FindUserByTwoPartKey                    = findUserByTwoPartKey
 	FindUserPoolByID                        = findUserPoolByID
+	FindUserPoolClientByName                = findUserPoolClientByName
 	FindUserPoolClientByTwoPartKey          = findUserPoolClientByTwoPartKey
 	FindUserPoolDomain                      = findUserPoolDomain
 	FindUserPoolUICustomizationByTwoPartKey = findUserPoolUICustomizationByTwoPartKey
