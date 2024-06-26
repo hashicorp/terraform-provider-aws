@@ -66,6 +66,7 @@ const (
 	DeviceFarmEndpointID                 = "devicefarm"
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
+	ELBEndpointID                        = "elasticloadbalancing"
 	EMREndpointID                        = "elasticmapreduce"
 	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"

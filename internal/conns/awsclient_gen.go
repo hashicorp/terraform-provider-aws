@@ -85,6 +85,7 @@ import (
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
+	elasticloadbalancing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
@@ -207,7 +208,6 @@ import (
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
-	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
@@ -621,8 +621,8 @@ func (c *AWSClient) EKSClient(ctx context.Context) *eks_sdkv2.Client {
 	return errs.Must(client[*eks_sdkv2.Client](ctx, c, names.EKS, make(map[string]any)))
 }
 
-func (c *AWSClient) ELBConn(ctx context.Context) *elb_sdkv1.ELB {
-	return errs.Must(conn[*elb_sdkv1.ELB](ctx, c, names.ELB, make(map[string]any)))
+func (c *AWSClient) ELBClient(ctx context.Context) *elasticloadbalancing_sdkv2.Client {
+	return errs.Must(client[*elasticloadbalancing_sdkv2.Client](ctx, c, names.ELB, make(map[string]any)))
 }
 
 func (c *AWSClient) ELBV2Conn(ctx context.Context) *elbv2_sdkv1.ELBV2 {
