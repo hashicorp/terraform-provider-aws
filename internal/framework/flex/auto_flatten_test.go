@@ -23,8 +23,6 @@ import (
 func TestFlatten(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
-
 	testString := "test"
 
 	testARN := "arn:aws:securityhub:us-west-2:1234567890:control/cis-aws-foundations-benchmark/v/1.2.0/1.1" //lintignore:AWSAT003,AWSAT005
@@ -231,12 +229,12 @@ func TestFlatten(t *testing.T) {
 			Source:   &TestFlexAWS05{},
 			Target:   &TestFlexTF18{},
 			WantTarget: &TestFlexTF18{
-				Field1: fwtypes.NewListValueOfNull[types.String](ctx),
-				Field2: fwtypes.NewListValueOfNull[types.String](ctx),
-				Field3: fwtypes.NewSetValueOfNull[types.String](ctx),
-				Field4: fwtypes.NewSetValueOfNull[types.String](ctx),
-				Field5: fwtypes.NewMapValueOfNull[types.String](ctx),
-				Field6: fwtypes.NewMapValueOfNull[types.String](ctx),
+				Field1: fwtypes.NewListValueOfNull[types.String](context.Background()),
+				Field2: fwtypes.NewListValueOfNull[types.String](context.Background()),
+				Field3: fwtypes.NewSetValueOfNull[types.String](context.Background()),
+				Field4: fwtypes.NewSetValueOfNull[types.String](context.Background()),
+				Field5: fwtypes.NewMapValueOfNull[types.String](context.Background()),
+				Field6: fwtypes.NewMapValueOfNull[types.String](context.Background()),
 			},
 		},
 		{
@@ -251,27 +249,27 @@ func TestFlatten(t *testing.T) {
 			},
 			Target: &TestFlexTF18{},
 			WantTarget: &TestFlexTF18{
-				Field1: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+				Field1: fwtypes.NewListValueOfMust[types.String](context.Background(), []attr.Value{
 					types.StringValue("a"),
 					types.StringValue("b"),
 				}),
-				Field2: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{
+				Field2: fwtypes.NewListValueOfMust[types.String](context.Background(), []attr.Value{
 					types.StringValue("a"),
 					types.StringValue("b"),
 				}),
-				Field3: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
+				Field3: fwtypes.NewSetValueOfMust[types.String](context.Background(), []attr.Value{
 					types.StringValue("a"),
 					types.StringValue("b"),
 				}),
-				Field4: fwtypes.NewSetValueOfMust[types.String](ctx, []attr.Value{
+				Field4: fwtypes.NewSetValueOfMust[types.String](context.Background(), []attr.Value{
 					types.StringValue("a"),
 					types.StringValue("b"),
 				}),
-				Field5: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+				Field5: fwtypes.NewMapValueOfMust[types.String](context.Background(), map[string]attr.Value{
 					"A": types.StringValue("a"),
 					"B": types.StringValue("b"),
 				}),
-				Field6: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+				Field6: fwtypes.NewMapValueOfMust[types.String](context.Background(), map[string]attr.Value{
 					"A": types.StringValue("a"),
 					"B": types.StringValue("b"),
 				}),
@@ -284,7 +282,7 @@ func TestFlatten(t *testing.T) {
 			},
 			Target: &TestFlexTF08{},
 			WantTarget: &TestFlexTF08{
-				Field: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF01{
+				Field: fwtypes.NewListNestedObjectValueOfPtrMust(context.Background(), &TestFlexTF01{
 					Field1: types.StringValue("a"),
 				}),
 			},
@@ -375,8 +373,8 @@ func TestFlatten(t *testing.T) {
 			},
 		},
 		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
-			TestName: "resource name prefix",
+			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+			TestName:  "resource name prefix",
 			Source: &TestFlexAWS18{
 				IntentName: aws.String("Ovodoghen"),
 			},
@@ -441,7 +439,7 @@ func TestFlatten(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenGeneric(t *testing.T) {
@@ -766,7 +764,7 @@ func TestFlattenGeneric(t *testing.T) {
 		},
 	}
 
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
@@ -781,7 +779,6 @@ func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
 		Field2 TestEnum
 	}
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
@@ -796,7 +793,7 @@ func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumNull[TestEnum]()},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexNestedBlockWithStringEnum(t *testing.T) {
@@ -839,7 +836,7 @@ func TestFlattenComplexNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field2: zero})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
@@ -885,7 +882,7 @@ func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexSingleNestedBlock(t *testing.T) {
@@ -937,7 +934,7 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
@@ -952,7 +949,6 @@ func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
 		Field2 *float32
 	}
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
@@ -961,7 +957,7 @@ func TestFlattenSimpleNestedBlockWithFloat32(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
@@ -993,7 +989,7 @@ func TestFlattenComplexNestedBlockWithFloat32(t *testing.T) {
 			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
@@ -1008,7 +1004,6 @@ func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
 		Field2 *float64
 	}
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
@@ -1017,7 +1012,7 @@ func TestFlattenSimpleNestedBlockWithFloat64(t *testing.T) {
 			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: types.Float64Value(0.01)},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
@@ -1049,7 +1044,7 @@ func TestFlattenComplexNestedBlockWithFloat64(t *testing.T) {
 			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field1: types.Float64Value(1.11), Field2: types.Float64Value(-2.22)})},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenOptions(t *testing.T) {
@@ -1150,10 +1145,10 @@ func TestFlattenOptions(t *testing.T) {
 			},
 		},
 	}
-	runAutoFlattenTestCases(ctx, t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
-func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
+func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
 	for _, testCase := range testCases {
@@ -1161,12 +1156,12 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
+			ctx := context.Background()
+			if testCase.ContextFn != nil {
+				ctx = testCase.ContextFn(ctx)
 			}
 
-			err := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
+			err := Flatten(ctx, testCase.Source, testCase.Target, testCase.Options...)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {
