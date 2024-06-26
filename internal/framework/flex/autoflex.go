@@ -11,6 +11,7 @@ import (
 
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type ResourcePrefixCtxKey string
@@ -125,6 +126,14 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 
 	if fromExpander, ok := valFrom.Interface().(Expander); ok {
 		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
+		return diags
+	}
+
+	if valTo.Kind() == reflect.Interface {
+		tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]any{
+			"from": valFrom.Type(),
+			"to":   valTo.Kind(),
+		})
 		return diags
 	}
 
