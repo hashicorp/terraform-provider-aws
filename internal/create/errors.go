@@ -53,7 +53,7 @@ func ProblemStandardMessage(service, action, resource, id string, gotError error
 	return fmt.Sprintf("%s %s %s (%s): %s", action, hf, resource, id, gotError)
 }
 
-func AddError(d fwdiag.Diagnostics, service, action, resource, id string, gotError error) {
+func AddError(d *fwdiag.Diagnostics, service, action, resource, id string, gotError error) {
 	d.AddError(
 		ProblemStandardMessage(service, action, resource, id, nil),
 		gotError.Error(),
