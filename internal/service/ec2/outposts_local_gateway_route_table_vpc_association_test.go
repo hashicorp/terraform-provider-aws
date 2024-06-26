@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -119,34 +118,18 @@ func TestAccEC2OutpostsLocalGatewayRouteTableVPCAssociation_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckLocalGatewayRouteTableVPCAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("%s: missing resource ID", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		association, err := tfec2.GetLocalGatewayRouteTableVPCAssociation(ctx, conn, rs.Primary.ID)
+		_, err := tfec2.FindLocalGatewayRouteTableVPCAssociationByID(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if association == nil {
-			return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) not found", rs.Primary.ID)
-		}
-
-		if aws.ToString(association.State) != string(awstypes.RouteTableAssociationStateCodeAssociated) {
-			return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) not in associated state: %s", rs.Primary.ID, aws.ToString(association.State))
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -159,15 +142,17 @@ func testAccCheckLocalGatewayRouteTableVPCAssociationDestroy(ctx context.Context
 				continue
 			}
 
-			association, err := tfec2.GetLocalGatewayRouteTableVPCAssociation(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindLocalGatewayRouteTableVPCAssociationByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if association != nil && aws.ToString(association.State) != string(awstypes.RouteTableAssociationStateCodeDisassociated) {
-				return fmt.Errorf("EC2 Local Gateway Route Table VPC Association (%s) still exists in state: %s", rs.Primary.ID, aws.ToString(association.State))
-			}
+			return fmt.Errorf("EC2 Local Gateway Route Table VPC Association still exists: %s", rs.Primary.ID)
 		}
 
 		return nil

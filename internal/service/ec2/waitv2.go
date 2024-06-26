@@ -1752,21 +1752,15 @@ func waitIPAMScopeDeleted(ctx context.Context, conn *ec2.Client, id string, time
 	return nil, err
 }
 
-const (
-	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Associated
-	LocalGatewayRouteTableVPCAssociationAssociatedTimeout = 5 * time.Minute
-
-	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Disassociated
-	LocalGatewayRouteTableVPCAssociationDisassociatedTimeout = 5 * time.Minute
-)
-
-// waitLocalGatewayRouteTableVPCAssociationAssociated waits for a LocalGatewayRouteTableVpcAssociation to return Associated
-func waitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, conn *ec2.Client, localGatewayRouteTableVpcAssociationID string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+func waitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeAssociating),
 		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeAssociated),
-		Refresh: statusLocalGatewayRouteTableVPCAssociationState(ctx, conn, localGatewayRouteTableVpcAssociationID),
-		Timeout: LocalGatewayRouteTableVPCAssociationAssociatedTimeout,
+		Refresh: statusLocalGatewayRouteTableVPCAssociation(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1778,13 +1772,15 @@ func waitLocalGatewayRouteTableVPCAssociationAssociated(ctx context.Context, con
 	return nil, err
 }
 
-// waitLocalGatewayRouteTableVPCAssociationDisassociated waits for a LocalGatewayRouteTableVpcAssociation to return Disassociated
-func waitLocalGatewayRouteTableVPCAssociationDisassociated(ctx context.Context, conn *ec2.Client, localGatewayRouteTableVpcAssociationID string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+func waitLocalGatewayRouteTableVPCAssociationDisassociated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociating),
-		Target:  enum.Slice(awstypes.RouteTableAssociationStateCodeDisassociated),
-		Refresh: statusLocalGatewayRouteTableVPCAssociationState(ctx, conn, localGatewayRouteTableVpcAssociationID),
-		Timeout: LocalGatewayRouteTableVPCAssociationAssociatedTimeout,
+		Target:  []string{},
+		Refresh: statusLocalGatewayRouteTableVPCAssociation(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -1795,10 +1791,6 @@ func waitLocalGatewayRouteTableVPCAssociationDisassociated(ctx context.Context, 
 
 	return nil, err
 }
-
-const (
-	TransitGatewayIncorrectStateTimeout = 5 * time.Minute
-)
 
 func waitTransitGatewayCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGateway, error) {
 	stateConf := &retry.StateChangeConf{

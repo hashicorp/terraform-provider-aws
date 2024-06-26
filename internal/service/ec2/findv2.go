@@ -679,6 +679,61 @@ func findLocalGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *e
 	return output, nil
 }
 
+func findLocalGatewayRouteTableVPCAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	output, err := findLocalGatewayRouteTableVPCAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayRouteTableVPCAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput) ([]awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	var output []awstypes.LocalGatewayRouteTableVpcAssociation
+
+	pages := ec2.NewDescribeLocalGatewayRouteTableVpcAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayRouteTableVpcAssociations...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteTableVPCAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LocalGatewayRouteTableVpcAssociation, error) {
+	input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
+		LocalGatewayRouteTableVpcAssociationIds: []string{id},
+	}
+
+	output, err := findLocalGatewayRouteTableVPCAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.ToString(output.State); state == string(awstypes.RouteTableAssociationStateCodeDisassociated) {
+		return nil, &retry.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.LocalGatewayRouteTableVpcAssociationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) ([]awstypes.LocalGatewayVirtualInterfaceGroup, error) {
 	var output []awstypes.LocalGatewayVirtualInterfaceGroup
 
