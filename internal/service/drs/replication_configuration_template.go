@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -22,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -61,7 +64,11 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 				Required: true,
 			},
 			"auto_replicate_new_disks": schema.BoolAttribute{
+				Computed: true,
 				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"bandwidth_throttling": schema.Int64Attribute{
 				Required: true,
@@ -152,7 +159,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 	conn := r.Meta().DRSClient(ctx)
 
 	input := &drs.CreateReplicationConfigurationTemplateInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -174,7 +181,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -206,7 +213,7 @@ func (r *replicationConfigurationTemplateResource) Read(ctx context.Context, req
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -230,7 +237,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 	if replicationConfigurationTemplateHasChanges(ctx, new, old) {
 		input := &drs.UpdateReplicationConfigurationTemplateInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -256,7 +263,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+	response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -341,9 +348,7 @@ func findReplicationConfigurationTemplates(ctx context.Context, conn *drs.Client
 }
 
 func findReplicationConfigurationTemplateByID(ctx context.Context, conn *drs.Client, id string) (*awstypes.ReplicationConfigurationTemplate, error) {
-	input := &drs.DescribeReplicationConfigurationTemplatesInput{
-		ReplicationConfigurationTemplateIDs: []string{id},
-	}
+	input := &drs.DescribeReplicationConfigurationTemplatesInput{}
 
 	return findReplicationConfigurationTemplate(ctx, conn, input)
 }
