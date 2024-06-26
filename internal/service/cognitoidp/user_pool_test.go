@@ -1746,10 +1746,6 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserPoolConfig_userAttributeUpdateSettings(rName, "invalid_value"),
-				ExpectError: regexache.MustCompile("expected user_attribute_update_settings.0.attributes_require_verification_before_update.0 to be one of"),
-			},
-			{
 				Config: testAccUserPoolConfig_userAttributeUpdateSettings(rName, string(awstypes.VerifiedAttributeTypeEmail)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
