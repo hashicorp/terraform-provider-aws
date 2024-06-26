@@ -137,6 +137,16 @@ func findCapacityReservationByID(ctx context.Context, conn *ec2.Client, id strin
 	return output, nil
 }
 
+func findCOIPPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) (*awstypes.CoipPool, error) {
+	output, err := findCOIPPools(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
 func findCOIPPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCoipPoolsInput) ([]awstypes.CoipPool, error) {
 	var output []awstypes.CoipPool
 
