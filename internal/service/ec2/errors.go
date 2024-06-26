@@ -66,6 +66,7 @@ const (
 	errCodeInvalidLaunchTemplateIdNotFound                         = "InvalidLaunchTemplateId.NotFound"
 	errCodeInvalidLaunchTemplateIdVersionNotFound                  = "InvalidLaunchTemplateId.VersionNotFound"
 	errCodeInvalidLaunchTemplateNameNotFoundException              = "InvalidLaunchTemplateName.NotFoundException"
+	errCodeInvalidLocalGatewayRouteTableIDNotFound                 = "InvalidLocalGatewayRouteTableID.NotFound"
 	errCodeInvalidLocalGatewayRouteTableVpcAssociationIDNotFound   = "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound"
 	errCodeInvalidNetworkACLEntryNotFound                          = "InvalidNetworkAclEntry.NotFound"
 	errCodeInvalidNetworkACLIDNotFound                             = "InvalidNetworkAclID.NotFound"

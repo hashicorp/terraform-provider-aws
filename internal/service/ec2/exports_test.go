@@ -125,6 +125,7 @@ var (
 	FindInstanceStateByID                                      = findInstanceStateByID
 	FindKeyPairByName                                          = findKeyPairByName
 	FindLaunchTemplateByID                                     = findLaunchTemplateByID
+	FindLocalGatewayRouteByTwoPartKey                          = findLocalGatewayRouteByTwoPartKey
 	FindLocalGatewayRouteTableVPCAssociationByID               = findLocalGatewayRouteTableVPCAssociationByID
 	FindMainRouteTableAssociationByID                          = findMainRouteTableAssociationByID
 	FindNetworkACLByIDV2                                       = findNetworkACLByID

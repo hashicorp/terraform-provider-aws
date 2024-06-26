@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -674,6 +675,67 @@ func findLocalGatewayRouteTables(ctx context.Context, conn *ec2.Client, input *e
 		}
 
 		output = append(output, page.LocalGatewayRouteTables...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRoutes(ctx context.Context, conn *ec2.Client, input *ec2.SearchLocalGatewayRoutesInput) ([]awstypes.LocalGatewayRoute, error) {
+	var output []awstypes.LocalGatewayRoute
+
+	pages := ec2.NewSearchLocalGatewayRoutesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLocalGatewayRouteTableIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Routes...)
+	}
+
+	return output, nil
+}
+
+func findLocalGatewayRouteByTwoPartKey(ctx context.Context, conn *ec2.Client, localGatewayRouteTableID, destinationCIDRBlock string) (*awstypes.LocalGatewayRoute, error) {
+	input := &ec2.SearchLocalGatewayRoutesInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String(names.AttrType),
+				Values: enum.Slice(awstypes.LocalGatewayRouteTypeStatic),
+			},
+		},
+		LocalGatewayRouteTableId: aws.String(localGatewayRouteTableID),
+	}
+
+	localGatewayRoutes, err := findLocalGatewayRoutes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	localGatewayRoutes = tfslices.Filter(localGatewayRoutes, func(v awstypes.LocalGatewayRoute) bool {
+		return aws.ToString(v.DestinationCidrBlock) == destinationCIDRBlock
+	})
+
+	output, err := tfresource.AssertSingleValueResult(localGatewayRoutes)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.LocalGatewayRouteStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
