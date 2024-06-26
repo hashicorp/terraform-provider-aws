@@ -74,14 +74,6 @@ import (
 // Cut and dry functions using well-used patterns, like typical flatteners and
 // expanders, don't need unit testing. However, if they are complex or
 // intricate, they should be unit tested.
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the data source as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// data source name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccAppStreamAppstreamImageDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
@@ -109,7 +101,7 @@ func TestAccAppStreamAppstreamImageDataSource_basic(t *testing.T) {
 				Config: testAccAppstreamImageDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 
-					resource.TestCheckResourceAttrPair(resourceName, "applications.0.#", dataSourceName, "applications"), // this is a list of lists
+					resource.TestCheckResourceAttrPair(resourceName, "applications", dataSourceName, "applications"), // this is a list of lists
 					resource.TestCheckResourceAttrPair(resourceName, "app_stream_agent_version", dataSourceName, "app_stream_agent_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "base_image_arn", dataSourceName, "base_image_arn"),
@@ -123,7 +115,7 @@ func TestAccAppStreamAppstreamImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "platform", dataSourceName, "platform"),
 					resource.TestCheckResourceAttrPair(resourceName, "public_base_image_released_date", dataSourceName, "public_base_image_released_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "state_change_reason.#", dataSourceName, "state_change_reason.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "state_change_reason", dataSourceName, "state_change_reason"),
 					resource.TestCheckResourceAttrPair(resourceName, "visibility", dataSourceName, "visibility"),
 				),
 			},
@@ -144,7 +136,7 @@ func testAccAppstreamImageDataSourceConfig_basic(rName string) string { // , ver
 	data "aws_appstream_image" "test" {
 		arns = "????"
 		max_results = 1
-		names = "???"
+		names = %[2]q
 		type = "PRIVATE"
 	}
 

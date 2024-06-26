@@ -34,6 +34,8 @@ import (
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 	"context"
+	"time"
+	"sort"
 	//"errors"
 
 	//"regexp"
@@ -58,6 +60,7 @@ import (
 	//"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+
 	//"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -79,7 +82,7 @@ import (
 // 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource(name="Describe Images")
+// @FrameworkDataSource(name="Appstream Image")
 func newDataSourceAppstreamImage(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceAppstreamImage{}, nil
 }
@@ -93,9 +96,32 @@ type dataSourceAppstreamImage struct {
 }
 
 func (d *dataSourceAppstreamImage) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_appstream_image" // name would just be aws_appstream_image // dont include action in name
+	resp.TypeName = "aws_appstream_appstream_image"
 }
 
+// TIP: ==== SCHEMA ====
+// In the schema, add each of the arguments and attributes in snake
+// case (e.g., delete_automated_backups).
+// * Alphabetize arguments to make them easier to find.
+// * Do not add a blank line between arguments/attributes.
+//
+// Users can configure argument values while attribute values cannot be
+// configured and are used as output. Arguments have either:
+// Required: true,
+// Optional: true,
+//
+// All attributes will be computed and some arguments. If users will
+// want to read updated information or detect drift for an argument,
+// it should be computed:
+// Computed: true,
+//
+// You will typically find arguments in the input struct
+// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
+// they are only in the input struct (e.g., ModifyDBInstanceInput) for
+// the modify operation.
+//
+// For more about schema options, visit
+// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (d *dataSourceAppstreamImage) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -103,6 +129,9 @@ func (d *dataSourceAppstreamImage) Schema(ctx context.Context, req datasource.Sc
 				CustomType: fwtypes.ARNType,
 				Optional: true, 
 				Computed: true,
+			},
+			names.AttrMostRecent : schema.BoolAttribute {
+				Optional: true,
 			},
 			"applications": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{
@@ -153,7 +182,7 @@ func (d *dataSourceAppstreamImage) Schema(ctx context.Context, req datasource.Sc
 						},
 						"name": schema.StringAttribute{
 							Computed: true,
-						},
+						},						
 						"platforms": schema.ListAttribute{ // help
 							CustomType:  fwtypes.ListOfStringType,
 							ElementType: types.StringType,
@@ -273,7 +302,7 @@ func (d *dataSourceAppstreamImage) Read(ctx context.Context, req datasource.Read
 	
 	// TIP: -- 3. Get information about a resource from AWS
 	//out, err := appstream.DescribeImagesAPIClient.DescribeImages(j, ctx, &h)
-	out,err := conn.DescribeImages(ctx,&describeImagesInput)
+	_,err := conn.DescribeImages(ctx,&describeImagesInput)
 	//out,err := conn.DescribeImages(ctx, conn, data.name.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -298,7 +327,7 @@ func (d *dataSourceAppstreamImage) Read(ctx context.Context, req datasource.Read
 
 	
 	
-	images, findImagesError := findImages(ctx,conn,out,&describeImagesInput)
+	images, findImagesError := findImages(ctx,conn,&describeImagesInput)
 	if findImagesError != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameAppstreamImage, data.Arn.String(), findImagesError),
@@ -309,23 +338,31 @@ func (d *dataSourceAppstreamImage) Read(ctx context.Context, req datasource.Read
 	if len(images) < 1 {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameAppstreamImage, data.Arn.String(), findImagesError),
-			findImagesError.Error(),
+			"Your query returned no results. Please change your search criteria and try again.",
 		)
 		return
 	}
 	if len(images) > 1 {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameAppstreamImage, data.Arn.String(), findImagesError),
-			findImagesError.Error(),
-		)
-		return
+		if names.AttrMostRecent == "false" {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.AppStream, create.ErrActionReading, DSNameAppstreamImage, data.Arn.String(), findImagesError),
+				"Your query returned more than one result. Please try a more specific search criteria, or set `most_recent` attribute to true.",
+			)
+			return
+		}
+		sort.Slice(images, func(i, j int) bool {
+			itime, _ := time.Parse(time.RFC3339, images[i].CreatedTime.Month().String())
+			jtime, _ := time.Parse(time.RFC3339, images[j].CreatedTime.Month().String())
+			return itime.Unix() > jtime.Unix()
+		})
 	}
 	image := images[0]
 	
 	
 	// TIP: -- 6. Set the state
-	resp.Diagnostics.Append(flex.Flatten(ctx,image,&data)...) // create finder for this
+	resp.Diagnostics.Append(flex.Flatten(ctx,image,&data)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 }
 
 
