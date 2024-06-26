@@ -19,6 +19,11 @@ import (
 
 // Expand  = TF -->  AWS
 
+// Expander is implemented by types that customize their expansion
+type Expander interface {
+	Expand(ctx context.Context) (any, diag.Diagnostics)
+}
+
 // Expand "expands" a resource's "business logic" data structure,
 // implemented using Terraform Plugin Framework data types, into
 // an AWS SDK for Go v2 API data structure.
@@ -764,10 +769,6 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 	}
 
 	return diags
-}
-
-type Expander interface {
-	Expand(ctx context.Context) (any, diag.Diagnostics)
 }
 
 // nestedObjectToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
