@@ -1468,7 +1468,8 @@ func domainErrorRetryable(err error) (bool, error) {
 		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet"),
 		tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error"),
 		tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe"),
-		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe"):
+		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "A change/update is in progress"):
 		return true, err
 
 	default:
