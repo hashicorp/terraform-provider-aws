@@ -512,7 +512,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	listenerARN := d.Get("listener_arn").(string)
 	input := &elasticloadbalancingv2.CreateRuleInput{
 		ListenerArn: aws.String(listenerARN),
-		Tags:        getTagsInV2(ctx),
+		Tags:        getTagsIn(ctx),
 	}
 
 	input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
@@ -543,8 +543,8 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.ToString(output.Rules[0].RuleArn))
 
 	// Post-create tagging supported in some partitions
-	if tags := getTagsInV2(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTagsV2(ctx, conn, d.Id(), tags)
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
