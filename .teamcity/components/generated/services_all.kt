@@ -158,6 +158,7 @@ val services = mapOf(
     "neptunegraph" to ServiceSpec("Neptune Analytics"),
     "networkfirewall" to ServiceSpec("Network Firewall", vpcLock = true),
     "networkmanager" to ServiceSpec("Network Manager", vpcLock = true),
+    "networkmonitor" to ServiceSpec("CloudWatch Network Monitor"),
     "oam" to ServiceSpec("CloudWatch Observability Access Manager"),
     "opensearch" to ServiceSpec("OpenSearch", vpcLock = true),
     "opensearchserverless" to ServiceSpec("OpenSearch Serverless"),

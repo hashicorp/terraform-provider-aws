@@ -317,7 +317,12 @@ func sqliMatchStatementSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchSchema(),
+				"field_to_match": fieldToMatchSchema(),
+				"sensitivity_level": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
+				},
 				"text_transformation": textTransformationSchema(),
 			},
 		},

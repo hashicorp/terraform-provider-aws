@@ -1033,7 +1033,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_route_table_association",
 		},
 		{
-			Factory:  ResourceSecurityGroup,
+			Factory:  resourceSecurityGroup,
 			TypeName: "aws_security_group",
 			Name:     "Security Group",
 			Tags: &types.ServicePackageResourceTags{
