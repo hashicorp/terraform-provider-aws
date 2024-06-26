@@ -8,7 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -57,12 +59,12 @@ func ResourceTargetGroupAttachment() *schema.Resource {
 
 func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	targetGroupARN := d.Get("target_group_arn").(string)
-	input := &elbv2.RegisterTargetsInput{
+	input := &elasticloadbalancingv2.RegisterTargetsInput{
 		TargetGroupArn: aws.String(targetGroupARN),
-		Targets: []*elbv2.TargetDescription{{
+		Targets: []awstypes.TargetDescription{{
 			Id: aws.String(d.Get("target_id").(string)),
 		}},
 	}
@@ -72,11 +74,11 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
-		input.Targets[0].Port = aws.Int64(int64(v.(int)))
+		input.Targets[0].Port = aws.Int32(int32(v.(int)))
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
-		return conn.RegisterTargetsWithContext(ctx, input)
+		return conn.RegisterTargets(ctx, input)
 	}, elbv2.ErrCodeInvalidTargetException)
 
 	if err != nil {
@@ -93,12 +95,12 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 // target, so there is no work to do beyond ensuring that the target and group still exist.
 func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	targetGroupARN := d.Get("target_group_arn").(string)
-	input := &elbv2.DescribeTargetHealthInput{
+	input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 		TargetGroupArn: aws.String(targetGroupARN),
-		Targets: []*elbv2.TargetDescription{{
+		Targets: []awstypes.TargetDescription{{
 			Id: aws.String(d.Get("target_id").(string)),
 		}},
 	}
@@ -108,7 +110,7 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
-		input.Targets[0].Port = aws.Int64(int64(v.(int)))
+		input.Targets[0].Port = aws.Int32(int32(v.(int)))
 	}
 
 	_, err := FindTargetHealthDescription(ctx, conn, input)
@@ -128,12 +130,12 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	targetGroupARN := d.Get("target_group_arn").(string)
-	input := &elbv2.DeregisterTargetsInput{
+	input := &elasticloadbalancingv2.DeregisterTargetsInput{
 		TargetGroupArn: aws.String(targetGroupARN),
-		Targets: []*elbv2.TargetDescription{{
+		Targets: []awstypes.TargetDescription{{
 			Id: aws.String(d.Get("target_id").(string)),
 		}},
 	}
@@ -143,11 +145,11 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk(names.AttrPort); ok {
-		input.Targets[0].Port = aws.Int64(int64(v.(int)))
+		input.Targets[0].Port = aws.Int32(int32(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Deleting ELBv2 Target Group Attachment: %s", d.Id())
-	_, err := conn.DeregisterTargetsWithContext(ctx, input)
+	_, err := conn.DeregisterTargets(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 		return diags
@@ -160,14 +162,14 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindTargetHealthDescription(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput) (*elbv2.TargetHealthDescription, error) {
-	output, err := findTargetHealthDescriptions(ctx, conn, input, func(v *elbv2.TargetHealthDescription) bool {
+func FindTargetHealthDescription(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput) (*awstypes.TargetHealthDescription, error) {
+	output, err := findTargetHealthDescriptions(ctx, conn, input, func(v awstypes.TargetHealthDescription) bool {
 		// This will catch targets being removed by hand (draining as we plan) or that have been removed for a while
 		// without trying to re-create ones that are just not in use. For example, a target can be `unused` if the
 		// target group isnt assigned to anything, a scenario where we don't want to continuously recreate the resource.
 		if v := v.TargetHealth; v != nil {
-			switch reason := aws.StringValue(v.Reason); reason {
-			case elbv2.TargetHealthReasonEnumTargetDeregistrationInProgress, elbv2.TargetHealthReasonEnumTargetNotRegistered:
+			switch v.Reason {
+			case awstypes.TargetHealthReasonEnumDeregistrationInProgress, awstypes.TargetHealthReasonEnumNotRegistered:
 				return false
 			default:
 				return true
@@ -181,13 +183,13 @@ func FindTargetHealthDescription(ctx context.Context, conn *elbv2.ELBV2, input *
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSinglePtrResult(tfslices.ToPointers(output))
 }
 
-func findTargetHealthDescriptions(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetHealthInput, filter tfslices.Predicate[*elbv2.TargetHealthDescription]) ([]*elbv2.TargetHealthDescription, error) {
-	var targetHealthDescriptions []*elbv2.TargetHealthDescription
+func findTargetHealthDescriptions(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeTargetHealthInput, filter tfslices.Predicate[awstypes.TargetHealthDescription]) ([]awstypes.TargetHealthDescription, error) {
+	var targetHealthDescriptions []awstypes.TargetHealthDescription
 
-	output, err := conn.DescribeTargetHealthWithContext(ctx, input)
+	output, err := conn.DescribeTargetHealth(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException, elbv2.ErrCodeTargetGroupNotFoundException) {
 		return nil, &retry.NotFoundError{
@@ -205,7 +207,7 @@ func findTargetHealthDescriptions(ctx context.Context, conn *elbv2.ELBV2, input 
 	}
 
 	for _, v := range output.TargetHealthDescriptions {
-		if v != nil && filter(v) {
+		if filter(v) {
 			targetHealthDescriptions = append(targetHealthDescriptions, v)
 		}
 	}
