@@ -543,7 +543,7 @@ func (r *managedUserPoolClientResource) Read(ctx context.Context, request resour
 
 	conn := r.Meta().CognitoIDPConn(ctx)
 
-	poolClient, err := FindCognitoUserPoolClientByID(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
+	poolClient, err := FindUserPoolClientByTwoPartKey(ctx, conn, state.UserPoolID.ValueString(), state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, state.ID.ValueString())
 		response.State.RemoveResource(ctx)
