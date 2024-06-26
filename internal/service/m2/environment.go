@@ -606,10 +606,9 @@ type storageConfigurationModel struct {
 	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
 }
 
-func (m storageConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if !m.EFS.IsNull() {
+func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
+	switch {
+	case !m.EFS.IsNull():
 		efsStorageConfigurationData, d := m.EFS.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
@@ -623,9 +622,8 @@ func (m storageConfigurationModel) Expand(ctx context.Context) (any, diag.Diagno
 		}
 
 		return &r, diags
-	}
 
-	if !m.FSX.IsNull() {
+	case !m.FSX.IsNull():
 		fsxStorageConfigurationData, d := m.FSX.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {

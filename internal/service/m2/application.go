@@ -615,17 +615,17 @@ var (
 )
 
 func (m definitionModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	if !m.Content.IsNull() {
-		return &awstypes.DefinitionMemberContent{
+	switch {
+	case !m.Content.IsNull():
+		result = &awstypes.DefinitionMemberContent{
 			Value: m.Content.ValueString(),
-		}, diags
-	}
+		}
 
-	if !m.S3Location.IsNull() {
-		return &awstypes.DefinitionMemberS3Location{
+	case !m.S3Location.IsNull():
+		result = &awstypes.DefinitionMemberS3Location{
 			Value: m.S3Location.ValueString(),
-		}, diags
+		}
 	}
 
-	return nil, diags
+	return result, diags
 }
