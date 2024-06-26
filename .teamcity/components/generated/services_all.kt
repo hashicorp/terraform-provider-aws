@@ -27,7 +27,7 @@ val services = mapOf(
     "backup" to ServiceSpec("Backup"),
     "batch" to ServiceSpec("Batch", vpcLock = true),
     "bcmdataexports" to ServiceSpec("BCM Data Exports"),
-    "bedrock" to ServiceSpec("Amazon Bedrock"),
+    "bedrock" to ServiceSpec("Bedrock"),
     "bedrockagent" to ServiceSpec("Agents for Amazon Bedrock"),
     "budgets" to ServiceSpec("Web Services Budgets"),
     "ce" to ServiceSpec("CE (Cost Explorer)"),
