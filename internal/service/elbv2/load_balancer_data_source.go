@@ -8,9 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -217,17 +217,18 @@ func DataSourceLoadBalancer() *schema.Resource {
 
 func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	input := &elbv2.DescribeLoadBalancersInput{}
+	input := &elasticloadbalancingv2.DescribeLoadBalancersInput{}
 
 	if v, ok := d.GetOk(names.AttrARN); ok {
-		input.LoadBalancerArns = aws.StringSlice([]string{v.(string)})
+		input.LoadBalancerArns = []string{v.(string)}
 	} else if v, ok := d.GetOk(names.AttrName); ok {
-		input.Names = aws.StringSlice([]string{v.(string)})
+		input.Names = []string{v.(string)}
 	}
 
 	results, err := findLoadBalancers(ctx, conn, input)
@@ -237,13 +238,13 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if len(tagsToMatch) > 0 {
-		var loadBalancers []*elbv2.LoadBalancer
+		var loadBalancers []awstypes.LoadBalancer
 
 		for _, loadBalancer := range results {
-			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
+			arn := aws.ToString(loadBalancer.LoadBalancerArn)
 			tags, err := listTags(ctx, conn, arn)
 
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+			if errs.IsA[*awstypes.LoadBalancerNotFoundException](err) {
 				continue
 			}
 
@@ -266,7 +267,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	lb := results[0]
-	d.SetId(aws.StringValue(lb.LoadBalancerArn))
+	d.SetId(aws.ToString(lb.LoadBalancerArn))
 	d.Set(names.AttrARN, lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
@@ -274,9 +275,9 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	d.Set(names.AttrName, lb.LoadBalancerName)
-	d.Set("internal", aws.StringValue(lb.Scheme) == "internal")
+	d.Set("internal", string(lb.Scheme) == "internal")
 	d.Set("load_balancer_type", lb.Type)
-	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(lb.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, lb.SecurityGroups)
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
@@ -304,7 +305,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	tags, err := listTags(ctx, conn, d.Id())
 
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer (%s): %s", d.Id(), err)
 		return diags
 	}
