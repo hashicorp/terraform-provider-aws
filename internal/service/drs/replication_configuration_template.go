@@ -350,7 +350,7 @@ func findReplicationConfigurationTemplates(ctx context.Context, conn *drs.Client
 
 func findReplicationConfigurationTemplateByID(ctx context.Context, conn *drs.Client, id string) (*awstypes.ReplicationConfigurationTemplate, error) {
 	input := &drs.DescribeReplicationConfigurationTemplatesInput{
-		//ReplicationConfigurationTemplateIDs: []string{id},
+		//ReplicationConfigurationTemplateIDs: []string{id}, // Uncomment when SDK supports this, currently MAX of 1 so you find it anyway
 	}
 
 	return findReplicationConfigurationTemplate(ctx, conn, input)
