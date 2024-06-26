@@ -24,6 +24,7 @@ import (
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -976,6 +977,26 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 		if curr := Partition(); curr == partition {
 			t.Skipf("skipping tests; current partition (%s) not supported", curr)
 		}
+	}
+}
+
+func PreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
+
+	input := &cognitoidentityprovider.ListUserPoolsInput{
+		MaxResults: aws.Int32(1),
+	}
+
+	_, err := conn.ListUserPools(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
