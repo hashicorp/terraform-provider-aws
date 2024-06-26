@@ -907,6 +907,18 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 		return diags
 	}
 
+	if expanded == nil {
+		expanderType := reflect.TypeOf(fromExpander)
+		diags.AddError(
+			"Incompatible Types",
+			"An unexpected error occurred while expanding configuration. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				fmt.Sprintf("Expanding %q returned nil.", fullTypeName(expanderType)),
+		)
+		return diags
+	}
+
 	expandedVal := reflect.ValueOf(expanded)
 
 	targetType := toVal.Type()
@@ -918,7 +930,7 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 				"An unexpected error occurred while expanding configuration. "+
 					"This is always an error in the provider. "+
 					"Please report the following to the provider developer:\n\n"+
-					fmt.Sprintf("Type %q does not implement %q", fullTypeName(expandedType), fullTypeName(targetType)),
+					fmt.Sprintf("Type %q does not implement %q.", fullTypeName(expandedType), fullTypeName(targetType)),
 			)
 			return diags
 		}
@@ -939,7 +951,7 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 			"An unexpected error occurred while expanding configuration. "+
 				"This is always an error in the provider. "+
 				"Please report the following to the provider developer:\n\n"+
-				fmt.Sprintf("Type %q cannot be assigned to %q", fullTypeName(expandedType), fullTypeName(targetType)),
+				fmt.Sprintf("Type %q cannot be assigned to %q.", fullTypeName(expandedType), fullTypeName(targetType)),
 		)
 		return diags
 	}

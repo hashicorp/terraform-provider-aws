@@ -446,6 +446,16 @@ func (t testFlexTFExpanderToString) Expand(ctx context.Context) (any, diag.Diagn
 	return t.Field1.ValueString(), nil
 }
 
+type testFlexTFExpanderToNil struct {
+	Field1 types.String `tfsdk:"field1"`
+}
+
+var _ Expander = testFlexTFExpanderToNil{}
+
+func (t testFlexTFExpanderToNil) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return nil, nil
+}
+
 type testFlexAWSExpander struct {
 	AWSField string
 }
