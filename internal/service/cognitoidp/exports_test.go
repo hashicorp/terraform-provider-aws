@@ -25,5 +25,6 @@ var (
 	FindUserByTwoPartKey                    = findUserByTwoPartKey
 	FindUserPoolByID                        = findUserPoolByID
 	FindUserPoolClientByTwoPartKey          = findUserPoolClientByTwoPartKey
+	FindUserPoolDomain                      = findUserPoolDomain
 	FindUserPoolUICustomizationByTwoPartKey = findUserPoolUICustomizationByTwoPartKey
 )
