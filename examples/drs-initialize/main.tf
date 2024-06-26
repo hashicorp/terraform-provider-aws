@@ -1,6 +1,10 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
+terraform {
+  required_version = ">= 1.0"
+}
+
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "AWSElasticDisasterRecoveryAgentRole" {
