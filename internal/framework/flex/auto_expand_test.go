@@ -25,8 +25,6 @@ import (
 func TestExpand(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
-
 	testString := "test"
 	testStringResult := "a"
 
@@ -276,8 +274,8 @@ func TestExpand(t *testing.T) {
 			},
 		},
 		{
-			Context:  context.WithValue(ctx, ResourcePrefix, "Intent"),
-			TestName: "resource name prefix",
+			ContextFn: func(ctx context.Context) context.Context { return context.WithValue(ctx, ResourcePrefix, "Intent") },
+			TestName:  "resource name prefix",
 			Source: &TestFlexTF16{
 				Name: types.StringValue("Ovodoghen"),
 			},
@@ -332,7 +330,7 @@ func TestExpand(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandGeneric(t *testing.T) {
@@ -684,7 +682,7 @@ func TestExpandGeneric(t *testing.T) {
 		},
 	}
 
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandSimpleSingleNestedBlock(t *testing.T) {
@@ -730,7 +728,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandComplexSingleNestedBlock(t *testing.T) {
@@ -781,7 +779,7 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws03{Field1: &aws02{Field1: &aws01{Field1: true, Field2: []string{"a", "b"}}}},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandStringEnum(t *testing.T) {
@@ -790,7 +788,6 @@ func TestExpandStringEnum(t *testing.T) {
 	var testEnum TestEnum
 	testEnumList := TestEnumList
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "valid value",
@@ -805,13 +802,12 @@ func TestExpandStringEnum(t *testing.T) {
 			WantTarget: &testEnum,
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandListOfInt64(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName: "valid value []int64",
@@ -898,13 +894,12 @@ func TestExpandListOfInt64(t *testing.T) {
 			WantTarget: &[]*int32{},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandSetOfInt64(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName: "valid value []int64",
@@ -991,7 +986,7 @@ func TestExpandSetOfInt64(t *testing.T) {
 			WantTarget: &[]*int32{},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandListOfStringEnum(t *testing.T) {
@@ -1001,7 +996,6 @@ func TestExpandListOfStringEnum(t *testing.T) {
 	var testEnumFoo testEnum = "foo"
 	var testEnumBar testEnum = "bar"
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName: "valid value",
@@ -1025,7 +1019,7 @@ func TestExpandListOfStringEnum(t *testing.T) {
 			WantTarget: &[]testEnum{},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandSetOfStringEnum(t *testing.T) {
@@ -1035,7 +1029,6 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 	var testEnumFoo testEnum = "foo"
 	var testEnumBar testEnum = "bar"
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName: "valid value",
@@ -1059,7 +1052,7 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 			WantTarget: &[]testEnum{},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
@@ -1074,7 +1067,6 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 		Field2 TestEnum
 	}
 
-	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
@@ -1089,7 +1081,7 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &aws01{Field1: 1, Field2: ""},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
@@ -1125,7 +1117,7 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 			WantTarget: &aws01{Field1: 1, Field2: &aws02{Field2: ""}},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 func TestExpandOptions(t *testing.T) {
@@ -1206,11 +1198,11 @@ func TestExpandOptions(t *testing.T) {
 			},
 		},
 	}
-	runAutoExpandTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(t, testCases)
 }
 
 type autoFlexTestCase struct {
-	Context          context.Context //nolint:containedctx // testing context use
+	ContextFn        func(context.Context) context.Context
 	Options          []AutoFlexOptionsFunc
 	TestName         string
 	Source           any
@@ -1223,7 +1215,7 @@ type autoFlexTestCase struct {
 
 type autoFlexTestCases []autoFlexTestCase
 
-func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
+func runAutoExpandTestCases(t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
 	for _, testCase := range testCases {
@@ -1231,15 +1223,15 @@ func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFle
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
+			ctx := context.Background()
+			if testCase.ContextFn != nil {
+				ctx = testCase.ContextFn(ctx)
 			}
 
 			var buf bytes.Buffer
-			testCtx = tflogtest.RootLogger(testCtx, &buf)
+			ctx = tflogtest.RootLogger(ctx, &buf)
 
-			diags := Expand(testCtx, testCase.Source, testCase.Target, testCase.Options...)
+			diags := Expand(ctx, testCase.Source, testCase.Target, testCase.Options...)
 
 			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
