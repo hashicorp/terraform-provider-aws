@@ -39,10 +39,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var (
-	timeUnitsType = fwtypes.StringEnumType[awstypes.TimeUnitsType]()
-)
-
 // @FrameworkResource(name="User Pool Client")
 func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userPoolClientResource{}
