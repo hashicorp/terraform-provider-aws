@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,24 +19,24 @@ import (
 // listTags lists elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string) (tftags.KeyValueTags, error) {
-	input := &elbv2.DescribeTagsInput{
-		ResourceArns: aws.StringSlice([]string{identifier}),
+func listTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identifier string, optFns ...func(*elasticloadbalancingv2.Options)) (tftags.KeyValueTags, error) {
+	input := &elasticloadbalancingv2.DescribeTagsInput{
+		ResourceArns: []string{identifier},
 	}
 
-	output, err := conn.DescribeTagsWithContext(ctx, input)
+	output, err := conn.DescribeTags(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return keyValueTags(ctx, output.TagDescriptions[0].Tags), nil
+	return KeyValueTags(ctx, output.TagDescriptions[0].Tags), nil
 }
 
 // ListTags lists elbv2 service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).ELBV2Conn(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ELBV2Client(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -51,12 +51,12 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 
 // []*SERVICE.Tag handling
 
-// tags returns elbv2 service tags.
-func tags(tags tftags.KeyValueTags) []*elbv2.Tag {
-	result := make([]*elbv2.Tag, 0, len(tags))
+// Tags returns elbv2 service tags.
+func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &elbv2.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -67,12 +67,12 @@ func tags(tags tftags.KeyValueTags) []*elbv2.Tag {
 	return result
 }
 
-// keyValueTags creates tftags.KeyValueTags from elbv2 service tags.
-func keyValueTags(ctx context.Context, tags []*elbv2.Tag) tftags.KeyValueTags {
+// KeyValueTags creates tftags.KeyValueTags from elasticloadbalancingv2 service tags.
+func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -80,9 +80,9 @@ func keyValueTags(ctx context.Context, tags []*elbv2.Tag) tftags.KeyValueTags {
 
 // getTagsIn returns elbv2 service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*elbv2.Tag {
+func getTagsIn(ctx context.Context) []awstypes.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -91,25 +91,25 @@ func getTagsIn(ctx context.Context) []*elbv2.Tag {
 }
 
 // setTagsOut sets elbv2 service tags in Context.
-func setTagsOut(ctx context.Context, tags []*elbv2.Tag) {
+func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(keyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
 // createTags creates elbv2 service tags for new resources.
-func createTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string, tags []*elbv2.Tag) error {
+func createTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identifier string, tags []awstypes.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
 // updateTags updates elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *elasticloadbalancingv2.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*elasticloadbalancingv2.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -118,12 +118,12 @@ func updateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ELBV2)
 	if len(removedTags) > 0 {
-		input := &elbv2.RemoveTagsInput{
-			ResourceArns: aws.StringSlice([]string{identifier}),
-			TagKeys:      aws.StringSlice(removedTags.Keys()),
+		input := &elasticloadbalancingv2.RemoveTagsInput{
+			ResourceArns: []string{identifier},
+			TagKeys:      removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTagsWithContext(ctx, input)
+		_, err := conn.RemoveTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -133,12 +133,12 @@ func updateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.ELBV2)
 	if len(updatedTags) > 0 {
-		input := &elbv2.AddTagsInput{
-			ResourceArns: aws.StringSlice([]string{identifier}),
-			Tags:         tags(updatedTags),
+		input := &elasticloadbalancingv2.AddTagsInput{
+			ResourceArns: []string{identifier},
+			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsWithContext(ctx, input)
+		_, err := conn.AddTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -151,5 +151,5 @@ func updateTags(ctx context.Context, conn elbv2iface.ELBV2API, identifier string
 // UpdateTags updates elbv2 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).ELBV2Conn(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).ELBV2Client(ctx), identifier, oldTags, newTags)
 }
