@@ -6,12 +6,13 @@ package elbv2
 import (
 	"context"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -107,8 +108,8 @@ func DataSourceHostedZoneID() *schema.Resource {
 			"load_balancer_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      elbv2.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice([]string{elbv2.LoadBalancerTypeEnumApplication, elbv2.LoadBalancerTypeEnumNetwork}, false),
+				Default:      awstypes.LoadBalancerTypeEnumApplication,
+				ValidateFunc: validation.StringInSlice(enum.Slice[awstypes.LoadBalancerTypeEnum](awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork), false),
 			},
 		},
 	}
@@ -121,18 +122,18 @@ func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, met
 		region = v.(string)
 	}
 
-	lbType := elbv2.LoadBalancerTypeEnumApplication
+	lbType := awstypes.LoadBalancerTypeEnumApplication
 	if v, ok := d.GetOk("load_balancer_type"); ok {
-		lbType = v.(string)
+		lbType = awstypes.LoadBalancerTypeEnum(v.(string))
 	}
 
-	if lbType == elbv2.LoadBalancerTypeEnumApplication {
+	if lbType == awstypes.LoadBalancerTypeEnumApplication {
 		if zoneId, ok := HostedZoneIdPerRegionALBMap[region]; ok {
 			d.SetId(zoneId)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
 		}
-	} else if lbType == elbv2.LoadBalancerTypeEnumNetwork {
+	} else if lbType == awstypes.LoadBalancerTypeEnumNetwork {
 		if zoneId, ok := HostedZoneIdPerRegionNLBMap[region]; ok {
 			d.SetId(zoneId)
 		} else {
