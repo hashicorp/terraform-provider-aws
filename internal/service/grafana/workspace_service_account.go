@@ -164,7 +164,6 @@ func (r *resourceWorkspaceServiceAccount) Delete(ctx context.Context, req resour
 }
 
 func (r *resourceWorkspaceServiceAccount) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-
 	const (
 		partCount = 3
 	)
