@@ -6,7 +6,8 @@ package elbv2
 import (
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const (
@@ -203,11 +204,11 @@ const (
 )
 
 func healthCheckProtocolEnumValues() []string {
-	return []string{
-		elbv2.ProtocolEnumHttp,
-		elbv2.ProtocolEnumHttps,
-		elbv2.ProtocolEnumTcp,
-	}
+	return enum.Slice[awstypes.ProtocolEnum](
+		awstypes.ProtocolEnumHttp,
+		awstypes.ProtocolEnumHttps,
+		awstypes.ProtocolEnumTcp,
+	)
 }
 
 const (
