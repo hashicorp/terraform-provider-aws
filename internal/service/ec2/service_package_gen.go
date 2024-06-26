@@ -158,6 +158,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceCoIPPools,
 			TypeName: "aws_ec2_coip_pools",
+			Name:     "COIP Pools",
 		},
 		{
 			Factory:  dataSourceHost,

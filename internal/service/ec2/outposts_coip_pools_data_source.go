@@ -9,15 +9,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_coip_pools")
+// @SDKDataSource("aws_ec2_coip_pools", name="COIP Pools")
 func dataSourceCoIPPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCoIPPoolsRead,
@@ -33,7 +35,7 @@ func dataSourceCoIPPools() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -62,14 +64,10 @@ func dataSourceCoIPPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EC2 COIP Pools: %s", err)
 	}
 
-	var poolIDs []string
-
-	for _, v := range output {
-		poolIDs = append(poolIDs, aws.ToString(v.PoolId))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("pool_ids", poolIDs)
+	d.Set("pool_ids", tfslices.ApplyToAll(output, func(v awstypes.CoipPool) string {
+		return aws.ToString(v.PoolId)
+	}))
 
 	return diags
 }
