@@ -1236,6 +1236,29 @@ func TestExpandInterface(t *testing.T) {
 			},
 		},
 		{
+			TestName: "single list non-Expander Source and single interface Target",
+			Source: testFlexTFInterfaceListNestedObjectNonExpander{
+				Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
+					{
+						Field1: types.StringValue("value1"),
+					},
+				}),
+			},
+			Target: &testFlexAWSInterfaceSingle{},
+			WantTarget: &testFlexAWSInterfaceSingle{
+				Field1: nil,
+			},
+			expectedLogLines: []map[string]any{
+				{
+					"@level":   "info",
+					"@module":  "provider",
+					"@message": "AutoFlex Expand; incompatible types",
+					"from":     map[string]any{},
+					"to":       float64(reflect.Interface),
+				},
+			},
+		},
+		{
 			TestName: "single set Source and single interface Target",
 			Source: testFlexTFInterfaceSetNestedObject{
 				Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []testFlexTFInterfaceExpander{
