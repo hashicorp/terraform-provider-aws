@@ -311,30 +311,11 @@ func (r *resourceDataset) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	input := &inputModel{}
+	var readData resourceDatasetModel
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.S3InputDefinition, &input.S3InputDefinition)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.DataCatalogInputDefinition, &input.DataCatalogInputDefinition)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.Metadata, &input.Metadata)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, dataset.Input.DatabaseInputDefinition, &input.DatabaseInputDefinition)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// setTagsOut(ctx, dataset.Tags)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	readData.ID = flex.StringToFramework(ctx, dataset.Name)
+	resp.Diagnostics.Append(flex.Flatten(ctx, dataset, &readData)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &readData)...)
 }
 
 func (r *resourceDataset) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -411,7 +392,7 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func findDatasetByName(ctx context.Context, conn *databrew.Client, name string) (*databrew.DescribeDatasetOutput, error) {
+func findDatasetByName(ctx context.Context, conn *databrew.Client, name string) (*awstypes.Dataset, error) {
 	in := &databrew.DescribeDatasetInput{
 		Name: aws.String(name),
 	}
@@ -432,7 +413,14 @@ func findDatasetByName(ctx context.Context, conn *databrew.Client, name string) 
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out, nil
+	dataset := &awstypes.Dataset{}
+	dataset.Input = out.Input
+	dataset.PathOptions = out.PathOptions
+	dataset.FormatOptions = out.FormatOptions
+	dataset.Format = out.Format
+	dataset.Name = out.Name
+
+	return dataset, nil
 }
 
 type s3LocationModel struct {
