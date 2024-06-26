@@ -926,6 +926,11 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 		return diags
 	}
 
+	if expanded == nil {
+		diags.Append(diagExpandsToNil(reflect.TypeOf(fromExpander)))
+		return diags
+	}
+
 	expandedVal := reflect.ValueOf(expanded)
 
 	targetType := toVal.Type()
@@ -954,6 +959,16 @@ func expandExpander(ctx context.Context, fromExpander Expander, toVal reflect.Va
 	toVal.Set(expandedVal)
 
 	return diags
+}
+
+func diagExpandsToNil(expanderType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Expanding %q returned nil.", fullTypeName(expanderType)),
+	)
 }
 
 func diagExpandedTypeDoesNotImplement(expandedType, targetType reflect.Type) diag.ErrorDiagnostic {

@@ -1400,6 +1400,17 @@ func TestExpandExpander(t *testing.T) {
 			},
 		},
 		{
+			TestName: "top level expands to nil",
+			Source: testFlexTFExpanderToNil{
+				Field1: types.StringValue("value1"),
+			},
+			Target: &testFlexAWSExpander{},
+			expectedDiags: diag.Diagnostics{
+				diagExpandsToNil(reflect.TypeFor[testFlexTFExpanderToNil]()),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.testFlexTFExpanderToNil, *flex.testFlexAWSExpander]"),
+			},
+		},
+		{
 			TestName: "top level incompatible non-struct Target",
 			Source: testFlexTFExpanderToString{
 				Field1: types.StringValue("value1"),
