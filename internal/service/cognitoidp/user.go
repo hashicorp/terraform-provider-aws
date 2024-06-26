@@ -258,6 +258,8 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("preferred_mfa_setting", user.PreferredMfaSetting)
 	d.Set(names.AttrStatus, user.UserStatus)
 	d.Set("sub", flattenUserSub(user.UserAttributes))
+	d.Set(names.AttrUserPoolID, userPoolID)
+	d.Set(names.AttrUsername, username)
 
 	return diags
 }
