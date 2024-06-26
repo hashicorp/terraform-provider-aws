@@ -300,6 +300,7 @@ func (d *dataSourceAppstreamImage) Read(ctx context.Context, req datasource.Read
 	var describeImagesInput appstream.DescribeImagesInput // camel case 
 	resp.Diagnostics.Append(flex.Expand(ctx,&data,&describeImagesInput)...)
 	
+	/*
 	// TIP: -- 3. Get information about a resource from AWS
 	//out, err := appstream.DescribeImagesAPIClient.DescribeImages(j, ctx, &h)
 	_,err := conn.DescribeImages(ctx,&describeImagesInput)
@@ -323,7 +324,7 @@ func (d *dataSourceAppstreamImage) Read(ctx context.Context, req datasource.Read
 	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In 
 	// these cases the flatten function may have a diagnostics return value, which
 	// should be appended to resp.Diagnostics.
-
+	*/
 
 	
 	
@@ -387,7 +388,7 @@ type dsApplications struct {
 	Description types.String `tfsdk:"description"`
 	DisplayName types.String `tfsdk:"display_name"`
 	Enabled types.Bool `tfsdk:"enabled"`
-	IconS3Location icon_s3struct `tfsdk:"icon_s3_location"`
+	IconS3Location dsIconS3 `tfsdk:"icon_s3_location"`
 	IconUrl types.String `tfsdk:"icon_url"`
 	InstanceFamilies fwtypes.ListValueOf[types.String] `tfsdk:"instance_families"`
 	LaunchParameters types.String `tfsdk:"launch_parameters"`
@@ -398,18 +399,18 @@ type dsApplications struct {
 	WorkingDirectory types.String `tfsdk:"working_directory"`
  }
  
- type icon_s3struct struct {
+ type dsIconS3 struct {
 	S3Bucket types.String `tfsdk:"s3_bucket"`
 	S3Key types.String `tfsdk:"s3_key"`
  }
 
- type dsImage_errors struct {
+ type dsImageErrors struct {
 	ErrorCode types.String `tfsdk:"error_code"`
 	ErrorMessage types.String `tfsdk:"error_message"`
 	ErrorTimestamp timetypes.RFC3339 `tfsdk:"error_timestamp"`
  }
 
- type dsState_Change struct {
+ type dsStateChange struct {
 	Code types.String `tfsdk:"code"`
 	Message types.String `tfsdk:"message"`
  }
@@ -425,18 +426,17 @@ type dsApplications struct {
 	DisplayName types.String `tfsdk:"display_name"`
 	ImageBuilderName types.String `tfsdk:"image_builder_name"`
 	ImageBuilderSupported types.Bool `tfsdk:"image_builder_supported"`
-	ImageErrors fwtypes.ListNestedObjectValueOf[dsImage_errors] `tfsdk:"image_errors"`
-	ImagePermissions fwtypes.ListNestedObjectValueOf[dsImage_permissions] `tfsdk:"image_permissions"`
+	ImageErrors fwtypes.ListNestedObjectValueOf[dsImageErrors] `tfsdk:"image_errors"`
+	ImagePermissions fwtypes.ListNestedObjectValueOf[dsImagePermissions] `tfsdk:"image_permissions"`
 	Platform types.String `tfsdk:"platform"`
 	PubilcBaseImageReleasedDate timetypes.RFC3339 `tfsdk:"public_base_image_released_date"`
 	State types.String `tfsdk:"state"`
-	StateChangeReason fwtypes.ListNestedObjectValueOf[dsState_Change] `tfsdk:"state_change_reason"`
+	StateChangeReason fwtypes.ListNestedObjectValueOf[dsStateChange] `tfsdk:"state_change_reason"`
 	Type types.String `tfsdk:"type"`
  }
 
  
-type dsImage_permissions struct {
+type dsImagePermissions struct {
 	AllowFleet types.Bool `tfsdk:"allow_fleet"`
 	AllowImageBuilder types.Bool `tfsdk:"allow_image_builder"`
  }
- // camel case + capitalize first latter for all struct variables

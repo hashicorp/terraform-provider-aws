@@ -132,13 +132,11 @@ func testAccAppstreamImageDataSourceConfig_basic(rName string) string { // , ver
 	image_arn     = "arn:${data.aws_partition.current.partition}:appstream:%[1]s::image/%[2]s"
 	}
 
-
 	data "aws_appstream_image" "test" {
-		arns = "????"
+		arns = "arn:${data.aws_partition.current.partition}:appstream:%[1]s::image/%[2]s"
 		max_results = 1
 		names = %[2]q
 		type = "PRIVATE"
 	}
-
 `, rName)
 }
