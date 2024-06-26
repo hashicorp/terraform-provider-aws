@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 terraform {
-  required_version = ">= 1.0"
+  required_version = ">= 0.12"
 }
 
 data "aws_caller_identity" "current" {}
