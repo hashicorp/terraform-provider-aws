@@ -168,7 +168,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 
 	_, err := conn.CreateReplicationConfigurationTemplate(ctx, input)
 	if err != nil {
-		create.AddError(response.Diagnostics, names.DRS, create.ErrActionCreating, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionCreating, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
@@ -176,11 +176,12 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 	output, err := waitReplicationConfigurationTemplateAvailable(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		create.AddError(response.Diagnostics, names.DRS, create.ErrActionWaitingForCreation, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionWaitingForCreation, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
 
+	//data.ID = fwflex.StringToFramework(ctx, output.ReplicationConfigurationTemplateID)
 	response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -208,7 +209,7 @@ func (r *replicationConfigurationTemplateResource) Read(ctx context.Context, req
 	}
 
 	if err != nil {
-		create.AddError(response.Diagnostics, names.DRS, create.ErrActionReading, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionReading, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
@@ -244,13 +245,13 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 		_, err := conn.UpdateReplicationConfigurationTemplate(ctx, input)
 		if err != nil {
-			create.AddError(response.Diagnostics, names.DRS, create.ErrActionUpdating, ResNameReplicationConfigurationTemplate, new.ID.ValueString(), err)
+			create.AddError(&response.Diagnostics, names.DRS, create.ErrActionUpdating, ResNameReplicationConfigurationTemplate, new.ID.ValueString(), err)
 
 			return
 		}
 
 		if _, err := waitReplicationConfigurationTemplateAvailable(ctx, conn, old.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			create.AddError(response.Diagnostics, names.DRS, create.ErrActionWaitingForUpdate, ResNameReplicationConfigurationTemplate, new.ID.ValueString(), err)
+			create.AddError(&response.Diagnostics, names.DRS, create.ErrActionWaitingForUpdate, ResNameReplicationConfigurationTemplate, new.ID.ValueString(), err)
 
 			return
 		}
@@ -258,7 +259,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 	output, err := findReplicationConfigurationTemplateByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
-		create.AddError(response.Diagnostics, names.DRS, create.ErrActionUpdating, ResNameReplicationConfigurationTemplate, old.ID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionUpdating, ResNameReplicationConfigurationTemplate, old.ID.ValueString(), err)
 
 		return
 	}
@@ -297,13 +298,13 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 	}
 
 	if err != nil {
-		create.AddError(response.Diagnostics, names.DRS, create.ErrActionDeleting, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionDeleting, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
 
 	if _, err := waitReplicationConfigurationTemplateDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		create.AddError(response.Diagnostics, names.DRS, create.ErrActionWaitingForDeletion, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionWaitingForDeletion, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
@@ -348,7 +349,9 @@ func findReplicationConfigurationTemplates(ctx context.Context, conn *drs.Client
 }
 
 func findReplicationConfigurationTemplateByID(ctx context.Context, conn *drs.Client, id string) (*awstypes.ReplicationConfigurationTemplate, error) {
-	input := &drs.DescribeReplicationConfigurationTemplatesInput{}
+	input := &drs.DescribeReplicationConfigurationTemplatesInput{
+		//ReplicationConfigurationTemplateIDs: []string{id},
+	}
 
 	return findReplicationConfigurationTemplate(ctx, conn, input)
 }
