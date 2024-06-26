@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws
 go 1.22.4
 
 require (
-	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
+	github.com/ProtonMail/go-crypto v1.1.0-alpha.3-proton
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.54.5
