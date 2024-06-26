@@ -818,7 +818,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("admin_create_user_config", flattenAdminCreateUserConfigType(userPool.AdminCreateUserConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting admin_create_user_config: %s", err)
 	}
-	if userPool.AliasAttributes != nil {
+	if userPool.AliasAttributes != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("alias_attributes", userPool.AliasAttributes)
 	}
 	d.Set(names.AttrARN, userPool.Arn)
