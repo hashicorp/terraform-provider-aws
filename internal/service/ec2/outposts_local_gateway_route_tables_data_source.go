@@ -9,15 +9,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_local_gateway_route_tables")
+// @SDKDataSource("aws_ec2_local_gateway_route_tables", name="Local Gateway Route Table")
 func dataSourceLocalGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayRouteTablesRead,
@@ -69,7 +71,9 @@ func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, routeTableIDs)
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.LocalGatewayRouteTable) string {
+		return aws.ToString(v.LocalGatewayRouteTableId)
+	}))
 
 	return diags
 }
