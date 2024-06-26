@@ -12,7 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
@@ -58,10 +61,12 @@ func TestAccM2Environment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "security_group_ids.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct0),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "subnet_ids.#", 0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -138,10 +143,12 @@ func TestAccM2Environment_full(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -218,11 +225,20 @@ func TestAccM2Environment_efs(t *testing.T) {
 				Config: testAccEnvironmentConfig_efsComplete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttrSet(resourceName, "storage_configuration.0.efs.0.file_system_id"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.0.mount_point", "/m2/mount/efsexample"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"efs": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"file_system_id": knownvalue.NotNull(), // TODO: should be Pair, depends on https://github.com/hashicorp/terraform-plugin-testing/pull/330
+									"mount_point":    knownvalue.StringExact("/m2/mount/efsexample"),
+								}),
+							}),
+							"fsx": knownvalue.ListExact([]knownvalue.Check{}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -232,6 +248,7 @@ func TestAccM2Environment_efs(t *testing.T) {
 		},
 	})
 }
+
 func TestAccM2Environment_fsx(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -255,11 +272,20 @@ func TestAccM2Environment_fsx(t *testing.T) {
 				Config: testAccEnvironmentConfig_fsxComplete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.#", acctest.Ct0),
-					resource.TestCheckResourceAttrSet(resourceName, "storage_configuration.0.fsx.0.file_system_id"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.0.mount_point", "/m2/mount/fsxexample"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("storage_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"efs": knownvalue.ListExact([]knownvalue.Check{}),
+							"fsx": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"file_system_id": knownvalue.NotNull(), // TODO: should be Pair, depends on https://github.com/hashicorp/terraform-plugin-testing/pull/330
+									"mount_point":    knownvalue.StringExact("/m2/mount/fsxexample"),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -435,6 +461,24 @@ resource "aws_m2_environment" "test" {
 func testAccEnvironmentConfig_efsComplete(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  name               = %[1]q
+  engine_type        = "bluage"
+  engine_version     = "3.7.0"
+  instance_type      = "M2.m5.large"
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+
+  storage_configuration {
+    efs {
+      file_system_id = aws_efs_file_system.test.id
+      mount_point    = "/m2/mount/efsexample"
+    }
+  }
+
+  depends_on = [aws_efs_mount_target.test]
+}
+
 resource "aws_efs_file_system" "test" {
   tags = {
     Name = %[1]q
@@ -461,36 +505,11 @@ resource "aws_efs_mount_target" "test" {
   security_groups = [aws_security_group.test.id]
 }
 
-resource "aws_m2_environment" "test" {
-  name               = %[1]q
-  engine_type        = "bluage"
-  engine_version     = "3.7.0"
-  instance_type      = "M2.m5.large"
-  security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test[*].id
-
-  storage_configuration {
-    efs {
-      file_system_id = aws_efs_file_system.test.id
-      mount_point    = "/m2/mount/efsexample"
-    }
-  }
-}
 `, rName))
 }
 
 func testAccEnvironmentConfig_fsxComplete(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
-resource "aws_fsx_lustre_file_system" "test" {
-  storage_capacity   = 1200
-  subnet_ids         = [aws_subnet.test[0].id]
-  security_group_ids = [aws_security_group.test.id]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_m2_environment" "test" {
   name               = %[1]q
   engine_type        = "bluage"
@@ -504,6 +523,16 @@ resource "aws_m2_environment" "test" {
       file_system_id = aws_fsx_lustre_file_system.test.id
       mount_point    = "/m2/mount/fsxexample"
     }
+  }
+}
+
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity   = 1200
+  subnet_ids         = [aws_subnet.test[0].id]
+  security_group_ids = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))
