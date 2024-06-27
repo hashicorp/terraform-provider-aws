@@ -59,8 +59,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Workspace API Key",
 		},
 		{
-			Factory:  ResourceWorkspaceSAMLConfiguration,
+			Factory:  resourceWorkspaceSAMLConfiguration,
 			TypeName: "aws_grafana_workspace_saml_configuration",
+			Name:     "Grafana Workspace SAML Configuration",
 		},
 	}
 }
