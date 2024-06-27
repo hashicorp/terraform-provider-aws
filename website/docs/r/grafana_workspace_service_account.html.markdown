@@ -8,13 +8,8 @@ description: |-
 
 # Resource: aws_grafana_workspace_service_account
 
-https://docs.aws.amazon.com/grafana/latest/userguide/service-accounts.html
-
 -> **Note:** You cannot update a service account. If you change any attribute, Terraform
 will delete the current and create a new one.
-
-Provides an Amazon Managed Service for Prometheus fully managed collector
-(scraper).
 
 Read about Service Accounts in the [Amazon Managed Grafana user guide](https://docs.aws.amazon.com/grafana/latest/userguide/service-accounts.html).
 
