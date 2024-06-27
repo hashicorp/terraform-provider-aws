@@ -11,23 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func waitLicenseAssociationCreated(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.WorkspaceDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{managedgrafana.WorkspaceStatusUpgrading},
-		Target:  []string{managedgrafana.WorkspaceStatusActive},
-		Refresh: statusWorkspace(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*managedgrafana.WorkspaceDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitWorkspaceSAMLConfigurationCreated(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string, timeout time.Duration) (*managedgrafana.SamlAuthentication, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{managedgrafana.SamlConfigurationStatusNotConfigured},

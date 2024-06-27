@@ -13,20 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindLicensedWorkspaceByID(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
-	output, err := FindWorkspaceByID(ctx, conn, id)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output.LicenseType == nil {
-		return nil, &retry.NotFoundError{}
-	}
-
-	return output, nil
-}
-
 func FindSamlConfigurationByID(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.SamlAuthentication, error) {
 	input := &managedgrafana.DescribeWorkspaceAuthenticationInput{
 		WorkspaceId: aws.String(id),

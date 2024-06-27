@@ -5,7 +5,9 @@ package grafana
 
 // Exports for use in tests only.
 var (
-	ResourceWorkspace = resourceWorkspace
+	ResourceLicenseAssociation = resourceLicenseAssociation
+	ResourceWorkspace          = resourceWorkspace
 
-	FindWorkspaceByID = findWorkspaceByID
+	FindLicensedWorkspaceByID = findLicensedWorkspaceByID
+	FindWorkspaceByID         = findWorkspaceByID
 )
