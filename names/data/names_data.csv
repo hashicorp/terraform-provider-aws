@@ -236,7 +236,7 @@ macie2,macie2,macie2,macie2,,macie2,,,Macie2,Macie2,,1,,,aws_macie2_,,macie2_,Ma
 macie,macie,macie,macie,,macie,,,Macie,Macie,,1,,,aws_macie_,,macie_,Macie Classic,Amazon,,x,,,,,Macie,,,,
 m2,m2,m2,m2,,m2,,,M2,M2,,,2,,aws_m2_,,m2_,Mainframe Modernization,AWS,,,,,,,m2,ListApplications,,,
 managedblockchain,managedblockchain,managedblockchain,managedblockchain,,managedblockchain,,,ManagedBlockchain,ManagedBlockchain,,1,,,aws_managedblockchain_,,managedblockchain_,Managed Blockchain,Amazon,,x,,,,,ManagedBlockchain,,,,
-grafana,grafana,managedgrafana,grafana,,grafana,,managedgrafana;amg,Grafana,ManagedGrafana,,,2,,aws_grafana_,,grafana_,Managed Grafana,Amazon,,,,,,,grafana,ListWorkspaces,,,
+grafana,grafana,managedgrafana,grafana,,grafana,,managedgrafana;amg,Grafana,ManagedGrafana,,1,,,aws_grafana_,,grafana_,Managed Grafana,Amazon,,,,,,,grafana,ListWorkspaces,,,
 kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,x,,2,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,,,Kafka,ListClusters,,,
 kafkaconnect,kafkaconnect,kafkaconnect,kafkaconnect,,kafkaconnect,,,KafkaConnect,KafkaConnect,,1,,aws_mskconnect_,aws_kafkaconnect_,,mskconnect_,Managed Streaming for Kafka Connect,Amazon,,,,,,,KafkaConnect,ListConnectors,,,
 ,,,,,,,,,,,,,,,,,Management Console,AWS,x,,,,,,,,,,No SDK support
