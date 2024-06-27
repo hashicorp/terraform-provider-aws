@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -58,7 +59,7 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 
 func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
 	description := "test eni target"
@@ -91,7 +92,7 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 
 func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -141,7 +142,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 
 func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorTarget
+	var v awstypes.TrafficMirrorTarget
 	resourceName := "aws_ec2_traffic_mirror_target.test"
 	description := "test nlb target"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
@@ -198,9 +199,23 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 	})
 }
 
+func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+	_, err := conn.DescribeTrafficMirrorTargets(ctx, &ec2.DescribeTrafficMirrorTargetsInput{})
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skip("skipping traffic mirror target acceptance test: ", err)
+	}
+
+	if err != nil {
+		t.Fatal("Unexpected PreCheck error: ", err)
+	}
+}
+
 func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_traffic_mirror_target" {
@@ -224,18 +239,14 @@ func testAccCheckTrafficMirrorTargetDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckTrafficMirrorTargetExists(ctx context.Context, n string, v *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorTargetExists(ctx context.Context, n string, v *awstypes.TrafficMirrorTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Traffic Mirror Target ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTrafficMirrorTargetByID(ctx, conn, rs.Primary.ID)
 
@@ -351,18 +362,4 @@ resource "aws_ec2_traffic_mirror_target" "test" {
   }
 }
 `, rName, description))
-}
-
-func testAccPreCheckTrafficMirrorTarget(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-	_, err := conn.DescribeTrafficMirrorTargetsWithContext(ctx, &ec2.DescribeTrafficMirrorTargetsInput{})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skip("skipping traffic mirror target acceptance test: ", err)
-	}
-
-	if err != nil {
-		t.Fatal("Unexpected PreCheck error: ", err)
-	}
 }

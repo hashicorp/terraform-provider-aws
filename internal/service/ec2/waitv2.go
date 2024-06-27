@@ -2589,3 +2589,24 @@ func waitFastSnapshotRestoreDeleted(ctx context.Context, conn *ec2.Client, avail
 
 	return nil, err
 }
+
+func waitNetworkInsightsAnalysisCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.NetworkInsightsAnalysis, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.AnalysisStatusRunning),
+		Target:     enum.Slice(awstypes.AnalysisStatusSucceeded),
+		Timeout:    timeout,
+		Refresh:    statusNetworkInsightsAnalysis(ctx, conn, id),
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.NetworkInsightsAnalysis); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}

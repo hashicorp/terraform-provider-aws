@@ -49,6 +49,8 @@ var (
 	ResourceMainRouteTableAssociation                = resourceMainRouteTableAssociation
 	ResourceNetworkACL                               = resourceNetworkACL
 	ResourceNetworkACLRule                           = resourceNetworkACLRule
+	ResourceNetworkInsightsAnalysis                  = resourceNetworkInsightsAnalysis
+	ResourceNetworkInsightsPath                      = resourceNetworkInsightsPath
 	ResourceNetworkInterface                         = resourceNetworkInterface
 	ResourcePlacementGroup                           = resourcePlacementGroup
 	ResourceRoute                                    = resourceRoute
@@ -60,6 +62,10 @@ var (
 	ResourceSpotFleetRequest                         = resourceSpotFleetRequest
 	ResourceSpotInstanceRequest                      = resourceSpotInstanceRequest
 	ResourceTag                                      = resourceTag
+	ResourceTrafficMirrorFilter                      = resourceTrafficMirrorFilter
+	ResourceTrafficMirrorFilterRule                  = resourceTrafficMirrorFilterRule
+	ResourceTrafficMirrorSession                     = resourceTrafficMirrorSession
+	ResourceTrafficMirrorTarget                      = resourceTrafficMirrorTarget
 	ResourceTransitGatewayConnect                    = resourceTransitGatewayConnect
 	ResourceTransitGatewayMulticastDomain            = resourceTransitGatewayMulticastDomain
 	ResourceTransitGatewayMulticastDomainAssociation = resourceTransitGatewayMulticastDomainAssociation
@@ -119,6 +125,8 @@ var (
 	FindLaunchTemplateByID                                     = findLaunchTemplateByID
 	FindMainRouteTableAssociationByID                          = findMainRouteTableAssociationByID
 	FindNetworkACLByIDV2                                       = findNetworkACLByID
+	FindNetworkInsightsAnalysisByID                            = findNetworkInsightsAnalysisByID
+	FindNetworkInsightsPathByID                                = findNetworkInsightsPathByID
 	FindNetworkInterfaceByIDV2                                 = findNetworkInterfaceByID
 	FindNetworkPerformanceMetricSubscriptionByFourPartKey      = findNetworkPerformanceMetricSubscriptionByFourPartKey
 	FindPlacementGroupByName                                   = findPlacementGroupByName
@@ -136,6 +144,10 @@ var (
 	FindSpotInstanceRequestByID                                = findSpotInstanceRequestByID
 	FindSubnetsV2                                              = findSubnets
 	FindTag                                                    = findTag
+	FindTrafficMirrorFilterByID                                = findTrafficMirrorFilterByID
+	FindTrafficMirrorFilterRuleByTwoPartKey                    = findTrafficMirrorFilterRuleByTwoPartKey
+	FindTrafficMirrorSessionByID                               = findTrafficMirrorSessionByID
+	FindTrafficMirrorTargetByID                                = findTrafficMirrorTargetByID
 	FindTransitGatewayByID                                     = findTransitGatewayByID
 	FindTransitGatewayConnectByID                              = findTransitGatewayConnectByID
 	FindTransitGatewayConnectPeerByID                          = findTransitGatewayConnectPeerByID

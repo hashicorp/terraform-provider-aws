@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_launch_template", name="Launch Template")
 // @Tags
+// @Testing(tagsTest=false)
 func dataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchTemplateRead,
@@ -398,6 +399,10 @@ func dataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"max_spot_price_as_percentage_of_optimal_on_demand_price": {
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 						"memory_gib_per_vcpu": {
 							Type:     schema.TypeList,
