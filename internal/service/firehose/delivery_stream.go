@@ -206,13 +206,13 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:  false,
 							},
 							"secret_arn": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:         schema.TypeString,
+								Optional:     true,
 								ValidateFunc: verify.ValidARN,
 							},
 							names.AttrRoleARN: {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:         schema.TypeString,
+								Optional:     true,
 								ValidateFunc: verify.ValidARN,
 							},
 						},
@@ -1034,10 +1034,10 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 							"key_passphrase": {
-								Type:          schema.TypeString,
-								Optional:      true,
-								Sensitive:     true,
-								ValidateFunc:  validation.StringLenBetween(7, 255),
+								Type:         schema.TypeString,
+								Optional:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringLenBetween(7, 255),
 							},
 							"metadata_column_name": {
 								Type:         schema.TypeString,
@@ -1045,9 +1045,9 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 							names.AttrPrivateKey: {
-								Type:          schema.TypeString,
-								Optional:      true,
-								Sensitive:     true,
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
 							},
 							"processing_configuration": processingConfigurationSchema(),
 							"retry_duration": {
@@ -1113,9 +1113,9 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 							"user": {
-								Type:          schema.TypeString,
-								Optional:      true,
-								ValidateFunc:  validation.StringLenBetween(1, 255),
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
 					},

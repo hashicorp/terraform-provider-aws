@@ -2935,7 +2935,6 @@ EOF
 `, rName, acctest.TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(privateKey)))
 }
 
-
 func testAccDeliveryStreamConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
