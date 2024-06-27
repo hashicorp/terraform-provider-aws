@@ -640,6 +640,34 @@ type Resource struct {
 	// changes with it enabled. However, data-based errors typically require
 	// logic fixes that should be applicable for both SDKs to be resolved.
 	EnableLegacyTypeSystemPlanErrors bool
+
+	// ResourceBehavior is used to control SDK-specific logic when
+	// interacting with this resource.
+	ResourceBehavior ResourceBehavior
+}
+
+// ResourceBehavior controls SDK-specific logic when interacting
+// with a resource.
+type ResourceBehavior struct {
+	// ProviderDeferred enables provider-defined logic to be executed
+	// in the case of a deferred response from (Provider).ConfigureProvider.
+	//
+	// NOTE: This functionality is related to deferred action support, which is currently experimental and is subject
+	// to change or break without warning. It is not protected by version compatibility guarantees.
+	ProviderDeferred ProviderDeferredBehavior
+}
+
+// ProviderDeferredBehavior enables provider-defined logic to be executed
+// in the case of a deferred response from provider configuration.
+//
+// NOTE: This functionality is related to deferred action support, which is currently experimental and is subject
+// to change or break without warning. It is not protected by version compatibility guarantees.
+type ProviderDeferredBehavior struct {
+	// When EnablePlanModification is true, the SDK will execute provider-defined logic
+	// during plan (CustomizeDiff, Default, DiffSupressFunc, etc.) if ConfigureProvider
+	// returns a deferred response. The SDK will then automatically return a deferred response
+	// along with the modified plan.
+	EnablePlanModification bool
 }
 
 // SchemaMap returns the schema information for this Resource whether it is

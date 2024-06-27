@@ -103,7 +103,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "badge_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "badge_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "build_timeout", "60"),
 					resource.TestCheckResourceAttr(resourceName, "queued_timeout", "480"),
@@ -115,7 +115,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", string(types.EnvironmentTypeLinuxContainer)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", string(types.ImagePullCredentialsTypeCodebuild)),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", string(types.LogsConfigStatusTypeEnabled)),
@@ -127,9 +127,9 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "source.0.location", testAccGitHubSourceLocationFromEnv()),
-					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
@@ -293,7 +293,7 @@ func TestAccCodeBuildProject_badgeEnabled(t *testing.T) {
 				Config: testAccProjectConfig_badgeEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "badge_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "badge_enabled", acctest.CtTrue),
 					resource.TestMatchResourceAttr(resourceName, "badge_url", regexache.MustCompile(`\b(https?).*\b`)),
 				),
 			},
@@ -537,7 +537,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", string(types.EnvironmentTypeLinuxContainer)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
@@ -925,7 +925,7 @@ func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", string(types.LogsConfigStatusTypeEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.location", rName+"/build-log"),
-					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.encryption_disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.encryption_disabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -934,7 +934,7 @@ func TestAccCodeBuildProject_Logs_s3Logs(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", string(types.LogsConfigStatusTypeEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.location", rName+"/build-log"),
-					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.encryption_disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.encryption_disabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -977,7 +977,7 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 				Config: testAccProjectConfig_buildBatch(rName, true, "BUILD_GENERAL1_SMALL", 10, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", "true"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.0", "BUILD_GENERAL1_SMALL"),
@@ -994,7 +994,7 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 				Config: testAccProjectConfig_buildBatch(rName, false, "BUILD_GENERAL1_MEDIUM", 20, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", "false"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.0", "BUILD_GENERAL1_MEDIUM"),
@@ -1026,11 +1026,11 @@ func TestAccCodeBuildProject_buildBatchConfigDelete(t *testing.T) {
 				Config: testAccProjectConfig_buildBatchConfigDelete(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", "true"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "480"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "2160"),
 				),
 			},
 			{
@@ -1105,7 +1105,7 @@ func TestAccCodeBuildProject_SourceGitSubmodules_codeCommit(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", acctest.CtTrue),
 				),
 			},
 			{
@@ -1118,7 +1118,7 @@ func TestAccCodeBuildProject_SourceGitSubmodules_codeCommit(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", acctest.CtFalse),
 				),
 			},
 		},
@@ -1219,12 +1219,12 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource1",
 						"git_submodules_config.#":                  acctest.Ct1,
-						"git_submodules_config.0.fetch_submodules": "true",
+						"git_submodules_config.0.fetch_submodules": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource2",
 						"git_submodules_config.#":                  acctest.Ct1,
-						"git_submodules_config.0.fetch_submodules": "true",
+						"git_submodules_config.0.fetch_submodules": acctest.CtTrue,
 					}),
 				),
 			},
@@ -1236,12 +1236,12 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource1",
 						"git_submodules_config.#":                  acctest.Ct1,
-						"git_submodules_config.0.fetch_submodules": "false",
+						"git_submodules_config.0.fetch_submodules": acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier":                        "secondarySource2",
 						"git_submodules_config.#":                  acctest.Ct1,
-						"git_submodules_config.0.fetch_submodules": "false",
+						"git_submodules_config.0.fetch_submodules": acctest.CtFalse,
 					}),
 				),
 			},
@@ -1428,7 +1428,7 @@ func TestAccCodeBuildProject_Source_insecureSSL(t *testing.T) {
 				Config: testAccProjectConfig_sourceInsecureSSL(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", acctest.CtTrue),
 				),
 			},
 			{
@@ -1440,7 +1440,7 @@ func TestAccCodeBuildProject_Source_insecureSSL(t *testing.T) {
 				Config: testAccProjectConfig_sourceInsecureSSL(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", acctest.CtFalse),
 				),
 			},
 		},
@@ -1499,7 +1499,7 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHubEnterprise(t *testing
 				Config: testAccProjectConfig_sourceReportBuildStatusGitHubEnterprise(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtTrue),
 				),
 			},
 			{
@@ -1511,7 +1511,7 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHubEnterprise(t *testing
 				Config: testAccProjectConfig_sourceReportBuildStatusGitHubEnterprise(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtFalse),
 				),
 			},
 		},
@@ -1540,7 +1540,7 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_bitbucket(t *testing.T) {
 				Config: testAccProjectConfig_sourceReportBuildStatusBitbucket(rName, sourceLocation, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtTrue),
 				),
 			},
 			{
@@ -1552,7 +1552,7 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_bitbucket(t *testing.T) {
 				Config: testAccProjectConfig_sourceReportBuildStatusBitbucket(rName, sourceLocation, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtFalse),
 				),
 			},
 		},
@@ -1579,7 +1579,7 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHub(t *testing.T) {
 				Config: testAccProjectConfig_sourceReportBuildStatusGitHub(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtTrue),
 				),
 			},
 			{
@@ -1591,7 +1591,7 @@ func TestAccCodeBuildProject_SourceReportBuildStatus_gitHub(t *testing.T) {
 				Config: testAccProjectConfig_sourceReportBuildStatusGitHub(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtFalse),
 				),
 			},
 		},
@@ -1805,7 +1805,7 @@ phases:
 				ExpectError: regexache.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
 			},
 			{
-				Config:      testAccProjectConfig_sourceTypeNoSource(rName, "location", rBuildspec),
+				Config:      testAccProjectConfig_sourceTypeNoSource(rName, names.AttrLocation, rBuildspec),
 				ExpectError: regexache.MustCompile("`location` must be empty when source's `type` is `NO_SOURCE`"),
 			},
 		},
@@ -1888,7 +1888,7 @@ func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Medium)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", string(types.ImagePullCredentialsTypeCodebuild)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", string(types.EnvironmentTypeWindowsServer2019Container)),
 				),
@@ -1957,7 +1957,7 @@ func TestAccCodeBuildProject_linuxLambdaContainer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildLambda1gb)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", "aws/codebuild/amazonlinux-x86_64-lambda-standard:go1.21"),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", string(types.ImagePullCredentialsTypeCodebuild)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", string(types.EnvironmentTypeLinuxLambdaContainer)),
 				),
@@ -2036,7 +2036,7 @@ func TestAccCodeBuildProject_Artifacts_encryptionDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -2049,7 +2049,7 @@ func TestAccCodeBuildProject_Artifacts_encryptionDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.encryption_disabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -2204,7 +2204,7 @@ func TestAccCodeBuildProject_Artifacts_overrideArtifactName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", "true"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", acctest.CtTrue),
 				),
 			},
 			{
@@ -2217,7 +2217,7 @@ func TestAccCodeBuildProject_Artifacts_overrideArtifactName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", "false"),
+					resource.TestCheckResourceAttr(resourceName, "artifacts.0.override_artifact_name", acctest.CtFalse),
 				),
 			},
 		},
@@ -2482,7 +2482,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_overrideArtifactName(t *testing.
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"override_artifact_name": "true",
+						"override_artifact_name": acctest.CtTrue,
 					}),
 				),
 			},
@@ -2492,7 +2492,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_overrideArtifactName(t *testing.
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"override_artifact_name": "false",
+						"override_artifact_name": acctest.CtFalse,
 					}),
 				),
 			},
@@ -2522,7 +2522,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_encryptionDisabled(t *testing.T)
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"encryption_disabled": "true",
+						"encryption_disabled": acctest.CtTrue,
 					}),
 				),
 			},
@@ -2532,7 +2532,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_encryptionDisabled(t *testing.T)
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"encryption_disabled": "false",
+						"encryption_disabled": acctest.CtFalse,
 					}),
 				),
 			},
@@ -2563,7 +2563,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"location": rName1,
+						names.AttrLocation: rName1,
 					}),
 				),
 			},
@@ -2573,7 +2573,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"location": rName2,
+						names.AttrLocation: rName2,
 					}),
 				),
 			},
@@ -3918,7 +3918,7 @@ build_batch_config {
   }
 
   service_role    = aws_iam_role.test.arn
-  timeout_in_mins = 480
+  timeout_in_mins = 2160
 }
 `
 

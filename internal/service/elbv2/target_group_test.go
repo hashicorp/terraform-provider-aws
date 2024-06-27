@@ -117,12 +117,12 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
@@ -270,47 +270,6 @@ func TestAccELBV2TargetGroup_duplicateName(t *testing.T) {
 	})
 }
 
-func TestAccELBV2TargetGroup_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf elbv2.TargetGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_lb_target_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTargetGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccTargetGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccTargetGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
@@ -336,7 +295,7 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
@@ -381,12 +340,12 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
@@ -876,7 +835,7 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -886,7 +845,7 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -915,10 +874,10 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
-					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", "false"),
-					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "traffic-port"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
@@ -941,7 +900,7 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "20"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
@@ -972,14 +931,14 @@ func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *t
 				Config: testAccTargetGroupConfig_typeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confBefore),
-					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_typeTCPConnectionTermination(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confAfter),
-					resource.TestCheckResourceAttr(resourceName, "connection_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "connection_termination", acctest.CtTrue),
 				),
 			},
 		},
@@ -1002,14 +961,14 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 				Config: testAccTargetGroupConfig_typeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confBefore),
-					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", "false"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_typeTCPProxyProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &confAfter),
-					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", "true"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", acctest.CtTrue),
 				),
 			},
 		},
@@ -1032,14 +991,14 @@ func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 				Config: testAccTargetGroupConfig_preserveClientIP(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", "true"),
+					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_preserveClientIP(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", acctest.CtFalse),
 				),
 			},
 		},
@@ -1110,7 +1069,7 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "HTTP"),
@@ -1142,7 +1101,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6081"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip"),
 				),
 			},
@@ -1153,7 +1112,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6081"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip_proto"),
 				),
 			},
@@ -1236,7 +1195,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 				),
 			},
@@ -1261,7 +1220,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
@@ -1270,7 +1229,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
@@ -1279,7 +1238,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
@@ -1373,7 +1332,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "86400"),
 				),
@@ -1383,7 +1342,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "86400"),
 				),
@@ -1409,7 +1368,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
@@ -1418,7 +1377,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
@@ -1427,7 +1386,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
@@ -1436,7 +1395,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
 				),
 			},
@@ -1488,7 +1447,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
@@ -1514,7 +1473,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
@@ -1556,7 +1515,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
@@ -1582,7 +1541,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "app_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", "Cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
@@ -1608,7 +1567,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
@@ -1653,7 +1612,7 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "60"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8081"),
@@ -1678,7 +1637,7 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/health2"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "8082"),
@@ -1737,7 +1696,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
@@ -1762,7 +1721,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
@@ -1799,7 +1758,7 @@ func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -1831,7 +1790,7 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "slow_start", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "instance"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
@@ -2008,7 +1967,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
 				Config: testAccTargetGroupConfig_albLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
 			},
@@ -2044,7 +2003,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
 			},
@@ -2064,7 +2023,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
 			},
@@ -2072,7 +2031,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
 			},
@@ -2436,7 +2395,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -2445,7 +2404,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_cross_zone_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -2496,7 +2455,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
@@ -2521,7 +2480,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.cookie_duration", "10000"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
@@ -2558,7 +2517,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtFalse),
 				),
 			},
 			{
@@ -2568,7 +2527,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtTrue),
 				),
 			},
 			{
@@ -2578,7 +2537,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtFalse),
 				),
 			},
 			{
@@ -2588,7 +2547,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS"),
 					resource.TestCheckResourceAttr(resourceName, "target_health_state.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_health_state.0.enable_unhealthy_connection_termination", acctest.CtTrue),
 				),
 			},
 		},
@@ -2743,7 +2702,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumInstance),
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
@@ -2891,7 +2850,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.matcher),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
 						)
@@ -3033,7 +2992,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.path),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
 						)
@@ -3249,7 +3208,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, elbv2.ProtocolEnumGeneve),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
@@ -3321,7 +3280,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
 							resource.TestCheckResourceAttr(resourceName, "protocol_version", "GRPC"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "30"),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", tc.expectedMatcher),
@@ -3399,7 +3358,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 							resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, protocol),
 							resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+							resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.path", tc.path),
 							resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", healthCheckProtocol),
 						)
@@ -3660,7 +3619,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -3690,7 +3649,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrVPCID),
 				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 			),
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3701,7 +3660,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrVPCID),
 				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "false"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtFalse),
 			),
 		}.Steps(),
 	})
@@ -3948,7 +3907,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
@@ -3980,7 +3939,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
@@ -3993,7 +3952,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+				resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct3),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.interval", "40"),
 				resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200"),
@@ -4048,7 +4007,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
 			} else {
@@ -4119,7 +4078,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", ""),
 				)
 			} else {
@@ -4373,91 +4332,6 @@ resource "aws_lb_target_group" "test2" {
   }
 }
 `, rName))
-}
-
-func testAccTargetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 443
-  protocol = "HTTPS"
-  vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-  slow_start           = 0
-
-  stickiness {
-    type            = "lb_cookie"
-    cookie_duration = 10000
-  }
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccTargetGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_target_group" "test" {
-  name     = %[1]q
-  port     = 443
-  protocol = "HTTPS"
-  vpc_id   = aws_vpc.test.id
-
-  deregistration_delay = 200
-  slow_start           = 0
-
-  stickiness {
-    type            = "lb_cookie"
-    cookie_duration = 10000
-  }
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccTargetGroupConfig_albDefaults(rName string) string {

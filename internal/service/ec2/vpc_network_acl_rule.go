@@ -36,11 +36,11 @@ func resourceNetworkACLRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"cidr_block", "ipv6_cidr_block"},
+				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
 			},
 			"egress": {
 				Type:     schema.TypeBool,
@@ -67,7 +67,7 @@ func resourceNetworkACLRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"cidr_block", "ipv6_cidr_block"},
+				ExactlyOneOf: []string{names.AttrCIDRBlock, "ipv6_cidr_block"},
 			},
 			"network_acl_id": {
 				Type:     schema.TypeString,
@@ -157,7 +157,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 		RuleNumber: aws.Int64(int64(ruleNumber)),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -210,7 +210,7 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 
 	naclEntry := outputRaw.(*ec2.NetworkAclEntry)
 
-	d.Set("cidr_block", naclEntry.CidrBlock)
+	d.Set(names.AttrCIDRBlock, naclEntry.CidrBlock)
 	d.Set("egress", naclEntry.Egress)
 	d.Set("ipv6_cidr_block", naclEntry.Ipv6CidrBlock)
 	if naclEntry.IcmpTypeCode != nil {

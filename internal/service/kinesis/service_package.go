@@ -19,17 +19,17 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kinesis.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return kinesis.NewFromConfig(cfg, func(o *kinesis.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*types.LimitExceededException](err, "simultaneously be in CREATING or DELETING") ||
-				errs.IsAErrorMessageContains[*types.LimitExceededException](err, "Rate exceeded for stream") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return kinesis.NewFromConfig(cfg,
+		kinesis.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *kinesis.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if errs.IsAErrorMessageContains[*types.LimitExceededException](err, "simultaneously be in CREATING or DELETING") ||
+					errs.IsAErrorMessageContains[*types.LimitExceededException](err, "Rate exceeded for stream") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

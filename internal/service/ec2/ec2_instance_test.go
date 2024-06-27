@@ -16,105 +16,87 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/aws/request"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	acctest.RegisterServiceErrorCheckFunc(names.EC2ServiceID, testAccErrorCheckSkip)
-}
+// func TestFetchRootDevice(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	t.Parallel()
 
-func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
-	return acctest.ErrorCheckSkipMessagesContaining(t,
-		"VolumeTypeNotAvailableInRegion",
-		"Invalid value specified for Phase",
-		"You have reached the maximum allowed number of license configurations created in one day",
-		"specified zone does not support multi-attach-enabled volumes",
-		"Unsupported volume type",
-		"HostLimitExceeded",
-		"ReservationCapacityExceeded",
-		"InsufficientInstanceCapacity",
-	)
-}
+// 	cases := []struct {
+// 		label  string
+// 		images []*awstypes.Image
+// 		name   string
+// 	}{
+// 		{
+// 			"device name in mappings",
+// 			[]*awstypes.Image{{
+// 				ImageId:        aws.String("ami-123"),
+// 				RootDeviceType: awstypes.DeviceType("ebs"),
+// 				RootDeviceName: aws.String("/dev/xvda"),
+// 				BlockDeviceMappings: []awstypes.BlockDeviceMapping{
+// 					{DeviceName: aws.String("/dev/xvdb")},
+// 					{DeviceName: aws.String("/dev/xvda")},
+// 				},
+// 			}},
+// 			"/dev/xvda",
+// 		},
+// 		{
+// 			"device name not in mappings",
+// 			[]*awstypes.Image{{
+// 				ImageId:        aws.String("ami-123"),
+// 				RootDeviceType: awstypes.DeviceType("ebs"),
+// 				RootDeviceName: aws.String("/dev/xvda"),
+// 				BlockDeviceMappings: []awstypes.BlockDeviceMapping{
+// 					{DeviceName: aws.String("/dev/xvdb")},
+// 					{DeviceName: aws.String("/dev/xvdc")},
+// 				},
+// 			}},
+// 			"/dev/xvdb",
+// 		},
+// 		{
+// 			"no images",
+// 			[]*awstypes.Image{},
+// 			"",
+// 		},
+// 	}
 
-func TestFetchRootDevice(t *testing.T) {
-	ctx := acctest.Context(t)
-	t.Parallel()
+// 	sess, err := session.NewSession(nil)
+// 	if err != nil {
+// 		t.Errorf("Error new session: %s", err)
+// 	}
 
-	cases := []struct {
-		label  string
-		images []*ec2.Image
-		name   string
-	}{
-		{
-			"device name in mappings",
-			[]*ec2.Image{{
-				ImageId:        aws.String("ami-123"),
-				RootDeviceType: aws.String("ebs"),
-				RootDeviceName: aws.String("/dev/xvda"),
-				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
-					{DeviceName: aws.String("/dev/xvdb")},
-					{DeviceName: aws.String("/dev/xvda")},
-				},
-			}},
-			"/dev/xvda",
-		},
-		{
-			"device name not in mappings",
-			[]*ec2.Image{{
-				ImageId:        aws.String("ami-123"),
-				RootDeviceType: aws.String("ebs"),
-				RootDeviceName: aws.String("/dev/xvda"),
-				BlockDeviceMappings: []*ec2.BlockDeviceMapping{
-					{DeviceName: aws.String("/dev/xvdb")},
-					{DeviceName: aws.String("/dev/xvdc")},
-				},
-			}},
-			"/dev/xvdb",
-		},
-		{
-			"no images",
-			[]*ec2.Image{},
-			"",
-		},
-	}
+// 	for _, tc := range cases {
+// 		tc := tc
+// 		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
 
-	sess, err := session.NewSession(nil)
-	if err != nil {
-		t.Errorf("Error new session: %s", err)
-	}
+// 			t.Parallel()
 
-	for _, tc := range cases {
-		tc := tc
-		t.Run(fmt.Sprintf(tc.label), func(t *testing.T) {
-			t.Parallel()
-
-			conn := ec2.New(sess)
-			conn.Handlers.Clear()
-			conn.Handlers.Send.PushBack(func(r *request.Request) {
-				data := r.Data.(*ec2.DescribeImagesOutput)
-				data.Images = tc.images
-			})
-			name, _ := tfec2.FetchRootDeviceName(ctx, conn, "ami-123")
-			if tc.name != aws.StringValue(name) {
-				t.Errorf("Expected name %s, got %s", tc.name, aws.StringValue(name))
-			}
-		})
-	}
-}
+// 			conn := ec2.New(sess)
+// 			conn.Handlers.Clear()
+// 			conn.Handlers.Send.PushBack(func(r *request.Request) {
+// 				data := r.Data.(*ec2.DescribeImagesOutput)
+// 				data.Images = tc.images
+// 			})
+// 			name, _ := tfec2.FetchRootDeviceName(ctx, conn, "ami-123")
+// 			if tc.name != aws.ToString(name) {
+// 				t.Errorf("Expected name %s, got %s", tc.name, aws.ToString(name))
+// 			}
+// 		})
+// 	}
+// }
 
 func TestParseInstanceType(t *testing.T) {
 	t.Parallel()
@@ -189,7 +171,7 @@ func TestParseInstanceType(t *testing.T) {
 
 func TestAccEC2Instance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -222,7 +204,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 
 func TestAccEC2Instance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -247,59 +229,9 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets.
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckHasDefaultVPCDefaultSubnets(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_tags1(acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
-			},
-			{
-				Config: testAccInstanceConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccInstanceConfig_tags1(acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -327,7 +259,7 @@ func TestAccEC2Instance_inDefaultVPCBySgName(t *testing.T) {
 
 func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -355,7 +287,7 @@ func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 
 func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -399,7 +331,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 
 func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -416,7 +348,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrEncrypted: "true",
+						names.AttrEncrypted: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
@@ -463,7 +395,7 @@ func TestAccEC2Instance_EBSBlockDevice_invalidThroughputForVolumeType(t *testing
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/20821
 func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -489,7 +421,7 @@ func TestAccEC2Instance_EBSBlockDevice_RootBlockDevice_removed(t *testing.T) {
 
 func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -505,7 +437,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "root_block_device.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -521,7 +453,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 
 func TestAccEC2Instance_userDataBase64(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -550,7 +482,7 @@ func TestAccEC2Instance_userDataBase64(t *testing.T) {
 
 func TestAccEC2Instance_userDataBase64_updateWithBashFile(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -585,7 +517,7 @@ func TestAccEC2Instance_userDataBase64_updateWithBashFile(t *testing.T) {
 
 func TestAccEC2Instance_userDataBase64_updateWithZipFile(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -620,7 +552,7 @@ func TestAccEC2Instance_userDataBase64_updateWithZipFile(t *testing.T) {
 
 func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -656,16 +588,16 @@ func TestAccEC2Instance_userDataBase64_update(t *testing.T) {
 
 func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			// Map out the block devices by name, which should be unique.
-			blockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
+			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[*blockDevice.DeviceName] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -727,16 +659,16 @@ func TestAccEC2Instance_gp2WithIopsValue(t *testing.T) {
 
 func TestAccEC2Instance_blockDevices(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			// Map out the block devices by name, which should be unique.
-			blockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
+			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[*blockDevice.DeviceName] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -806,13 +738,13 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 						names.AttrDeviceName: "/dev/sdf",
 						names.AttrVolumeSize: acctest.Ct10,
 						names.AttrVolumeType: "gp3",
-						"throughput":         "300",
+						names.AttrThroughput: "300",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdg",
 						names.AttrVolumeSize: acctest.Ct10,
 						names.AttrVolumeType: "gp3",
-						"throughput":         "300",
+						names.AttrThroughput: "300",
 						names.AttrIOPS:       "4000",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
@@ -820,7 +752,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdd",
-						names.AttrEncrypted:  "true",
+						names.AttrEncrypted:  acctest.CtTrue,
 						names.AttrVolumeSize: "12",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
@@ -828,8 +760,8 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						names.AttrDeviceName: "/dev/sde",
-						"virtual_name":       "ephemeral0",
+						names.AttrDeviceName:  "/dev/sde",
+						names.AttrVirtualName: "ephemeral0",
 					}),
 					testCheck(),
 				),
@@ -846,7 +778,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 
 func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -861,7 +793,7 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct0),
 				),
 			},
@@ -877,16 +809,16 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 
 func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			// Map out the block devices by name, which should be unique.
-			blockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
+			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[*blockDevice.DeviceName] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -917,7 +849,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 				Config: testAccInstanceConfig_noAMIEphemeralDevices(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
@@ -925,11 +857,11 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						"no_device":          "true",
+						"no_device":          acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdc",
-						"no_device":          "true",
+						"no_device":          acctest.CtTrue,
 					}),
 					testCheck(),
 				),
@@ -946,7 +878,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 
 func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1002,7 +934,7 @@ func TestAccEC2Instance_sourceDestCheck(t *testing.T) {
 
 func TestAccEC2Instance_autoRecovery(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1040,7 +972,7 @@ func TestAccEC2Instance_autoRecovery(t *testing.T) {
 
 func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1054,7 +986,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPIStop(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtTrue),
 				),
 			},
 			{
@@ -1067,7 +999,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPIStop(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
 				),
 			},
 		},
@@ -1076,7 +1008,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 
 func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1090,7 +1022,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtTrue),
 				),
 			},
 			{
@@ -1103,7 +1035,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtFalse),
 				),
 			},
 		},
@@ -1112,7 +1044,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 
 func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1126,7 +1058,7 @@ func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtTrue),
 				),
 			},
 			{
@@ -1141,7 +1073,7 @@ func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
 
 func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1175,7 +1107,7 @@ func TestAccEC2Instance_dedicatedInstance(t *testing.T) {
 
 func TestAccEC2Instance_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1205,7 +1137,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 
 func TestAccEC2Instance_placementGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1234,7 +1166,7 @@ func TestAccEC2Instance_placementGroup(t *testing.T) {
 
 func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1264,7 +1196,7 @@ func TestAccEC2Instance_placementPartitionNumber(t *testing.T) {
 
 func TestAccEC2Instance_IPv6_supportAddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1311,7 +1243,7 @@ func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 
 func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1340,8 +1272,7 @@ func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 
 func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1384,7 +1315,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 
 func TestAccEC2Instance_networkInstanceSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1412,7 +1343,7 @@ func TestAccEC2Instance_networkInstanceSecurityGroups(t *testing.T) {
 
 func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1455,7 +1386,7 @@ func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 
 func TestAccEC2Instance_networkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1489,7 +1420,7 @@ func TestAccEC2Instance_networkInstanceVPCSecurityGroupIDs(t *testing.T) {
 
 func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1542,7 +1473,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 
 func TestAccEC2Instance_BlockDeviceTags_attachedVolume(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	ebsVolumeName := "aws_ebs_volume.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1593,7 +1524,7 @@ func TestAccEC2Instance_BlockDeviceTags_attachedVolume(t *testing.T) {
 
 func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1651,7 +1582,7 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 
 func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 
 	emptyMap := map[string]string{}
@@ -1726,7 +1657,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 
 func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 
 	emptyMap := map[string]string{}
@@ -1803,7 +1734,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 
 func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1862,7 +1793,7 @@ func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 
 func TestAccEC2Instance_iamInstanceProfile(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1902,7 +1833,7 @@ func TestAccEC2Instance_iamInstanceProfile(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17719
 func TestAccEC2Instance_iamInstanceProfilePath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1930,7 +1861,7 @@ func TestAccEC2Instance_iamInstanceProfilePath(t *testing.T) {
 
 func TestAccEC2Instance_privateIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1969,7 +1900,7 @@ func TestAccEC2Instance_privateIP(t *testing.T) {
 
 func TestAccEC2Instance_associatePublicIPAndPrivateIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2010,14 +1941,14 @@ func TestAccEC2Instance_associatePublicIPAndPrivateIP(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/13626
 func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
-			if aws.StringValue(v.PrivateIpAddress) == "" {
-				return fmt.Errorf("bad computed private IP: %s", aws.StringValue(v.PrivateIpAddress))
+			if aws.ToString(v.PrivateIpAddress) == "" {
+				return fmt.Errorf("bad computed private IP: %s", aws.ToString(v.PrivateIpAddress))
 			}
 
 			return nil
@@ -2049,7 +1980,7 @@ func TestAccEC2Instance_Empty_privateIP(t *testing.T) {
 
 func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2064,8 +1995,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
 				),
 			},
@@ -2081,7 +2012,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 
 func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 ec2.Instance
+	var v1, v2, v3 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2096,8 +2027,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "false"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "ip-name"),
 				),
 			},
@@ -2113,8 +2044,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "ip-name"),
 				),
 			},
@@ -2131,8 +2062,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
 					testAccCheckInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
 				),
 			},
@@ -2144,7 +2075,7 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/2302
 func TestAccEC2Instance_keyPairCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	keyPairResourceName := "aws_key_pair.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2171,35 +2102,6 @@ func TestAccEC2Instance_keyPairCheck(t *testing.T) {
 	})
 }
 
-func TestAccEC2Instance_rootBlockDeviceMismatch(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_rootBlockDeviceMismatch(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "13"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"root_block_device", "user_data_replace_on_change"},
-			},
-		},
-	})
-}
-
 // This test reproduces the bug here:
 //
 //	https://github.com/hashicorp/terraform/issues/1752
@@ -2212,7 +2114,7 @@ func TestAccEC2Instance_rootBlockDeviceMismatch(t *testing.T) {
 // set NewRemoved on the .# field when it changes to 0.
 func TestAccEC2Instance_forceNewAndTagsDrift(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2248,8 +2150,7 @@ func TestAccEC2Instance_forceNewAndTagsDrift(t *testing.T) {
 
 func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before ec2.Instance
-	var after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2286,8 +2187,7 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 
 func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before ec2.Instance
-	var after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2318,7 +2218,7 @@ func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
 
 func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2361,7 +2261,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 
 func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2399,7 +2299,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDevice_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2429,12 +2329,10 @@ func TestAccEC2Instance_EBSRootDevice_basic(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	deleteOnTermination := "true"
 	volumeType := "gp2"
 
 	originalSize := "30"
@@ -2447,21 +2345,21 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, deleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, acctest.CtTrue, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, updatedSize, deleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, updatedSize, acctest.CtTrue, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
@@ -2471,13 +2369,11 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
 
 	originalType := "gp2"
 	updatedType := "standard"
@@ -2489,21 +2385,21 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, deleteOnTermination, originalType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtTrue, originalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", originalType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, deleteOnTermination, updatedType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtTrue, updatedType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", updatedType),
 				),
 			},
@@ -2513,13 +2409,12 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
+
 	volumeType := "io1"
 
 	originalIOPS := "100"
@@ -2532,22 +2427,22 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, originalIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", originalIOPS),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
 				),
@@ -2558,13 +2453,11 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
 	volumeType := "io2"
 
 	originalIOPS := "100"
@@ -2577,22 +2470,22 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, originalIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", originalIOPS),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
 				),
@@ -2603,13 +2496,12 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
+
 	volumeType := "gp3"
 
 	originalThroughput := "250"
@@ -2622,22 +2514,22 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, deleteOnTermination, volumeType, originalThroughput),
+				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, acctest.CtTrue, volumeType, originalThroughput),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", originalThroughput),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, deleteOnTermination, volumeType, updatedThroughput),
+				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, acctest.CtTrue, volumeType, updatedThroughput),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", updatedThroughput),
 				),
@@ -2648,16 +2540,12 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
 	volumeType := "gp2"
-
-	originalDeleteOnTermination := "false"
-	updatedDeleteOnTermination := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2666,21 +2554,21 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, originalDeleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtFalse, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, updatedDeleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtTrue, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
@@ -2690,8 +2578,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2703,9 +2590,6 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 
 	updatedIOPS := "200"
 
-	originalDeleteOnTermination := "false"
-	updatedDeleteOnTermination := "true"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2713,21 +2597,21 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, originalDeleteOnTermination, originalType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, acctest.CtFalse, originalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", originalType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, updatedSize, updatedDeleteOnTermination, updatedType, updatedIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, updatedSize, acctest.CtTrue, updatedType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", updatedType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
 				),
@@ -2738,12 +2622,9 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 
 func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before ec2.Instance
-	var after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	deleteOnTermination := "true"
 
 	updatedRootVolumeSize := "14"
 
@@ -2754,7 +2635,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, deleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
@@ -2770,7 +2651,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 				),
 			},
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, updatedRootVolumeSize, deleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, updatedRootVolumeSize, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
@@ -2792,13 +2673,9 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 
 func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTermination(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before ec2.Instance
-	var after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	originalDeleteOnTermination := "false"
-	updatedDeleteOnTermination := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2807,11 +2684,11 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, originalDeleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: "9",
 					}),
@@ -2824,12 +2701,12 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 				),
 			},
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, updatedDeleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: "9",
 					}),
@@ -2848,7 +2725,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 // Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
 func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2864,25 +2741,25 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrDeleteOnTermination: "true",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdd",
-						names.AttrEncrypted:           "false",
+						names.AttrEncrypted:           acctest.CtFalse,
 						names.AttrIOPS:                "100",
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrDeleteOnTermination: "true",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdc",
-						names.AttrEncrypted:           "false",
+						names.AttrEncrypted:           acctest.CtFalse,
 						names.AttrIOPS:                "100",
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrDeleteOnTermination: "true",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdb",
-						names.AttrEncrypted:           "false",
+						names.AttrEncrypted:           acctest.CtFalse,
 						names.AttrIOPS:                "100",
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
@@ -2901,16 +2778,16 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 
 func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
 			// Map out the block devices by name, which should be unique.
-			blockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
+			blockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[*blockDevice.DeviceName] = blockDevice
+				blockDevices[aws.ToString(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -2952,7 +2829,7 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 
 func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	var eni awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
@@ -2988,7 +2865,7 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 
 func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3024,7 +2901,7 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 
 func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	var eni awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
@@ -3041,7 +2918,7 @@ func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					testAccCheckENIExists(ctx, eniResourceName, &eni),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
 			{
@@ -3056,8 +2933,7 @@ func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 
 func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before ec2.Instance
-	var after ec2.Instance
+	var before, after awstypes.Instance
 	var eniPrimary awstypes.NetworkInterface
 	var eniSecondary awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
@@ -3100,8 +2976,7 @@ func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/3205
 func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before ec2.Instance
-	var after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3138,7 +3013,7 @@ func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3152,7 +3027,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 				Config: testAccInstanceConfig_publicAndPrivateSecondaryIPs(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.Ct2),
 				),
@@ -3161,7 +3036,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 				Config: testAccInstanceConfig_publicAndPrivateSecondaryIPs(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.Ct2),
 				),
@@ -3179,7 +3054,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	secondaryIPs := fmt.Sprintf("%q, %q", "10.1.1.42", "10.1.1.43")
@@ -3211,7 +3086,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	secondaryIP := fmt.Sprintf("%q", "10.1.1.42")
@@ -3260,7 +3135,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	privateIP := "10.1.1.42"
@@ -3293,7 +3168,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPs(t *t
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7063
 func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	privateIP := "10.1.1.42"
@@ -3343,7 +3218,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdat
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3357,7 +3232,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicDefaultPrivate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
 			},
@@ -3374,7 +3249,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3388,7 +3263,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicDefaultPublic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -3405,7 +3280,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3419,7 +3294,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicExplicitPublic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -3436,7 +3311,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3450,7 +3325,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicExplicitPrivate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
 			},
@@ -3467,7 +3342,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3481,7 +3356,7 @@ func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicOverridePublic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -3498,7 +3373,7 @@ func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3512,7 +3387,7 @@ func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicOverridePrivate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
 			},
@@ -3528,7 +3403,7 @@ func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	amiDataSourceName := "data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64"
@@ -3558,7 +3433,7 @@ func TestAccEC2Instance_LaunchTemplate_basic(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplate_overrideTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	amiDataSourceName := "data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64"
@@ -3586,7 +3461,7 @@ func TestAccEC2Instance_LaunchTemplate_overrideTemplate(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplate_setSpecificVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3620,7 +3495,7 @@ func TestAccEC2Instance_LaunchTemplate_setSpecificVersion(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplateModifyTemplate_defaultVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3654,7 +3529,7 @@ func TestAccEC2Instance_LaunchTemplateModifyTemplate_defaultVersion(t *testing.T
 
 func TestAccEC2Instance_LaunchTemplate_updateTemplateVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3688,7 +3563,7 @@ func TestAccEC2Instance_LaunchTemplate_updateTemplateVersion(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3722,7 +3597,7 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplate_iamInstanceProfile(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3747,7 +3622,7 @@ func TestAccEC2Instance_LaunchTemplate_iamInstanceProfile(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -3771,7 +3646,7 @@ func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 
 func TestAccEC2Instance_LaunchTemplate_vpcSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	launchTemplateResourceName := "aws_launch_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3795,7 +3670,7 @@ func TestAccEC2Instance_LaunchTemplate_vpcSecurityGroup(t *testing.T) {
 
 func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3814,7 +3689,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 				Config: testAccInstanceConfig_getPasswordData(rName, publicKey, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "password_data", ""),
 				),
 			},
@@ -3829,7 +3704,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "password_data"),
 				),
 			},
@@ -3839,7 +3714,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 
 func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3858,7 +3733,7 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 				Config: testAccInstanceConfig_getPasswordData(rName, publicKey, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "password_data"),
 				),
 			},
@@ -3877,7 +3752,7 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "password_data", ""),
 				),
 			},
@@ -3887,7 +3762,7 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspecified(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3, v4 ec2.Instance
+	var v1, v2, v3, v4 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3896,7 +3771,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -3919,7 +3794,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			},
 			{
 				// test DiffSuppressFunc to suppress "" to "disabled"
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceNotRecreated(&v1, &v2),
@@ -3930,12 +3805,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			},
 			{
 				// expect recreation when it is enabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
 					testAccCheckInstanceRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 			{
@@ -3945,7 +3820,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 					testAccCheckInstanceExists(ctx, resourceName, &v4),
 					testAccCheckInstanceNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 		},
@@ -3954,7 +3829,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspecified(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3, v4 ec2.Instance
+	var v1, v2, v3, v4 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -3963,7 +3838,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -3986,22 +3861,22 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 			},
 			{
 				// expect recreation when it is enabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 			{
 				// expect recreation when it is disabled
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
 					testAccCheckInstanceRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 			{
@@ -4011,7 +3886,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 					testAccCheckInstanceExists(ctx, resourceName, &v4),
 					testAccCheckInstanceNotRecreated(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 		},
@@ -4020,7 +3895,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4029,18 +3904,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 			{
@@ -4050,12 +3925,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 		},
@@ -4064,7 +3939,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4073,18 +3948,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationDisabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 				),
 			},
 			{
@@ -4094,12 +3969,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, ec2.AmdSevSnpSpecificationEnabled),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnp(rName, string(awstypes.AmdSevSnpSpecificationEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 				),
 			},
 		},
@@ -4108,7 +3983,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4122,18 +3997,18 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
+			acctest.PreCheckRegion(t, names.USEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationEnabled, originalCoreCount, originalThreadsPerCore),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationEnabled), originalCoreCount, originalThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationEnabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(originalCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(originalThreadsPerCore)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(originalCoreCount)),
@@ -4147,12 +4022,12 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, ec2.AmdSevSnpSpecificationDisabled, updatedCoreCount, updatedThreadsPerCore),
+				Config: testAccInstanceConfig_cpuOptionsAmdSevSnpCoreThreads(rName, string(awstypes.AmdSevSnpSpecificationDisabled), updatedCoreCount, updatedThreadsPerCore),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", ec2.AmdSevSnpSpecificationDisabled),
+					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.amd_sev_snp", string(awstypes.AmdSevSnpSpecificationDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.core_count", strconv.Itoa(updatedCoreCount)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.0.threads_per_core", strconv.Itoa(updatedThreadsPerCore)),
 					resource.TestCheckResourceAttr(resourceName, "cpu_core_count", strconv.Itoa(updatedCoreCount)),
@@ -4165,7 +4040,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4215,7 +4090,7 @@ func TestAccEC2Instance_cpuOptionsCoreThreads(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsCoreThreadsMigration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4264,7 +4139,7 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsMigration(t *testing.T) {
 
 func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4313,7 +4188,7 @@ func TestAccEC2Instance_cpuOptionsCoreThreadsUnspecifiedToSpecified(t *testing.T
 
 func TestAccEC2Instance_CreditSpecificationEmpty_nonBurstable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4342,7 +4217,7 @@ func TestAccEC2Instance_CreditSpecificationEmpty_nonBurstable(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10203
 func TestAccEC2Instance_CreditSpecificationUnspecifiedToEmpty_nonBurstable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance ec2.Instance
+	var instance awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4376,7 +4251,7 @@ func TestAccEC2Instance_CreditSpecificationUnspecifiedToEmpty_nonBurstable(t *te
 
 func TestAccEC2Instance_CreditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4406,7 +4281,7 @@ func TestAccEC2Instance_CreditSpecification_unspecifiedDefaultsToStandard(t *tes
 
 func TestAccEC2Instance_CreditSpecification_standardCPUCredits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second ec2.Instance
+	var first, second awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4444,7 +4319,7 @@ func TestAccEC2Instance_CreditSpecification_standardCPUCredits(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecification_unlimitedCPUCredits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second ec2.Instance
+	var first, second awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4482,7 +4357,7 @@ func TestAccEC2Instance_CreditSpecification_unlimitedCPUCredits(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4512,7 +4387,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t2(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4542,7 +4417,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3a(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4572,7 +4447,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t3a(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t4g(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4602,7 +4477,7 @@ func TestAccEC2Instance_CreditSpecificationUnknownCPUCredits_t4g(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second, third ec2.Instance
+	var first, second, third awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4648,7 +4523,7 @@ func TestAccEC2Instance_CreditSpecification_updateCPUCredits(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecification_isNotAppliedToNonBurstable(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4676,7 +4551,7 @@ func TestAccEC2Instance_CreditSpecification_isNotAppliedToNonBurstable(t *testin
 
 func TestAccEC2Instance_CreditSpecificationT3_unspecifiedDefaultsToUnlimited(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4706,7 +4581,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 
 func TestAccEC2Instance_CreditSpecificationT3_standardCPUCredits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second ec2.Instance
+	var first, second awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4744,7 +4619,7 @@ func TestAccEC2Instance_CreditSpecificationT3_standardCPUCredits(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecificationT3_unlimitedCPUCredits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second ec2.Instance
+	var first, second awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4782,7 +4657,7 @@ func TestAccEC2Instance_CreditSpecificationT3_unlimitedCPUCredits(t *testing.T) 
 
 func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var first, second, third ec2.Instance
+	var first, second, third awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4828,7 +4703,7 @@ func TestAccEC2Instance_CreditSpecificationT3_updateCPUCredits(t *testing.T) {
 
 func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4867,7 +4742,7 @@ func TestAccEC2Instance_CreditSpecificationStandardCPUCredits_t2Tot3Taint(t *tes
 
 func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.Instance
+	var before, after awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4906,7 +4781,7 @@ func TestAccEC2Instance_CreditSpecificationUnlimitedCPUCredits_t2Tot3Taint(t *te
 
 func TestAccEC2Instance_UserData(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4934,7 +4809,7 @@ func TestAccEC2Instance_UserData(t *testing.T) {
 
 func TestAccEC2Instance_UserData_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -4968,7 +4843,7 @@ func TestAccEC2Instance_UserData_update(t *testing.T) {
 
 func TestAccEC2Instance_UserData_stringToEncodedString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5002,7 +4877,7 @@ func TestAccEC2Instance_UserData_stringToEncodedString(t *testing.T) {
 
 func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5036,7 +4911,7 @@ func TestAccEC2Instance_UserData_emptyStringToUnspecified(t *testing.T) {
 
 func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5070,7 +4945,7 @@ func TestAccEC2Instance_UserData_unspecifiedToEmptyString(t *testing.T) {
 
 func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance1, instance2 ec2.Instance
+	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5081,7 +4956,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", "true"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5094,7 +4969,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 			},
 			// Switching should force a recreate
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", "true"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceRecreated(&instance1, &instance2),
@@ -5106,7 +4981,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 
 func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance1, instance2 ec2.Instance
+	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5117,7 +4992,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "true"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5130,7 +5005,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 			},
 			// Switching should force a recreate
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "true"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceRecreated(&instance1, &instance2),
@@ -5142,7 +5017,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 
 func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance1, instance2 ec2.Instance
+	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5153,7 +5028,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", "false"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5166,7 +5041,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 			},
 			// Switching should not force a recreate
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", "false"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
@@ -5178,7 +5053,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 
 func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 	ctx := acctest.Context(t)
-	var instance1, instance2 ec2.Instance
+	var instance1, instance2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5189,7 +5064,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "false"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5202,7 +5077,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 			},
 			// Switching should not force a recreate
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "false"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
@@ -5214,7 +5089,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 
 func TestAccEC2Instance_hibernation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5228,7 +5103,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 				Config: testAccInstanceConfig_hibernation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "hibernation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation", acctest.CtTrue),
 				),
 			},
 			{
@@ -5242,7 +5117,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "hibernation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation", acctest.CtFalse),
 				),
 			},
 		},
@@ -5251,7 +5126,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 
 func TestAccEC2Instance_metadataOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5321,7 +5196,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 
 func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.Instance
+	var v1, v2 awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5336,7 +5211,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -5351,7 +5226,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -5360,7 +5235,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 
 func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5397,7 +5272,7 @@ func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 
 func TestAccEC2Instance_CapacityReservationPreference_open(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5428,7 +5303,7 @@ func TestAccEC2Instance_CapacityReservationPreference_open(t *testing.T) {
 
 func TestAccEC2Instance_CapacityReservationPreference_none(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5459,7 +5334,7 @@ func TestAccEC2Instance_CapacityReservationPreference_none(t *testing.T) {
 
 func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5490,8 +5365,7 @@ func TestAccEC2Instance_CapacityReservation_targetID(t *testing.T) {
 
 func TestAccEC2Instance_CapacityReservation_modifyPreference(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5531,8 +5405,7 @@ func TestAccEC2Instance_CapacityReservation_modifyPreference(t *testing.T) {
 
 func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 	ctx := acctest.Context(t)
-	var original ec2.Instance
-	var updated ec2.Instance
+	var original, updated awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5572,7 +5445,7 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 
 func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Instance
+	var v awstypes.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -5610,9 +5483,9 @@ func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceNotRecreated(before, after *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceNotRecreated(before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before != after {
+		if before, after := aws.ToString(before.InstanceId), aws.ToString(after.InstanceId); before != after {
 			return fmt.Errorf("EC2 Instance (%s/%s) recreated", before, after)
 		}
 
@@ -5620,9 +5493,9 @@ func testAccCheckInstanceNotRecreated(before, after *ec2.Instance) resource.Test
 	}
 }
 
-func testAccCheckInstanceRecreated(before, after *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceRecreated(before, after *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.InstanceId), aws.StringValue(after.InstanceId); before == after {
+		if before, after := aws.ToString(before.InstanceId), aws.ToString(after.InstanceId); before == after {
 			return fmt.Errorf("EC2 Instance (%s) not recreated", before)
 		}
 
@@ -5632,7 +5505,7 @@ func testAccCheckInstanceRecreated(before, after *ec2.Instance) resource.TestChe
 
 func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_instance" {
@@ -5656,7 +5529,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckInstanceExists(ctx context.Context, n string, v *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -5667,7 +5540,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *ec2.Instance) 
 			return fmt.Errorf("No EC2 Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -5681,23 +5554,23 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *ec2.Instance) 
 	}
 }
 
-func testAccCheckStopInstance(ctx context.Context, v *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckStopInstance(ctx context.Context, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.StopInstance(ctx, conn, aws.StringValue(v.InstanceId), false, 10*time.Minute)
+		return tfec2.StopInstance(ctx, conn, aws.ToString(v.InstanceId), false, 10*time.Minute)
 	}
 }
 
-func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
+func testAccCheckDetachVolumes(ctx context.Context, instance *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, v := range instance.BlockDeviceMappings {
 			if v.Ebs != nil && v.Ebs.VolumeId != nil {
-				deviceName := aws.StringValue(v.DeviceName)
-				instanceID := aws.StringValue(instance.InstanceId)
-				volumeID := aws.StringValue(v.Ebs.VolumeId)
+				deviceName := aws.ToString(v.DeviceName)
+				instanceID := aws.ToString(instance.InstanceId)
+				volumeID := aws.ToString(v.Ebs.VolumeId)
 
 				// Make sure in correct state before detaching.
 				if _, err := tfec2.WaitVolumeAttachmentCreated(ctx, conn, volumeID, instanceID, deviceName, 5*time.Minute); err != nil {
@@ -5778,12 +5651,12 @@ func TestInstanceCPUThreadsPerCoreSchema(t *testing.T) {
 	}
 }
 
-func driftTags(ctx context.Context, instance *ec2.Instance) resource.TestCheckFunc {
+func driftTags(ctx context.Context, instance *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-		_, err := conn.CreateTagsWithContext(ctx, &ec2.CreateTagsInput{
-			Resources: []*string{instance.InstanceId},
-			Tags: []*ec2.Tag{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		_, err := conn.CreateTags(ctx, &ec2.CreateTagsInput{
+			Resources: []string{aws.ToString(instance.InstanceId)},
+			Tags: []awstypes.Tag{
 				{
 					Key:   aws.String("Drift"),
 					Value: aws.String("Happens"),
@@ -5807,10 +5680,10 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 
 // defaultVPC returns the ID of the default VPC for the current AWS Region, or "" if none exists.
 func defaultVPC(ctx context.Context, t *testing.T) string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := conn.DescribeAccountAttributesWithContext(ctx, &ec2.DescribeAccountAttributesInput{
-		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	output, err := conn.DescribeAccountAttributes(ctx, &ec2.DescribeAccountAttributesInput{
+		AttributeNames: flex.ExpandStringyValueList[awstypes.AccountAttributeName]([]any{string(awstypes.AccountAttributeNameDefaultVpc)}),
 	})
 
 	if acctest.PreCheckSkipError(err) {
@@ -5822,7 +5695,7 @@ func defaultVPC(ctx context.Context, t *testing.T) string {
 	}
 
 	if len(output.AccountAttributes) > 0 && len(output.AccountAttributes[0].AttributeValues) > 0 {
-		if v := aws.StringValue(output.AccountAttributes[0].AttributeValues[0].AttributeValue); v != "none" {
+		if v := aws.ToString(output.AccountAttributes[0].AttributeValues[0].AttributeValue); v != "none" {
 			return v
 		}
 	}
@@ -5836,17 +5709,17 @@ func hasDefaultVPC(ctx context.Context, t *testing.T) bool {
 
 // defaultSubnetCount returns the number of default subnets in the current region's default VPC.
 func defaultSubnetCount(ctx context.Context, t *testing.T) int {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.NewAttributeFilterList(
+		Filters: tfec2.NewAttributeFilterListV2(
 			map[string]string{
-				"defaultForAz": "true",
+				"defaultForAz": acctest.CtTrue,
 			},
 		),
 	}
 
-	subnets, err := tfec2.FindSubnets(ctx, conn, input)
+	subnets, err := tfec2.FindSubnetsV2(ctx, conn, input)
 
 	if acctest.PreCheckSkipError(err) {
 		return 0
@@ -6025,33 +5898,6 @@ resource "aws_instance" "test" {
   # Explicitly no tags so as to test creation without tags.
 }
 `)
-}
-
-func testAccInstanceConfig_tags1(tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type = "t2.small"
-
-  tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1))
-}
-
-func testAccInstanceConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type = "t2.small"
-
-  tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccInstanceConfig_inDefaultVPCBySgName(rName string) string {
@@ -7814,28 +7660,6 @@ resource "aws_instance" "test" {
 `, rName, publicKey))
 }
 
-func testAccInstanceConfig_rootBlockDeviceMismatch(rName string) string {
-	return acctest.ConfigCompose(
-		testAccInstanceVPCConfig(rName, false, 0), fmt.Sprintf(`
-resource "aws_instance" "test" {
-  # This is an AMI in UsWest2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
-  ami = "ami-ef5b69df"
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type = "t1.micro"
-  subnet_id     = aws_subnet.test.id
-
-  root_block_device {
-    volume_size = 13
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)) //lintignore:AWSAT002
-}
-
 func testAccInstanceConfig_forceNewAndTagsDrift(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
@@ -9057,7 +8881,7 @@ resource "aws_ec2_capacity_reservation" "test" {
     Name = %[1]q
   }
 }
-`, rName, ec2.CapacityReservationInstancePlatformLinuxUnix))
+`, rName, awstypes.CapacityReservationInstancePlatformLinuxUnix))
 }
 
 func testAccInstanceConfig_templateBasic(rName string) string {

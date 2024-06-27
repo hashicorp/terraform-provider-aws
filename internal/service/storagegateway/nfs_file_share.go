@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_storagegateway_nfs_file_share", name="NFS File Share")
 // @Tags(identifierAttribute="arn")
-func ResourceNFSFileShare() *schema.Resource {
+func resourceNFSFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNFSFileShareCreate,
 		ReadWithoutTimeout:   resourceNFSFileShareRead,
@@ -152,13 +152,13 @@ func ResourceNFSFileShare() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "65534",
-							ValidateFunc: valid4ByteASN,
+							ValidateFunc: verify.Valid4ByteASN,
 						},
 						names.AttrOwnerID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "65534",
-							ValidateFunc: valid4ByteASN,
+							ValidateFunc: verify.Valid4ByteASN,
 						},
 					},
 				},

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func validateMonthlySpend(v interface{}, k string) (ws []string, errors []error) {
@@ -135,11 +136,12 @@ func resourceSMSPreferences() *schema.Resource {
 }
 
 func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := SMSPreferencesAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &sns.SetSMSAttributesInput{
@@ -149,27 +151,29 @@ func resourceSMSPreferencesSet(ctx context.Context, d *schema.ResourceData, meta
 	_, err = conn.SetSMSAttributes(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("setting SNS SMS Preferences: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting SNS SMS Preferences: %s", err)
 	}
 
 	d.SetId("aws_sns_sms_id")
 
-	return nil
+	return diags
 }
 
 func resourceSMSPreferencesGet(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	output, err := conn.GetSMSAttributes(ctx, &sns.GetSMSAttributesInput{})
 
 	if err != nil {
-		return diag.Errorf("reading SNS SMS Preferences: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS SMS Preferences: %s", err)
 	}
 
-	return diag.FromErr(SMSPreferencesAttributeMap.APIAttributesToResourceData(output.Attributes, d))
+	return sdkdiag.AppendFromErr(diags, SMSPreferencesAttributeMap.APIAttributesToResourceData(output.Attributes, d))
 }
 
 func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	// Reset the attributes to their default value.
@@ -185,8 +189,8 @@ func resourceSMSPreferencesDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.SetSMSAttributes(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("resetting SNS SMS Preferences: %s", err)
+		return sdkdiag.AppendErrorf(diags, "resetting SNS SMS Preferences: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ import (
 
 func TestAccSiteVPNGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.VpnGateway
+	var v1, v2 awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -37,7 +37,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 			return fmt.Errorf("VPN Gateway B is not attached")
 		}
 
-		if aws.StringValue(v1.VpcAttachments[0].VpcId) == aws.StringValue(v2.VpcAttachments[0].VpcId) {
+		if aws.ToString(v1.VpcAttachments[0].VpcId) == aws.ToString(v2.VpcAttachments[0].VpcId) {
 			return fmt.Errorf("Attachment IDs are equal")
 		}
 
@@ -76,7 +76,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 
 func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpnGateway
+	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	azDataSourceName := "data.aws_availability_zones.available"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -106,7 +106,7 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 
 func TestAccSiteVPNGateway_amazonSideASN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpnGateway
+	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -135,7 +135,7 @@ func TestAccSiteVPNGateway_amazonSideASN(t *testing.T) {
 
 func TestAccSiteVPNGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpnGateway
+	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -159,41 +159,41 @@ func TestAccSiteVPNGateway_disappears(t *testing.T) {
 
 func TestAccSiteVPNGateway_reattach(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpc1, vpc2 ec2.Vpc
-	var vgw1, vgw2 ec2.VpnGateway
+	var vpc1, vpc2 awstypes.Vpc
+	var vgw1, vgw2 awstypes.VpnGateway
 	vpcResourceName1 := "aws_vpc.test1"
 	vpcResourceName2 := "aws_vpc.test2"
 	resourceName1 := "aws_vpn_gateway.test1"
 	resourceName2 := "aws_vpn_gateway.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	testAttachmentFunc := func(vgw *ec2.VpnGateway, vpc *ec2.Vpc) func(*terraform.State) error {
+	testAttachmentFunc := func(vgw *awstypes.VpnGateway, vpc *awstypes.Vpc) func(*terraform.State) error {
 		return func(*terraform.State) error {
 			if len(vgw.VpcAttachments) == 0 {
-				return fmt.Errorf("VPN Gateway %q has no VPC attachments.", aws.StringValue(vgw.VpnGatewayId))
+				return fmt.Errorf("VPN Gateway %q has no VPC attachments.", aws.ToString(vgw.VpnGatewayId))
 			}
 
 			if len(vgw.VpcAttachments) > 1 {
 				count := 0
 				for _, v := range vgw.VpcAttachments {
-					if aws.StringValue(v.State) == ec2.AttachmentStatusAttached {
+					if v.State == awstypes.AttachmentStatusAttached {
 						count += 1
 					}
 				}
 				if count > 1 {
 					return fmt.Errorf(
 						"VPN Gateway %q has an unexpected number of VPC attachments (more than 1): %#v",
-						aws.StringValue(vgw.VpnGatewayId), vgw.VpcAttachments)
+						aws.ToString(vgw.VpnGatewayId), vgw.VpcAttachments)
 				}
 			}
 
-			if aws.StringValue(vgw.VpcAttachments[0].State) != ec2.AttachmentStatusAttached {
-				return fmt.Errorf("Expected VPN Gateway %q to be attached.", aws.StringValue(vgw.VpnGatewayId))
+			if vgw.VpcAttachments[0].State != awstypes.AttachmentStatusAttached {
+				return fmt.Errorf("Expected VPN Gateway %q to be attached.", aws.ToString(vgw.VpnGatewayId))
 			}
 
 			if *vgw.VpcAttachments[0].VpcId != *vpc.VpcId {
 				return fmt.Errorf("Expected VPN Gateway %q to be attached to VPC %q, but got: %q",
-					aws.StringValue(vgw.VpnGatewayId), aws.StringValue(vpc.VpcId), aws.StringValue(vgw.VpcAttachments[0].VpcId))
+					aws.ToString(vgw.VpnGatewayId), aws.ToString(vpc.VpcId), aws.ToString(vgw.VpcAttachments[0].VpcId))
 			}
 			return nil
 		}
@@ -208,8 +208,8 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 			{
 				Config: testAccSiteVPNGatewayConfig_reattach(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(ctx, vpcResourceName1, &vpc1),
-					acctest.CheckVPCExists(ctx, vpcResourceName2, &vpc2),
+					acctest.CheckVPCExistsV2(ctx, vpcResourceName1, &vpc1),
+					acctest.CheckVPCExistsV2(ctx, vpcResourceName2, &vpc2),
 					testAccCheckVPNGatewayExists(ctx, resourceName1, &vgw1),
 					testAccCheckVPNGatewayExists(ctx, resourceName2, &vgw2),
 					testAttachmentFunc(&vgw1, &vpc1),
@@ -250,7 +250,7 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 
 func TestAccSiteVPNGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.VpnGateway
+	var v awstypes.VpnGateway
 	resourceName := "aws_vpn_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -296,7 +296,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 
 func testAccCheckVPNGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_gateway" {
@@ -320,14 +320,14 @@ func testAccCheckVPNGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckVPNGatewayExists(ctx context.Context, n string, v *ec2.VpnGateway) resource.TestCheckFunc {
+func testAccCheckVPNGatewayExists(ctx context.Context, n string, v *awstypes.VpnGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNGatewayByID(ctx, conn, rs.Primary.ID)
 

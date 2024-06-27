@@ -76,7 +76,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"parameter_group_name": {
+						names.AttrParameterGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -246,19 +246,19 @@ func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrDescription:      aws.StringValue(v.Description),
-		names.AttrEngineVersion:    aws.StringValue(v.EngineVersion),
-		"maintenance_window":       aws.StringValue(v.MaintenanceWindow),
-		names.AttrName:             aws.StringValue(v.Name),
-		"node_type":                aws.StringValue(v.NodeType),
-		"num_shards":               aws.Int64Value(v.NumShards),
-		"parameter_group_name":     aws.StringValue(v.ParameterGroupName),
-		names.AttrPort:             aws.Int64Value(v.Port),
-		"snapshot_retention_limit": aws.Int64Value(v.SnapshotRetentionLimit),
-		"snapshot_window":          aws.StringValue(v.SnapshotWindow),
-		"subnet_group_name":        aws.StringValue(v.SubnetGroupName),
-		names.AttrTopicARN:         aws.StringValue(v.TopicArn),
-		names.AttrVPCID:            aws.StringValue(v.VpcId),
+		names.AttrDescription:        aws.StringValue(v.Description),
+		names.AttrEngineVersion:      aws.StringValue(v.EngineVersion),
+		"maintenance_window":         aws.StringValue(v.MaintenanceWindow),
+		names.AttrName:               aws.StringValue(v.Name),
+		"node_type":                  aws.StringValue(v.NodeType),
+		"num_shards":                 aws.Int64Value(v.NumShards),
+		names.AttrParameterGroupName: aws.StringValue(v.ParameterGroupName),
+		names.AttrPort:               aws.Int64Value(v.Port),
+		"snapshot_retention_limit":   aws.Int64Value(v.SnapshotRetentionLimit),
+		"snapshot_window":            aws.StringValue(v.SnapshotWindow),
+		"subnet_group_name":          aws.StringValue(v.SubnetGroupName),
+		names.AttrTopicARN:           aws.StringValue(v.TopicArn),
+		names.AttrVPCID:              aws.StringValue(v.VpcId),
 	}
 
 	return []interface{}{m}

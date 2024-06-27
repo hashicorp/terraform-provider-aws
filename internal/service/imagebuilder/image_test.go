@@ -42,10 +42,10 @@ func TestAccImageBuilderImage_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "container_recipe_arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(resourceName, "distribution_configuration_arn"),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
 					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -131,7 +131,7 @@ func TestAccImageBuilderImage_enhancedImageMetadataEnabled(t *testing.T) {
 				Config: testAccImageConfig_enhancedMetadataEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccImageBuilderImage_ImageTests_imageTestsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtFalse),
 				),
 			},
 			{

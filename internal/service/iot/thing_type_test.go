@@ -34,7 +34,7 @@ func TestAccIoTThingType_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "deprecated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deprecated", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
@@ -86,7 +86,7 @@ func TestAccIoTThingType_full(t *testing.T) {
 				Config: testAccThingTypeConfig_full(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "deprecated", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deprecated", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "MyDescription"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.searchable_attributes.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "properties.0.searchable_attributes.*", "foo"),
@@ -103,7 +103,7 @@ func TestAccIoTThingType_full(t *testing.T) {
 				Config: testAccThingTypeConfig_full(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "deprecated", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deprecated", acctest.CtFalse),
 				),
 			},
 		},

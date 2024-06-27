@@ -50,7 +50,7 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "rds", regexache.MustCompile(`cert:rds-ca-[-0-9a-z]+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "certificate_type", "CA"),
-					resource.TestCheckResourceAttr(dataSourceName, "customer_override", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "customer_override", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(dataSourceName, "customer_override_valid_till"),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^rds-ca-[-0-9a-z]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexache.MustCompile(`^[0-9a-f]+$`)),

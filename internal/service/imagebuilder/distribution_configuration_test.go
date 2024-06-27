@@ -633,12 +633,12 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_fastLaunchEnabled(rName, "true"),
+				Config: testAccDistributionConfigurationConfig_fastLaunchEnabled(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -647,12 +647,12 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_fastLaunchEnabled(rName, "false"),
+				Config: testAccDistributionConfigurationConfig_fastLaunchEnabled(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -801,7 +801,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", "true"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 				),
 			},
@@ -817,7 +817,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", "false"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 				),
 			},
@@ -828,7 +828,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", "false"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.account_id", "111111111111"),
 				),

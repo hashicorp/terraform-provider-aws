@@ -42,7 +42,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", "false"),
+					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", ""),
 				),
 			},
@@ -272,12 +272,12 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						names.AttrClientID:        "7lhlkkfbfb4q5kpp90urffao",
 						names.AttrProviderName:    fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
-						"server_side_token_check": "false",
+						"server_side_token_check": acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						names.AttrClientID:        "7lhlkkfbfb4q5kpp90urffao",
 						names.AttrProviderName:    fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Ab129faBb", acctest.Region(), acctest.PartitionDNSSuffix()),
-						"server_side_token_check": "false",
+						"server_side_token_check": acctest.CtFalse,
 					}),
 				),
 			},
@@ -296,7 +296,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
 						names.AttrClientID:        "6lhlkkfbfb4q5kpp90urffae",
 						names.AttrProviderName:    fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
-						"server_side_token_check": "false",
+						"server_side_token_check": acctest.CtFalse,
 					}),
 				),
 			},

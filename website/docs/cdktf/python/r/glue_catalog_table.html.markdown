@@ -146,6 +146,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 ### storage_descriptor
 
+* `additional_locations` - (Optional) List of locations that point to the path where a Delta table is located.
 * `bucket_columns` - (Optional) List of reducer grouping columns, clustering columns, and bucketing columns in the table.
 * `columns` - (Optional) Configuration block for columns in the table. See [`columns`](#columns) below.
 * `compressed` - (Optional) Whether the data in the table is compressed.
@@ -235,4 +236,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-440086f7b6f42d14e88814e52247b9d2d35062cc39a397bacf9d9b2222191e88 -->
+<!-- cache-key: cdktf-0.20.1 input-75088d3c6c39c44bd5079c79ed51ebfb158cf71471233214605cf723a3b61c92 -->

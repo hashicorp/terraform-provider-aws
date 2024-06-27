@@ -317,7 +317,12 @@ func sqliMatchStatementSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_to_match":      fieldToMatchSchema(),
+				"field_to_match": fieldToMatchSchema(),
+				"sensitivity_level": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SensitivityLevel](),
+				},
 				"text_transformation": textTransformationSchema(),
 			},
 		},
@@ -539,7 +544,59 @@ func requestBodySchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"api_gateway": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
+				"app_runner_service": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
 				"cloudfront": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
+				"cognito_user_pool": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
+				"verified_access_instance": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Elem: &schema.Resource{

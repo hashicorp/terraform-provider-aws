@@ -652,23 +652,13 @@ func CheckResourceAttrRFC3339(resourceName, attributeName string) resource.TestC
 	return resource.TestMatchResourceAttr(resourceName, attributeName, regexache.MustCompile(RFC3339RegexPattern))
 }
 
-// CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value. Both JSON
-// values are normalized before being compared.
-func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		is, err := PrimaryInstanceState(s, resourceName)
+// CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value.
+// Both JSON values are normalized before being compared.
+func CheckResourceAttrEquivalentJSON(n, key, expectedJSON string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(n, key, func(value string) error {
+		vNormal, err := structure.NormalizeJsonString(value)
 		if err != nil {
-			return err
-		}
-
-		v, ok := is.Attributes[attributeName]
-		if !ok {
-			return fmt.Errorf("%s: No attribute %q found", resourceName, attributeName)
-		}
-
-		vNormal, err := structure.NormalizeJsonString(v)
-		if err != nil {
-			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", resourceName, attributeName, err)
+			return fmt.Errorf("%s: Error normalizing JSON in %q: %w", n, key, err)
 		}
 
 		expectedNormal, err := structure.NormalizeJsonString(expectedJSON)
@@ -677,10 +667,10 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 		}
 
 		if vNormal != expectedNormal {
-			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", resourceName, attributeName, expectedJSON, v)
+			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", n, key, expectedJSON, value)
 		}
 		return nil
-	}
+	})
 }
 
 func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheckFunc {
@@ -1932,7 +1922,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 	return func(s *terraform.State) error {
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		if v := string(certificateAuthority.Type); v != string(acmpcatypes.CertificateAuthorityTypeRoot) {
+		if v := certificateAuthority.Type; v != acmpcatypes.CertificateAuthorityTypeRoot {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
@@ -2001,7 +1991,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 	return func(s *terraform.State) error {
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		if v := string(certificateAuthority.Type); v != string(acmpcatypes.CertificateAuthorityTypeSubordinate) {
+		if v := certificateAuthority.Type; v != acmpcatypes.CertificateAuthorityTypeSubordinate {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
@@ -2036,14 +2026,14 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		// Wait for certificate status to become ISSUED.
 		waiter := acmpca.NewCertificateIssuedWaiter(conn)
 		params := &acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		}
 
 		err = waiter.Wait(ctx, params, CertificateIssueTimeout)
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.StringValue(issueCertOutput.CertificateArn), err)
 		}
 
 		getCertOutput, err := conn.GetCertificate(ctx, &acmpca.GetCertificateInput{

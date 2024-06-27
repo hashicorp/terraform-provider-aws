@@ -129,7 +129,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_deleteOnTermination(t 
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"ebs.0.delete_on_termination": "true",
+						"ebs.0.delete_on_termination": acctest.CtTrue,
 					}),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_encrypted(t *testing.T
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"ebs.0.encrypted": "true",
+						"ebs.0.encrypted": acctest.CtTrue,
 					}),
 				),
 			},
@@ -397,7 +397,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMapping_noDevice(t *testing.T) {
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"no_device": "true",
+						"no_device": acctest.CtTrue,
 					}),
 				),
 			},
@@ -427,7 +427,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMapping_virtualName(t *testing.T)
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"virtual_name": "ephemeral0",
+						names.AttrVirtualName: "ephemeral0",
 					}),
 				),
 			},
@@ -639,7 +639,7 @@ func TestAccImageBuilderImageRecipe_systemsManagerAgent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "systems_manager_agent.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "systems_manager_agent.0.uninstall_after_build", "true"),
+					resource.TestCheckResourceAttr(resourceName, "systems_manager_agent.0.uninstall_after_build", acctest.CtTrue),
 				),
 			},
 			{

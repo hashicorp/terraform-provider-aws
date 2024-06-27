@@ -11,7 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,10 +40,10 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(`launchConfiguration:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_monitoring", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_monitoring", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
@@ -178,8 +178,8 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						names.AttrDeviceName: "/dev/sde",
-						"virtual_name":       "ephemeral0",
+						names.AttrDeviceName:  "/dev/sde",
+						names.AttrVirtualName: "ephemeral0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
@@ -200,7 +200,7 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ami ec2.Image
+	var ami ec2awstypes.Image
 	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	amiCopyResourceName := "aws_ami_copy.test"
@@ -286,7 +286,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
-						names.AttrEncrypted:  "true",
+						names.AttrEncrypted:  acctest.CtTrue,
 						names.AttrVolumeSize: "11",
 						names.AttrVolumeType: "gp2",
 					}),
@@ -376,8 +376,8 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						names.AttrEncrypted:  "true",
-						"throughput":         "150",
+						names.AttrEncrypted:  acctest.CtTrue,
+						names.AttrThroughput: "150",
 						names.AttrVolumeSize: "9",
 						names.AttrVolumeType: "gp3",
 					}),
@@ -416,7 +416,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						names.AttrEncrypted:  "true",
+						names.AttrEncrypted:  acctest.CtTrue,
 						names.AttrVolumeSize: "9",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
@@ -438,7 +438,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						names.AttrEncrypted:  "true",
+						names.AttrEncrypted:  acctest.CtTrue,
 						names.AttrVolumeSize: acctest.Ct10,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
@@ -502,7 +502,7 @@ func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sda2",
-						"no_device":          "true",
+						"no_device":          acctest.CtTrue,
 					}),
 				),
 			},
@@ -597,7 +597,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 		CheckDestroy:             testAccCheckLaunchConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, "false"),
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
@@ -629,7 +629,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 		CheckDestroy:             testAccCheckLaunchConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, "true"),
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, false, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
@@ -693,7 +693,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 		CheckDestroy:             testAccCheckLaunchConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, "false"),
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
@@ -725,7 +725,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 		CheckDestroy:             testAccCheckLaunchConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, "true"),
+				Config: testAccLaunchConfigurationConfig_associatePublicIPAddress(rName, true, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
@@ -789,14 +789,14 @@ func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *aws
 	}
 }
 
-func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource.TestCheckFunc {
+func testAccCheckAMIExists(ctx context.Context, n string, v *ec2awstypes.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
 
@@ -812,7 +812,7 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource
 
 func testAccCheckInstanceHasPublicIPAddress(ctx context.Context, group *awstypes.AutoScalingGroup, idx int, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		instanceID := aws.ToString(group.Instances[idx].InstanceId)
 		instance, err := tfec2.FindInstanceByID(ctx, conn, instanceID)

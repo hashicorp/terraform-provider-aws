@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic:                testAccFramework_basic,
-			"disappears":                   testAccFramework_disappears,
+			acctest.CtDisappears:           testAccFramework_disappears,
 			"UpdateTags":                   testAccFramework_updateTags,
 			"UpdateControlScope":           testAccFramework_updateControlScope,
 			"UpdateControlInputParameters": testAccFramework_updateControlInputParameters,
@@ -470,7 +470,6 @@ func testAccFramework_disappears(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
-	description := "disappears"
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
@@ -480,7 +479,7 @@ func testAccFramework_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFrameworkConfig_basic(rName, description),
+				Config: testAccFrameworkConfig_basic(rName, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceFramework(), resourceName),
@@ -492,9 +491,9 @@ func testAccFramework_disappears(t *testing.T) {
 }
 
 func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
-	_, err := conn.ListFrameworksWithContext(ctx, &backup.ListFrameworksInput{})
+	_, err := conn.ListFrameworks(ctx, &backup.ListFrameworksInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -507,7 +506,7 @@ func testAccFrameworkPreCheck(ctx context.Context, t *testing.T) {
 
 func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_framework" {
 				continue
@@ -517,10 +516,10 @@ func testAccCheckFrameworkDestroy(ctx context.Context) resource.TestCheckFunc {
 				FrameworkName: aws.String(rs.Primary.ID),
 			}
 
-			resp, err := conn.DescribeFrameworkWithContext(ctx, input)
+			resp, err := conn.DescribeFramework(ctx, input)
 
 			if err == nil {
-				if aws.StringValue(resp.FrameworkName) == rs.Primary.ID {
+				if aws.ToString(resp.FrameworkName) == rs.Primary.ID {
 					return fmt.Errorf("Backup Framework '%s' was not deleted properly", rs.Primary.ID)
 				}
 			}
@@ -538,11 +537,11 @@ func testAccCheckFrameworkExists(ctx context.Context, name string, framework *ba
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		input := &backup.DescribeFrameworkInput{
 			FrameworkName: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.DescribeFrameworkWithContext(ctx, input)
+		resp, err := conn.DescribeFramework(ctx, input)
 
 		if err != nil {
 			return err

@@ -42,7 +42,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_type", resourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "num_replicas_per_shard", resourceName, "num_replicas_per_shard"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "num_shards", resourceName, "num_shards"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "parameter_group_name", resourceName, "parameter_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrParameterGroupName, resourceName, names.AttrParameterGroupName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
 					resource.TestCheckResourceAttr(dataSourceName, "security_group_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "security_group_ids.*", resourceName, "security_group_ids.0"),
