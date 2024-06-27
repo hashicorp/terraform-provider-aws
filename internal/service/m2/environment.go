@@ -568,10 +568,12 @@ func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, tim
 
 func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusEnvironment(ctx, conn, id),
-		Timeout: timeout,
+		Pending:    enum.Slice(awstypes.EnvironmentLifecycleAvailable, awstypes.EnvironmentLifecycleCreating, awstypes.EnvironmentLifecycleDeleting),
+		Target:     []string{},
+		Refresh:    statusEnvironment(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      4 * time.Minute,
+		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
