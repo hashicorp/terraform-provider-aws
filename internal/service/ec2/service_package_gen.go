@@ -223,6 +223,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceLocalGateways,
 			TypeName: "aws_ec2_local_gateways",
+			Name:     "Local Gateways",
 		},
 		{
 			Factory:  DataSourceManagedPrefixList,

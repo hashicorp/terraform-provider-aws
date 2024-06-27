@@ -9,15 +9,17 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_local_gateways")
+// @SDKDataSource("aws_ec2_local_gateways", name="Local Gateways")
 func dataSourceLocalGateways() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewaysRead,
@@ -62,14 +64,10 @@ func dataSourceLocalGatewaysRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateways: %s", err)
 	}
 
-	var gatewayIDs []string
-
-	for _, v := range output {
-		gatewayIDs = append(gatewayIDs, aws.ToString(v.LocalGatewayId))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, gatewayIDs)
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.LocalGateway) string {
+		return aws.ToString(v.LocalGatewayId)
+	}))
 
 	return diags
 }
