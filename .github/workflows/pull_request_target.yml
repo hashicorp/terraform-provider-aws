@@ -164,7 +164,7 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id ${{ vars.team_project_status_maintainer_pr }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID "--single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: "Assigned to Maintainers"
+      - name: Assigned to Maintainers
         if: |
           github.event.action == 'assigned'
           && steps.community_check.outputs.maintainer == 'true'
@@ -175,7 +175,7 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$STATUS_FIELD_ID" --single-select-option-id ${{ vars.team_project_status_in_progress }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: "Labeled Prioritized"
+      - name: Labeled Prioritized
         if: github.event.label.name == 'prioritized'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
@@ -183,7 +183,7 @@ jobs:
           PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: "Labeled Engineering Initiative"
+      - name: Labeled Engineering Initiative
         if: github.event.label.name == 'engineering-initiative'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
@@ -192,18 +192,18 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
 
   add_to_milestone:
-    name: "Add Merged Pull Requests and Related Issues to Milestone"
+    name: Add Merged Pull Requests and Related Issues to Milestone
     if: github.event.action == 'closed' && github.event.pull_request.merged
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout"
+      - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
-      - name: "Get Current Milestone Name"
+      - name: Get Current Milestone Name
         id: get-current-milestone
         run: echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
 
-      - name: "Add Items to Milestone"
+      - name: Add Items to Milestone
         env:
           GH_TOKEN: ${{ github.token }}
           MILESTONE: ${{ steps.get-current-milestone.outputs.current_milestone }}
@@ -212,11 +212,11 @@ jobs:
         run: ./.ci/scripts/add-to-milestone.sh
 
   community_note:
-    name: "Community Note"
+    name: Community Note
     if: github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: "Add community note to new Pull Requests"
+      - name: Add community note to new Pull Requests
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -236,11 +236,11 @@ jobs:
             * Whether or not the branch has been rebased will **not** impact prioritization, but doing so is always a welcome surprise.
 
   first_contribution_note:
-    name: "New Contributor Note"
+    name: New Contributor Note
     if: github.event.action == 'opened'
     runs-on: ubuntu-latest
     steps:
-      - name: "Add comment to add helpful context for new contributors"
+      - name: Add comment to add helpful context for new contributors
         uses: actions/first-interaction@34f15e814fe48ac9312ccf29db4e74fa767cbab7 # v1.3.0
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -256,19 +256,23 @@ jobs:
   permissions_check:
     name: Verify Maintainers Can Edit
     runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
     steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          sparse-checkout: .github/actions/community_check
+
       - name: Community Check
         id: community_check
-        if: github.event.action == 'opened'
         uses: ./.github/actions/community_check
         with:
           user_login: ${{ github.event.action == 'assigned' && github.event.assignee.login || github.event.pull_request.user.login }}
           maintainers: ${{ secrets.MAINTAINERS }}
 
-      - name: "Comment if maintainers cannot edit"
+      - name: Comment if Not
         if: |
-          steps.community_check.outcome == 'success'
-          && steps.community_check.outputs.maintainer == 'false'
+          steps.community_check.outputs.maintainer == 'false'
           && !github.event.pull_request.maintainer_can_modify
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         with:
