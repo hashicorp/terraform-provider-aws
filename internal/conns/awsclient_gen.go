@@ -57,6 +57,7 @@ import (
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	cognitoidentity_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	cognitoidentityprovider_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
@@ -192,7 +193,6 @@ import (
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
@@ -477,8 +477,8 @@ func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarno
 	return errs.Must(client[*codestarnotifications_sdkv2.Client](ctx, c, names.CodeStarNotifications, make(map[string]any)))
 }
 
-func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
-	return errs.Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](ctx, c, names.CognitoIDP, make(map[string]any)))
+func (c *AWSClient) CognitoIDPClient(ctx context.Context) *cognitoidentityprovider_sdkv2.Client {
+	return errs.Must(client[*cognitoidentityprovider_sdkv2.Client](ctx, c, names.CognitoIDP, make(map[string]any)))
 }
 
 func (c *AWSClient) CognitoIdentityClient(ctx context.Context) *cognitoidentity_sdkv2.Client {

@@ -2190,7 +2190,7 @@ service "cognitoidp" {
 
   sdk {
     id             = "Cognito Identity Provider"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2205,6 +2205,7 @@ service "cognitoidp" {
 
   endpoint_info {
     endpoint_api_call        = "ListUserPools"
+    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
   }
 
   resource_prefix {

@@ -37,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
@@ -194,6 +195,7 @@ func registerSweepers() {
 	codepipeline.RegisterSweepers()
 	codestarconnections.RegisterSweepers()
 	codestarnotifications.RegisterSweepers()
+	cognitoidentity.RegisterSweepers()
 	cognitoidp.RegisterSweepers()
 	configservice.RegisterSweepers()
 	connect.RegisterSweepers()
