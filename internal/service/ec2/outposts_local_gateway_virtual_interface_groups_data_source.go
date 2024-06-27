@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_local_gateway_virtual_interface_groups")
+// @SDKDataSource("aws_ec2_local_gateway_virtual_interface_groups", name="Local Gateway Virtual Interface Groups")
 func dataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayVirtualInterfaceGroupsRead,
@@ -38,7 +38,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
