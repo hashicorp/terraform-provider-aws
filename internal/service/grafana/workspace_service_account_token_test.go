@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,30 +86,6 @@ func testAccCheckWorkspaceServiceAccountTokenExists(ctx context.Context, n strin
 
 		*v = *output
 
-		return nil
-	}
-}
-
-func testAccCheckWorkspaceServiceAccountTokenDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_grafana_workspace_service_account_token" {
-				continue
-			}
-
-			_, err := tfgrafana.FindWorkspaceServiceAccountToken(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["service_account_id"], rs.Primary.Attributes[names.AttrWorkspaceID])
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Grafana workspace service account token %s still exists", rs.Primary.ID)
-		}
 		return nil
 	}
 }
