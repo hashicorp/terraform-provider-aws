@@ -14,10 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_local_gateway_virtual_interface")
+// @SDKDataSource("aws_ec2_local_gateway_virtual_interface", name="Local Gateway Virtual Interface")
+// @Tags
+// @Testing(tagsTest=false)
 func dataSourceLocalGatewayVirtualInterface() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLocalGatewayVirtualInterfaceRead,
@@ -70,7 +73,6 @@ func dataSourceLocalGatewayVirtualInterface() *schema.Resource {
 func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfacesInput{}
 
@@ -91,21 +93,11 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 		input.Filters = nil
 	}
 
-	output, err := conn.DescribeLocalGatewayVirtualInterfaces(ctx, input)
+	localGatewayVirtualInterface, err := findLocalGatewayVirtualInterface(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing EC2 Local Gateway Virtual Interfaces: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Local Gateway Virtual Interface", err))
 	}
-
-	if output == nil || len(output.LocalGatewayVirtualInterfaces) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no matching EC2 Local Gateway Virtual Interface found")
-	}
-
-	if len(output.LocalGatewayVirtualInterfaces) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple EC2 Local Gateway Virtual Interfaces matched; use additional constraints to reduce matches to a single EC2 Local Gateway Virtual Interface")
-	}
-
-	localGatewayVirtualInterface := output.LocalGatewayVirtualInterfaces[0]
 
 	d.SetId(aws.ToString(localGatewayVirtualInterface.LocalGatewayVirtualInterfaceId))
 	d.Set("local_address", localGatewayVirtualInterface.LocalAddress)
@@ -113,12 +105,9 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 	d.Set("local_gateway_id", localGatewayVirtualInterface.LocalGatewayId)
 	d.Set("peer_address", localGatewayVirtualInterface.PeerAddress)
 	d.Set("peer_bgp_asn", localGatewayVirtualInterface.PeerBgpAsn)
-
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, localGatewayVirtualInterface.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
 	d.Set("vlan", localGatewayVirtualInterface.Vlan)
+
+	setTagsOutV2(ctx, localGatewayVirtualInterface.Tags)
 
 	return diags
 }

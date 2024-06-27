@@ -796,6 +796,33 @@ func findLocalGatewayRouteTableVPCAssociationByID(ctx context.Context, conn *ec2
 	return output, nil
 }
 
+func findLocalGatewayVirtualInterface(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) (*awstypes.LocalGatewayVirtualInterface, error) {
+	output, err := findLocalGatewayVirtualInterfaces(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLocalGatewayVirtualInterfaces(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfacesInput) ([]awstypes.LocalGatewayVirtualInterface, error) {
+	var output []awstypes.LocalGatewayVirtualInterface
+
+	pages := ec2.NewDescribeLocalGatewayVirtualInterfacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LocalGatewayVirtualInterfaces...)
+	}
+
+	return output, nil
+}
+
 func findLocalGatewayVirtualInterfaceGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput) ([]awstypes.LocalGatewayVirtualInterfaceGroup, error) {
 	var output []awstypes.LocalGatewayVirtualInterfaceGroup
 
