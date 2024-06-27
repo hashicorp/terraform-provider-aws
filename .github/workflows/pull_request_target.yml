@@ -9,14 +9,13 @@ on:
       - labeled
       - opened
       - ready_for_review
+env:
+  ISSUE_URL: ${{ github.event.pull_request.html_url }}
 
 jobs:
   labels:
     name: Labelers
     runs-on: ubuntu-latest
-    env:
-      ISSUE_URL: ${{ github.event.pull_request.html_url }}
-
     steps:
       - name: Generate GitHub App Token
         id: token
@@ -131,7 +130,6 @@ jobs:
       PROJECT_NUMBER: "196"
       STATUS_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgDcsQA"
       VIEW_FIELD_ID: "PVTSSF_lADOAAuecM4AF-7hzgMRB34"
-      ISSUE_URL: ${{ github.event.pull_request.html_url }}
 
     steps:
       - name: Generate GitHub App Token
@@ -190,7 +188,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
-          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ITEM_URL" --format json | jq '.id')
+          PROJECT_ITEM_ID=$(gh project item-add "$PROJECT_NUMBER" --owner "hashicorp" --url "$ISSUE_URL" --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id "$PROJECT_ID" --field-id "$VIEW_FIELD_ID" --single-select-option-id ${{ vars.team_project_view_engineering_initiative }}
 
   add_to_milestone:
