@@ -64,12 +64,6 @@ func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route Tables: %s", err)
 	}
 
-	var routeTableIDs []string
-
-	for _, v := range output {
-		routeTableIDs = append(routeTableIDs, aws.ToString(v.LocalGatewayRouteTableId))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.LocalGatewayRouteTable) string {
 		return aws.ToString(v.LocalGatewayRouteTableId)
