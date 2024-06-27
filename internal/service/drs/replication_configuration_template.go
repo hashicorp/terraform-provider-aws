@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -159,7 +158,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 	conn := r.Meta().DRSClient(ctx)
 
 	input := &drs.CreateReplicationConfigurationTemplateInput{}
-	response.Diagnostics.Append(fwflex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), data, input)...)
+	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -181,8 +180,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 		return
 	}
 
-	//data.ID = fwflex.StringToFramework(ctx, output.ReplicationConfigurationTemplateID)
-	response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -214,7 +212,7 @@ func (r *replicationConfigurationTemplateResource) Read(ctx context.Context, req
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -238,7 +236,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 	if replicationConfigurationTemplateHasChanges(ctx, new, old) {
 		input := &drs.UpdateReplicationConfigurationTemplateInput{}
-		response.Diagnostics.Append(fwflex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), new, input)...)
+		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -264,7 +262,7 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &new)...)
+	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
