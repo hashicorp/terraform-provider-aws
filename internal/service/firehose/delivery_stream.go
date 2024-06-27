@@ -3120,16 +3120,22 @@ func expandSnowflakeRetryOptions(tfMap map[string]interface{}) *types.SnowflakeR
 }
 
 func expandSnowflakeRoleConfiguration(tfMap map[string]interface{}) *types.SnowflakeRoleConfiguration {
-	tfList := tfMap["snowflake_role_configuration"].([]interface{})
-	if len(tfList) == 0 {
-		return nil
+	config := tfMap["snowflake_role_configuration"].([]interface{})
+	if len(config) == 0 || config[0] == nil {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &types.SnowflakeRoleConfiguration{
+			Enabled: aws.Bool(false),
+		}
 	}
 
-	tfMap = tfList[0].(map[string]interface{})
-
+	snowflakeRoleConfiguration := config[0].(map[string]interface{})
 	apiObject := &types.SnowflakeRoleConfiguration{
-		Enabled:       aws.Bool(tfMap[names.AttrEnabled].(bool)),
-		SnowflakeRole: aws.String(tfMap["snowflake_role"].(string)),
+		Enabled: aws.Bool(snowflakeRoleConfiguration[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := snowflakeRoleConfiguration["snowflake_role"]; ok && len(v.(string)) > 0 {
+		apiObject.SnowflakeRole = aws.String(v.(string))
 	}
 
 	return apiObject
@@ -3961,7 +3967,9 @@ func flattenSnowflakeRoleConfiguration(apiObject *types.SnowflakeRoleConfigurati
 
 	m := map[string]interface{}{
 		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
-		"snowflake_role":  aws.ToString(apiObject.SnowflakeRole),
+	}
+	if aws.ToBool(apiObject.Enabled) {
+		m["snowflake_role"] = aws.ToString(apiObject.SnowflakeRole)
 	}
 
 	return []map[string]interface{}{m}
