@@ -186,6 +186,48 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 	})
 }
 
+func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster1, cluster2 types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bootstrap_self_managed_addons",
+				},
+			},
+			{
+				Config:             testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster2),
+					testAccCheckClusterRecreated(&cluster1, &cluster2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEKSCluster_Encryption_create(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
@@ -978,6 +1020,22 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, authenticationMode))
+}
+
+func testAccClusterConfig_bootstrapSelfManagedAddons(rName string, bootstrapSelfManagedAddons bool) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  bootstrap_self_managed_addons = %[2]t
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName, bootstrapSelfManagedAddons))
 }
 
 func testAccClusterConfig_version(rName, version string) string {
