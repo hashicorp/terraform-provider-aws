@@ -8,6 +8,7 @@ var (
 	ResourceLicenseAssociation = resourceLicenseAssociation
 	ResourceRoleAssociation    = resourceRoleAssociation
 	ResourceWorkspace          = resourceWorkspace
+	ResourceWorkspaceAPIKey    = resourceWorkspaceAPIKey
 
 	FindLicensedWorkspaceByID        = findLicensedWorkspaceByID
 	FindRoleAssociationsByTwoPartKey = findRoleAssociationsByTwoPartKey
