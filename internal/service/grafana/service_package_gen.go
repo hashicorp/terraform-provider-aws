@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_grafana_role_association",
 		},
 		{
-			Factory:  ResourceWorkspace,
+			Factory:  resourceWorkspace,
 			TypeName: "aws_grafana_workspace",
 			Name:     "Workspace",
 			Tags: &types.ServicePackageResourceTags{

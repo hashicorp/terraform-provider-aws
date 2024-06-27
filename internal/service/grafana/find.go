@@ -27,31 +27,6 @@ func FindLicensedWorkspaceByID(ctx context.Context, conn *managedgrafana.Managed
 	return output, nil
 }
 
-func FindWorkspaceByID(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
-	input := &managedgrafana.DescribeWorkspaceInput{
-		WorkspaceId: aws.String(id),
-	}
-
-	output, err := conn.DescribeWorkspaceWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Workspace == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Workspace, nil
-}
-
 func FindSamlConfigurationByID(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.SamlAuthentication, error) {
 	input := &managedgrafana.DescribeWorkspaceAuthenticationInput{
 		WorkspaceId: aws.String(id),
