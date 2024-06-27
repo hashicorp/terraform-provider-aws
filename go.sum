@@ -228,6 +228,8 @@ github.com/aws/aws-sdk-go-v2/service/glacier v1.23.1 h1:nUOHgAUOnQth5+fMWgCQiOEq
 github.com/aws/aws-sdk-go-v2/service/glacier v1.23.1/go.mod h1:29ythAZEVnLPIOCpzENgCzvZLoAHt8S8BHryPpm8EyI=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.25.1 h1:7C51ZbOLStv+VJwdiKGzJeKK0LPX6+XTJv199Q9xe0U=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.25.1/go.mod h1:VSQN6t3mMZfL/CEC2sg+MaSDv7A9sTFFhIB82k7zexA=
+github.com/aws/aws-sdk-go-v2/service/grafana v1.23.1 h1:J1nNR2/admfa8nDN178GQM3nIv0rrpZylP6/N/llWAg=
+github.com/aws/aws-sdk-go-v2/service/grafana v1.23.1/go.mod h1:6/0Jo9jruzMV1rlBnvQZxxLECA50Roq9EaASk6eGpOw=
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.28.1 h1:XTtOVIG/v1yaff76zGqNLB9LDW/+hY7dQTuwvh4y5Qo=
 github.com/aws/aws-sdk-go-v2/service/groundstation v1.28.1/go.mod h1:GF6S/WXbeYIIdbsIAKsYdEvndnn8wksiolvsk27TaBo=
 github.com/aws/aws-sdk-go-v2/service/guardduty v1.44.1 h1:0LOU9mO7AI2rjuuO9p8iymDR3jhY91d+P7XEjJkaa7w=
