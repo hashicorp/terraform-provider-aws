@@ -7,5 +7,6 @@ package grafana
 var (
 	ResourceWorkspaceServiceAccount = newResourceWorkspaceServiceAccount
 
-	FindWorkspaceServiceAccount = findWorkspaceServiceAccount
+	FindWorkspaceServiceAccount      = findWorkspaceServiceAccount
+	FindWorkspaceServiceAccountToken = findWorkspaceServiceAccountToken
 )
