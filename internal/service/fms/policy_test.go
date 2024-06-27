@@ -44,6 +44,7 @@ func testAccPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resource_set_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -413,6 +414,7 @@ resource "aws_fms_policy" "test" {
   name                  = %[1]q
   description           = "test description"
   remediation_enabled   = false
+  resource_set_ids      = [aws_fms_resource_set.test.id]
   resource_type_list    = ["AWS::ElasticLoadBalancingV2::LoadBalancer"]
 
   exclude_map {
@@ -430,6 +432,14 @@ resource "aws_fms_policy" "test" {
 resource "aws_wafregional_rule_group" "test" {
   metric_name = "MyTest"
   name        = %[2]q
+}
+
+resource "aws_fms_resource_set" "test" {
+  depends_on = [aws_fms_admin_account.test]
+  resource_set {
+    name               = %[1]q
+    resource_type_list = ["AWS::NetworkFirewall::Firewall"]
+  }
 }
 `, policyName, ruleGroupName))
 }
