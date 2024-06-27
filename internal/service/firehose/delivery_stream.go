@@ -2308,6 +2308,32 @@ func expandProcessorParameter(processorParameter map[string]interface{}) types.P
 	return parameter
 }
 
+func expandSecretsManagerConfiguration(tfMap map[string]interface{}) *types.SecretsManagerConfiguration {
+	config := tfMap["secrets_manager_configuration"].([]interface{})
+	if len(config) == 0 || config[0] == nil {
+		// It is possible to just pass nil here, but this seems to be the
+		// canonical form that AWS uses, and is less likely to produce diffs.
+		return &types.SecretsManagerConfiguration{
+			Enabled:    aws.Bool(false),
+		}
+	}
+
+  secretsManagerConfiguration := config[0].(map[string]interface{})
+  configuration := &types.SecretsManagerConfiguration{
+    Enabled:    aws.Bool(secretsManagerConfiguration[names.AttrEnabled].(bool)),
+  }
+
+  if v, ok := secretsManagerConfiguration["secret_arn"]; ok {
+    configuration.SecretARN = aws.String(v.(string))
+  }
+
+  if v, ok := secretsManagerConfiguration[names.AttrRoleARN]; ok {
+    configuration.RoleARN = aws.String(v.(string))
+  }
+
+  return configuration
+}
+
 func expandEncryptionConfiguration(s3 map[string]interface{}) *types.EncryptionConfiguration {
 	if key, ok := s3[names.AttrKMSKeyARN]; ok && len(key.(string)) > 0 {
 		return &types.EncryptionConfiguration{
