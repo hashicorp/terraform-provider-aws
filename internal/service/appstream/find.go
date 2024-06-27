@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -193,7 +192,7 @@ func findImages(ctx context.Context, conn *appstream.Client, input *appstream.De
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if tfawserr.ErrCodeEquals(err, "InvalidAMIID.NotFound") {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
