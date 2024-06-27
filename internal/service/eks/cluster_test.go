@@ -1025,8 +1025,8 @@ resource "aws_eks_cluster" "test" {
 func testAccClusterConfig_bootstrapSelfManagedAddons(rName string, bootstrapSelfManagedAddons bool) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
-  name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  name                          = %[1]q
+  role_arn                      = aws_iam_role.test.arn
   bootstrap_self_managed_addons = %[2]t
 
   vpc_config {
