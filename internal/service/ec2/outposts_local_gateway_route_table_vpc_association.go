@@ -126,7 +126,7 @@ func resourceLocalGatewayRouteTableVPCAssociationDelete(ctx context.Context, d *
 
 	_, err := conn.DeleteLocalGatewayRouteTableVpcAssociation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidLocalGatewayRouteTableVpcAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidLocalGatewayRouteTableVPCAssociationIDNotFound) {
 		return diags
 	}
 
