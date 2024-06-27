@@ -83,6 +83,11 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_self_managed_addons": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+			},
 			"certificate_authority": {
 				Type:     schema.TypeList,
 				Computed: true,
