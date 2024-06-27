@@ -64,7 +64,7 @@ func TestAccGrafanaWorkspaceServiceAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
+		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),

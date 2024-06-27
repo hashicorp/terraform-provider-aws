@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/grafana"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -56,6 +57,10 @@ func (r *resourceWorkspaceServiceAccount) Schema(ctx context.Context, req resour
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.LengthAtMost(128),
+				},
 			},
 			"grafana_role": schema.StringAttribute{
 				Required: true,
@@ -66,7 +71,7 @@ func (r *resourceWorkspaceServiceAccount) Schema(ctx context.Context, req resour
 					enum.FrameworkValidate[awstypes.Role](),
 				},
 			},
-			"workspace_id": schema.StringAttribute{
+			names.AttrWorkspaceID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
