@@ -2205,6 +2205,7 @@ service "cognitoidp" {
 
   endpoint_info {
     endpoint_api_call        = "ListUserPools"
+    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
   }
 
   resource_prefix {
