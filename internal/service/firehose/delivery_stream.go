@@ -3802,6 +3802,23 @@ func flattenProcessingConfiguration(pc *types.ProcessingConfiguration, destinati
 	return processingConfiguration
 }
 
+func flattenSecretsManagerConfiguration(smc *types.SecretsManagerConfiguration) []interface{} {
+	if smc == nil {
+		return []interface{}{}
+	}
+
+	secretsManagerConfiguration := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(smc.Enabled),
+	}
+	if aws.ToBool(smc.Enabled) {
+		secretsManagerConfiguration["secret_arn"] = aws.ToString(smc.SecretARN)
+		if smc.RoleARN != nil {
+			secretsManagerConfiguration[names.AttrRoleARN] = aws.ToString(smc.RoleARN)
+		}
+	}
+	return []interface{}{secretsManagerConfiguration}
+}
+
 func flattenDynamicPartitioningConfiguration(dpc *types.DynamicPartitioningConfiguration) []map[string]interface{} {
 	if dpc == nil {
 		return []map[string]interface{}{}
