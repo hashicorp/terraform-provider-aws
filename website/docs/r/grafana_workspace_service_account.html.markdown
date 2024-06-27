@@ -30,9 +30,7 @@ resource "aws_grafana_workspace_service_account" "example" {
 The following arguments are required:
 
 * `name` - (Required) A name for the service account. The name must be unique within the workspace, as it determines the ID associated with the service account.
-
 * `grafana_role` - (Required) The permission level to use for this service account. For more information about the roles and the permissions each has, see the [User roles](https://docs.aws.amazon.com/grafana/latest/userguide/Grafana-user-roles.html) documentation.
-
 * `workspace_id` - (Required) The Grafana workspace with which the service account is associated.
 
 ## Attribute Reference
