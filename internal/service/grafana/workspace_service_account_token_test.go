@@ -118,10 +118,10 @@ func testAccCheckWorkspaceServiceAccountTokenDestroy(ctx context.Context) resour
 func testAccWorkspaceServiceAccountTokenConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceServiceAccountConfig_basic(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace_service_account_token" "test" {
-  name = %[1]q
+  name               = %[1]q
   service_account_id = aws_grafana_workspace_service_account.test.id
-  seconds_to_live = 3600
-  workspace_id = aws_grafana_workspace.test.id
+  seconds_to_live    = 3600
+  workspace_id       = aws_grafana_workspace.test.id
 }
 `, rName))
 }

@@ -25,10 +25,10 @@ resource "aws_grafana_workspace_service_account" "example" {
 }
 
 resource "aws_grafana_workspace_service_account_token" "example" {
-  name = "example-key"
+  name               = "example-key"
   service_account_id = aws_grafana_workspace_service_account.example.id
-  seconds_to_live = 3600
-  workspace_id = aws_grafana_workspace.example.id
+  seconds_to_live    = 3600
+  workspace_id       = aws_grafana_workspace.example.id
 }
 ```
 
