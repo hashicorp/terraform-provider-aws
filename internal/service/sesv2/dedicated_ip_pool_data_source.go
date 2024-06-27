@@ -68,11 +68,12 @@ const (
 )
 
 func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Get("pool_name").(string))
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, d.Get("pool_name").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, d.Get("pool_name").(string), err)
 	}
 	poolName := aws.ToString(out.DedicatedIpPool.PoolName)
 	d.SetId(poolName)
@@ -81,13 +82,13 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 
 	outIP, err := findDedicatedIPPoolIPs(ctx, conn, poolName)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, poolName, err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, poolName, err)
 	}
 	d.Set("dedicated_ips", flattenDedicatedIPs(outIP.DedicatedIps))
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, d.Id(), err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -95,10 +96,10 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameDedicatedIPPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, DSNameDedicatedIPPool, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []interface{} {

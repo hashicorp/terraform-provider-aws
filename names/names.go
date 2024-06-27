@@ -18,6 +18,7 @@ package names
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -25,82 +26,89 @@ import (
 
 // Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
-	AccessAnalyzerEndpointID             = "access-analyzer"
 	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
-	AppStreamEndpointID                  = "appstream2"
-	ApplicationAutoscalingEndpointID     = "application-autoscaling"
-	AppIntegrationsEndpointID            = "app-integrations"
-	AppConfigEndpointID                  = "appconfig"
-	AmplifyEndpointID                    = "amplify"
 	APIGatewayID                         = "apigateway"
 	APIGatewayV2EndpointID               = "apigateway"
+	AccessAnalyzerEndpointID             = "access-analyzer"
+	AmplifyEndpointID                    = "amplify"
+	AppConfigEndpointID                  = "appconfig"
+	AppFabricEndpointID                  = "appfabric"
+	AppIntegrationsEndpointID            = "app-integrations"
+	AppStreamEndpointID                  = "appstream2"
+	AppSyncEndpointID                    = "appsync"
+	ApplicationAutoscalingEndpointID     = "application-autoscaling"
+	ApplicationInsightsEndpointID        = "applicationinsights"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	AutoScalingPlansEndpointID           = "autoscaling-plans"
+	BCMDataExportsEndpointID             = "bcm-data-exports"
+	BackupEndpointID                     = "backup"
 	BatchEndpointID                      = "batch"
 	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
-	BCMDataExportsEndpointID             = "bcm-data-exports"
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
+	Cloud9EndpointID                     = "cloud9"
 	CloudFormationEndpointID             = "cloudformation"
 	CloudFrontEndpointID                 = "cloudfront"
 	CloudSearchEndpointID                = "cloudsearch"
 	CloudWatchEndpointID                 = "monitoring"
-	Cloud9EndpointID                     = "cloud9"
 	CodeArtifactEndpointID               = "codeartifact"
 	CodeGuruReviewerEndpointID           = "codeguru-reviewer"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
 	CognitoIdentityEndpointID            = "cognito-identity"
 	ComprehendEndpointID                 = "comprehend"
 	ConfigServiceEndpointID              = "config"
-	DeviceFarmEndpointID                 = "devicefarm"
-	DevOpsGuruEndpointID                 = "devops-guru"
 	DLMEndpointID                        = "dlm"
+	DevOpsGuruEndpointID                 = "devops-guru"
+	DeviceFarmEndpointID                 = "devicefarm"
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
 	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"
 	FMSEndpointID                        = "fms"
+	IVSChatEndpointID                    = "ivschat"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
-	IVSChatEndpointID                    = "ivschat"
-	KendraEndpointID                     = "kendra"
 	KMSEndpointID                        = "kms"
+	KendraEndpointID                     = "kendra"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"
+	MQEndpointID                         = "mq"
 	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
-	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
-	OpenSearchServerlessEndpointID       = "aoss"
 	OpenSearchIngestionEndpointID        = "osis"
+	OpenSearchServerlessEndpointID       = "aoss"
 	PaymentCryptographyEndpointID        = "paymentcryptography"
 	PipesEndpointID                      = "pipes"
 	PollyEndpointID                      = "polly"
 	QLDBEndpointID                       = "qldb"
-	RedshiftServerlessEndpointID         = "redshift-serverless"
+	RUMEndpointID                        = "rum"
 	RedshiftEndpointID                   = "redshift"
+	RedshiftServerlessEndpointID         = "redshift-serverless"
 	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
-	SchedulerEndpointID                  = "scheduler"
-	ServiceQuotasEndpointID              = "servicequotas"
-	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
-	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
 	SSMIncidentsEndpointID               = "ssm-incidents"
 	SSOAdminEndpointID                   = "sso"
 	STSEndpointID                        = "sts"
+	SchedulerEndpointID                  = "scheduler"
+	SchemasEndpointID                    = "schemas"
+	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
+	ServiceDiscoveryEndpointID           = "servicediscovery"
+	ServiceQuotasEndpointID              = "servicequotas"
+	ShieldEndpointID                     = "shield"
 	TranscribeEndpointID                 = "transcribe"
 	TransferEndpointID                   = "transfer"
-	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
+	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	WAFEndpointID                        = "waf"
 	WAFRegionalEndpointID                = "waf-regional"
 )
@@ -165,7 +173,54 @@ const (
 
 	// AWS ISOB (US) partition's regions.
 	USISOBEast1RegionID = "us-isob-east-1" // US ISOB East (Ohio).
+
+	// AWS ISOF partition's regions.
+	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
+
+var allRegionIDs = []string{
+	AFSouth1RegionID,
+	APEast1RegionID,
+	APNortheast1RegionID,
+	APNortheast2RegionID,
+	APNortheast3RegionID,
+	APSouth1RegionID,
+	APSouth2RegionID,
+	APSoutheast1RegionID,
+	APSoutheast2RegionID,
+	APSoutheast3RegionID,
+	APSoutheast4RegionID,
+	CACentral1RegionID,
+	CAWest1RegionID,
+	EUCentral1RegionID,
+	EUCentral2RegionID,
+	EUNorth1RegionID,
+	EUSouth1RegionID,
+	EUSouth2RegionID,
+	EUWest1RegionID,
+	EUWest2RegionID,
+	EUWest3RegionID,
+	ILCentral1RegionID,
+	MECentral1RegionID,
+	MESouth1RegionID,
+	SAEast1RegionID,
+	USEast1RegionID,
+	USEast2RegionID,
+	USWest1RegionID,
+	USWest2RegionID,
+	CNNorth1RegionID,
+	CNNorthwest1RegionID,
+	USGovEast1RegionID,
+	USGovWest1RegionID,
+	USISOEast1RegionID,
+	USISOWest1RegionID,
+	USISOBEast1RegionID,
+	EUISOEWest1RegionID,
+}
+
+func Regions() []string {
+	return slices.Clone(allRegionIDs)
+}
 
 func DNSSuffixForPartition(partition string) string {
 	switch partition {
@@ -213,6 +268,8 @@ func PartitionForRegion(region string) string {
 		return ISOPartitionID
 	case USISOBEast1RegionID:
 		return ISOBPartitionID
+	case EUISOEWest1RegionID:
+		return ISOEPartitionID
 	case USGovEast1RegionID, USGovWest1RegionID:
 		return USGovCloudPartitionID
 	default:

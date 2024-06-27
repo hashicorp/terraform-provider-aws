@@ -250,7 +250,7 @@ This resource supports the following arguments:
 * `cache_key_parameters` - (Optional) List of cache key parameters for the integration.
 * `cache_namespace` - (Optional) Integration's cache namespace.
 * `content_handling` - (Optional) How to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the request payload will be passed through from the method request to integration request without modification, provided that the passthroughBehaviors is configured to support payload pass-through.
-* `timeout_milliseconds` - (Optional) Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000 milliseconds.
+* `timeout_milliseconds` - (Optional) Custom timeout between 50 and 300,000 milliseconds. The default value is 29,000 milliseconds. You need to raise a [Service Quota Ticket](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html) to increase time beyond 29,000 milliseconds.
 * `tls_config` - (Optional) TLS configuration. See below.
 
 ### tls_config Configuration Block
@@ -288,4 +288,4 @@ Using `terraform import`, import `aws_api_gateway_integration` using `REST-API-I
 % terraform import aws_api_gateway_integration.example 12345abcde/67890fghij/GET
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6579a01c31e2b3a3e752d392012759bae929079686c0227bc0bc75da134a211f -->
+<!-- cache-key: cdktf-0.20.1 input-81e6d697f00f0fcc748de8e3839b83773d2165b6d6901935697bcf51a913f03f -->

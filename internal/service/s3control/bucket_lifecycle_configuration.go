@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -128,18 +129,18 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
-
 	parsedArn, err := arn.Parse(bucket)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if parsedArn.AccountID == "" {
-		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
 	input := &s3control.PutBucketLifecycleConfigurationInput{
@@ -153,25 +154,26 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	_, err = conn.PutBucketLifecycleConfiguration(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating S3 Control Bucket Lifecycle Configuration (%s): %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Control Bucket Lifecycle Configuration (%s): %s", bucket, err)
 	}
 
 	d.SetId(bucket)
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if parsedArn.AccountID == "" {
-		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
 	output, err := findBucketLifecycleConfigurationByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
@@ -179,33 +181,34 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Control Bucket Lifecycle Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, d.Id())
 
 	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output.Rules)); err != nil {
-		return diag.Errorf("setting rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if parsedArn.AccountID == "" {
-		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
 	input := &s3control.PutBucketLifecycleConfigurationInput{
@@ -219,23 +222,24 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 	_, err = conn.PutBucketLifecycleConfiguration(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketLifecycleConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketLifecycleConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if parsedArn.AccountID == "" {
-		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
+		return sdkdiag.AppendErrorf(diags, "parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Control Bucket Lifecycle Configuration: %s", d.Id())
@@ -245,14 +249,14 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeNoSuchOutpost) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, bucket string) (*s3control.GetBucketLifecycleConfigurationOutput, error) {

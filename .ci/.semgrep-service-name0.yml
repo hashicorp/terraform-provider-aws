@@ -992,6 +992,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)ApplicationInsights"
     severity: WARNING
+  - id: applicationsignals-in-func-name
+    languages:
+      - go
+    message: Do not use "ApplicationSignals" in func name inside applicationsignals package
+    paths:
+      include:
+        - internal/service/applicationsignals
+      exclude:
+        - internal/service/applicationsignals/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationSignals"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: applicationsignals-in-test-name
+    languages:
+      - go
+    message: Include "ApplicationSignals" in test name
+    paths:
+      include:
+        - internal/service/applicationsignals/*_test.go
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccApplicationSignals"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: applicationsignals-in-const-name
+    languages:
+      - go
+    message: Do not use "ApplicationSignals" in const name inside applicationsignals package
+    paths:
+      include:
+        - internal/service/applicationsignals
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationSignals"
+    severity: WARNING
+  - id: applicationsignals-in-var-name
+    languages:
+      - go
+    message: Do not use "ApplicationSignals" in var name inside applicationsignals package
+    paths:
+      include:
+        - internal/service/applicationsignals
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ApplicationSignals"
+    severity: WARNING
   - id: appmesh-in-func-name
     languages:
       - go
@@ -4130,33 +4191,4 @@ rules:
             - pattern-regex: "(?i)ConfigService"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T)
-    severity: WARNING
-  - id: configservice-in-test-name
-    languages:
-      - go
-    message: Include "ConfigService" in test name
-    paths:
-      include:
-        - internal/service/configservice/*_test.go
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-const-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in const name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
     severity: WARNING

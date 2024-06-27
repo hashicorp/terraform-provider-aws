@@ -2271,11 +2271,11 @@ func testAccCheckRouteExists(ctx context.Context, n string, v *awstypes.Route) r
 		var route *awstypes.Route
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-			route, err = tfec2.FindRouteByIPv4DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByIPv4Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-			route, err = tfec2.FindRouteByIPv6DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByIPv6Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-			route, err = tfec2.FindRouteByPrefixListIDDestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByPrefixListIDDestination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if err != nil {
@@ -2299,11 +2299,11 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			var err error
 			if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-				_, err = tfec2.FindRouteByIPv4DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+				_, err = tfec2.FindRouteByIPv4Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 			} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-				_, err = tfec2.FindRouteByIPv6DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+				_, err = tfec2.FindRouteByIPv6Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 			} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-				_, err = tfec2.FindRouteByPrefixListIDDestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+				_, err = tfec2.FindRouteByPrefixListIDDestination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 			}
 
 			if tfresource.NotFound(err) {
