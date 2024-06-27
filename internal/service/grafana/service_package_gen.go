@@ -41,8 +41,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "License Association",
 		},
 		{
-			Factory:  ResourceRoleAssociation,
+			Factory:  resourceRoleAssociation,
 			TypeName: "aws_grafana_role_association",
+			Name:     "Workspace Role Association",
 		},
 		{
 			Factory:  resourceWorkspace,

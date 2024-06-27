@@ -6,8 +6,10 @@ package grafana
 // Exports for use in tests only.
 var (
 	ResourceLicenseAssociation = resourceLicenseAssociation
+	ResourceRoleAssociation    = resourceRoleAssociation
 	ResourceWorkspace          = resourceWorkspace
 
-	FindLicensedWorkspaceByID = findLicensedWorkspaceByID
-	FindWorkspaceByID         = findWorkspaceByID
+	FindLicensedWorkspaceByID        = findLicensedWorkspaceByID
+	FindRoleAssociationsByTwoPartKey = findRoleAssociationsByTwoPartKey
+	FindWorkspaceByID                = findWorkspaceByID
 )
