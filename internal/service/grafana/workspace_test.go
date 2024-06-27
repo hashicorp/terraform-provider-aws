@@ -476,7 +476,7 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 
 func testAccWorkspace_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 managedgrafana.WorkspaceDescription
+	var v1, v2, v3 managedgrafana.WorkspaceDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
@@ -504,6 +504,14 @@ func testAccWorkspace_version(t *testing.T) {
 					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "grafana_version", "9.4"),
 					testAccCheckWorkspaceNotRecreated(&v2, &v1),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_version(rName, "10.4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
+					resource.TestCheckResourceAttr(resourceName, "grafana_version", "10.4"),
+					testAccCheckWorkspaceNotRecreated(&v3, &v2),
 				),
 			},
 		},
