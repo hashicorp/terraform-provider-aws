@@ -1267,7 +1267,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.s3_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.schema", "test-schema"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.secrets_manager_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.secrets_manager_configuration.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.secrets_manager_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.secrets_manager_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.secrets_manager_configuration.0.secret_arn"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.#", acctest.Ct1),
@@ -2869,7 +2869,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 func testAccDeliveryStreamConfig_baseSecretsManager(rName, privateKey string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
+data "aws_caller_identity" "current_for_secretsmanager" {}
 
 resource "aws_iam_role" "iam_for_secretsmanager" {
   name = "%[1]s-secretsmanager"
@@ -2887,7 +2887,7 @@ resource "aws_iam_role" "iam_for_secretsmanager" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId": "${data.aws_caller_identity.current_for_secretsmanager.account_id}"
         }
       }
     }
@@ -2925,7 +2925,7 @@ resource "aws_iam_role_policy" "iam_policy_for_secretsmanager" {
         "secret:ListSecretVersionIds"
       ],
       "Resource": [
-        "${aws_secretmanager_secret.test.arn}"
+        "${aws_secretsmanager_secret.test.arn}"
       ]
     }
   ]
@@ -3929,7 +3929,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 func testAccDeliveryStreamConfig_snowflakeUpdateSecretsManager(rName, privateKey string) string {
 	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), testAccDeliveryStreamConfig_baseSecretsManager(rName, privateKey), fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on  = [aws_iam_role_policy.firehose, aws_iam_role_policy.iam_for_secrets_manager]
+  depends_on  = [aws_iam_role_policy.firehose, aws_iam_role_policy.iam_policy_for_secretsmanager]
   name        = %[1]q
   destination = "snowflake"
 
@@ -3942,8 +3942,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
     secrets_manager_configuration {
       enabled    = true
-      secret_arn = aws_secretsmanager_secret.test1.arn
-      role_arn   = aws_iam_role.iam_for_secrets_manager.arn
+      secret_arn = aws_secretsmanager_secret.test.arn
+      role_arn   = aws_iam_role.iam_for_secretsmanager.arn
     }
 
     s3_configuration {

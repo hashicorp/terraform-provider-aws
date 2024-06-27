@@ -2351,11 +2351,11 @@ func expandSecretsManagerConfiguration(tfMap map[string]interface{}) *types.Secr
 		Enabled: aws.Bool(secretsManagerConfiguration[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := secretsManagerConfiguration["secret_arn"]; ok {
+	if v, ok := secretsManagerConfiguration["secret_arn"]; ok && len(v.(string)) > 0 {
 		configuration.SecretARN = aws.String(v.(string))
 	}
 
-	if v, ok := secretsManagerConfiguration[names.AttrRoleARN]; ok {
+	if v, ok := secretsManagerConfiguration[names.AttrRoleARN]; ok && len(v.(string)) > 0 {
 		configuration.RoleARN = aws.String(v.(string))
 	}
 
