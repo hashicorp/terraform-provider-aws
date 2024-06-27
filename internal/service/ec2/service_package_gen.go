@@ -212,6 +212,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceLocalGatewayVirtualInterfaceGroup,
 			TypeName: "aws_ec2_local_gateway_virtual_interface_group",
+			Name:     "Local Gateway Virtual Interface Group",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceLocalGatewayVirtualInterfaceGroups,
