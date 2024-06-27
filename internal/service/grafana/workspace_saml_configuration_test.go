@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/grafana/types"
+	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,10 +25,7 @@ func testAccWorkspaceSAMLConfiguration_basic(t *testing.T) {
 	workspaceResourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ManagedGrafanaEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,7 +39,7 @@ func testAccWorkspaceSAMLConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
 					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.SamlConfigurationStatusConfigured)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, managedgrafana.SamlConfigurationStatusConfigured),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 				),
 			},
@@ -57,10 +54,7 @@ func testAccWorkspaceSAMLConfiguration_loginValidity(t *testing.T) {
 	workspaceResourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ManagedGrafanaEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -74,7 +68,7 @@ func testAccWorkspaceSAMLConfiguration_loginValidity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
 					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.SamlConfigurationStatusConfigured)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, managedgrafana.SamlConfigurationStatusConfigured),
 					resource.TestCheckResourceAttr(resourceName, "login_validity_duration", "1440"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 				),
@@ -90,10 +84,7 @@ func testAccWorkspaceSAMLConfiguration_assertions(t *testing.T) {
 	workspaceResourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ManagedGrafanaEndpointID)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,7 +98,7 @@ func testAccWorkspaceSAMLConfiguration_assertions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "editor_role_values.0", "editor"),
 					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.SamlConfigurationStatusConfigured)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, managedgrafana.SamlConfigurationStatusConfigured),
 					resource.TestCheckResourceAttr(resourceName, "email_assertion", "mail"),
 					resource.TestCheckResourceAttrSet(resourceName, "idp_metadata_xml"),
 					resource.TestCheckResourceAttr(resourceName, "groups_assertion", "groups"),
@@ -173,7 +164,7 @@ func testAccCheckWorkspaceSAMLConfigurationExists(ctx context.Context, name stri
 			return fmt.Errorf("No Grafana Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn(ctx)
 
 		_, err := tfgrafana.FindSamlConfigurationByID(ctx, conn, rs.Primary.ID)
 

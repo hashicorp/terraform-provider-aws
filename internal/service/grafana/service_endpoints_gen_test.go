@@ -4,20 +4,17 @@ package grafana_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
+	"net/url"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
-	"github.com/aws/smithy-go/middleware"
-	smithyhttp "github.com/aws/smithy-go/transport/http"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/go-cty/cty"
@@ -355,63 +352,54 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := grafana_sdkv2.NewDefaultEndpointResolverV2()
+	r := endpoints.DefaultResolver()
 
-	ep, err := r.ResolveEndpoint(context.Background(), grafana_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
-	})
+	ep, err := r.EndpointFor(managedgrafana_sdkv1.EndpointsID, region)
 	if err != nil {
 		return err.Error()
 	}
 
-	if ep.URI.Path == "" {
-		ep.URI.Path = "/"
+	url, _ := url.Parse(ep.URL)
+
+	if url.Path == "" {
+		url.Path = "/"
 	}
 
-	return ep.URI.String()
+	return url.String()
 }
 
 func defaultFIPSEndpoint(region string) string {
-	r := grafana_sdkv2.NewDefaultEndpointResolverV2()
+	r := endpoints.DefaultResolver()
 
-	ep, err := r.ResolveEndpoint(context.Background(), grafana_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.EndpointFor(managedgrafana_sdkv1.EndpointsID, region, func(opt *endpoints.Options) {
+		opt.UseFIPSEndpoint = endpoints.FIPSEndpointStateEnabled
 	})
 	if err != nil {
 		return err.Error()
 	}
 
-	if ep.URI.Path == "" {
-		ep.URI.Path = "/"
+	url, _ := url.Parse(ep.URL)
+
+	if url.Path == "" {
+		url.Path = "/"
 	}
 
-	return ep.URI.String()
+	return url.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.GrafanaClient(ctx)
+	client := meta.GrafanaConn(ctx)
 
-	var result apiCallParams
+	req, _ := client.ListWorkspacesRequest(&managedgrafana_sdkv1.ListWorkspacesInput{})
 
-	_, err := client.ListWorkspaces(ctx, &grafana_sdkv2.ListWorkspacesInput{},
-		func(opts *grafana_sdkv2.Options) {
-			opts.APIOptions = append(opts.APIOptions,
-				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
-				addRetrieveRegionMiddleware(&result.region),
-				addCancelRequestMiddleware(),
-			)
-		},
-	)
-	if err == nil {
-		t.Fatal("Expected an error, got none")
-	} else if !errors.Is(err, errCancelOperation) {
-		t.Fatalf("Unexpected error: %s", err)
+	req.HTTPRequest.URL.Path = "/"
+
+	return apiCallParams{
+		endpoint: req.HTTPRequest.URL.String(),
+		region:   aws_sdkv1.StringValue(client.Config.Region),
 	}
-
-	return result
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -610,89 +598,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	if e, a := testcase.expected.region, callParams.region; e != a {
 		t.Errorf("expected region %q, got %q", e, a)
 	}
-}
-
-func addRetrieveEndpointURLMiddleware(t *testing.T, endpoint *string) func(*middleware.Stack) error {
-	return func(stack *middleware.Stack) error {
-		return stack.Finalize.Add(
-			retrieveEndpointURLMiddleware(t, endpoint),
-			middleware.After,
-		)
-	}
-}
-
-func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.FinalizeMiddleware {
-	return middleware.FinalizeMiddlewareFunc(
-		"Test: Retrieve Endpoint",
-		func(ctx context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
-			t.Helper()
-
-			request, ok := in.Request.(*smithyhttp.Request)
-			if !ok {
-				t.Fatalf("Expected *github.com/aws/smithy-go/transport/http.Request, got %s", fullTypeName(in.Request))
-			}
-
-			url := request.URL
-			url.RawQuery = ""
-			url.Path = "/"
-
-			*endpoint = url.String()
-
-			return next.HandleFinalize(ctx, in)
-		})
-}
-
-func addRetrieveRegionMiddleware(region *string) func(*middleware.Stack) error {
-	return func(stack *middleware.Stack) error {
-		return stack.Serialize.Add(
-			retrieveRegionMiddleware(region),
-			middleware.After,
-		)
-	}
-}
-
-func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
-	return middleware.SerializeMiddlewareFunc(
-		"Test: Retrieve Region",
-		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
-			*region = awsmiddleware.GetRegion(ctx)
-
-			return next.HandleSerialize(ctx, in)
-		},
-	)
-}
-
-var errCancelOperation = fmt.Errorf("Test: Canceling request")
-
-func addCancelRequestMiddleware() func(*middleware.Stack) error {
-	return func(stack *middleware.Stack) error {
-		return stack.Finalize.Add(
-			cancelRequestMiddleware(),
-			middleware.After,
-		)
-	}
-}
-
-// cancelRequestMiddleware creates a Smithy middleware that intercepts the request before sending and cancels it
-func cancelRequestMiddleware() middleware.FinalizeMiddleware {
-	return middleware.FinalizeMiddlewareFunc(
-		"Test: Cancel Requests",
-		func(_ context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
-			return middleware.FinalizeOutput{}, middleware.Metadata{}, errCancelOperation
-		})
-}
-
-func fullTypeName(i interface{}) string {
-	return fullValueTypeName(reflect.ValueOf(i))
-}
-
-func fullValueTypeName(v reflect.Value) string {
-	if v.Kind() == reflect.Ptr {
-		return "*" + fullValueTypeName(reflect.Indirect(v))
-	}
-
-	requestType := v.Type()
-	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
 }
 
 func generateSharedConfigFile(config configFile) string {

@@ -6,12 +6,13 @@ package grafana
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/grafana"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusWorkspaceStatus(ctx context.Context, conn *grafana.Client, id string) retry.StateRefreshFunc {
+func statusWorkspaceStatus(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindWorkspaceByID(ctx, conn, id)
 
@@ -23,11 +24,11 @@ func statusWorkspaceStatus(ctx context.Context, conn *grafana.Client, id string)
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client, id string) retry.StateRefreshFunc {
+func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSamlConfigurationByID(ctx, conn, id)
 
@@ -39,6 +40,6 @@ func statusWorkspaceSAMLConfiguration(ctx context.Context, conn *grafana.Client,
 			return nil, "", err
 		}
 
-		return output, string(output.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
