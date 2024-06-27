@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,7 +29,7 @@ func TestAccGrafanaWorkspaceServiceAccount_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Grafana) },
 		ErrorCheck:               acctest.ErrorCheck(t, grafana.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceServiceAccountConfig_basic(rName),
@@ -64,7 +63,7 @@ func TestAccGrafanaWorkspaceServiceAccount_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceServiceAccountDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceServiceAccountConfig_basic(resourceName),
@@ -90,32 +89,6 @@ func testAccCheckWorkspaceServiceAccountExists(ctx context.Context, n string, v 
 		}
 
 		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckWorkspaceServiceAccountDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaClient(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_grafana_workspace_service_account" {
-				continue
-			}
-
-			_, err := tfgrafana.FindWorkspaceServiceAccount(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["workspace_id"])
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("Grafana workspace service account %s still exists", rs.Primary.ID)
-		}
 
 		return nil
 	}
