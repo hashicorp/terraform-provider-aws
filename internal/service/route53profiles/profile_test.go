@@ -137,7 +137,6 @@ func testAccCheckProfileExists(ctx context.Context, name string, r *awstypes.Pro
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ProfilesClient(ctx)
 
 		output, err := tfroute53profiles.FindProfileByID(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

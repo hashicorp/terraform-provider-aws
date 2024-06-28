@@ -21,11 +21,19 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceAssociation,
+			Name:    "Association",
+		},
+		{
 			Factory: newResourceProfile,
 			Name:    "Profile",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory: newResourceResourceAssociation,
+			Name:    "ResourceAssociation",
 		},
 	}
 }

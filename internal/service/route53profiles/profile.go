@@ -130,16 +130,20 @@ func (r *resourceProfile) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	data.ARN = fwflex.StringToFramework(ctx, output.Profile.Arn)
 	data.ID = fwflex.StringToFramework(ctx, output.Profile.Id)
-	data.OwnerId = fwflex.StringToFramework(ctx, output.Profile.OwnerId)
-	data.ShareStatus = fwtypes.StringEnumValue(output.Profile.ShareStatus)
-	data.Status = fwtypes.StringEnumValue(output.Profile.Status)
-	data.StatusMessage = fwflex.StringToFramework(ctx, output.Profile.StatusMessage)
 
-	if _, err := waitProfileCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	profileOutput, err := waitProfileCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for route53 profile (%s) created", name), err.Error())
 		return
+	}
+
+	if profileOutput != nil {
+		data.ARN = fwflex.StringToFramework(ctx, profileOutput.Arn)
+		data.OwnerId = fwflex.StringToFramework(ctx, profileOutput.OwnerId)
+		data.ShareStatus = fwtypes.StringEnumValue(profileOutput.ShareStatus)
+		data.Status = fwtypes.StringEnumValue(profileOutput.Status)
+		data.StatusMessage = fwflex.StringToFramework(ctx, profileOutput.StatusMessage)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -212,7 +216,6 @@ func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	_, err := conn.DeleteProfile(ctx, in)
-
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
@@ -235,7 +238,7 @@ func (r *resourceProfile) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 }
 
-func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*route53profiles.GetProfileOutput, error) {
+func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.Profile, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ProfileStatusCreating),
 		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
@@ -246,14 +249,14 @@ func waitProfileCreated(ctx context.Context, conn *route53profiles.Client, id st
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*route53profiles.GetProfileOutput); ok {
+	if out, ok := outputRaw.(*awstypes.Profile); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*route53profiles.DeleteProfileOutput, error) {
+func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.Profile, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ProfileStatusDeleting),
 		Target:  []string{},
@@ -262,7 +265,7 @@ func waitProfileDeleted(ctx context.Context, conn *route53profiles.Client, id st
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*route53profiles.DeleteProfileOutput); ok {
+	if out, ok := outputRaw.(*awstypes.Profile); ok {
 		return out, err
 	}
 

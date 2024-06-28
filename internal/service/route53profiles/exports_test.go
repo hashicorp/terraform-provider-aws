@@ -4,6 +4,10 @@
 package route53profiles
 
 var (
-	Route53Profile  = newResourceProfile
-	FindProfileByID = findProfileByID
+	Route53Profile                   = newResourceProfile
+	FindProfileByID                  = findProfileByID
+	Route53ProfileAssocation         = newResourceAssociation
+	FindAssociationByID              = findAssociationByID
+	Route53ProfileResourceAssocation = newResourceResourceAssociation
+	FindResourceAssociationByID      = findResourceAssociationByID
 )
