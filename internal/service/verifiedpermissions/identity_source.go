@@ -268,8 +268,6 @@ func (r *resourceIdentitySource) Create(ctx context.Context, request resource.Cr
 
 	state.PrincipalEntityType = flex.StringToFramework(ctx, out.PrincipalEntityType)
 
-	fmt.Println(state.PrincipalEntityType)
-
 	configuration, d := flattenConfiguration(ctx, out.Configuration)
 	response.Diagnostics.Append(d...)
 	state.Configuration = configuration
