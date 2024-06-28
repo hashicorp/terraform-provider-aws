@@ -35,7 +35,6 @@ func TestExpand(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName: "nil Source and Target",
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, <nil>]"),
@@ -45,7 +44,6 @@ func TestExpand(t *testing.T) {
 			TestName: "non-pointer Target",
 			Source:   TestFlex00{},
 			Target:   0,
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, int]"),
@@ -55,7 +53,6 @@ func TestExpand(t *testing.T) {
 			TestName: "non-struct Source",
 			Source:   testString,
 			Target:   &TestFlex00{},
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[string, *flex.TestFlex00]"),
@@ -65,7 +62,6 @@ func TestExpand(t *testing.T) {
 			TestName: "non-struct Target",
 			Source:   TestFlex00{},
 			Target:   &testString,
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *string]"),
@@ -99,7 +95,6 @@ func TestExpand(t *testing.T) {
 			TestName: "does not implement attr.Value Source",
 			Source:   &TestFlexAWS01{Field1: "a"},
 			Target:   &TestFlexAWS01{},
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
@@ -1208,7 +1203,6 @@ type autoFlexTestCase struct {
 	TestName      string
 	Source        any
 	Target        any
-	WantErr       bool
 	expectedDiags diag.Diagnostics
 	WantTarget    any
 	WantDiff      bool
@@ -1230,22 +1224,15 @@ func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFle
 			}
 
 			diags := Expand(testCtx, testCase.Source, testCase.Target, testCase.Options...)
-			gotErr := diags != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
 
 			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", diags)
+			if !diags.HasError() {
+				if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}

@@ -37,7 +37,6 @@ func TestFlatten(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName: "nil Source and Target",
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[<nil>, <nil>]"),
@@ -47,7 +46,6 @@ func TestFlatten(t *testing.T) {
 			TestName: "non-pointer Target",
 			Source:   TestFlex00{},
 			Target:   0,
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, int]"),
@@ -57,7 +55,6 @@ func TestFlatten(t *testing.T) {
 			TestName: "non-struct Source",
 			Source:   testString,
 			Target:   &TestFlex00{},
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[string, *flex.TestFlex00]"),
@@ -67,7 +64,6 @@ func TestFlatten(t *testing.T) {
 			TestName: "non-struct Target",
 			Source:   TestFlex00{},
 			Target:   &testString,
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, *string]"),
@@ -109,7 +105,6 @@ func TestFlatten(t *testing.T) {
 			TestName: "does not implement attr.Value Target",
 			Source:   &TestFlexAWS01{Field1: "a"},
 			Target:   &TestFlexAWS01{},
-			WantErr:  true,
 			expectedDiags: diag.Diagnostics{
 				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
 				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
@@ -1189,25 +1184,17 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 			}
 
 			diags := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
-			gotErr := diags != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
 
 			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
-			less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
-
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", diags)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
-				if !testCase.WantDiff {
-					t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			if !diags.HasError() {
+				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
+				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
+					if !testCase.WantDiff {
+						t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+					}
 				}
 			}
 		})
