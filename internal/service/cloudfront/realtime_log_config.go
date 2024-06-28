@@ -60,7 +60,7 @@ func resourceRealtimeLogConfig() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -291,7 +291,7 @@ func expandKinesisStreamConfig(tfMap map[string]interface{}) *awstypes.KinesisSt
 		apiObject.RoleARN = aws.String(v)
 	}
 
-	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamARN = aws.String(v)
 	}
 
@@ -344,7 +344,7 @@ func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) map[str
 	}
 
 	if v := apiObject.StreamARN; v != nil {
-		tfMap["stream_arn"] = aws.ToString(v)
+		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -1,13 +1,12 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package route53_test
+package route53
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,7 +51,7 @@ func TestRecordMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := tfroute53.RecordMigrateState(
+		is, err := recordMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
@@ -77,13 +76,13 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_1": {
 			StateVersion: 1,
 			Attributes: map[string]string{
-				names.AttrWeight: "0",
+				names.AttrWeight: "0", // nosemgrep: ci.literal-0-string-test-constant
 				"failover":       "PRIMARY",
 			},
 			Expected: map[string]string{
-				"weighted_routing_policy.#":        "1",
-				"weighted_routing_policy.0.weight": "0",
-				"failover_routing_policy.#":        "1",
+				"weighted_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
+				"weighted_routing_policy.0.weight": "0", // nosemgrep: ci.literal-0-string-test-constant
+				"failover_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
 				"failover_routing_policy.0.type":   "PRIMARY",
 			},
 		},
@@ -101,7 +100,7 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 			ID:         "route53_record",
 			Attributes: tc.Attributes,
 		}
-		is, err := tfroute53.ResourceRecord().MigrateState(
+		is, err := ResourceRecord().MigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

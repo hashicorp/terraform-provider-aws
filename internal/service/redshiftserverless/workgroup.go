@@ -136,7 +136,7 @@ func resourceWorkgroup() *schema.Resource {
 											},
 										},
 									},
-									"vpc_endpoint_id": {
+									names.AttrVPCEndpointID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -154,7 +154,7 @@ func resourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"max_capacity": {
+			names.AttrMaxCapacity: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -228,7 +228,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.EnhancedVpcRouting = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("max_capacity"); ok {
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Int64(int64(v.(int)))
 	}
 
@@ -289,7 +289,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
-	d.Set("max_capacity", out.MaxCapacity)
+	d.Set(names.AttrMaxCapacity, out.MaxCapacity)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
 	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
@@ -323,7 +323,7 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	// Some validations, such as increasing base_capacity beyond an unchanged max_capacity, are deferred to the AWS API.
 
 	hasBaseCapacityChange, _, newBaseCapacity := checkCapacityChange("base_capacity")
-	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange("max_capacity")
+	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange(names.AttrMaxCapacity)
 
 	switch {
 	case hasMaxCapacityChange && newMaxCapacity == 0:
@@ -689,7 +689,7 @@ func flattenVPCEndpoint(apiObject *redshiftserverless.VpcEndpoint) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {

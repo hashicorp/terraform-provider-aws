@@ -4,40 +4,59 @@
 
 package names
 
-import (
-	"fmt"
-)
-
 const (
 	AttrARN                        = "arn"
 	AttrARNs                       = "arns"
+	AttrAWSAccountID               = "aws_account_id"
 	AttrAccessKey                  = "access_key"
 	AttrAccountID                  = "account_id"
 	AttrAction                     = "action"
+	AttrActions                    = "actions"
 	AttrAddress                    = "address"
+	AttrAlias                      = "alias"
+	AttrAllocatedStorage           = "allocated_storage"
+	AttrAllowMajorVersionUpgrade   = "allow_major_version_upgrade"
+	AttrApplicationID              = "application_id"
 	AttrApplyImmediately           = "apply_immediately"
+	AttrAssociationID              = "association_id"
+	AttrAttributes                 = "attributes"
 	AttrAutoMinorVersionUpgrade    = "auto_minor_version_upgrade"
 	AttrAvailabilityZone           = "availability_zone"
 	AttrAvailabilityZones          = "availability_zones"
 	AttrBucket                     = "bucket"
 	AttrBucketName                 = "bucket_name"
 	AttrBucketPrefix               = "bucket_prefix"
+	AttrCIDRBlock                  = "cidr_block"
+	AttrCapacityProviderStrategy   = "capacity_provider_strategy"
 	AttrCatalogID                  = "catalog_id"
 	AttrCertificate                = "certificate"
 	AttrCertificateARN             = "certificate_arn"
+	AttrCertificateChain           = "certificate_chain"
 	AttrClientID                   = "client_id"
+	AttrClientSecret               = "client_secret"
+	AttrCloudWatchLogGroupARN      = "cloudwatch_log_group_arn"
+	AttrCloudWatchLogs             = "cloudwatch_logs"
 	AttrClusterIdentifier          = "cluster_identifier"
+	AttrClusterName                = "cluster_name"
+	AttrComment                    = "comment"
+	AttrCondition                  = "condition"
 	AttrConfiguration              = "configuration"
+	AttrConnectionID               = "connection_id"
 	AttrContent                    = "content"
 	AttrContentType                = "content_type"
+	AttrCreateTime                 = "create_time"
 	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
+	AttrCreatedTime                = "created_time"
 	AttrCreationDate               = "creation_date"
 	AttrCreationTime               = "creation_time"
 	AttrDNSName                    = "dns_name"
 	AttrDatabase                   = "database"
 	AttrDatabaseName               = "database_name"
+	AttrDefaultAction              = "default_action"
+	AttrDefaultValue               = "default_value"
 	AttrDeleteOnTermination        = "delete_on_termination"
+	AttrDeletionProtection         = "deletion_protection"
 	AttrDescription                = "description"
 	AttrDestination                = "destination"
 	AttrDestinationARN             = "destination_arn"
@@ -46,46 +65,81 @@ const (
 	AttrDomain                     = "domain"
 	AttrDomainName                 = "domain_name"
 	AttrDuration                   = "duration"
+	AttrEmail                      = "email"
 	AttrEnabled                    = "enabled"
 	AttrEncrypted                  = "encrypted"
 	AttrEncryptionConfiguration    = "encryption_configuration"
 	AttrEndpoint                   = "endpoint"
 	AttrEndpointType               = "endpoint_type"
 	AttrEndpoints                  = "endpoints"
+	AttrEngine                     = "engine"
 	AttrEngineVersion              = "engine_version"
+	AttrEnvironment                = "environment"
 	AttrExecutionRoleARN           = "execution_role_arn"
+	AttrExpectedBucketOwner        = "expected_bucket_owner"
 	AttrExpression                 = "expression"
+	AttrExternalID                 = "external_id"
+	AttrFamily                     = "family"
+	AttrField                      = "field"
 	AttrFileSystemID               = "file_system_id"
 	AttrFilter                     = "filter"
+	AttrFinalSnapshotIdentifier    = "final_snapshot_identifier"
+	AttrForceDelete                = "force_delete"
 	AttrForceDestroy               = "force_destroy"
 	AttrFormat                     = "format"
+	AttrFunctionARN                = "function_arn"
 	AttrGroupName                  = "group_name"
+	AttrHeader                     = "header"
+	AttrHealthCheck                = "health_check"
 	AttrHostedZoneID               = "hosted_zone_id"
+	AttrIAMRoleARN                 = "iam_role_arn"
 	AttrID                         = "id"
+	AttrIDs                        = "ids"
+	AttrIOPS                       = "iops"
 	AttrIPAddress                  = "ip_address"
+	AttrIPAddressType              = "ip_address_type"
+	AttrIPAddresses                = "ip_addresses"
 	AttrIdentifier                 = "identifier"
+	AttrInstanceCount              = "instance_count"
 	AttrInstanceID                 = "instance_id"
 	AttrInstanceType               = "instance_type"
+	AttrInterval                   = "interval"
+	AttrIssuer                     = "issuer"
+	AttrJSON                       = "json"
+	AttrKMSKey                     = "kms_key"
 	AttrKMSKeyARN                  = "kms_key_arn"
 	AttrKMSKeyID                   = "kms_key_id"
 	AttrKey                        = "key"
+	AttrKeyID                      = "key_id"
+	AttrLanguageCode               = "language_code"
 	AttrLastUpdatedDate            = "last_updated_date"
+	AttrLastUpdatedTime            = "last_updated_time"
+	AttrLaunchTemplate             = "launch_template"
+	AttrLocation                   = "location"
 	AttrLogGroupName               = "log_group_name"
 	AttrLoggingConfiguration       = "logging_configuration"
 	AttrMax                        = "max"
+	AttrMaxCapacity                = "max_capacity"
+	AttrMessage                    = "message"
 	AttrMetricName                 = "metric_name"
 	AttrMin                        = "min"
 	AttrMode                       = "mode"
+	AttrMostRecent                 = "most_recent"
 	AttrName                       = "name"
 	AttrNamePrefix                 = "name_prefix"
+	AttrNames                      = "names"
 	AttrNamespace                  = "namespace"
 	AttrNetworkConfiguration       = "network_configuration"
 	AttrNetworkInterfaceID         = "network_interface_id"
+	AttrOwner                      = "owner"
+	AttrOwnerAccountID             = "owner_account_id"
 	AttrOwnerID                    = "owner_id"
 	AttrParameter                  = "parameter"
+	AttrParameterGroupName         = "parameter_group_name"
 	AttrParameters                 = "parameters"
 	AttrPassword                   = "password"
 	AttrPath                       = "path"
+	AttrPermissions                = "permissions"
 	AttrPolicy                     = "policy"
 	AttrPort                       = "port"
 	AttrPreferredMaintenanceWindow = "preferred_maintenance_window"
@@ -94,30 +148,58 @@ const (
 	AttrPriority                   = "priority"
 	AttrPrivateKey                 = "private_key"
 	AttrProfile                    = "profile"
+	AttrPropagateTags              = "propagate_tags"
 	AttrProperties                 = "properties"
 	AttrProtocol                   = "protocol"
+	AttrProviderName               = "provider_name"
+	AttrPublicKey                  = "public_key"
 	AttrPubliclyAccessible         = "publicly_accessible"
 	AttrRegion                     = "region"
+	AttrRepositoryName             = "repository_name"
 	AttrResourceARN                = "resource_arn"
+	AttrResourceID                 = "resource_id"
+	AttrResourceOwner              = "resource_owner"
+	AttrResourceTags               = "resource_tags"
 	AttrResourceType               = "resource_type"
+	AttrResources                  = "resources"
+	AttrRetentionPeriod            = "retention_period"
+	AttrRole                       = "role"
 	AttrRoleARN                    = "role_arn"
+	AttrRule                       = "rule"
 	AttrS3Bucket                   = "s3_bucket"
 	AttrS3BucketName               = "s3_bucket_name"
+	AttrS3KeyPrefix                = "s3_key_prefix"
 	AttrSNSTopicARN                = "sns_topic_arn"
 	AttrSchedule                   = "schedule"
 	AttrScheduleExpression         = "schedule_expression"
 	AttrSchema                     = "schema"
+	AttrScope                      = "scope"
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
 	AttrServiceName                = "service_name"
+	AttrServiceRole                = "service_role"
+	AttrServiceRoleARN             = "service_role_arn"
 	AttrSession                    = "session"
 	AttrSharedConfigFiles          = "shared_config_files"
+	AttrSize                       = "size"
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
+	AttrSkipDestroy                = "skip_destroy"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"
+	AttrSnapshotID                 = "snapshot_id"
 	AttrSource                     = "source"
+	AttrSourceType                 = "source_type"
+	AttrStage                      = "stage"
+	AttrStartTime                  = "start_time"
 	AttrState                      = "state"
 	AttrStatus                     = "status"
+	AttrStatusCode                 = "status_code"
+	AttrStatusMessage              = "status_message"
+	AttrStatusReason               = "status_reason"
+	AttrStorageClass               = "storage_class"
+	AttrStorageEncrypted           = "storage_encrypted"
+	AttrStorageType                = "storage_type"
+	AttrStreamARN                  = "stream_arn"
 	AttrSubnetID                   = "subnet_id"
 	AttrSubnetIDs                  = "subnet_ids"
 	AttrSubnets                    = "subnets"
@@ -125,163 +207,31 @@ const (
 	AttrTags                       = "tags"
 	AttrTagsAll                    = "tags_all"
 	AttrTarget                     = "target"
+	AttrTargetARN                  = "target_arn"
+	AttrThroughput                 = "throughput"
+	AttrTimeout                    = "timeout"
 	AttrTimeouts                   = "timeouts"
+	AttrTopicARN                   = "topic_arn"
 	AttrTransitGatewayAttachmentID = "transit_gateway_attachment_id"
 	AttrTransitGatewayID           = "transit_gateway_id"
+	AttrTriggers                   = "triggers"
 	AttrType                       = "type"
+	AttrURI                        = "uri"
 	AttrURL                        = "url"
 	AttrUnit                       = "unit"
 	AttrUserName                   = "user_name"
+	AttrUserPoolID                 = "user_pool_id"
 	AttrUsername                   = "username"
 	AttrVPCConfig                  = "vpc_config"
+	AttrVPCConfiguration           = "vpc_configuration"
+	AttrVPCEndpointID              = "vpc_endpoint_id"
 	AttrVPCID                      = "vpc_id"
 	AttrVPCSecurityGroupIDs        = "vpc_security_group_ids"
 	AttrValue                      = "value"
 	AttrValues                     = "values"
 	AttrVersion                    = "version"
+	AttrVirtualName                = "virtual_name"
+	AttrVolumeSize                 = "volume_size"
+	AttrVolumeType                 = "volume_type"
 	AttrWeight                     = "weight"
 )
-
-// ConstOrQuote returns the constant name for the given attribute if it exists.
-// Otherwise, it returns the attribute quoted. This is intended for use in
-// generated code and templates.
-func ConstOrQuote(constant string) string {
-	allConstants := map[string]string{
-		"arn":                           "AttrARN",
-		"arns":                          "AttrARNs",
-		"access_key":                    "AttrAccessKey",
-		"account_id":                    "AttrAccountID",
-		"action":                        "AttrAction",
-		"address":                       "AttrAddress",
-		"apply_immediately":             "AttrApplyImmediately",
-		"auto_minor_version_upgrade":    "AttrAutoMinorVersionUpgrade",
-		"availability_zone":             "AttrAvailabilityZone",
-		"availability_zones":            "AttrAvailabilityZones",
-		"bucket":                        "AttrBucket",
-		"bucket_name":                   "AttrBucketName",
-		"bucket_prefix":                 "AttrBucketPrefix",
-		"catalog_id":                    "AttrCatalogID",
-		"certificate":                   "AttrCertificate",
-		"certificate_arn":               "AttrCertificateARN",
-		"client_id":                     "AttrClientID",
-		"cluster_identifier":            "AttrClusterIdentifier",
-		"configuration":                 "AttrConfiguration",
-		"content":                       "AttrContent",
-		"content_type":                  "AttrContentType",
-		"created_at":                    "AttrCreatedAt",
-		"created_date":                  "AttrCreatedDate",
-		"creation_date":                 "AttrCreationDate",
-		"creation_time":                 "AttrCreationTime",
-		"dns_name":                      "AttrDNSName",
-		"database":                      "AttrDatabase",
-		"database_name":                 "AttrDatabaseName",
-		"delete_on_termination":         "AttrDeleteOnTermination",
-		"description":                   "AttrDescription",
-		"destination":                   "AttrDestination",
-		"destination_arn":               "AttrDestinationARN",
-		"device_name":                   "AttrDeviceName",
-		"display_name":                  "AttrDisplayName",
-		"domain":                        "AttrDomain",
-		"domain_name":                   "AttrDomainName",
-		"duration":                      "AttrDuration",
-		"enabled":                       "AttrEnabled",
-		"encrypted":                     "AttrEncrypted",
-		"encryption_configuration":      "AttrEncryptionConfiguration",
-		"endpoint":                      "AttrEndpoint",
-		"endpoint_type":                 "AttrEndpointType",
-		"endpoints":                     "AttrEndpoints",
-		"engine_version":                "AttrEngineVersion",
-		"execution_role_arn":            "AttrExecutionRoleARN",
-		"expression":                    "AttrExpression",
-		"file_system_id":                "AttrFileSystemID",
-		"filter":                        "AttrFilter",
-		"force_destroy":                 "AttrForceDestroy",
-		"format":                        "AttrFormat",
-		"group_name":                    "AttrGroupName",
-		"hosted_zone_id":                "AttrHostedZoneID",
-		"id":                            "AttrID",
-		"ip_address":                    "AttrIPAddress",
-		"identifier":                    "AttrIdentifier",
-		"instance_id":                   "AttrInstanceID",
-		"instance_type":                 "AttrInstanceType",
-		"kms_key_arn":                   "AttrKMSKeyARN",
-		"kms_key_id":                    "AttrKMSKeyID",
-		"key":                           "AttrKey",
-		"last_updated_date":             "AttrLastUpdatedDate",
-		"log_group_name":                "AttrLogGroupName",
-		"logging_configuration":         "AttrLoggingConfiguration",
-		"max":                           "AttrMax",
-		"metric_name":                   "AttrMetricName",
-		"min":                           "AttrMin",
-		"mode":                          "AttrMode",
-		"name":                          "AttrName",
-		"name_prefix":                   "AttrNamePrefix",
-		"namespace":                     "AttrNamespace",
-		"network_configuration":         "AttrNetworkConfiguration",
-		"network_interface_id":          "AttrNetworkInterfaceID",
-		"owner_id":                      "AttrOwnerID",
-		"parameter":                     "AttrParameter",
-		"parameters":                    "AttrParameters",
-		"password":                      "AttrPassword",
-		"path":                          "AttrPath",
-		"policy":                        "AttrPolicy",
-		"port":                          "AttrPort",
-		"preferred_maintenance_window":  "AttrPreferredMaintenanceWindow",
-		"prefix":                        "AttrPrefix",
-		"principal":                     "AttrPrincipal",
-		"priority":                      "AttrPriority",
-		"private_key":                   "AttrPrivateKey",
-		"profile":                       "AttrProfile",
-		"properties":                    "AttrProperties",
-		"protocol":                      "AttrProtocol",
-		"publicly_accessible":           "AttrPubliclyAccessible",
-		"region":                        "AttrRegion",
-		"resource_arn":                  "AttrResourceARN",
-		"resource_type":                 "AttrResourceType",
-		"role_arn":                      "AttrRoleARN",
-		"s3_bucket":                     "AttrS3Bucket",
-		"s3_bucket_name":                "AttrS3BucketName",
-		"sns_topic_arn":                 "AttrSNSTopicARN",
-		"schedule":                      "AttrSchedule",
-		"schedule_expression":           "AttrScheduleExpression",
-		"schema":                        "AttrSchema",
-		"secret_key":                    "AttrSecretKey",
-		"security_group_ids":            "AttrSecurityGroupIDs",
-		"security_groups":               "AttrSecurityGroups",
-		"service_name":                  "AttrServiceName",
-		"session":                       "AttrSession",
-		"shared_config_files":           "AttrSharedConfigFiles",
-		"skip_credentials_validation":   "AttrSkipCredentialsValidation",
-		"skip_requesting_account_id":    "AttrSkipRequestingAccountID",
-		"source":                        "AttrSource",
-		"state":                         "AttrState",
-		"status":                        "AttrStatus",
-		"subnet_id":                     "AttrSubnetID",
-		"subnet_ids":                    "AttrSubnetIDs",
-		"subnets":                       "AttrSubnets",
-		"table_name":                    "AttrTableName",
-		"tags":                          "AttrTags",
-		"tags_all":                      "AttrTagsAll",
-		"target":                        "AttrTarget",
-		"timeouts":                      "AttrTimeouts",
-		"transit_gateway_attachment_id": "AttrTransitGatewayAttachmentID",
-		"transit_gateway_id":            "AttrTransitGatewayID",
-		"type":                          "AttrType",
-		"url":                           "AttrURL",
-		"unit":                          "AttrUnit",
-		"user_name":                     "AttrUserName",
-		"username":                      "AttrUsername",
-		"vpc_config":                    "AttrVPCConfig",
-		"vpc_id":                        "AttrVPCID",
-		"vpc_security_group_ids":        "AttrVPCSecurityGroupIDs",
-		"value":                         "AttrValue",
-		"values":                        "AttrValues",
-		"version":                       "AttrVersion",
-		"weight":                        "AttrWeight",
-	}
-
-	if v, ok := allConstants[constant]; ok {
-		return fmt.Sprintf("names.%s", v)
-	}
-	return fmt.Sprintf("%q", constant)
-}

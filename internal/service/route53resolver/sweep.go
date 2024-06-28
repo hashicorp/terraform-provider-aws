@@ -111,7 +111,7 @@ func sweepDNSSECConfig(region string) error {
 			r := ResourceDNSSECConfig()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
-			d.Set("resource_id", v.ResourceId)
+			d.Set(names.AttrResourceID, v.ResourceId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -200,7 +200,7 @@ func sweepFirewallConfigs(region string) error {
 			r := ResourceFirewallConfig()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
-			d.Set("resource_id", v.ResourceId)
+			d.Set(names.AttrResourceID, v.ResourceId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -459,7 +459,7 @@ func sweepQueryLogConfigAssociations(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.Id))
 			d.Set("resolver_query_log_config_id", v.ResolverQueryLogConfigId)
-			d.Set("resource_id", v.ResourceId)
+			d.Set(names.AttrResourceID, v.ResourceId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

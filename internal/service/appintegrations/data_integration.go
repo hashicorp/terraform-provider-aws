@@ -25,6 +25,8 @@ import (
 
 // @SDKResource("aws_appintegrations_data_integration", name="Data Integration")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appintegrations;appintegrations.GetDataIntegrationOutput")
 func ResourceDataIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataIntegrationCreate,
@@ -46,7 +48,7 @@ func ResourceDataIntegration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -116,7 +118,7 @@ func resourceDataIntegrationCreate(ctx context.Context, d *schema.ResourceData, 
 	name := d.Get(names.AttrName).(string)
 	input := &appintegrations.CreateDataIntegrationInput{
 		ClientToken:    aws.String(id.UniqueId()),
-		KmsKey:         aws.String(d.Get("kms_key").(string)),
+		KmsKey:         aws.String(d.Get(names.AttrKMSKey).(string)),
 		Name:           aws.String(name),
 		ScheduleConfig: expandScheduleConfig(d.Get("schedule_config").([]interface{})),
 		SourceURI:      aws.String(d.Get("source_uri").(string)),
@@ -159,7 +161,7 @@ func resourceDataIntegrationRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("kms_key", output.KmsKey)
+	d.Set(names.AttrKMSKey, output.KmsKey)
 	d.Set(names.AttrName, output.Name)
 	if err := d.Set("schedule_config", flattenScheduleConfig(output.ScheduleConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "schedule_config tags: %s", err)

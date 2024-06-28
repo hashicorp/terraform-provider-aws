@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,7 +15,6 @@ import (
 
 func TestAccNetworkFirewallFirewallPolicyDataSource_arn(t *testing.T) {
 	ctx := acctest.Context(t)
-	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
@@ -29,7 +27,6 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_arn(t *testing.T) {
 			{
 				Config: testAccFirewallPolicyDataSourceConfig_arn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
@@ -39,7 +36,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.0", resourceName, "firewall_policy.0.stateless_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_coniguration_arn", resourceName, "firewall_policy.0.tls_inspection_coniguration_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -48,7 +45,6 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_arn(t *testing.T) {
 
 func TestAccNetworkFirewallFirewallPolicyDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
@@ -61,7 +57,6 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_name(t *testing.T) {
 			{
 				Config: testAccFirewallPolicyDataSourceConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
@@ -71,7 +66,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.0", resourceName, "firewall_policy.0.stateless_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_coniguration_arn", resourceName, "firewall_policy.0.tls_inspection_coniguration_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -80,7 +75,6 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_name(t *testing.T) {
 
 func TestAccNetworkFirewallFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
@@ -93,7 +87,6 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 			{
 				Config: testAccFirewallPolicyDataSourceConfig_nameAndARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
@@ -103,7 +96,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_default_actions.0", resourceName, "firewall_policy.0.stateless_default_actions.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.tls_inspection_coniguration_arn", resourceName, "firewall_policy.0.tls_inspection_coniguration_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -112,7 +105,6 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_nameAndARN(t *testing.T) {
 
 func TestAccNetworkFirewallFirewallPolicyDataSource_withOverriddenManagedRuleGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_networkfirewall_firewall_policy.test"
 	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
@@ -125,7 +117,6 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_withOverriddenManagedRuleGro
 			{
 				Config: testAccFirewallPolicyDataSourceConfig_withOverriddenManagedRuleGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN), resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateless_fragment_default_actions.#", resourceName, "firewall_policy.0.stateless_fragment_default_actions.#"),
@@ -136,7 +127,7 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_withOverriddenManagedRuleGro
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.0", resourceName, "firewall_policy.0.stateful_rule_group_reference.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.stateful_rule_group_reference.override.action", resourceName, "firewall_policy.0.stateful_rule_group_reference.override.action"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

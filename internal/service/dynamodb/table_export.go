@@ -111,7 +111,7 @@ func resourceTableExport() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -210,7 +210,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("s3_sse_algorithm", desc.S3SseAlgorithm)
 	d.Set("s3_sse_kms_key_id", desc.S3SseKmsKeyId)
 	if desc.StartTime != nil {
-		d.Set("start_time", aws.ToTime(desc.StartTime).Format(time.RFC3339))
+		d.Set(names.AttrStartTime, aws.ToTime(desc.StartTime).Format(time.RFC3339))
 	}
 	d.Set("table_arn", desc.TableArn)
 

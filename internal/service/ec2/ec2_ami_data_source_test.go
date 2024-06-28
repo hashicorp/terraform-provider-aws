@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
+func TestAccEC2AMIDataSource_linuxInstance(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_ami.test"
 
@@ -34,23 +34,23 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 					// these attributes set.
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
-					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrCreationDate, regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr(datasourceName, names.AttrDescription, regexache.MustCompile("^Amazon Linux AMI")),
-					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
+					resource.TestMatchResourceAttr(datasourceName, names.AttrDescription, regexache.MustCompile("^Amazon Linux 2023 AMI")),
+					resource.TestCheckResourceAttr(datasourceName, "ena_support", acctest.CtTrue),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),
 					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
 					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile("^amazon/")),
 					resource.TestCheckResourceAttr(datasourceName, "image_owner_alias", "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "image_type", "machine"),
-					resource.TestCheckResourceAttr(datasourceName, "imds_support", ""),
-					resource.TestCheckResourceAttr(datasourceName, "most_recent", "true"),
-					resource.TestMatchResourceAttr(datasourceName, names.AttrName, regexache.MustCompile("^amzn-ami-vpc-nat")),
+					resource.TestCheckResourceAttr(datasourceName, "imds_support", "v2.0"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrMostRecent, acctest.CtTrue),
+					resource.TestMatchResourceAttr(datasourceName, names.AttrName, regexache.MustCompile("^al2023-ami-2023.")),
 					acctest.MatchResourceAttrAccountID(datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(datasourceName, "platform_details", "Linux/UNIX"),
-					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "public", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, "public", acctest.CtTrue),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
 					resource.TestMatchResourceAttr(datasourceName, "root_snapshot_id", regexache.MustCompile("^snap-")),
@@ -58,7 +58,7 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, names.AttrState, "available"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.code", "UNSET"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.message", "UNSET"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(datasourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(datasourceName, "virtualization_type", "hvm"),
 				),
@@ -84,19 +84,19 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 					resource.TestMatchResourceAttr(datasourceName, names.AttrCreationDate, regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrDescription, regexache.MustCompile("^Microsoft Windows Server")),
-					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "ena_support", acctest.CtTrue),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),
 					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
 					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile("^amazon/")),
 					resource.TestCheckResourceAttr(datasourceName, "image_owner_alias", "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "image_type", "machine"),
-					resource.TestCheckResourceAttr(datasourceName, "most_recent", "true"),
-					resource.TestMatchResourceAttr(datasourceName, names.AttrName, regexache.MustCompile("^Windows_Server-2012-R2")),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrMostRecent, acctest.CtTrue),
+					resource.TestMatchResourceAttr(datasourceName, names.AttrName, regexache.MustCompile("^Windows_Server-2022-")),
 					acctest.MatchResourceAttrAccountID(datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(datasourceName, "platform", "windows"),
 					resource.TestMatchResourceAttr(datasourceName, "platform_details", regexache.MustCompile(`Windows`)),
-					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "public", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, "public", acctest.CtTrue),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
 					resource.TestMatchResourceAttr(datasourceName, "root_snapshot_id", regexache.MustCompile("^snap-")),
@@ -104,7 +104,7 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, names.AttrState, "available"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.code", "UNSET"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.message", "UNSET"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(datasourceName, "tpm_support", ""),
 					resource.TestMatchResourceAttr(datasourceName, "usage_operation", regexache.MustCompile(`^RunInstances`)),
 					resource.TestCheckResourceAttr(datasourceName, "virtualization_type", "hvm"),
@@ -127,27 +127,27 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 				Config: testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
-					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", acctest.Ct0),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrCreationDate, regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
-					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "ena_support", acctest.CtTrue),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),
 					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
 					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile(`ubuntu-images-.*-release/.*/.*/hvm/instance-store`)),
 					resource.TestCheckResourceAttr(datasourceName, "image_type", "machine"),
-					resource.TestCheckResourceAttr(datasourceName, "most_recent", "true"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrMostRecent, acctest.CtTrue),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrName, regexache.MustCompile(`ubuntu/images/hvm-instance/.*`)),
 					acctest.MatchResourceAttrAccountID(datasourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(datasourceName, "platform_details", "Linux/UNIX"),
-					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "0"),
-					resource.TestCheckResourceAttr(datasourceName, "public", "true"),
+					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(datasourceName, "public", acctest.CtTrue),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "instance-store"),
 					resource.TestCheckResourceAttr(datasourceName, "root_snapshot_id", ""),
 					resource.TestCheckResourceAttr(datasourceName, "sriov_net_support", "simple"),
 					resource.TestCheckResourceAttr(datasourceName, names.AttrState, "available"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.code", "UNSET"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.message", "UNSET"),
-					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(datasourceName, "tpm_support", ""),
 					resource.TestCheckResourceAttr(datasourceName, "usage_operation", "RunInstances"),
 					resource.TestCheckResourceAttr(datasourceName, "virtualization_type", "hvm"),
@@ -200,8 +200,27 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_snapshot_id", resourceName, "root_snapshot_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "sriov_net_support", resourceName, "sriov_net_support"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "virtualization_type", resourceName, "virtualization_type"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2AMIDataSource_productCode(t *testing.T) {
+	ctx := acctest.Context(t)
+	datasourceName := "data.aws_ami.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAMIDataSourceConfig_productCode,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", acctest.Ct1),
 				),
 			},
 		},
@@ -215,6 +234,7 @@ func testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore() string {
 	return `
 data "aws_ami" "ubuntu-bionic-ami-hvm-instance-store" {
   most_recent = true
+  owners      = ["amazon"]
 
   filter {
     name   = "name"
@@ -229,18 +249,20 @@ data "aws_ami" "ubuntu-bionic-ami-hvm-instance-store" {
 `
 }
 
-// Using NAT AMIs for testing - I would expect with NAT gateways now a thing,
-// that this will possibly be deprecated at some point in time. Other candidates
-// for testing this after that may be Ubuntu's AMI's, or Amazon's regular
-// Amazon Linux AMIs.
+// Amazon Linux AMI's test
 const testAccAMIDataSourceConfig_basic = `
 data "aws_ami" "test" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
     name   = "name"
-    values = ["amzn-ami-vpc-nat*"]
+    values = ["al2023-ami-2023.*"]
   }
 
   filter {
@@ -255,7 +277,7 @@ data "aws_ami" "test" {
 
   filter {
     name   = "block-device-mapping.volume-type"
-    values = ["standard"]
+    values = ["gp3"]
   }
 }
 `
@@ -268,7 +290,7 @@ data "aws_ami" "test" {
 
   filter {
     name   = "name"
-    values = ["Windows_Server-2012-R2*"]
+    values = ["Windows_Server-2022-*"]
   }
 
   filter {
@@ -296,10 +318,10 @@ data "aws_ami" "test" {
 
   filter {
     name   = "name"
-    values = ["amzn-ami-*"]
+    values = ["al2023-ami-2023.*"]
   }
 
-  name_regex = "^amzn-ami-min[a-z]{4}-hvm"
+  name_regex = "^al2023-ami-[0-9]{4}.[0-9]{1}.[0-9]{8}.[0-9]{1}-kernel-*"
 }
 `
 
@@ -319,3 +341,16 @@ data "aws_ami" "test" {
 }
 `)
 }
+
+// Image with product code.
+const testAccAMIDataSourceConfig_productCode = `
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["679593333241"]
+
+  filter {
+    name   = "name"
+    values = ["AwsMarketPublished_IBM App Connect v12.0.12.0 and IBM MQ v9.3.0.16 with RapidDeploy 5.1.12 -422d2ddd-3288-4067-be37-4e2a69450606"]
+  }
+}
+`

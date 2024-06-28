@@ -43,7 +43,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Optional:   true,
 				Computed:   true,
 			},
-			"attributes": schema.ListAttribute{
+			names.AttrAttributes: schema.ListAttribute{
 				Computed: true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
@@ -69,15 +69,15 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address_type": schema.StringAttribute{
+			names.AttrIPAddressType: schema.StringAttribute{
 				Computed: true,
 			},
 			"ip_sets": schema.ListAttribute{
 				Computed: true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"ip_addresses": types.ListType{ElemType: types.StringType},
-						"ip_family":    types.StringType,
+						names.AttrIPAddresses: types.ListType{ElemType: types.StringType},
+						"ip_family":           types.StringType,
 					},
 				},
 			},
@@ -171,8 +171,8 @@ func (d *acceleratorDataSource) Read(ctx context.Context, request datasource.Rea
 
 func (d *acceleratorDataSource) flattenIPSetFramework(ctx context.Context, apiObject *awstypes.IpSet) types.Object {
 	attributeTypes := map[string]attr.Type{
-		"ip_addresses": types.ListType{ElemType: types.StringType},
-		"ip_family":    types.StringType,
+		names.AttrIPAddresses: types.ListType{ElemType: types.StringType},
+		"ip_family":           types.StringType,
 	}
 
 	if apiObject == nil {
@@ -180,8 +180,8 @@ func (d *acceleratorDataSource) flattenIPSetFramework(ctx context.Context, apiOb
 	}
 
 	attributes := map[string]attr.Value{
-		"ip_addresses": flex.FlattenFrameworkStringValueListLegacy(ctx, apiObject.IpAddresses),
-		"ip_family":    flex.StringToFrameworkLegacy(ctx, apiObject.IpFamily),
+		names.AttrIPAddresses: flex.FlattenFrameworkStringValueListLegacy(ctx, apiObject.IpAddresses),
+		"ip_family":           flex.StringToFrameworkLegacy(ctx, apiObject.IpFamily),
 	}
 
 	return types.ObjectValueMust(attributeTypes, attributes)
@@ -189,8 +189,8 @@ func (d *acceleratorDataSource) flattenIPSetFramework(ctx context.Context, apiOb
 
 func (d *acceleratorDataSource) flattenIPSetsFramework(ctx context.Context, apiObjects []awstypes.IpSet) types.List {
 	elementType := types.ObjectType{AttrTypes: map[string]attr.Type{
-		"ip_addresses": types.ListType{ElemType: types.StringType},
-		"ip_family":    types.StringType,
+		names.AttrIPAddresses: types.ListType{ElemType: types.StringType},
+		"ip_family":           types.StringType,
 	}}
 	var elements []attr.Value
 

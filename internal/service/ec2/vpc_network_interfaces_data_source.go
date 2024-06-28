@@ -28,7 +28,7 @@ func DataSourceNetworkInterfaces() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -69,7 +69,7 @@ func dataSourceNetworkInterfacesRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", networkInterfaceIDs)
+	d.Set(names.AttrIDs, networkInterfaceIDs)
 
 	return diags
 }

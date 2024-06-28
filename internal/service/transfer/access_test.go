@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func testAccAccess_s3_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedAccess
+	var conf awstypes.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -40,23 +40,23 @@ func testAccAccess_s3_basic(t *testing.T) {
 				Config: testAccAccessConfig_s3Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
-					resource.TestCheckResourceAttrSet(resourceName, "role"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"role"},
+				ImportStateVerifyIgnore: []string{names.AttrRole},
 			},
 			{
 				Config: testAccAccessConfig_s3Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/test"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 				),
@@ -67,7 +67,7 @@ func testAccAccess_s3_basic(t *testing.T) {
 
 func testAccAccess_efs_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedAccess
+	var conf awstypes.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -86,26 +86,26 @@ func testAccAccess_efs_basic(t *testing.T) {
 				Config: testAccAccessConfig_efsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
-					resource.TestCheckResourceAttrSet(resourceName, "role"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"role"},
+				ImportStateVerifyIgnore: []string{names.AttrRole},
 			},
 			{
 				Config: testAccAccessConfig_efsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
-					resource.TestCheckResourceAttrSet(resourceName, "role"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
 				),
 			},
 		},
@@ -114,7 +114,7 @@ func testAccAccess_efs_basic(t *testing.T) {
 
 func testAccAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedAccess
+	var conf awstypes.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -143,7 +143,7 @@ func testAccAccess_disappears(t *testing.T) {
 
 func testAccAccess_s3_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedAccess
+	var conf awstypes.DescribedAccess
 	resourceName := "aws_transfer_access.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -169,26 +169,16 @@ func testAccAccess_s3_policy(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessExists(ctx context.Context, n string, v *transfer.DescribedAccess) resource.TestCheckFunc {
+func testAccCheckAccessExists(ctx context.Context, n string, v *awstypes.DescribedAccess) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Access ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		serverID, externalID, err := tftransfer.AccessParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
-
-		output, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
+		output, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrExternalID])
 
 		if err != nil {
 			return err
@@ -202,19 +192,14 @@ func testAccCheckAccessExists(ctx context.Context, n string, v *transfer.Describ
 
 func testAccCheckAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_access" {
 				continue
 			}
 
-			serverID, externalID, err := tftransfer.AccessParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return fmt.Errorf("error parsing Transfer Access ID: %w", err)
-			}
-			_, err = tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
+			_, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrExternalID])
 
 			if tfresource.NotFound(err) {
 				continue

@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_api_gateway_usage_plan", name="Usage Plan")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetUsagePlanOutput")
 func resourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsagePlanCreate,
@@ -49,7 +50,7 @@ func resourceUsagePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"stage": {
+						names.AttrStage: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -312,7 +313,7 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta i
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpRemove,
 					Path:  aws.String("/apiStages"),
-					Value: aws.String(fmt.Sprintf("%s:%s", m["api_id"].(string), m["stage"].(string))),
+					Value: aws.String(fmt.Sprintf("%s:%s", m["api_id"].(string), m[names.AttrStage].(string))),
 				})
 			}
 
@@ -320,7 +321,7 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			if len(ns) > 0 {
 				for _, v := range ns {
 					m := v.(map[string]interface{})
-					id := fmt.Sprintf("%s:%s", m["api_id"].(string), m["stage"].(string))
+					id := fmt.Sprintf("%s:%s", m["api_id"].(string), m[names.AttrStage].(string))
 					operations = append(operations, types.PatchOperation{
 						Op:    types.OpAdd,
 						Path:  aws.String("/apiStages"),
@@ -479,7 +480,7 @@ func resourceUsagePlanDelete(ctx context.Context, d *schema.ResourceData, meta i
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpRemove,
 				Path:  aws.String("/apiStages"),
-				Value: aws.String(fmt.Sprintf("%s:%s", sv["api_id"].(string), sv["stage"].(string))),
+				Value: aws.String(fmt.Sprintf("%s:%s", sv["api_id"].(string), sv[names.AttrStage].(string))),
 			})
 		}
 
@@ -545,7 +546,7 @@ func expandAPIStages(s *schema.Set) []types.ApiStage {
 			stage.ApiId = aws.String(v)
 		}
 
-		if v, ok := mStage["stage"].(string); ok && v != "" {
+		if v, ok := mStage[names.AttrStage].(string); ok && v != "" {
 			stage.Stage = aws.String(v)
 		}
 
@@ -610,7 +611,7 @@ func flattenAPIStages(s []types.ApiStage) []map[string]interface{} {
 		if bd.ApiId != nil && bd.Stage != nil {
 			stage := make(map[string]interface{})
 			stage["api_id"] = aws.ToString(bd.ApiId)
-			stage["stage"] = aws.ToString(bd.Stage)
+			stage[names.AttrStage] = aws.ToString(bd.Stage)
 			stage["throttle"] = flattenThrottleSettingsMap(bd.Throttle)
 
 			stages = append(stages, stage)

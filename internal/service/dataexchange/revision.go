@@ -40,7 +40,7 @@ func ResourceRevision() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16348),
@@ -67,7 +67,7 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
-		Comment:   aws.String(d.Get("comment").(string)),
+		Comment:   aws.String(d.Get(names.AttrComment).(string)),
 		Tags:      getTagsIn(ctx),
 	}
 
@@ -103,7 +103,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("data_set_id", revision.DataSetId)
-	d.Set("comment", revision.Comment)
+	d.Set(names.AttrComment, revision.Comment)
 	d.Set(names.AttrARN, revision.Arn)
 	d.Set("revision_id", revision.Id)
 
@@ -122,8 +122,8 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			DataSetId:  aws.String(d.Get("data_set_id").(string)),
 		}
 
-		if d.HasChange("comment") {
-			input.Comment = aws.String(d.Get("comment").(string))
+		if d.HasChange(names.AttrComment) {
+			input.Comment = aws.String(d.Get(names.AttrComment).(string))
 		}
 
 		log.Printf("[DEBUG] Updating DataExchange Revision: %s", d.Id())

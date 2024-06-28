@@ -273,7 +273,7 @@ func ResourceEndpoint() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -2013,7 +2013,7 @@ func expandKinesisSettings(tfMap map[string]interface{}) *dms.KinesisSettings {
 		apiObject.ServiceAccessRoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamArn = aws.String(v)
 	}
 
@@ -2060,7 +2060,7 @@ func flattenKinesisSettings(apiObject *dms.KinesisSettings) map[string]interface
 	}
 
 	if v := apiObject.StreamArn; v != nil {
-		tfMap["stream_arn"] = aws.StringValue(v)
+		tfMap[names.AttrStreamARN] = aws.StringValue(v)
 	}
 
 	return tfMap

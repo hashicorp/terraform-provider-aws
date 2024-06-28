@@ -28,7 +28,7 @@ func DataSourceVPCs() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -72,7 +72,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", vpcIDs)
+	d.Set(names.AttrIDs, vpcIDs)
 
 	return diags
 }

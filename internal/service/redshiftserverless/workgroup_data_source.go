@@ -65,7 +65,7 @@ func dataSourceWorkgroup() *schema.Resource {
 											},
 										},
 									},
-									"vpc_endpoint_id": {
+									names.AttrVPCEndpointID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

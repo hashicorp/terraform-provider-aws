@@ -69,7 +69,7 @@ func DataSourceImage() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

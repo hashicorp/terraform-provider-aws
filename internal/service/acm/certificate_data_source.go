@@ -6,6 +6,7 @@ package acm
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
@@ -17,10 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_acm_certificate")
+// @SDKDataSource("aws_acm_certificate", name="Certificate")
+// @Tags(identifierAttribute="arn")
+// @Testing(tlsKey=true, generator=false)
 func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
@@ -34,7 +38,7 @@ func dataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +54,7 @@ func dataSourceCertificate() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
 				},
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -80,8 +84,8 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain := d.Get(names.AttrDomain)
-	input := &acm.ListCertificatesInput{}
+	domain := d.Get(names.AttrDomain).(string)
+	input := acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {
 		input.Includes = &types.Filters{
@@ -95,27 +99,18 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		input.CertificateStatuses = []types.CertificateStatus{types.CertificateStatusIssued}
 	}
 
-	var arns []string
-	pages := acm.NewListCertificatesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
-		}
-
-		for _, v := range page.CertificateSummaryList {
-			if aws.ToString(v.DomainName) == domain {
-				arns = append(arns, aws.ToString(v.CertificateArn))
-			}
-		}
+	arns, err := tfresource.RetryGWhenNotFound(ctx, 1*time.Minute,
+		func() ([]string, error) {
+			return listCertificates(ctx, conn, &input, domain)
+		},
+	)
+	if tfresource.NotFound(err) {
+		sdkdiag.AppendErrorf(diags, "XXX no ACM Certificate matching domain (%s)", domain)
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 	}
 
-	if len(arns) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
-	}
-
-	filterMostRecent := d.Get("most_recent").(bool)
+	filterMostRecent := d.Get(names.AttrMostRecent).(bool)
 	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
 
 	if !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {
@@ -188,7 +183,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if matchedCertificate == nil {
-		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
+		return sdkdiag.AppendErrorf(diags, "YYY no ACM Certificate matching domain (%s)", domain)
 	}
 
 	// Get the certificate data if the status is issued
@@ -208,10 +203,10 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if output != nil {
 		d.Set(names.AttrCertificate, output.Certificate)
-		d.Set("certificate_chain", output.CertificateChain)
+		d.Set(names.AttrCertificateChain, output.CertificateChain)
 	} else {
 		d.Set(names.AttrCertificate, nil)
-		d.Set("certificate_chain", nil)
+		d.Set(names.AttrCertificateChain, nil)
 	}
 
 	d.SetId(aws.ToString(matchedCertificate.CertificateArn))
@@ -247,4 +242,29 @@ func mostRecentCertificate(i, j *types.CertificateDetail) (*types.CertificateDet
 		return i, nil
 	}
 	return j, nil
+}
+
+func listCertificates(ctx context.Context, conn *acm.Client, input *acm.ListCertificatesInput, domain string) ([]string, error) {
+	var result []string
+
+	pages := acm.NewListCertificatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return []string{}, err
+		}
+
+		for _, v := range page.CertificateSummaryList {
+			if aws.ToString(v.DomainName) == domain {
+				result = append(result, aws.ToString(v.CertificateArn))
+			}
+		}
+	}
+
+	if len(result) == 0 {
+		return []string{}, tfresource.NewEmptyResultError(input)
+	}
+
+	return result, nil
 }

@@ -46,7 +46,7 @@ func ResourceAccount() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(macie2.MacieStatus_Values(), false),
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,7 +126,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrStatus, resp.Status)
 	d.Set("finding_publishing_frequency", resp.FindingPublishingFrequency)
-	d.Set("service_role", resp.ServiceRole)
+	d.Set(names.AttrServiceRole, resp.ServiceRole)
 	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 

@@ -97,7 +97,7 @@ func ResourceEnvironment() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -180,11 +180,23 @@ func ResourceEnvironment() *schema.Resource {
 					},
 				},
 			},
+			"max_webservers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(2, 5),
+			},
 			"max_workers": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
+			},
+			"min_webservers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(2, 5),
 			},
 			"min_workers": {
 				Type:         schema.TypeInt,
@@ -242,7 +254,7 @@ func ResourceEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -340,7 +352,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.EnvironmentClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKey); ok {
 		input.KmsKey = aws.String(v.(string))
 	}
 
@@ -355,6 +367,14 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("min_workers"); ok {
 		input.MinWorkers = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("max_webservers"); ok {
+		input.MaxWebservers = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("min_webservers"); ok {
+		input.MinWebservers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("plugins_s3_object_version"); ok {
@@ -442,7 +462,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("endpoint_management", environment.EndpointManagement)
 	d.Set("environment_class", environment.EnvironmentClass)
 	d.Set(names.AttrExecutionRoleARN, environment.ExecutionRoleArn)
-	d.Set("kms_key", environment.KmsKey)
+	d.Set(names.AttrKMSKey, environment.KmsKey)
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
@@ -451,6 +471,8 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
+	d.Set("max_webservers", environment.MaxWebservers)
+	d.Set("min_webservers", environment.MinWebservers)
 	d.Set(names.AttrName, environment.Name)
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
@@ -460,7 +482,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("requirements_s3_object_version", environment.RequirementsS3ObjectVersion)
 	d.Set("requirements_s3_path", environment.RequirementsS3Path)
 	d.Set("schedulers", environment.Schedulers)
-	d.Set("service_role_arn", environment.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
 	d.Set("startup_script_s3_object_version", environment.StartupScriptS3ObjectVersion)
 	d.Set("startup_script_s3_path", environment.StartupScriptS3Path)
@@ -520,6 +542,14 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("min_workers") {
 			input.MinWorkers = aws.Int32(int32(d.Get("min_workers").(int)))
+		}
+
+		if d.HasChange("max_webservers") {
+			input.MaxWebservers = aws.Int32(int32(d.Get("max_webservers").(int)))
+		}
+
+		if d.HasChange("min_webservers") {
+			input.MinWebservers = aws.Int32(int32(d.Get("min_webservers").(int)))
 		}
 
 		if d.HasChange(names.AttrNetworkConfiguration) {

@@ -73,14 +73,14 @@ func TestAccQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 				Config: testAccUserConfig_email(rName, "nottarealemailbutworks"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, "nottarealemailbutworks"),
 				),
 			},
 			{
 				Config: testAccUserConfig_email(rName, "nottarealemailbutworks2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, "nottarealemailbutworks2"),
 				),
 			},
 		},

@@ -26,6 +26,7 @@ const (
 
 // @SDKResource("aws_rds_reserved_instance", name="Reserved Instance")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceReservedInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReservedInstanceCreate,
@@ -63,7 +64,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"instance_count": {
+			names.AttrInstanceCount: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -111,7 +112,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,6 +133,7 @@ func ResourceReservedInstance() *schema.Resource {
 }
 
 func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.PurchaseReservedDBInstancesOfferingInput{
@@ -139,8 +141,8 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                          getTagsIn(ctx),
 	}
 
-	if v, ok := d.Get("instance_count").(int); ok && v > 0 {
-		input.DBInstanceCount = aws.Int64(int64(d.Get("instance_count").(int)))
+	if v, ok := d.Get(names.AttrInstanceCount).(int); ok && v > 0 {
+		input.DBInstanceCount = aws.Int64(int64(d.Get(names.AttrInstanceCount).(int)))
 	}
 
 	if v, ok := d.Get("reservation_id").(string); ok && v != "" {
@@ -149,19 +151,20 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.PurchaseReservedDBInstancesOfferingWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionCreating, ResNameReservedInstance, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionCreating, ResNameReservedInstance, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
 	}
 
 	d.SetId(aws.ToString(resp.ReservedDBInstance.ReservedDBInstanceId))
 
 	if err := waitReservedInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.RDS, create.ErrActionWaitingForCreation, ResNameReservedInstance, d.Id(), err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionWaitingForCreation, ResNameReservedInstance, d.Id(), err)
 	}
 
-	return resourceReservedInstanceRead(ctx, d, meta)
+	return append(diags, resourceReservedInstanceRead(ctx, d, meta)...)
 }
 
 func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	reservation, err := FindReservedDBInstanceByID(ctx, conn, d.Id())
@@ -169,11 +172,11 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id(), err)
+		return create.AppendDiagError(diags, names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, reservation.ReservedDBInstanceArn)
@@ -181,7 +184,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("db_instance_class", reservation.DBInstanceClass)
 	d.Set(names.AttrDuration, reservation.Duration)
 	d.Set("fixed_price", reservation.FixedPrice)
-	d.Set("instance_count", reservation.DBInstanceCount)
+	d.Set(names.AttrInstanceCount, reservation.DBInstanceCount)
 	d.Set("lease_id", reservation.LeaseId)
 	d.Set("multi_az", reservation.MultiAZ)
 	d.Set("offering_id", reservation.ReservedDBInstancesOfferingId)
@@ -189,11 +192,11 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("product_description", reservation.ProductDescription)
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
 	d.Set("reservation_id", reservation.ReservedDBInstanceId)
-	d.Set("start_time", (reservation.StartTime).Format(time.RFC3339))
+	d.Set(names.AttrStartTime, (reservation.StartTime).Format(time.RFC3339))
 	d.Set(names.AttrState, reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
-	return nil
+	return diags
 }
 
 func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

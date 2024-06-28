@@ -63,7 +63,7 @@ func ResourceConfiguredTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -168,7 +168,7 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrDescription, configuredTable.Description)
 	d.Set("allowed_columns", configuredTable.AllowedColumns)
 	d.Set("analysis_method", configuredTable.AnalysisMethod)
-	d.Set("create_time", configuredTable.CreateTime.String())
+	d.Set(names.AttrCreateTime, configuredTable.CreateTime.String())
 	d.Set("update_time", configuredTable.UpdateTime.String())
 
 	if err := d.Set("table_reference", flattenTableReference(configuredTable.TableReference)); err != nil {

@@ -38,7 +38,7 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
@@ -47,8 +47,8 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
@@ -87,8 +87,8 @@ func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.Ct2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
@@ -105,8 +105,8 @@ func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccessKey, ""),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSecretKey),
@@ -123,8 +123,8 @@ func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
 				),
 			},
 		},
@@ -170,11 +170,11 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, "key1", "value1"),
+				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -183,20 +183,20 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocationObjectStorageConfig_tags2(rName, domain, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationObjectStorageConfig_tags2(rName, domain, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, "key1", "value1"),
+				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -228,7 +228,7 @@ func TestAccDataSyncLocationObjectStorage_serverCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
-					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/test/", domain, rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, fmt.Sprintf("object-storage://%s/%s/test/", domain, rName)),
 				),
 			},
 			{

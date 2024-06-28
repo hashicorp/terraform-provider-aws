@@ -95,12 +95,12 @@ func resourceInstanceFleet() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
 									},
-									"size": {
+									names.AttrSize: {
 										Type:     schema.TypeInt,
 										Required: true,
 										ForceNew: true,

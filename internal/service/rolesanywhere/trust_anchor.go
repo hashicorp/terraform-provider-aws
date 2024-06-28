@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,7 +75,7 @@ func ResourceTrustAnchor() *schema.Resource {
 								},
 							},
 						},
-						"source_type": {
+						names.AttrSourceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(trustAnchorTypeValues(types.TrustAnchorType("").Values()...), false),
@@ -91,6 +92,7 @@ func ResourceTrustAnchor() *schema.Resource {
 }
 
 func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -105,15 +107,16 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.CreateTrustAnchor(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating RolesAnywhere Trust Anchor (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating RolesAnywhere Trust Anchor (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.TrustAnchor.TrustAnchorId))
 
-	return resourceTrustAnchorRead(ctx, d, meta)
+	return append(diags, resourceTrustAnchorRead(ctx, d, meta)...)
 }
 
 func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	trustAnchor, err := FindTrustAnchorByID(ctx, conn, d.Id())
@@ -121,11 +124,11 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RolesAnywhere Trust Anchor (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, trustAnchor.TrustAnchorArn)
@@ -133,13 +136,14 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrName, trustAnchor.Name)
 
 	if err := d.Set(names.AttrSource, flattenSource(trustAnchor.Source)); err != nil {
-		return diag.Errorf("setting source: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -153,27 +157,28 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateTrustAnchor(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 		}
 
 		if d.HasChange(names.AttrEnabled) {
 			_, n := d.GetChange(names.AttrEnabled)
 			if n == true {
 				if err := enableTrustAnchor(ctx, d.Id(), meta); err != nil {
-					diag.Errorf("enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+					sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 				}
 			} else {
 				if err := disableTrustAnchor(ctx, d.Id(), meta); err != nil {
-					diag.Errorf("disabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+					sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceTrustAnchorRead(ctx, d, meta)
+	return append(diags, resourceTrustAnchorRead(ctx, d, meta)...)
 }
 
 func resourceTrustAnchorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Trust Anchor (%s)", d.Id())
@@ -183,14 +188,14 @@ func resourceTrustAnchorDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenSource(apiObject *types.Source) []interface{} {
@@ -200,7 +205,7 @@ func flattenSource(apiObject *types.Source) []interface{} {
 
 	m := map[string]interface{}{}
 
-	m["source_type"] = apiObject.SourceType
+	m[names.AttrSourceType] = apiObject.SourceType
 	m["source_data"] = flattenSourceData(apiObject.SourceData)
 
 	return []interface{}{m}
@@ -239,7 +244,7 @@ func expandSource(tfList []interface{}) *types.Source {
 
 	result := &types.Source{}
 
-	if v, ok := tfMap["source_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSourceType].(string); ok && v != "" {
 		result.SourceType = types.TrustAnchorType(v)
 	}
 

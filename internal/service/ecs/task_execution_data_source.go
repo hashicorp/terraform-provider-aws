@@ -26,7 +26,7 @@ func DataSourceTaskExecution() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTaskExecutionRead,
 
 		Schema: map[string]*schema.Schema{
-			"capacity_provider_strategy": {
+			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -124,7 +124,7 @@ func DataSourceTaskExecution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"environment": {
+									names.AttrEnvironment: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -231,7 +231,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -246,7 +246,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"propagate_tags": {
+			names.AttrPropagateTags: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.PropagateTags_Values(), false),
@@ -296,7 +296,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	if v, ok := d.GetOk("capacity_provider_strategy"); ok {
+	if v, ok := d.GetOk(names.AttrCapacityProviderStrategy); ok {
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("client_token"); ok {
@@ -340,7 +340,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("propagate_tags"); ok {
+	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 		input.PropagateTags = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("reference_id"); ok {
@@ -433,7 +433,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 		if v, ok := tfMap["cpu"]; ok {
 			co.Cpu = aws.Int64(int64(v.(int)))
 		}
-		if v, ok := tfMap["environment"]; ok {
+		if v, ok := tfMap[names.AttrEnvironment]; ok {
 			co.Environment = expandTaskEnvironment(v.(*schema.Set))
 		}
 		if v, ok := tfMap["memory"]; ok {

@@ -42,7 +42,7 @@ func resourceWebACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -106,7 +106,7 @@ func resourceWebACL() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -173,7 +173,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+			DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 			MetricName:    aws.String(d.Get(names.AttrMetricName).(string)),
 			Name:          aws.String(name),
 			Tags:          getTagsIn(ctx),
@@ -208,11 +208,11 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
+	if rules := d.Get(names.AttrRule).(*schema.Set).List(); len(rules) > 0 {
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 				Updates:       diffWebACLRules([]interface{}{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -237,11 +237,11 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Regional Web ACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF Regional Web ACL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional Web ACL (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -252,12 +252,12 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  "webacl/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	if err := d.Set("default_action", flattenAction(webACL.DefaultAction)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenAction(webACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set(names.AttrMetricName, webACL.MetricName)
 	d.Set(names.AttrName, webACL.Name)
-	if err := d.Set("rule", flattenWebACLRules(webACL.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenWebACLRules(webACL.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -288,14 +288,14 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	if d.HasChanges("default_action", "rule") {
-		o, n := d.GetChange("rule")
+	if d.HasChanges(names.AttrDefaultAction, names.AttrRule) {
+		o, n := d.GetChange(names.AttrRule)
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 				Updates:       diffWebACLRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -340,11 +340,11 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
+	if rules := d.Get(names.AttrRule).(*schema.Set).List(); len(rules) > 0 {
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}

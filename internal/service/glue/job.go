@@ -113,11 +113,15 @@ func ResourceJob() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"max_capacity": {
+			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"number_of_workers", "worker_type"},
+			},
+			"maintenance_window": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
@@ -154,7 +158,7 @@ func ResourceJob() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.IntAtLeast(1),
 			},
 			names.AttrRoleARN: {
@@ -164,7 +168,7 @@ func ResourceJob() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -178,7 +182,7 @@ func ResourceJob() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 			},
 		},
@@ -223,8 +227,12 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.GlueVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("max_capacity"); ok {
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
+	}
+
+	if v, ok := d.GetOk("maintenance_window"); ok {
+		input.MaintenanceWindow = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -247,7 +255,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("timeout"); ok {
+	if v, ok := d.GetOk(names.AttrTimeout); ok {
 		input.Timeout = aws.Int64(int64(v.(int)))
 	}
 
@@ -303,7 +311,8 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
-	d.Set("max_capacity", job.MaxCapacity)
+	d.Set("maintenance_window", job.MaintenanceWindow)
+	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
 	d.Set("max_retries", job.MaxRetries)
 	d.Set(names.AttrName, job.Name)
 	d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments))
@@ -313,7 +322,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("number_of_workers", job.NumberOfWorkers)
 	d.Set(names.AttrRoleARN, job.Role)
 	d.Set("security_configuration", job.SecurityConfiguration)
-	d.Set("timeout", job.Timeout)
+	d.Set(names.AttrTimeout, job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
 	return diags
@@ -355,6 +364,10 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.GlueVersion = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("maintenance_window"); ok {
+			jobUpdate.MaintenanceWindow = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("max_retries"); ok {
 			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
 		}
@@ -370,7 +383,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		if v, ok := d.GetOk("number_of_workers"); ok {
 			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
 		} else {
-			if v, ok := d.GetOk("max_capacity"); ok {
+			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
 			}
 		}
@@ -379,7 +392,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("timeout"); ok {
+		if v, ok := d.GetOk(names.AttrTimeout); ok {
 			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
 		}
 

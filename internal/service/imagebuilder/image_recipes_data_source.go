@@ -28,12 +28,12 @@ func DataSourceImageRecipes() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrFilter: namevaluesfilters.Schema(),
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Ownership_Values(), false),
@@ -48,7 +48,7 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 
 	input := &imagebuilder.ListImageRecipesInput{}
 
-	if v, ok := d.GetOk("owner"); ok {
+	if v, ok := d.GetOk(names.AttrOwner); ok {
 		input.Owner = aws.String(v.(string))
 	}
 
@@ -87,7 +87,7 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, arns)
-	d.Set("names", nms)
+	d.Set(names.AttrNames, nms)
 
 	return diags
 }

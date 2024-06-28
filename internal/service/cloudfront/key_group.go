@@ -34,7 +34,7 @@ func resourceKeyGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -65,7 +65,7 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Name:  aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -101,7 +101,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	keyGroupConfig := output.KeyGroup.KeyGroupConfig
-	d.Set("comment", keyGroupConfig.Comment)
+	d.Set(names.AttrComment, keyGroupConfig.Comment)
 	d.Set("etag", output.ETag)
 	d.Set("items", keyGroupConfig.Items)
 	d.Set(names.AttrName, keyGroupConfig.Name)
@@ -118,7 +118,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		Name:  aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 

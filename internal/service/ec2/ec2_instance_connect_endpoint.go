@@ -31,8 +31,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Instance Connect Endpoint")
+// @FrameworkResource("aws_ec2_instance_connect_endpoint", name="Instance Connect Endpoint")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func newInstanceConnectEndpointResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &instanceConnectEndpointResource{}
 
@@ -164,7 +165,7 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	data.InstanceConnectEndpointId = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
 	id := data.InstanceConnectEndpointId.ValueString()
 
-	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+	instanceConnectEndpoint, err := waitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
@@ -191,7 +192,7 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 	conn := r.Meta().EC2Client(ctx)
 
 	id := data.InstanceConnectEndpointId.ValueString()
-	instanceConnectEndpoint, err := FindInstanceConnectEndpointByID(ctx, conn, id)
+	instanceConnectEndpoint, err := findInstanceConnectEndpointByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -241,7 +242,7 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 		return
 	}
 
-	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitInstanceConnectEndpointDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) delete", id), err.Error())
 
 		return

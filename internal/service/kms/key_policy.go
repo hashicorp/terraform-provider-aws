@@ -36,7 +36,7 @@ func resourceKeyPolicy() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -60,7 +60,7 @@ func resourceKeyPolicyCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 
 	if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", keyID, d.Get(names.AttrPolicy).(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -87,7 +87,7 @@ func resourceKeyPolicyRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", d.Id(), err)
 	}
 
-	d.Set("key_id", key.metadata.KeyId)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
 
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), key.policy)
 	if err != nil {
@@ -117,7 +117,7 @@ func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	if !d.Get("bypass_policy_lockout_safety_check").(bool) {
-		if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", d.Get("key_id").(string), meta.(*conns.AWSClient).DefaultKMSKeyPolicy(ctx), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(ctx, conn, "KMS Key Policy", d.Get(names.AttrKeyID).(string), meta.(*conns.AWSClient).DefaultKMSKeyPolicy(ctx), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		} else {
 			log.Printf("[WARN] KMS Key Policy for Key (%s) does not allow PutKeyPolicy. Default Policy cannot be restored. Removing from state", d.Id())

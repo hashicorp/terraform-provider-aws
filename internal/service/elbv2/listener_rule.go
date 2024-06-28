@@ -47,6 +47,8 @@ const (
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
+// @Testing(importIgnore="action.0.forward")
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,
@@ -198,7 +200,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
 
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
@@ -232,7 +234,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -260,7 +262,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",
@@ -312,12 +314,12 @@ func ResourceListenerRule() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -327,7 +329,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",
@@ -356,7 +358,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"condition": {
+			names.AttrCondition: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -520,7 +522,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var err error
 
-	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+	input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -673,7 +675,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		conditions[i] = conditionMap
 	}
-	if err := d.Set("condition", conditions); err != nil {
+	if err := d.Set(names.AttrCondition, conditions); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
@@ -714,9 +716,9 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			requestUpdate = true
 		}
 
-		if d.HasChange("condition") {
+		if d.HasChange(names.AttrCondition) {
 			var err error
-			input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+			input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}

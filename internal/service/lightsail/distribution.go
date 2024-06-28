@@ -28,7 +28,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_distribution", name="Distribution")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Distribution")
 func ResourceDistribution() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionCreate,
@@ -222,14 +222,14 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The domain name of the distribution.",
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "The IP address type of the distribution.",
 				ValidateFunc: validation.StringInSlice(flattenIPAddressTypeValues(types.IpAddressType("").Values()), false),
 				Default:      "dualstack",
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "An object that describes the location of the distribution, such as the AWS Region and Availability Zone.",
@@ -347,7 +347,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		in.CacheBehaviors = expandCacheBehaviorsPerPath(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
@@ -438,8 +438,8 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
-	d.Set("ip_address_type", out.IpAddressType)
-	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})
+	d.Set(names.AttrIPAddressType, out.IpAddressType)
+	d.Set(names.AttrLocation, []interface{}{flattenResourceLocation(out.Location)})
 	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
@@ -505,11 +505,11 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		bundleUpdate = true
 	}
 
-	if d.HasChange("ip_address_type") {
+	if d.HasChange(names.AttrIPAddressType) {
 		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
 			ResourceType:  types.ResourceTypeDistribution,
-			IpAddressType: types.IpAddressType(d.Get("ip_address_type").(string)),
+			IpAddressType: types.IpAddressType(d.Get(names.AttrIPAddressType).(string)),
 		})
 
 		if err != nil {

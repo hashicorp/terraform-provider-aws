@@ -53,7 +53,7 @@ func TestAccKendraThesaurusDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "term_count"),
 					resource.TestCheckResourceAttrPair(datasourceName, "thesaurus_id", resourceName, "thesaurus_id"),
 					resource.TestCheckResourceAttrSet(datasourceName, "updated_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1")),
 			},
 		},

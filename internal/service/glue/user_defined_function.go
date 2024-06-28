@@ -80,7 +80,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(glue.ResourceType_Values(), false),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -88,7 +88,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 					},
 				},
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -186,7 +186,7 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("owner_name", udf.OwnerName)
 	d.Set("class_name", udf.ClassName)
 	if udf.CreateTime != nil {
-		d.Set("create_time", udf.CreateTime.Format(time.RFC3339))
+		d.Set(names.AttrCreateTime, udf.CreateTime.Format(time.RFC3339))
 	}
 	if err := d.Set("resource_uris", flattenUserDefinedFunctionResourceURI(udf.ResourceUris)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue User Defined Function (%s): setting resource_uris: %s", d.Id(), err)
@@ -250,7 +250,7 @@ func expandUserDefinedFunctionResourceURI(conf *schema.Set) []*glue.ResourceUri 
 
 		uri := &glue.ResourceUri{
 			ResourceType: aws.String(uriRaw[names.AttrResourceType].(string)),
-			Uri:          aws.String(uriRaw["uri"].(string)),
+			Uri:          aws.String(uriRaw[names.AttrURI].(string)),
 		}
 
 		result = append(result, uri)
@@ -265,7 +265,7 @@ func flattenUserDefinedFunctionResourceURI(uris []*glue.ResourceUri) []map[strin
 	for _, i := range uris {
 		l := map[string]interface{}{
 			names.AttrResourceType: aws.StringValue(i.ResourceType),
-			"uri":                  aws.StringValue(i.Uri),
+			names.AttrURI:          aws.StringValue(i.Uri),
 		}
 
 		result = append(result, l)

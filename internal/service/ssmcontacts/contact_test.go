@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testContact_basic(t *testing.T) {
+func testAccContact_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -45,7 +45,7 @@ func testContact_basic(t *testing.T) {
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PERSONAL"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/+.`)),
 				),
@@ -66,7 +66,7 @@ func testContact_basic(t *testing.T) {
 	})
 }
 
-func testContact_updateAlias(t *testing.T) {
+func testAccContact_updateAlias(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -90,7 +90,7 @@ func testContact_updateAlias(t *testing.T) {
 				Config: testAccContactConfig_alias(oldAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", oldAlias),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, oldAlias),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testContact_updateAlias(t *testing.T) {
 				Config: testAccContactConfig_alias(newAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", newAlias),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, newAlias),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func testContact_updateAlias(t *testing.T) {
 	})
 }
 
-func testContact_updateType(t *testing.T) {
+func testAccContact_updateType(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -163,7 +163,7 @@ func testContact_updateType(t *testing.T) {
 	})
 }
 
-func testContact_disappears(t *testing.T) {
+func testAccContact_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -193,7 +193,7 @@ func testContact_disappears(t *testing.T) {
 	})
 }
 
-func testContact_updateDisplayName(t *testing.T) {
+func testAccContact_updateDisplayName(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -241,7 +241,7 @@ func testContact_updateDisplayName(t *testing.T) {
 	})
 }
 
-func testContact_updateTags(t *testing.T) {
+func testAccContact_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -270,7 +270,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -282,7 +282,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
 				),
 			},
@@ -295,7 +295,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_twoTags(rName, rKey1, rVal1, rKey2, rVal2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
 				),
@@ -309,7 +309,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_twoTags(rName, rKey1, rVal1Updated, rKey2, rVal2Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2Updated),
 				),
@@ -323,7 +323,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 				),
 			},
@@ -336,7 +336,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{

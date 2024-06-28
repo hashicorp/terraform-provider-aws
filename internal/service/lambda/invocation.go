@@ -65,7 +65,7 @@ func resourceInvocation() *schema.Resource {
 				Optional: true,
 				Default:  "tf",
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,

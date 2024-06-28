@@ -99,7 +99,7 @@ func ResourceConnectAttachment() *schema.Resource {
 					},
 				},
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -231,7 +231,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("options", nil)
 	}
-	d.Set("owner_account_id", a.OwnerAccountId)
+	d.Set(names.AttrOwnerAccountID, a.OwnerAccountId)
 	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
 	d.Set(names.AttrState, a.State)

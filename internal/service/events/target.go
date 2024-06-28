@@ -51,7 +51,7 @@ func resourceTarget() *schema.Resource {
 				id := targetCreateResourceID(busName, ruleName, targetID)
 				d.SetId(id)
 				d.Set("target_id", targetID)
-				d.Set("rule", ruleName)
+				d.Set(names.AttrRule, ruleName)
 				d.Set("event_bus_name", busName)
 
 				return []*schema.ResourceData{d}, nil
@@ -120,7 +120,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"capacity_provider_strategy": {
+						names.AttrCapacityProviderStrategy: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -192,7 +192,7 @@ func resourceTarget() *schema.Resource {
 							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
+									names.AttrField: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 255),
@@ -228,7 +228,7 @@ func resourceTarget() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1600),
 						},
-						"propagate_tags": {
+						names.AttrPropagateTags: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.PropagateTags](),
@@ -413,7 +413,7 @@ func resourceTarget() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -497,7 +497,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	ruleName := d.Get("rule").(string)
+	ruleName := d.Get(names.AttrRule).(string)
 	var targetID string
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
@@ -533,7 +533,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	eventBusName := d.Get("event_bus_name").(string)
-	target, err := findTargetByThreePartKey(ctx, conn, eventBusName, d.Get("rule").(string), d.Get("target_id").(string))
+	target, err := findTargetByThreePartKey(ctx, conn, eventBusName, d.Get(names.AttrRule).(string), d.Get("target_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
@@ -651,7 +651,7 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []string{d.Get("target_id").(string)},
-		Rule: aws.String(d.Get("rule").(string)),
+		Rule: aws.String(d.Get(names.AttrRule).(string)),
 	}
 
 	if v, ok := d.GetOk("event_bus_name"); ok {
@@ -872,7 +872,7 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 	}
 
 	input := &eventbridge.PutTargetsInput{
-		Rule:    aws.String(d.Get("rule").(string)),
+		Rule:    aws.String(d.Get(names.AttrRule).(string)),
 		Targets: []types.Target{target},
 	}
 
@@ -935,7 +935,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 		tfMap := c.(map[string]interface{})
 		tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]interface{}))
 
-		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrCapacityProviderStrategy].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
 		}
 
@@ -963,7 +963,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]interface{}))
 		}
 
-		if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 			ecsParameters.PropagateTags = types.PropagateTags(v)
 		}
 
@@ -1188,7 +1188,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 		config["platform_version"] = aws.ToString(ecsParameters.PlatformVersion)
 	}
 
-	config["propagate_tags"] = ecsParameters.PropagateTags
+	config[names.AttrPropagateTags] = ecsParameters.PropagateTags
 
 	if ecsParameters.PlacementConstraints != nil {
 		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
@@ -1199,7 +1199,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 	}
 
 	if ecsParameters.CapacityProviderStrategy != nil {
-		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
+		config[names.AttrCapacityProviderStrategy] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
 	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
@@ -1388,7 +1388,7 @@ func expandTargetPlacementStrategies(tfList []interface{}) []types.PlacementStra
 
 		apiObject := types.PlacementStrategy{}
 
-		if v, ok := tfMap["field"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrField].(string); ok && v != "" {
 			apiObject.Field = aws.String(v)
 		}
 
@@ -1462,7 +1462,7 @@ func flattenTargetPlacementStrategies(pcs []types.PlacementStrategy) []map[strin
 		c := make(map[string]interface{})
 		c[names.AttrType] = pc.Type
 		if pc.Field != nil {
-			c["field"] = aws.ToString(pc.Field)
+			c[names.AttrField] = aws.ToString(pc.Field)
 		}
 
 		results = append(results, c)

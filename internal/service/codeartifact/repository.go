@@ -97,7 +97,7 @@ func resourceRepository() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -353,7 +353,7 @@ func expandUpstreams(tfList []interface{}) []types.UpstreamRepository {
 
 		apiObject := types.UpstreamRepository{}
 
-		if v, ok := tfMap["repository_name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrRepositoryName].(string); ok && v != "" {
 			apiObject.RepositoryName = aws.String(v)
 		}
 
@@ -374,7 +374,7 @@ func flattenUpstreamRepositoryInfos(apiObjects []types.UpstreamRepositoryInfo) [
 		tfMap := map[string]interface{}{}
 
 		if v := apiObject.RepositoryName; v != nil {
-			tfMap["repository_name"] = aws.ToString(v)
+			tfMap[names.AttrRepositoryName] = aws.ToString(v)
 		}
 
 		tfList = append(tfList, tfMap)

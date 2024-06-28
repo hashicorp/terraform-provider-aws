@@ -61,6 +61,7 @@ const (
 )
 
 func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.PutDedicatedIpInPoolInput{
@@ -70,35 +71,37 @@ func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.Resource
 
 	_, err := conn.PutDedicatedIpInPool(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameDedicatedIPAssignment, d.Get("ip").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameDedicatedIPAssignment, d.Get("ip").(string), err)
 	}
 
 	id := toID(d.Get("ip").(string), d.Get("destination_pool_name").(string))
 	d.SetId(id)
 
-	return resourceDedicatedIPAssignmentRead(ctx, d, meta)
+	return append(diags, resourceDedicatedIPAssignmentRead(ctx, d, meta)...)
 }
 
 func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindDedicatedIPAssignmentByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 DedicatedIPAssignment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameDedicatedIPAssignment, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameDedicatedIPAssignment, d.Id(), err)
 	}
 
 	d.Set("ip", out.Ip)
 	d.Set("destination_pool_name", out.PoolName)
 
-	return nil
+	return diags
 }
 
 func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 	ip, _ := splitID(d.Id())
 
@@ -111,13 +114,13 @@ func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.Resource
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameDedicatedIPAssignment, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameDedicatedIPAssignment, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const (

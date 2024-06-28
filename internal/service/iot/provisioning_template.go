@@ -86,7 +86,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 							Default:      provisioningHookPayloadVersion2020_04_01,
 							ValidateFunc: validation.StringInSlice(provisioningHookPayloadVersion_Values(), false),
 						},
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -281,7 +281,7 @@ func flattenProvisioningHook(apiObject *iot.ProvisioningHook) map[string]interfa
 	}
 
 	if v := apiObject.TargetArn; v != nil {
-		tfMap["target_arn"] = aws.StringValue(v)
+		tfMap[names.AttrTargetARN] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -298,7 +298,7 @@ func expandProvisioningHook(tfMap map[string]interface{}) *iot.ProvisioningHook 
 		apiObject.PayloadVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["target_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTargetARN].(string); ok && v != "" {
 		apiObject.TargetArn = aws.String(v)
 	}
 

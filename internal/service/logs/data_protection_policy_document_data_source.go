@@ -27,7 +27,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,7 +74,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"cloudwatch_logs": {
+															names.AttrCloudWatchLogs: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -218,7 +218,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 					findingsDestination := &DataProtectionPolicyStatementOperationAuditFindingsDestination{}
 					audit.FindingsDestination = findingsDestination
 
-					if m, ok := unwrap(m["cloudwatch_logs"]); ok {
+					if m, ok := unwrap(m[names.AttrCloudWatchLogs]); ok {
 						findingsDestination.CloudWatchLogs = &DataProtectionPolicyStatementOperationAuditFindingsDestinationCloudWatchLogs{
 							LogGroup: m["log_group"].(string),
 						}
@@ -270,7 +270,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 
 	jsonString := string(jsonBytes)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags

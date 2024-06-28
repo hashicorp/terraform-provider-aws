@@ -53,7 +53,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						"environment": {
+						names.AttrEnvironment: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -200,7 +200,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						"environment": {
+						names.AttrEnvironment: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -513,7 +513,7 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	if v, ok := m["model_data_source"]; ok {
 		container.ModelDataSource = expandModelDataSource(v.([]interface{}))
 	}
-	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringMap(v)
 	}
 
@@ -632,7 +632,7 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
 	}
 	if container.Environment != nil {
-		cfg["environment"] = aws.StringValueMap(container.Environment)
+		cfg[names.AttrEnvironment] = aws.StringValueMap(container.Environment)
 	}
 
 	if container.ImageConfig != nil {

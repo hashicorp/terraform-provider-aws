@@ -39,7 +39,7 @@ func resourceDocumentationPart() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +61,7 @@ func resourceDocumentationPart() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"status_code": {
+						names.AttrStatusCode: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -93,7 +93,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 
 	apiID := d.Get("rest_api_id").(string)
 	input := &apigateway.CreateDocumentationPartInput{
-		Location:   expandDocumentationPartLocation(d.Get("location").([]interface{})),
+		Location:   expandDocumentationPartLocation(d.Get(names.AttrLocation).([]interface{})),
 		Properties: aws.String(d.Get(names.AttrProperties).(string)),
 		RestApiId:  aws.String(apiID),
 	}
@@ -131,7 +131,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("documentation_part_id", docPart.Id)
-	d.Set("location", flattenDocumentationPartLocation(docPart.Location))
+	d.Set(names.AttrLocation, flattenDocumentationPartLocation(docPart.Location))
 	d.Set(names.AttrProperties, docPart.Properties)
 	d.Set("rest_api_id", apiID)
 
@@ -260,7 +260,7 @@ func expandDocumentationPartLocation(l []interface{}) *types.DocumentationPartLo
 	if v, ok := loc[names.AttrPath]; ok {
 		out.Path = aws.String(v.(string))
 	}
-	if v, ok := loc["status_code"]; ok {
+	if v, ok := loc[names.AttrStatusCode]; ok {
 		out.StatusCode = aws.String(v.(string))
 	}
 	return out
@@ -286,7 +286,7 @@ func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []inte
 	}
 
 	if v := l.StatusCode; v != nil {
-		m["status_code"] = aws.ToString(v)
+		m[names.AttrStatusCode] = aws.ToString(v)
 	}
 
 	m[names.AttrType] = string(l.Type)

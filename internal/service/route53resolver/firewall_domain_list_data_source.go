@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -55,7 +56,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,13 +65,14 @@ func DataSourceFirewallDomainList() *schema.Resource {
 }
 
 func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	id := d.Get("firewall_domain_list_id").(string)
 	firewallDomainList, err := FindFirewallDomainListByID(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Firewall Domain List (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Firewall Domain List (%s): %s", id, err)
 	}
 
 	d.SetId(aws.StringValue(firewallDomainList.Id))
@@ -83,7 +85,7 @@ func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("managed_owner_name", firewallDomainList.ManagedOwnerName)
 	d.Set("modification_time", firewallDomainList.ModificationTime)
 	d.Set(names.AttrStatus, firewallDomainList.Status)
-	d.Set("status_message", firewallDomainList.StatusMessage)
+	d.Set(names.AttrStatusMessage, firewallDomainList.StatusMessage)
 
-	return nil
+	return diags
 }

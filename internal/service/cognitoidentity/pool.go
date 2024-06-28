@@ -59,7 +59,7 @@ func resourcePool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validIdentityProvidersClientID,
 						},
-						"provider_name": {
+						names.AttrProviderName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validIdentityProvidersProviderName,
@@ -248,19 +248,19 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
-	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 
+	log.Printf("[DEBUG] Deleting Cognito Identity Pool: %s", d.Id())
 	_, err := conn.DeleteIdentityPool(ctx, &cognitoidentity.DeleteIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[DEBUG] Resource Pool already deleted: %s", d.Id())
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cognito identity pool (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito Identity Pool (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }

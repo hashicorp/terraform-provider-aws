@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_verifiedaccess_trust_provider", name="Verified Access Trust Provider")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessTrustProviderCreate,
@@ -86,18 +87,18 @@ func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 							ForceNew: true,
 							Optional: true,
 						},
-						"client_secret": {
+						names.AttrClientSecret: {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IsURLWithHTTPS,
 						},
-						"scope": {
+						names.AttrScope: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -187,7 +188,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	output, err := FindVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
+	output, err := findVerifiedAccessTrustProviderByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Verified Access Trust Provider (%s) not found, removing from state", d.Id())
@@ -295,7 +296,7 @@ func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []int
 	}
 
 	tfMap := map[string]interface{}{
-		"client_secret": clientSecret,
+		names.AttrClientSecret: clientSecret,
 	}
 
 	if v := apiObject.AuthorizationEndpoint; v != nil {
@@ -305,10 +306,10 @@ func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []int
 		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
 	if v := apiObject.Issuer; v != nil {
-		tfMap["issuer"] = aws.ToString(v)
+		tfMap[names.AttrIssuer] = aws.ToString(v)
 	}
 	if v := apiObject.Scope; v != nil {
-		tfMap["scope"] = aws.ToString(v)
+		tfMap[names.AttrScope] = aws.ToString(v)
 	}
 	if v := apiObject.TokenEndpoint; v != nil {
 		tfMap["token_endpoint"] = aws.ToString(v)
@@ -347,13 +348,13 @@ func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interfa
 	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
-	if v, ok := tfMap["client_secret"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClientSecret].(string); ok && v != "" {
 		apiObject.ClientSecret = aws.String(v)
 	}
-	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		apiObject.Issuer = aws.String(v)
 	}
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)
 	}
 	if v, ok := tfMap["token_endpoint"].(string); ok && v != "" {
@@ -373,7 +374,7 @@ func expandModifyVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interfa
 
 	apiObject := &types.ModifyVerifiedAccessTrustProviderOidcOptions{}
 
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)
 	}
 

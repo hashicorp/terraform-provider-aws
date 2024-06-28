@@ -203,7 +203,7 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -445,7 +445,7 @@ func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStore
 		config.SecurityConfig = expandFeatureGroupOnlineStoreConfigSecurityConfig(v)
 	}
 
-	if v, ok := m["storage_type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrStorageType].(string); ok && v != "" {
 		config.StorageType = aws.String(v)
 	}
 
@@ -470,7 +470,7 @@ func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) [
 	}
 
 	if config.StorageType != nil {
-		m["storage_type"] = aws.StringValue(config.StorageType)
+		m[names.AttrStorageType] = aws.StringValue(config.StorageType)
 	}
 
 	if config.TtlDuration != nil {

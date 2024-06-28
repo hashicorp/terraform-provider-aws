@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_amplify_branch", name="Branch")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amplify/types;types.Branch", serialize=true, serializeDelay=true)
 func resourceBranch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBranchCreate,
@@ -143,7 +144,7 @@ func resourceBranch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.Stage](),
@@ -232,7 +233,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PullRequestEnvironmentName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("stage"); ok {
+	if v, ok := d.GetOk(names.AttrStage); ok {
 		input.Stage = types.Stage(v.(string))
 	}
 
@@ -291,7 +292,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("framework", branch.Framework)
 	d.Set("pull_request_environment_name", branch.PullRequestEnvironmentName)
 	d.Set("source_branch", branch.SourceBranch)
-	d.Set("stage", branch.Stage)
+	d.Set(names.AttrStage, branch.Stage)
 	d.Set("ttl", branch.Ttl)
 
 	setTagsOut(ctx, branch.Tags)
@@ -366,8 +367,8 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.PullRequestEnvironmentName = aws.String(d.Get("pull_request_environment_name").(string))
 		}
 
-		if d.HasChange("stage") {
-			input.Stage = types.Stage(d.Get("stage").(string))
+		if d.HasChange(names.AttrStage) {
+			input.Stage = types.Stage(d.Get(names.AttrStage).(string))
 		}
 
 		if d.HasChange("ttl") {

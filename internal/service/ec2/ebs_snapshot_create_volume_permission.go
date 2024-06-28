@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_snapshot_create_volume_permission")
-func ResourceSnapshotCreateVolumePermission() *schema.Resource {
+// @SDKResource("aws_snapshot_create_volume_permission", name="EBS Snapshot CreateVolume Permission")
+func resourceSnapshotCreateVolumePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreateVolumePermissionCreate,
 		ReadWithoutTimeout:   resourceSnapshotCreateVolumePermissionRead,
@@ -42,7 +42,7 @@ func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,7 +55,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	snapshotID := d.Get("snapshot_id").(string)
+	snapshotID := d.Get(names.AttrSnapshotID).(string)
 	accountID := d.Get(names.AttrAccountID).(string)
 	id := EBSSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID)
 	input := &ec2.ModifySnapshotAttributeInput{
@@ -77,7 +77,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 	d.SetId(id)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
+		return findCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
 
 	if err != nil {
@@ -97,7 +97,7 @@ func resourceSnapshotCreateVolumePermissionRead(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshot CreateVolumePermission (%s): %s", d.Id(), err)
 	}
 
-	_, err = FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
+	_, err = findCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Snapshot CreateVolumePermission %s not found, removing from state", d.Id())
@@ -142,7 +142,7 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
+		return findCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
 
 	if err != nil {
@@ -154,10 +154,10 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 
 func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
-		if snapshotID := diff.Get("snapshot_id").(string); snapshotID != "" {
+		if snapshotID := diff.Get(names.AttrSnapshotID).(string); snapshotID != "" {
 			conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-			snapshot, err := FindSnapshotByID(ctx, conn, snapshotID)
+			snapshot, err := findSnapshotByID(ctx, conn, snapshotID)
 
 			if err != nil {
 				return fmt.Errorf("reading EBS Snapshot (%s): %w", snapshotID, err)

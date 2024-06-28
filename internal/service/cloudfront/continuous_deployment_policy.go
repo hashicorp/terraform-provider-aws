@@ -96,7 +96,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"header": schema.StringAttribute{
+									names.AttrHeader: schema.StringAttribute{
 										Required: true,
 									},
 									names.AttrValue: schema.StringAttribute{

@@ -97,7 +97,7 @@ func ResourceThingGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"attributes": {
+									names.AttrAttributes: {
 										Type:     schema.TypeMap,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -291,7 +291,7 @@ func expandAttributePayload(tfMap map[string]interface{}) *iot.AttributePayload 
 
 	apiObject := &iot.AttributePayload{}
 
-	if v, ok := tfMap["attributes"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrAttributes].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Attributes = flex.ExpandStringMap(v)
 	}
 
@@ -382,7 +382,7 @@ func flattenAttributePayload(apiObject *iot.AttributePayload) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Attributes; v != nil {
-		tfMap["attributes"] = aws.StringValueMap(v)
+		tfMap[names.AttrAttributes] = aws.StringValueMap(v)
 	}
 
 	return tfMap

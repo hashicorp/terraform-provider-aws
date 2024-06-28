@@ -46,7 +46,7 @@ func ResourceTrigger() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"actions": {
+			names.AttrActions: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -65,7 +65,7 @@ func ResourceTrigger() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
@@ -215,7 +215,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	name := d.Get(names.AttrName).(string)
 	triggerType := d.Get(names.AttrType).(string)
 	input := &glue.CreateTriggerInput{
-		Actions:         expandActions(d.Get("actions").([]interface{})),
+		Actions:         expandActions(d.Get(names.AttrActions).([]interface{})),
 		Name:            aws.String(name),
 		Tags:            getTagsIn(ctx),
 		Type:            aws.String(triggerType),
@@ -330,7 +330,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diags
 	}
 
-	if err := d.Set("actions", flattenActions(trigger.Actions)); err != nil {
+	if err := d.Set(names.AttrActions, flattenActions(trigger.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting actions: %s", err)
 	}
 
@@ -376,9 +376,9 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges("actions", names.AttrDescription, "predicate", names.AttrSchedule, "event_batching_condition") {
+	if d.HasChanges(names.AttrActions, names.AttrDescription, "predicate", names.AttrSchedule, "event_batching_condition") {
 		triggerUpdate := &glue.TriggerUpdate{
-			Actions: expandActions(d.Get("actions").([]interface{})),
+			Actions: expandActions(d.Get(names.AttrActions).([]interface{})),
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -500,7 +500,7 @@ func expandActions(l []interface{}) []*glue.Action {
 			action.Arguments = flex.ExpandStringMap(v)
 		}
 
-		if v, ok := m["timeout"].(int); ok && v > 0 {
+		if v, ok := m[names.AttrTimeout].(int); ok && v > 0 {
 			action.Timeout = aws.Int64(int64(v))
 		}
 
@@ -581,8 +581,8 @@ func flattenActions(actions []*glue.Action) []interface{} {
 
 	for _, action := range actions {
 		m := map[string]interface{}{
-			"arguments": aws.StringValueMap(action.Arguments),
-			"timeout":   int(aws.Int64Value(action.Timeout)),
+			"arguments":       aws.StringValueMap(action.Arguments),
+			names.AttrTimeout: int(aws.Int64Value(action.Timeout)),
 		}
 
 		if v := aws.StringValue(action.CrawlerName); v != "" {

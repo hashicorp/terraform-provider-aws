@@ -66,7 +66,7 @@ func ResourceVocabulary() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -110,7 +110,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ClientToken:    aws.String(id.UniqueId()),
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get(names.AttrContent).(string)),
-		LanguageCode:   aws.String(d.Get("language_code").(string)),
+		LanguageCode:   aws.String(d.Get(names.AttrLanguageCode).(string)),
 		Tags:           getTagsIn(ctx),
 		VocabularyName: aws.String(vocabularyName),
 	}
@@ -174,7 +174,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrContent, vocabulary.Content)
 	d.Set("failure_reason", vocabulary.FailureReason)
 	d.Set(names.AttrInstanceID, instanceID)
-	d.Set("language_code", vocabulary.LanguageCode)
+	d.Set(names.AttrLanguageCode, vocabulary.LanguageCode)
 	d.Set("last_modified_time", vocabulary.LastModifiedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, vocabulary.Name)
 	d.Set(names.AttrState, vocabulary.State)

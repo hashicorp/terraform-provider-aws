@@ -45,7 +45,7 @@ func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaReq
 				Optional: true,
 				Computed: true,
 			},
-			"names": schema.SetAttribute{
+			names.AttrNames: schema.SetAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},

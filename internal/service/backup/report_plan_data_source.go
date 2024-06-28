@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -58,7 +58,7 @@ func DataSourceReportPlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -116,7 +116,7 @@ func DataSourceReportPlan() *schema.Resource {
 
 func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BackupConn(ctx)
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
@@ -126,7 +126,7 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Backup Report Plan (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(reportPlan.ReportPlanName))
+	d.SetId(aws.ToString(reportPlan.ReportPlanName))
 
 	d.Set(names.AttrARN, reportPlan.ReportPlanArn)
 	d.Set(names.AttrCreationTime, reportPlan.CreationTime.Format(time.RFC3339))
@@ -142,7 +142,7 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := listTags(ctx, conn, aws.StringValue(reportPlan.ReportPlanArn))
+	tags, err := listTags(ctx, conn, aws.ToString(reportPlan.ReportPlanArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)

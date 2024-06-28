@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func scatterPlotVisualSchema() *schema.Schema {
@@ -17,8 +18,8 @@ func scatterPlotVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"visual_id": idSchema(),
-				"actions":   visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				"visual_id":       idSchema(),
+				names.AttrActions: visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScatterPlotConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -41,10 +42,10 @@ func scatterPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"size":     measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-													"x_axis":   measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-													"y_axis":   measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"category":     dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrSize: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"x_axis":       measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"y_axis":       measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -55,9 +56,9 @@ func scatterPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"size":   measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-													"x_axis": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"y_axis": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrSize: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"x_axis":       dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"y_axis":       dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 												},
 											},
 										},
@@ -97,7 +98,7 @@ func expandScatterPlotVisual(tfList []interface{}) *quicksight.ScatterPlotVisual
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -196,7 +197,7 @@ func expandScatterPlotCategoricallyAggregatedFieldWells(tfList []interface{}) *q
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		config.Category = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrSize].([]interface{}); ok && len(v) > 0 {
 		config.Size = expandMeasureFields(v)
 	}
 	if v, ok := tfMap["x_axis"].([]interface{}); ok && len(v) > 0 {
@@ -221,7 +222,7 @@ func expandScatterPlotUnaggregatedFieldWells(tfList []interface{}) *quicksight.S
 
 	config := &quicksight.ScatterPlotUnaggregatedFieldWells{}
 
-	if v, ok := tfMap["size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrSize].([]interface{}); ok && len(v) > 0 {
 		config.Size = expandMeasureFields(v)
 	}
 	if v, ok := tfMap["x_axis"].([]interface{}); ok && len(v) > 0 {
@@ -243,7 +244,7 @@ func flattenScatterPlotVisual(apiObject *quicksight.ScatterPlotVisual) []interfa
 		"visual_id": aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenScatterPlotConfiguration(apiObject.ChartConfiguration)
@@ -324,7 +325,7 @@ func flattenScatterPlotCategoricallyAggregatedFieldWells(apiObject *quicksight.S
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Size != nil {
-		tfMap["size"] = flattenMeasureFields(apiObject.Size)
+		tfMap[names.AttrSize] = flattenMeasureFields(apiObject.Size)
 	}
 	if apiObject.XAxis != nil {
 		tfMap["x_axis"] = flattenMeasureFields(apiObject.XAxis)
@@ -343,7 +344,7 @@ func flattenScatterPlotUnaggregatedFieldWells(apiObject *quicksight.ScatterPlotU
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Size != nil {
-		tfMap["size"] = flattenMeasureFields(apiObject.Size)
+		tfMap[names.AttrSize] = flattenMeasureFields(apiObject.Size)
 	}
 	if apiObject.XAxis != nil {
 		tfMap["x_axis"] = flattenDimensionFields(apiObject.XAxis)

@@ -26,9 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ebs_snapshot_import", name="EBS Snapshot")
+// @SDKResource("aws_ebs_snapshot_import", name="EBS Snapshot Import")
 // @Tags(identifierAttribute="id")
-func ResourceEBSSnapshotImport() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceEBSSnapshotImport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotImportCreate,
 		ReadWithoutTimeout:   resourceEBSSnapshotImportRead,
@@ -54,7 +55,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"comment": {
+						names.AttrComment: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -185,7 +186,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_size": {
+			names.AttrVolumeSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -237,7 +238,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	taskID := aws.ToString(outputRaw.(*ec2.ImportSnapshotOutput).ImportTaskId)
-	output, err := WaitEBSSnapshotImportComplete(ctx, conn, taskID, d.Timeout(schema.TimeoutCreate))
+	output, err := waitEBSSnapshotImportComplete(ctx, conn, taskID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Import (%s) create: %s", taskID, err)
@@ -273,7 +274,7 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
+	snapshot, err := findSnapshotByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Snapshot %s not found, removing from state", d.Id())
@@ -299,7 +300,7 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("owner_alias", snapshot.OwnerAlias)
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)
-	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
 
 	setTagsOutV2(ctx, snapshot.Tags)
 
@@ -313,7 +314,7 @@ func expandClientData(tfMap map[string]interface{}) *awstypes.ClientData {
 
 	apiObject := &awstypes.ClientData{}
 
-	if v, ok := tfMap["comment"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrComment].(string); ok && v != "" {
 		apiObject.Comment = aws.String(v)
 	}
 

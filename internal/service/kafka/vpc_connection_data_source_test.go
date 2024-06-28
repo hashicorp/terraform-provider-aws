@@ -34,7 +34,7 @@ func TestAccKafkaVPCConnectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "authentication", resourceName, "authentication"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "client_subnets.#", resourceName, "client_subnets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.% ", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.% ", resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "target_cluster_arn", resourceName, "target_cluster_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),

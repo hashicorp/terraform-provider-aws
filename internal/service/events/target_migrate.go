@@ -132,7 +132,7 @@ func resourceTargetV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeString,
 				Required: true,
 			},

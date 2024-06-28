@@ -75,7 +75,7 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 											Required:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.FilterBehavior](),
 										},
-										"condition": {
+										names.AttrCondition: {
 											Type:     schema.TypeSet,
 											Required: true,
 											MinItems: 1,
@@ -225,7 +225,7 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("log_destination_configs", flex.FlattenStringValueList(loggingConfig.LogDestinationConfigs)); err != nil {
@@ -330,7 +330,7 @@ func expandFilters(l []interface{}) []awstypes.Filter {
 			filter.Behavior = awstypes.FilterBehavior(v)
 		}
 
-		if v, ok := tfMap["condition"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrCondition].(*schema.Set); ok && v.Len() > 0 {
 			filter.Conditions = expandFilterConditions(v.List())
 		}
 
@@ -469,9 +469,9 @@ func flattenFilters(f []awstypes.Filter) []interface{} {
 
 	for _, filter := range f {
 		m := map[string]interface{}{
-			"behavior":    string(filter.Behavior),
-			"condition":   flattenFilterConditions(filter.Conditions),
-			"requirement": string(filter.Requirement),
+			"behavior":          string(filter.Behavior),
+			names.AttrCondition: flattenFilterConditions(filter.Conditions),
+			"requirement":       string(filter.Requirement),
 		}
 
 		filters = append(filters, m)

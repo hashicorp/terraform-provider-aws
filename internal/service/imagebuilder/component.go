@@ -50,7 +50,7 @@ func ResourceComponent() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
 			"date_created": {
@@ -79,7 +79,7 @@ func ResourceComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func ResourceComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -111,11 +111,11 @@ func ResourceComponent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"uri": {
+			names.AttrURI: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", "uri"},
+				ExactlyOneOf: []string{"data", names.AttrURI},
 			},
 			names.AttrVersion: {
 				Type:         schema.TypeString,
@@ -166,7 +166,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SupportedOsVersions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("uri"); ok {
+	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
@@ -223,7 +223,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrEncrypted, component.Encrypted)
 	d.Set(names.AttrKMSKeyID, component.KmsKeyId)
 	d.Set(names.AttrName, component.Name)
-	d.Set("owner", component.Owner)
+	d.Set(names.AttrOwner, component.Owner)
 	d.Set("platform", component.Platform)
 	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
 
@@ -246,7 +246,7 @@ func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Imagebuilder Component version %q", d.Id())
 		return diags
 	}

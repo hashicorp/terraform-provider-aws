@@ -28,7 +28,7 @@ func DataSourceSubnets() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -72,7 +72,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", subnetIDs)
+	d.Set(names.AttrIDs, subnetIDs)
 
 	return diags
 }

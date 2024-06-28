@@ -37,7 +37,7 @@ func ResourceDirectory() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -325,7 +325,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("registration_code", directory.RegistrationCode)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
-	d.Set("alias", directory.Alias)
+	d.Set(names.AttrAlias, directory.Alias)
 
 	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)

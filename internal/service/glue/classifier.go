@@ -113,7 +113,7 @@ func ResourceClassifier() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"header": {
+						names.AttrHeader: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -348,7 +348,7 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 		csvClassifier.QuoteSymbol = aws.String(v)
 	}
 
-	if v, ok := m["header"].([]interface{}); ok {
+	if v, ok := m[names.AttrHeader].([]interface{}); ok {
 		csvClassifier.Header = flex.ExpandStringList(v)
 	}
 
@@ -379,7 +379,7 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 		csvClassifier.QuoteSymbol = aws.String(v)
 	}
 
-	if v, ok := m["header"].([]interface{}); ok {
+	if v, ok := m[names.AttrHeader].([]interface{}); ok {
 		csvClassifier.Header = flex.ExpandStringList(v)
 	}
 
@@ -477,7 +477,7 @@ func flattenCSVClassifier(csvClassifier *glue.CsvClassifier) []map[string]interf
 		"contains_header":            aws.StringValue(csvClassifier.ContainsHeader),
 		"delimiter":                  aws.StringValue(csvClassifier.Delimiter),
 		"disable_value_trimming":     aws.BoolValue(csvClassifier.DisableValueTrimming),
-		"header":                     aws.StringValueSlice(csvClassifier.Header),
+		names.AttrHeader:             aws.StringValueSlice(csvClassifier.Header),
 		"quote_symbol":               aws.StringValue(csvClassifier.QuoteSymbol),
 		"custom_datatype_configured": aws.BoolValue(csvClassifier.CustomDatatypeConfigured),
 		"custom_datatypes":           aws.StringValueSlice(csvClassifier.CustomDatatypes),

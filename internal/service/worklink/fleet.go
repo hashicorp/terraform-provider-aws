@@ -118,11 +118,11 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -195,9 +195,9 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrDisplayName, resp.DisplayName)
 	d.Set("optimize_for_end_user_location", resp.OptimizeForEndUserLocation)
 	d.Set("company_code", resp.CompanyCode)
-	d.Set("created_time", resp.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, resp.CreatedTime.Format(time.RFC3339))
 	if resp.LastUpdatedTime != nil {
-		d.Set("last_updated_time", resp.LastUpdatedTime.Format(time.RFC3339))
+		d.Set(names.AttrLastUpdatedTime, resp.LastUpdatedTime.Format(time.RFC3339))
 	}
 	auditStreamConfigurationResp, err := conn.DescribeAuditStreamConfigurationWithContext(ctx, &worklink.DescribeAuditStreamConfigurationInput{
 		FleetArn: aws.String(d.Id()),

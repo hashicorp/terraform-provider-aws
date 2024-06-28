@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package elb
+package elb_test
 
 import (
 	"reflect"
@@ -10,6 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,7 +33,7 @@ func TestExpandListeners(t *testing.T) {
 			"ssl_certificate_id": "something",
 		},
 	}
-	listeners, err := ExpandListeners(expanded)
+	listeners, err := tfelb.ExpandListeners(expanded)
 	if err != nil {
 		t.Fatalf("bad: %#v", err)
 	}
@@ -65,7 +67,7 @@ func TestExpandListeners_invalid(t *testing.T) {
 			"ssl_certificate_id": "something",
 		},
 	}
-	_, err := ExpandListeners(expanded)
+	_, err := tfelb.ExpandListeners(expanded)
 	if err != nil {
 		// Check the error we got
 		if !strings.Contains(err.Error(), `"ssl_certificate_id" may be set only when "protocol"`) {
@@ -98,15 +100,15 @@ func TestFlattenHealthCheck(t *testing.T) {
 					"unhealthy_threshold": int64(10),
 					"healthy_threshold":   int64(10),
 					names.AttrTarget:      "HTTP:80/",
-					"timeout":             int64(30),
-					"interval":            int64(30),
+					names.AttrTimeout:     int64(30),
+					names.AttrInterval:    int64(30),
 				},
 			},
 		},
 	}
 
 	for _, tc := range cases {
-		output := FlattenHealthCheck(tc.Input)
+		output := tfelb.FlattenHealthCheck(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
@@ -126,7 +128,7 @@ func TestExpandInstanceString(t *testing.T) {
 		"test-two",
 	}
 
-	expanded := ExpandInstanceString(ids)
+	expanded := tfelb.ExpandInstanceString(ids)
 
 	if !reflect.DeepEqual(expanded, expected) {
 		t.Fatalf("Expand Instance String output did not match.\nGot:\n%#v\n\nexpected:\n%#v", expanded, expected)
@@ -139,18 +141,18 @@ func TestExpandPolicyAttributes(t *testing.T) {
 	expanded := []interface{}{
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1",
-			names.AttrValue: "false",
+			names.AttrValue: acctest.CtFalse,
 		},
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1.1",
-			names.AttrValue: "false",
+			names.AttrValue: acctest.CtFalse,
 		},
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1.2",
-			names.AttrValue: "true",
+			names.AttrValue: acctest.CtTrue,
 		},
 	}
-	attributes := ExpandPolicyAttributes(expanded)
+	attributes := tfelb.ExpandPolicyAttributes(expanded)
 
 	if len(attributes) != 3 {
 		t.Fatalf("expected number of attributes to be 3, but got %d", len(attributes))
@@ -158,7 +160,7 @@ func TestExpandPolicyAttributes(t *testing.T) {
 
 	expected := &elb.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
-		AttributeValue: aws.String("true"),
+		AttributeValue: aws.String(acctest.CtTrue),
 	}
 
 	if !reflect.DeepEqual(attributes[2], expected) {
@@ -174,7 +176,7 @@ func TestExpandPolicyAttributes_empty(t *testing.T) {
 
 	var expanded []interface{}
 
-	attributes := ExpandPolicyAttributes(expanded)
+	attributes := tfelb.ExpandPolicyAttributes(expanded)
 
 	if len(attributes) != 0 {
 		t.Fatalf("expected number of attributes to be 0, but got %d", len(attributes))
@@ -187,14 +189,14 @@ func TestExpandPolicyAttributes_invalid(t *testing.T) {
 	expanded := []interface{}{
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1.2",
-			names.AttrValue: "true",
+			names.AttrValue: acctest.CtTrue,
 		},
 	}
-	attributes := ExpandPolicyAttributes(expanded)
+	attributes := tfelb.ExpandPolicyAttributes(expanded)
 
 	expected := &elb.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
-		AttributeValue: aws.String("false"),
+		AttributeValue: aws.String(acctest.CtFalse),
 	}
 
 	if reflect.DeepEqual(attributes[0], expected) {
@@ -216,20 +218,20 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 			Input: []*elb.PolicyAttributeDescription{
 				{
 					AttributeName:  aws.String("Protocol-TLSv1.2"),
-					AttributeValue: aws.String("true"),
+					AttributeValue: aws.String(acctest.CtTrue),
 				},
 			},
 			Output: []interface{}{
 				map[string]string{
 					names.AttrName:  "Protocol-TLSv1.2",
-					names.AttrValue: "true",
+					names.AttrValue: acctest.CtTrue,
 				},
 			},
 		},
 	}
 
 	for _, tc := range cases {
-		output := FlattenPolicyAttributes(tc.Input)
+		output := tfelb.FlattenPolicyAttributes(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}

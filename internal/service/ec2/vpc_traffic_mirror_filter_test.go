@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +22,7 @@ import (
 
 func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorFilter
+	var v awstypes.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 	description := "test filter"
 
@@ -41,8 +42,8 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-filter/tmf-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			// Test Disable DNS service
@@ -50,7 +51,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_noDNS(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_services.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.Ct0),
 				),
 			},
 			// Test Enable DNS service
@@ -59,7 +60,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "network_services.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.Ct1),
 				),
 			},
 			{
@@ -73,7 +74,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 
 func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorFilter
+	var v awstypes.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,11 +87,11 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckTrafficMirrorFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key1", "value1"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -99,20 +100,20 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCTrafficMirrorFilterConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key2", "value2"),
+				Config: testAccVPCTrafficMirrorFilterConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -121,7 +122,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 
 func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.TrafficMirrorFilter
+	var v awstypes.TrafficMirrorFilter
 	resourceName := "aws_ec2_traffic_mirror_filter.test"
 	description := "test filter"
 
@@ -147,9 +148,9 @@ func TestAccVPCTrafficMirrorFilter_disappears(t *testing.T) {
 }
 
 func testAccPreCheckTrafficMirrorFilter(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.DescribeTrafficMirrorFiltersWithContext(ctx, &ec2.DescribeTrafficMirrorFiltersInput{})
+	_, err := conn.DescribeTrafficMirrorFilters(ctx, &ec2.DescribeTrafficMirrorFiltersInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skip("skipping traffic mirror filter acceprance test: ", err)
@@ -162,7 +163,7 @@ func testAccPreCheckTrafficMirrorFilter(ctx context.Context, t *testing.T) {
 
 func testAccCheckTrafficMirrorFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_traffic_mirror_filter" {
@@ -186,18 +187,14 @@ func testAccCheckTrafficMirrorFilterDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckTrafficMirrorFilterExists(ctx context.Context, n string, v *ec2.TrafficMirrorFilter) resource.TestCheckFunc {
+func testAccCheckTrafficMirrorFilterExists(ctx context.Context, n string, v *awstypes.TrafficMirrorFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Traffic Mirror Filter ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTrafficMirrorFilterByID(ctx, conn, rs.Primary.ID)
 

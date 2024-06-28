@@ -125,7 +125,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -265,7 +265,7 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -319,7 +319,7 @@ func ResourceTaskDefinition() *schema.Resource {
 										ForceNew: true,
 										Optional: true,
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -435,6 +435,12 @@ func ResourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"configure_at_launch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
 					},
 				},
 				Set: resourceTaskDefinitionVolumeHash,
@@ -459,12 +465,12 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
 	}
 
 	input := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
-		Family:               aws.String(d.Get("family").(string)),
+		Family:               aws.String(d.Get(names.AttrFamily).(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -503,7 +509,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	if constraints := d.Get("placement_constraints").(*schema.Set).List(); len(constraints) > 0 {
 		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
+			return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
 		}
 		input.PlacementConstraints = cons
 	}
@@ -539,7 +545,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
 	}
 
 	taskDefinition := *output.TaskDefinition // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment // false positive
@@ -571,7 +577,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 
 	trackedTaskDefinition := d.Get(names.AttrARN).(string)
 	if _, ok := d.GetOk("track_latest"); ok {
-		trackedTaskDefinition = d.Get("family").(string)
+		trackedTaskDefinition = d.Get(names.AttrFamily).(string)
 	}
 
 	input := ecs.DescribeTaskDefinitionInput{
@@ -607,7 +613,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
-	d.Set("family", taskDefinition.Family)
+	d.Set(names.AttrFamily, taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
 	d.Set("track_latest", d.Get("track_latest"))
 
@@ -678,7 +684,7 @@ func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining ECS Task Definition Revision %q", d.Id())
 		return diags
 	}
@@ -924,6 +930,10 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 			}
 		}
 
+		if v, ok := data["configure_at_launch"].(bool); ok {
+			l.ConfiguredAtLaunch = aws.Bool(v)
+		}
+
 		if v, ok := data["docker_volume_configuration"].([]interface{}); ok && len(v) > 0 {
 			l.DockerVolumeConfiguration = expandVolumesDockerVolume(v)
 		}
@@ -946,7 +956,7 @@ func expandVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfig
 	config := configList[0].(map[string]interface{})
 	dockerVol := &ecs.DockerVolumeConfiguration{}
 
-	if v, ok := config["scope"].(string); ok && v != "" {
+	if v, ok := config[names.AttrScope].(string); ok && v != "" {
 		dockerVol.Scope = aws.String(v)
 	}
 
@@ -1056,6 +1066,10 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 			l["host_path"] = aws.StringValue(volume.Host.SourcePath)
 		}
 
+		if volume.ConfiguredAtLaunch != nil {
+			l["configure_at_launch"] = aws.BoolValue(volume.ConfiguredAtLaunch)
+		}
+
 		if volume.DockerVolumeConfiguration != nil {
 			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
@@ -1078,7 +1092,7 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	m := make(map[string]interface{})
 
 	if v := config.Scope; v != nil {
-		m["scope"] = aws.StringValue(v)
+		m[names.AttrScope] = aws.StringValue(v)
 	}
 
 	if v := config.Autoprovision; v != nil {

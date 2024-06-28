@@ -77,7 +77,7 @@ func ResourceFilter() *schema.Resource {
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"field": {
+									names.AttrField: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -300,7 +300,7 @@ func expandFindingCriteria(raw []interface{}) (*guardduty.FindingCriteria, error
 	criteria := map[string]*guardduty.Condition{}
 	for _, criterion := range inputFindingCriteria {
 		typedCriterion := criterion.(map[string]interface{})
-		field := typedCriterion["field"].(string)
+		field := typedCriterion[names.AttrField].(string)
 
 		condition := guardduty.Condition{}
 		if x, ok := typedCriterion["equals"]; ok {
@@ -382,7 +382,7 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 
 	for field, conditions := range findingCriteriaRemote.Criterion {
 		criterion := map[string]interface{}{
-			"field": field,
+			names.AttrField: field,
 		}
 		if len(conditions.Equals) > 0 {
 			criterion["equals"] = aws.StringValueSlice(conditions.Equals)

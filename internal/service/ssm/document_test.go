@@ -10,7 +10,10 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -36,10 +39,13 @@ func TestAccSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("document/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -169,14 +175,14 @@ func TestAccSSMDocument_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "2.0"),
-					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
-					resource.TestCheckOutput("default_version", "1"),
-					resource.TestCheckOutput("document_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_version", acctest.Ct1),
+					resource.TestCheckOutput("default_version", acctest.Ct1),
+					resource.TestCheckOutput("document_version", acctest.Ct1),
 					resource.TestCheckOutput("hash", "1a200df3fefa0e7f8814829781d6295e616474945a239a956561876b4c820cde"),
-					resource.TestCheckOutput("latest_version", "1"),
-					resource.TestCheckOutput("parameter_len", "0"),
+					resource.TestCheckOutput("latest_version", acctest.Ct1),
+					resource.TestCheckOutput("parameter_len", acctest.Ct0),
 				),
 			},
 			{
@@ -188,14 +194,14 @@ func TestAccSSMDocument_update(t *testing.T) {
 				Config: testAccDocumentConfig_20Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "document_version", "2"),
-					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
-					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
-					resource.TestCheckOutput("default_version", "2"),
-					resource.TestCheckOutput("document_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "default_version", acctest.Ct2),
+					resource.TestCheckOutput("default_version", acctest.Ct2),
+					resource.TestCheckOutput("document_version", acctest.Ct2),
 					resource.TestCheckOutput("hash", "214c51d87f98ae07b868a63cd866955578c1ef41c3ab8c36f80039dfd9565f53"),
-					resource.TestCheckOutput("latest_version", "2"),
-					resource.TestCheckOutput("parameter_len", "1"),
+					resource.TestCheckOutput("latest_version", acctest.Ct2),
+					resource.TestCheckOutput("parameter_len", acctest.Ct1),
 				),
 			},
 		},
@@ -547,51 +553,6 @@ mainSteps:
 	})
 }
 
-func TestAccSSMDocument_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssm_document.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDocumentConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDocumentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccDocumentConfig_tags1(rName, "key2", "value2updated"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2updated"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccSSMDocument_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -622,11 +583,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Document ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		_, err := tfssm.FindDocumentByName(ctx, conn, rs.Primary.ID)
 
@@ -636,7 +593,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 
 func testAccCheckDocumentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_document" {
@@ -1250,71 +1207,4 @@ resource "aws_ssm_document" "test" {
 DOC
 }
 `, rName)
-}
-
-func testAccDocumentConfig_tags1(rName, key1, value1 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_document" "test" {
-  document_type = "Command"
-  name          = %[1]q
-
-  content = <<DOC
-{
-  "schemaVersion": "1.2",
-  "description": "Check ip configuration of a Linux instance.",
-  "parameters": {},
-  "runtimeConfig": {
-    "aws:runShellScript": {
-      "properties": [
-        {
-          "id": "0.aws:runShellScript",
-          "runCommand": [
-            "ifconfig"
-          ]
-        }
-      ]
-    }
-  }
-}
-DOC
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, key1, value1)
-}
-
-func testAccDocumentConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return fmt.Sprintf(`
-resource "aws_ssm_document" "test" {
-  document_type = "Command"
-  name          = %[1]q
-
-  content = <<DOC
-{
-  "schemaVersion": "1.2",
-  "description": "Check ip configuration of a Linux instance.",
-  "parameters": {},
-  "runtimeConfig": {
-    "aws:runShellScript": {
-      "properties": [
-        {
-          "id": "0.aws:runShellScript",
-          "runCommand": [
-            "ifconfig"
-          ]
-        }
-      ]
-    }
-  }
-}
-DOC
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, key1, value1, key2, value2)
 }

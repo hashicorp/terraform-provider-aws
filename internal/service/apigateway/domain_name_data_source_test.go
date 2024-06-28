@@ -42,7 +42,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "regional_domain_name", dataSourceName, "regional_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "regional_zone_id", dataSourceName, "regional_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_policy", dataSourceName, "security_policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

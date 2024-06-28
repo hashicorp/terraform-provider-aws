@@ -75,8 +75,8 @@ func resourceTableReplica() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: verify.ValidARN,
 				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"point_in_time_recovery": { // direct to replica
 				Type:     schema.TypeBool,
@@ -295,6 +295,10 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
+	}
+
+	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
+		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
 	}
 
 	if pitrOut != nil && pitrOut.ContinuousBackupsDescription != nil && pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription != nil {

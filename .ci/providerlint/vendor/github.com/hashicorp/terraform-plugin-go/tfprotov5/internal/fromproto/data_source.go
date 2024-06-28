@@ -27,9 +27,10 @@ func ReadDataSourceRequest(in *tfplugin5.ReadDataSource_Request) *tfprotov5.Read
 	}
 
 	resp := &tfprotov5.ReadDataSourceRequest{
-		Config:       DynamicValue(in.Config),
-		ProviderMeta: DynamicValue(in.ProviderMeta),
-		TypeName:     in.TypeName,
+		Config:             DynamicValue(in.Config),
+		ProviderMeta:       DynamicValue(in.ProviderMeta),
+		TypeName:           in.TypeName,
+		ClientCapabilities: ReadDataSourceClientCapabilities(in.ClientCapabilities),
 	}
 
 	return resp
