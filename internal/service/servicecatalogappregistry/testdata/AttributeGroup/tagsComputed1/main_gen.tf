@@ -7,10 +7,10 @@ resource "aws_servicecatalogappregistry_attribute_group" "test" {
   name        = var.rName
   description = "Some attribute group"
 
-  attributes = {
+  attributes = jsonencode({
     a = "1"
     b = "2"
-  }
+  })
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id

@@ -49,11 +49,9 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_basic(t *testing.T) {
 				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
-					resource.TestCheckResourceAttr(resourceName, "attributes.a", "1"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.b", "2"),
 				),
 			},
 			{
@@ -75,6 +73,8 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
 	rDesc := "Simple Description"
+	expectJsonV1 := `{"a":"1","b":"2"}`
+	expectJsonV2 := `{"b":"3","c":"4"}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -90,11 +90,10 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
-					resource.TestCheckResourceAttr(resourceName, "attributes.a", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "attributes.b", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attributes", expectJsonV1),
 				),
 			},
 			{
@@ -102,12 +101,10 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup2),
 					testAccCheckAttributeGroupNotRecreated(&attributegroup1, &attributegroup2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "attributes.b", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "attributes.c", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "attributes", expectJsonV2),
 				),
 			},
 			{
@@ -233,10 +230,10 @@ func testAccAttributeGroupConfig_basic(rName, description string) string {
 resource "aws_servicecatalogappregistry_attribute_group" "test" {
   name        = %[1]q
   description = %[2]q
-  attributes = {
+  attributes = jsonencode({
     a = "1"
     b = "2"
-  }
+  })
   tags = {
     tag1 = "v1"
     tag2 = "v2"
@@ -250,10 +247,10 @@ func testAccAttributeGroupConfig_update(rName, description string) string {
 resource "aws_servicecatalogappregistry_attribute_group" "test" {
   name        = %[1]q
   description = %[2]q
-  attributes = {
+  attributes = jsonencode({
     b = "3"
     c = "4"
-  }
+  })
   tags = {
     tag1 = "v1"
     tag2 = "v2"

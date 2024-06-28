@@ -18,10 +18,10 @@ resource "aws_servicecatalogappregistry_attribute_group" "example" {
   name        = "example"
   description = "example description"
 
-  attributes = {
+  attributes = jsonencode({
     app   = "exampleapp"
     group = "examplegroup"
-  }
+  })
 }
 ```
 
@@ -30,7 +30,7 @@ resource "aws_servicecatalogappregistry_attribute_group" "example" {
 The following arguments are required:
 
 * `name` - (Required) Name of the Attribute Group.
-* `attributes` - (Required) A map of attributes for the Attribute Group that describes the Application and its components.
+* `attributes` - (Required) A JSON string of nested key-value pairs that represents the attributes of the group.
 
 The following arguments are optional:
 

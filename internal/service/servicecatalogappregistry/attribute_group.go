@@ -5,18 +5,15 @@ package servicecatalogappregistry
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -57,11 +54,10 @@ func (r *resourceAttributeGroup) Schema(ctx context.Context, req resource.Schema
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"attributes": schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				PlanModifiers: []planmodifier.Map{
-					mapplanmodifier.UseStateForUnknown(),
+			names.AttrAttributes: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 8000),
 				},
 			},
 			names.AttrDescription: schema.StringAttribute{
@@ -103,15 +99,6 @@ func (r *resourceAttributeGroup) Create(ctx context.Context, req resource.Create
 	}
 
 	in.Tags = getTagsIn(ctx)
-
-	attrs, morediags := expandAttributes(ctx, plan.Attributes)
-
-	resp.Diagnostics.Append(morediags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in.Attributes = attrs
 
 	out, err := conn.CreateAttributeGroup(ctx, in)
 	if err != nil {
@@ -167,14 +154,6 @@ func (r *resourceAttributeGroup) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	attributes, morediags := flattenAttributes(ctx, out.Attributes)
-
-	resp.Diagnostics.Append(morediags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	state.Attributes = attributes
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -199,14 +178,7 @@ func (r *resourceAttributeGroup) Update(ctx context.Context, req resource.Update
 		}
 
 		if !plan.Attributes.Equal(state.Attributes) {
-			attrs, morediags := expandAttributes(ctx, plan.Attributes)
-
-			resp.Diagnostics.Append(morediags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			in.Attributes = attrs
+			in.Attributes = flex.StringFromFramework(ctx, plan.Attributes)
 		}
 
 		out, err := conn.UpdateAttributeGroup(ctx, in)
@@ -291,45 +263,9 @@ func findAttributeGroupByID(ctx context.Context, conn *servicecatalogappregistry
 	return out, nil
 }
 
-func expandAttributes(ctx context.Context, attributes types.Map) (*string, diag.Diagnostics) {
-
-	var diags diag.Diagnostics
-
-	target := flex.ExpandFrameworkStringMap(ctx, attributes)
-
-	jsonBytes, err := json.Marshal(target)
-
-	if err != nil {
-		diags.AddError("failed to marshall json", err.Error())
-		return nil, diags
-	}
-
-	jsonString := string(jsonBytes)
-
-	return aws.String(jsonString), diags
-}
-
-func flattenAttributes(ctx context.Context, attributesJson *string) (types.Map, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var out types.Map
-
-	target := make(map[string]string)
-
-	err := json.Unmarshal([]byte(*attributesJson), &target)
-
-	if err != nil {
-		diags.AddError("failed to unmarshall json", err.Error())
-		return out, diags
-	}
-
-	out = flex.FlattenFrameworkStringValueMap(ctx, target)
-
-	return out, diags
-}
-
 type resourceAttributeGroupData struct {
 	ARN         types.String `tfsdk:"arn"`
-	Attributes  types.Map    `tfsdk:"attributes"`
+	Attributes  types.String `tfsdk:"attributes"`
 	Description types.String `tfsdk:"description"`
 	ID          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
