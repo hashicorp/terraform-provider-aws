@@ -1334,6 +1334,53 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/38164.
+func TestAccCognitoIDPUserPool_addLambda(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+	lambdaResourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_lambda(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.create_auth_challenge", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_message", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.define_auth_challenge", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_authentication", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_confirmation", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_authentication", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_sign_up", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.user_migration", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool1, pool2 awstypes.UserPoolType
