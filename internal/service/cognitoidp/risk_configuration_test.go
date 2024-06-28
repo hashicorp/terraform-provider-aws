@@ -5,7 +5,6 @@ package cognitoidp_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -246,14 +245,14 @@ func TestAccCognitoIDPRiskConfiguration_emptyRiskException(t *testing.T) {
 
 func testAccCheckRiskConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_risk_configuration" {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindRiskConfigurationById(ctx, conn, rs.Primary.ID)
+			_, err := tfcognitoidp.FindRiskConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrClientID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -262,26 +261,24 @@ func testAccCheckRiskConfigurationDestroy(ctx context.Context) resource.TestChec
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Cognito Risk Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRiskConfigurationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckRiskConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return errors.New("No Cognito Risk Configuration ID set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
-
-		_, err := tfcognitoidp.FindRiskConfigurationById(ctx, conn, rs.Primary.ID)
+		_, err := tfcognitoidp.FindRiskConfigurationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrUserPoolID], rs.Primary.Attributes[names.AttrClientID])
 
 		return err
 	}
