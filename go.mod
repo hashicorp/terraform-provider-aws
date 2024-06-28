@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.32.0
-	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.10.1
