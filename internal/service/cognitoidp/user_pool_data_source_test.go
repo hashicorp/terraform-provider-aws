@@ -101,7 +101,7 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 				return fmt.Errorf("attribute not found at %s", name)
 			}
 			if name == names.AttrEmail {
-				if rs.Primary.Attributes[fmt.Sprintf("schema_attributes.%d.mutable", i)] != "false" {
+				if rs.Primary.Attributes[fmt.Sprintf("schema_attributes.%d.mutable", i)] != acctest.CtFalse {
 					return fmt.Errorf("mutable is not false for attribute %v", name)
 				}
 				checksCompleted[names.AttrEmail] = true
