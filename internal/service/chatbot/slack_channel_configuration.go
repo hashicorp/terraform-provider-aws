@@ -119,6 +119,7 @@ func (r *slackChannelConfigurationResource) Create(ctx context.Context, request 
 
 	_, err := conn.CreateSlackChannelConfiguration(ctx, input)
 	if err != nil {
+		create.AddError(&response.Diagnostics, names.Chatbot, create.ErrActionCreating, ResNameSlackChannelConfiguration, data.ChatConfigurationARN.String(), err)
 		response.Diagnostics.AddError("creating Chatbot Slack Channel Configuration", err.Error())
 
 		return
