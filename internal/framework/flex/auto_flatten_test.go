@@ -4,8 +4,10 @@
 package flex
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -140,6 +143,15 @@ func TestFlatten(t *testing.T) {
 			Source:     &TestFlexAWS01{Field1: "a"},
 			Target:     &TestFlexTF02{},
 			WantTarget: &TestFlexTF02{},
+			expectedLogLines: []map[string]any{
+				{
+					"@level":   "info",
+					"@module":  "provider",
+					"@message": "AutoFlex Flatten; incompatible types",
+					"from":     float64(reflect.String),
+					"to":       map[string]any{},
+				},
+			},
 		},
 		{
 			TestName: "zero value primtive types Source and primtive types Target",
@@ -1183,10 +1195,21 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 				testCtx = testCase.Context
 			}
 
+			var buf bytes.Buffer
+			testCtx = tflogtest.RootLogger(testCtx, &buf)
+
 			diags := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
 
 			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Expand: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
 			}
 
 			if !diags.HasError() {

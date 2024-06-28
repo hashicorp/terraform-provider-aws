@@ -4,7 +4,9 @@
 package flex
 
 import (
+	"bytes"
 	"context"
+	"reflect"
 	"testing"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflogtest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -118,6 +121,15 @@ func TestExpand(t *testing.T) {
 			Source:     &TestFlexTF01{Field1: types.StringValue("a")},
 			Target:     &TestFlexAWS03{},
 			WantTarget: &TestFlexAWS03{},
+			expectedLogLines: []map[string]any{
+				{
+					"@level":   "info",
+					"@module":  "provider",
+					"@message": "AutoFlex Expand; incompatible types",
+					"from":     map[string]any{},
+					"to":       float64(reflect.Int64),
+				},
+			},
 		},
 		{
 			TestName: "primtive types Source and primtive types Target",
@@ -1198,14 +1210,15 @@ func TestExpandOptions(t *testing.T) {
 }
 
 type autoFlexTestCase struct {
-	Context       context.Context //nolint:containedctx // testing context use
-	Options       []AutoFlexOptionsFunc
-	TestName      string
-	Source        any
-	Target        any
-	expectedDiags diag.Diagnostics
-	WantTarget    any
-	WantDiff      bool
+	Context          context.Context //nolint:containedctx // testing context use
+	Options          []AutoFlexOptionsFunc
+	TestName         string
+	Source           any
+	Target           any
+	expectedDiags    diag.Diagnostics
+	expectedLogLines []map[string]any
+	WantTarget       any
+	WantDiff         bool
 }
 
 type autoFlexTestCases []autoFlexTestCase
@@ -1223,10 +1236,21 @@ func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFle
 				testCtx = testCase.Context
 			}
 
+			var buf bytes.Buffer
+			testCtx = tflogtest.RootLogger(testCtx, &buf)
+
 			diags := Expand(testCtx, testCase.Source, testCase.Target, testCase.Options...)
 
 			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
+			lines, err := tflogtest.MultilineJSONDecode(&buf)
+			if err != nil {
+				t.Fatalf("Expand: decoding log lines: %s", err)
+			}
+			if diff := cmp.Diff(lines, testCase.expectedLogLines); diff != "" {
+				t.Errorf("unexpected log lines diff (+wanted, -got): %s", diff)
 			}
 
 			if !diags.HasError() {
