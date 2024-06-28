@@ -18,9 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfroute53profiles "github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ProfilesResourceAssociation_basic(t *testing.T) {
@@ -213,12 +212,12 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route53_zone" "test" {
-	name = "test.com"
-  
-	vpc {
-	  vpc_id = aws_vpc.test.id
-	}
+  name = "test.com"
+
+  vpc {
+    vpc_id = aws_vpc.test.id
   }
+}
 
 resource "aws_route53profiles_resource_association" "test" {
   name         = %[1]q
@@ -235,14 +234,14 @@ resource "aws_route53profiles_profile" "test" {
 }
 
 resource "aws_route53_resolver_firewall_rule_group" "test" {
-	name = %[1]q
-  }
+  name = %[1]q
+}
 
 
 resource "aws_route53profiles_resource_association" "test" {
-  name         = %[1]q
-  profile_id   = aws_route53profiles_profile.test.id
-  resource_arn = aws_route53_resolver_firewall_rule_group.test.arn
+  name                = %[1]q
+  profile_id          = aws_route53profiles_profile.test.id
+  resource_arn        = aws_route53_resolver_firewall_rule_group.test.arn
   resource_properties = "{\"priority\":102}"
 }
 `, rName)
@@ -255,9 +254,9 @@ resource "aws_route53profiles_profile" "test" {
 }
 
 resource "aws_route53_resolver_rule" "test" {
-	domain_name = "subdomain.test.com"
-	rule_type   = "SYSTEM"
-  }
+  domain_name = "subdomain.test.com"
+  rule_type   = "SYSTEM"
+}
 
 resource "aws_route53profiles_resource_association" "test" {
   name         = %[1]q

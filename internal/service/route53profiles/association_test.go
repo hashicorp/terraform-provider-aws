@@ -18,9 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfroute53profiles "github.com/hashicorp/terraform-provider-aws/internal/service/route53profiles"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ProfilesAssociation_basic(t *testing.T) {
@@ -145,9 +144,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_route53profiles_association" "test" {
-  name             = %[1]q
-  profile_id       = aws_route53profiles_profile.test.id
-  resource_id      = aws_vpc.test.id
+  name        = %[1]q
+  profile_id  = aws_route53profiles_profile.test.id
+  resource_id = aws_vpc.test.id
 }
 `, rName)
 }
