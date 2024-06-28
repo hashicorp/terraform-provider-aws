@@ -294,6 +294,47 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/38175.
+func TestAccCognitoIDPUser_v5560Regression(t *testing.T) {
+	ctx := acctest.Context(t)
+	rUserPoolName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	rUserName := acctest.RandomEmailAddress(domain)
+	resourceName := "aws_cognito_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		CheckDestroy: testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.53.0",
+					},
+				},
+				Config: testAccUserConfig_v5560Regression(rUserPoolName, rUserName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "sub"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
+					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.UserStatusTypeForceChangePassword)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccUserConfig_v5560Regression(rUserPoolName, rUserName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -610,4 +651,23 @@ resource "aws_cognito_user" "test" {
   enabled      = %[3]t
 }
 `, userPoolName, userName, enabled)
+}
+
+func testAccUserConfig_v5560Regression(userPoolName string, userName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user" "test" {
+  user_pool_id = aws_cognito_user_pool.test.id
+  username     = %[2]q
+
+  attributes = {
+    "name"           = "test"
+    "email"          = %[2]q
+    "email_verified" = "true"
+  }
+}
+`, userPoolName, userName)
 }
