@@ -999,10 +999,11 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				if d.HasChange("lambda_config.0.pre_token_generation") {
 					preTokenGeneration := d.Get("lambda_config.0.pre_token_generation")
 					if tfList, ok := v["pre_token_generation_config"].([]interface{}); ok && len(tfList) > 0 && tfList[0] != nil {
-						tfList[0].(map[string]interface{})["lambda_arn"] = preTokenGeneration
+						v["pre_token_generation_config"].([]interface{})[0].(map[string]interface{})["lambda_arn"] = preTokenGeneration
 					} else {
-						tfList = []interface{}{map[string]interface{}{
-							"lambda_arn": preTokenGeneration,
+						v["pre_token_generation_config"] = []interface{}{map[string]interface{}{
+							"lambda_arn":     preTokenGeneration,
+							"lambda_version": string(awstypes.PreTokenGenerationLambdaVersionTypeV10), // A guess...
 						}}
 					}
 				}
