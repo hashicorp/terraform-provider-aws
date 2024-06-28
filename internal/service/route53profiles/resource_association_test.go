@@ -24,9 +24,9 @@ import (
 
 func TestAccRoute53ProfilesResourceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// if testing.Short() {
-	// 	t.Skip("skipping long-running test in short mode")
-	// }
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	var resourceAssociation awstypes.ProfileResourceAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -58,9 +58,9 @@ func TestAccRoute53ProfilesResourceAssociation_basic(t *testing.T) {
 
 func TestAccRoute53ProfilesResourceAssociation_firewallRuleGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	// if testing.Short() {
-	// 	t.Skip("skipping long-running test in short mode")
-	// }
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	var resourceAssociation awstypes.ProfileResourceAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -92,9 +92,9 @@ func TestAccRoute53ProfilesResourceAssociation_firewallRuleGroup(t *testing.T) {
 
 func TestAccRoute53ProfilesResourceAssociation_resolverRule(t *testing.T) {
 	ctx := acctest.Context(t)
-	// if testing.Short() {
-	// 	t.Skip("skipping long-running test in short mode")
-	// }
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	var resourceAssociation awstypes.ProfileResourceAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

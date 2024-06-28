@@ -36,11 +36,11 @@ func TestAccRoute53ProfilesProfile_basic(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "status_message"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatusMessage),
 					resource.TestCheckResourceAttrSet(resourceName, "share_status"),
 				),
 			},
@@ -94,11 +94,11 @@ func TestAccRoute53ProfilesProfile_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProfileConfig_tags1(rName, "key1", "value1"),
+				Config: testAccProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -107,20 +107,20 @@ func TestAccRoute53ProfilesProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProfileConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccProfileConfig_tags1(rName, "key2", "value2"),
+				Config: testAccProfileConfig_tags1(rName, acctest.CtTagsKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

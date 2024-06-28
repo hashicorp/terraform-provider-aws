@@ -24,9 +24,9 @@ import (
 
 func TestAccRoute53ProfilesAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// if testing.Short() {
-	// 	t.Skip("skipping long-running test in short mode")
-	// }
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
 	var association awstypes.ProfileAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

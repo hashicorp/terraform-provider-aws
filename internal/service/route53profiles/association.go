@@ -59,14 +59,14 @@ func (r *resourceAssociation) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"owner_id": schema.StringAttribute{
+			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 			},
 			"profile_id": schema.StringAttribute{
@@ -75,22 +75,22 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"resource_id": schema.StringAttribute{
+			names.AttrResourceID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ProfileStatus](),
 				Computed:   true,
 			},
-			"status_message": schema.StringAttribute{
+			names.AttrStatusMessage: schema.StringAttribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Read:   true,
 				Delete: true,

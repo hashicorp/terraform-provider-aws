@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceProfile,
 			Name:    "Profile",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{

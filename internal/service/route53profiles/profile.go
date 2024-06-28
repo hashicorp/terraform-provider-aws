@@ -62,33 +62,33 @@ func (r *resourceProfile) Metadata(_ context.Context, req resource.MetadataReque
 func (r *resourceProfile) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"owner_id": schema.StringAttribute{
+			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 			},
 			"share_status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ShareStatus](),
 				Computed:   true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.ProfileStatus](),
 				Computed:   true,
 			},
-			"status_message": schema.StringAttribute{
+			names.AttrStatusMessage: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 				Read:   true,
