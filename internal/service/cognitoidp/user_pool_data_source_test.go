@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	awsTypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,7 +20,7 @@ import (
 func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var userpool cognitoidentityprovider.UserPoolType
+	var userpool awsTypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_user_pool.test"
 
@@ -48,7 +48,7 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 func TestAccCognitoIDPUserPoolDataSource_schemaAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var userpool cognitoidentityprovider.UserPoolType
+	var userpool awsTypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_user_pool.test"
 

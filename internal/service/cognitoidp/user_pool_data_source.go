@@ -309,7 +309,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 }
 
 func (d *dataSourceUserPool) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().CognitoIDPConn(ctx)
+	conn := d.Meta().CognitoIDPClient(ctx)
 
 	var data dataSourceUserPoolData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
