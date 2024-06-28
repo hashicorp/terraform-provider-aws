@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.41.0
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.22.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.25.1
