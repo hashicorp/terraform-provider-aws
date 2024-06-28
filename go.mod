@@ -107,7 +107,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.27.1
