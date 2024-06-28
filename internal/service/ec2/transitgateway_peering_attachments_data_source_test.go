@@ -4,7 +4,6 @@
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -22,16 +21,17 @@ func testAccTransitGatewayPeeringAttachmentsDataSource_Filter(t *testing.T, sema
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckTransitGatewayVPCAttachment(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentsDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_peering_attachments.by_attachment_id", "ids.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_peering_attachments.by_gateway_id", "ids.#", "2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanOrEqualValue("data.aws_ec2_transit_gateway_peering_attachments.all", "ids.#", 1),
+					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_peering_attachments.by_attachment_id", "ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -39,52 +39,16 @@ func testAccTransitGatewayPeeringAttachmentsDataSource_Filter(t *testing.T, sema
 }
 
 func testAccTransitGatewayPeeringAttachmentsDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
-resource "aws_vpc" "test1" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway" "test1" {
-  amazon_side_asn = "64512"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway" "test2" {
-  amazon_side_asn = "64513"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_peering_attachment" "test1" {
-  transit_gateway_id      = aws_ec2_transit_gateway.test1.id
-  peer_transit_gateway_id = aws_ec2_transit_gateway.test2.id
-
-  tags = {
-    Name = %[1]q
-  }
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName), `
+data "aws_ec2_transit_gateway_peering_attachments" "all" {
+  depends_on = [aws_ec2_transit_gateway_peering_attachment.test]
 }
 
 data "aws_ec2_transit_gateway_peering_attachments" "by_attachment_id" {
   filter {
     name   = "transit-gateway-attachment-id"
-    values = [aws_ec2_transit_gateway_peering_attachment.test1.id]
+    values = [aws_ec2_transit_gateway_peering_attachment.test.id]
   }
 }
-
-data "aws_ec2_transit_gateway_peering_attachments" "by_gateway_id" {
-  filter {
-    name   = "transit-gateway-id"
-    values = [aws_ec2_transit_gateway.test1.id]
-  }
-}
-`, rName))
+`)
 }

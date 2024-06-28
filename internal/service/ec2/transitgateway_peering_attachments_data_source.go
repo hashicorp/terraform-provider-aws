@@ -60,7 +60,7 @@ func dataSourceTransitGatewayPeeringAttachmentsRead(ctx context.Context, d *sche
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", tfslices.ApplyToAll(output, func(v awstypes.TransitGatewayPeeringAttachment) string {
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.TransitGatewayPeeringAttachment) string {
 		return aws.ToString(v.TransitGatewayAttachmentId)
 	}))
 
