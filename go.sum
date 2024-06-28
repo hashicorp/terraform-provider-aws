@@ -220,8 +220,8 @@ github.com/aws/aws-sdk-go-v2/service/finspace v1.26.0 h1:/D4q/6njv85uDJlkNx20oGj
 github.com/aws/aws-sdk-go-v2/service/finspace v1.26.0/go.mod h1:wFw2JQRHqId9j7TLuud2hVySpj3Kl2FyDTzk11U7VlI=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.31.0 h1:0XAArPk7Ldg2lZRq0/NlxKHo9WoP2EhhQ+bLGKfCnIA=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.31.0/go.mod h1:OfHMrSBBxqqMlNKxYS+qN1iEIlak7LmjQokzFocNdEw=
-github.com/aws/aws-sdk-go-v2/service/fis v1.25.1 h1:3QgBUXHUBlAR0C7U4NnW06AOFCu+k35NLNQebJ/ZFi0=
-github.com/aws/aws-sdk-go-v2/service/fis v1.25.1/go.mod h1:ZNsquchu106IZ++PAiwBDjmcOeALzBSPMHKNgwnsFwg=
+github.com/aws/aws-sdk-go-v2/service/fis v1.26.0 h1:cyNRCN7ZJqPrWnejc4oOUuN4eMBJ3qnhYOCtzuhiGf0=
+github.com/aws/aws-sdk-go-v2/service/fis v1.26.0/go.mod h1:ZNsquchu106IZ++PAiwBDjmcOeALzBSPMHKNgwnsFwg=
 github.com/aws/aws-sdk-go-v2/service/fms v1.34.1 h1:syweqXph4uS8LY+MjwsSt29N457s1U/4B/9OUE02fI4=
 github.com/aws/aws-sdk-go-v2/service/fms v1.34.1/go.mod h1:9tSGhVWwdYbj0TKzLzvZpsEwRCdzcVi/HC4YNKEsLQ8=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.23.1 h1:nUOHgAUOnQth5+fMWgCQiOEqH73fgqmueimUYJE/7rQ=
