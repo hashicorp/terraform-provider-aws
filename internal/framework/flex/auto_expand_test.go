@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -35,24 +36,40 @@ func TestExpand(t *testing.T) {
 		{
 			TestName: "nil Source and Target",
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[<nil>, <nil>]"),
+			},
 		},
 		{
 			TestName: "non-pointer Target",
 			Source:   TestFlex00{},
 			Target:   0,
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, int]"),
+			},
 		},
 		{
 			TestName: "non-struct Source",
 			Source:   testString,
 			Target:   &TestFlex00{},
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[string, *flex.TestFlex00]"),
+			},
 		},
 		{
 			TestName: "non-struct Target",
 			Source:   TestFlex00{},
 			Target:   &testString,
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[flex.TestFlex00, *string]"),
+			},
 		},
 		{
 			TestName:   "types.String to string",
@@ -83,6 +100,11 @@ func TestExpand(t *testing.T) {
 			Source:   &TestFlexAWS01{Field1: "a"},
 			Target:   &TestFlexAWS01{},
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Expand[*flex.TestFlexAWS01, *flex.TestFlexAWS01]"),
+			},
 		},
 		{
 			TestName:   "single string Source and single string Target",
@@ -1181,14 +1203,15 @@ func TestExpandOptions(t *testing.T) {
 }
 
 type autoFlexTestCase struct {
-	Context    context.Context //nolint:containedctx // testing context use
-	Options    []AutoFlexOptionsFunc
-	TestName   string
-	Source     any
-	Target     any
-	WantErr    bool
-	WantTarget any
-	WantDiff   bool
+	Context       context.Context //nolint:containedctx // testing context use
+	Options       []AutoFlexOptionsFunc
+	TestName      string
+	Source        any
+	Target        any
+	WantErr       bool
+	expectedDiags diag.Diagnostics
+	WantTarget    any
+	WantDiff      bool
 }
 
 type autoFlexTestCases []autoFlexTestCase
@@ -1206,16 +1229,20 @@ func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFle
 				testCtx = testCase.Context
 			}
 
-			err := Expand(testCtx, testCase.Source, testCase.Target, testCase.Options...)
-			gotErr := err != nil
+			diags := Expand(testCtx, testCase.Source, testCase.Target, testCase.Options...)
+			gotErr := diags != nil
 
 			if gotErr != testCase.WantErr {
 				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
 			}
 
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
+			}
+
 			if gotErr {
 				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
+					t.Errorf("err = %q", diags)
 				}
 			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
