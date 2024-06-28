@@ -38,7 +38,18 @@ func resourceUser() *schema.Resource {
 		DeleteWithoutTimeout: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), userResourceIDSeparator)
+
+				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+					return nil, fmt.Errorf("unexpected format for ID (%[1]s), expected UserPoolID%[2]sUsername", d.Id(), userResourceIDSeparator)
+				}
+
+				d.Set(names.AttrUserPoolID, parts[0])
+				d.Set(names.AttrUsername, parts[1])
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -229,11 +240,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolID, username, err := userParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
+	userPoolID, username := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string)
 	user, err := findUserByTwoPartKey(ctx, conn, userPoolID, username)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -268,10 +275,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolID, username, err := userParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	userPoolID, username := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string)
 
 	if d.HasChange(names.AttrAttributes) {
 		o, n := d.GetChange(names.AttrAttributes)
@@ -381,13 +385,10 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolID, username, err := userParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
+	userPoolID, username := d.Get(names.AttrUserPoolID).(string), d.Get(names.AttrUsername).(string)
 
 	log.Printf("[DEBUG] Deleting Cognito User: %s", d.Id())
-	_, err = conn.AdminDeleteUser(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
+	_, err := conn.AdminDeleteUser(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
 		Username:   aws.String(username),
 		UserPoolId: aws.String(userPoolID),
 	})
@@ -412,15 +413,7 @@ func userCreateResourceID(userPoolID, username string) string {
 	return id
 }
 
-func userParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, userResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected UserPoolID%[2]sUsername", id, userResourceIDSeparator)
-}
+// No userParseResourceID as pre-v5.56.0, the ID wasn't parsed -- user_pool_id and username attribute were used directly.
 
 func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 	input := &cognitoidentityprovider.AdminGetUserInput{
