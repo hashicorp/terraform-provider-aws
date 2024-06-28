@@ -93,7 +93,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
-					resource.TestCheckResourceAttr(resourceName, "attributes", expectJsonV1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAttributes, expectJsonV1),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
-					resource.TestCheckResourceAttr(resourceName, "attributes", expectJsonV2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAttributes, expectJsonV2),
 				),
 			},
 			{
