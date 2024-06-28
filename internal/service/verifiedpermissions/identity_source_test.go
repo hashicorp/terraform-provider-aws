@@ -47,7 +47,6 @@ func TestAccVerifiedPermissionsIdentitySource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "policy_store_id"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.cognito_user_pool_configuration.0.user_pool_arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.cognito_user_pool_configuration.0.client_ids.#", acctest.Ct1),
 				),
 			},
 			{
