@@ -100,6 +100,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -258,6 +259,7 @@ func registerSweepers() {
 	lightsail.RegisterSweepers()
 	location.RegisterSweepers()
 	logs.RegisterSweepers()
+	m2.RegisterSweepers()
 	medialive.RegisterSweepers()
 	mediapackage.RegisterSweepers()
 	memorydb.RegisterSweepers()
