@@ -189,7 +189,9 @@ func (r *resourceAttributeGroup) Update(ctx context.Context, req resource.Update
 
 	if !plan.Description.Equal(state.Description) || !plan.Attributes.Equal(state.Attributes) {
 
-		in := &servicecatalogappregistry.UpdateAttributeGroupInput{}
+		in := &servicecatalogappregistry.UpdateAttributeGroupInput{
+			AttributeGroup: flex.StringFromFramework(ctx, plan.ID),
+		}
 
 		if !plan.Description.Equal(state.Description) {
 			in.Description = flex.StringFromFramework(ctx, plan.Description)

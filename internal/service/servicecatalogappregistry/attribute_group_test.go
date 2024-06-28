@@ -50,6 +50,63 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
+					resource.TestCheckResourceAttr(resourceName, "attributes.a", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.b", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var attributegroup servicecatalogappregistry.GetAttributeGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
+	rDesc := "Simple Description"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogAppRegistryEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
+					resource.TestCheckResourceAttr(resourceName, "attributes.a", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.b", "2"),
+				),
+			},
+			{
+				Config: testAccAttributeGroupConfig_update(rName, rDesc),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.b", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.c", "4"),
 				),
 			},
 			{
@@ -178,6 +235,23 @@ resource "aws_servicecatalogappregistry_attribute_group" "test" {
   attributes = {
     a = "1"
     b = "2"
+  }
+  tags = {
+    tag1 = "v1"
+    tag2 = "v2"
+  }
+}
+`, rName, description)
+}
+
+func testAccAttributeGroupConfig_update(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_servicecatalogappregistry_attribute_group" "test" {
+  name        = %[1]q
+  description = %[2]q
+  attributes = {
+    b = "3"
+    c = "4"
   }
   tags = {
     tag1 = "v1"
