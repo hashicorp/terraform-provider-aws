@@ -120,7 +120,7 @@ func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.Sche
 			"sms_verification_message": schema.StringAttribute{
 				Computed: true,
 			},
-			"user_pool_id": schema.StringAttribute{
+			names.AttrUserPoolID: schema.StringAttribute{
 				Required: true,
 			},
 			"user_pool_tags": tftags.TagsAttributeComputedOnly(),
