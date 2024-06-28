@@ -179,11 +179,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk(names.AttrAttributes); ok {
-		input.UserAttributes = expandAttributeTypess(v.(map[string]interface{}))
+		input.UserAttributes = expandAttributeTypes(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("validation_data"); ok {
-		input.ValidationData = expandAttributeTypess(v.(map[string]interface{}))
+		input.ValidationData = expandAttributeTypes(v.(map[string]interface{}))
 	}
 
 	_, err := conn.AdminCreateUser(ctx, input)
@@ -280,7 +280,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if len(upd) > 0 {
 			input := &cognitoidentityprovider.AdminUpdateUserAttributesInput{
 				Username:       aws.String(username),
-				UserAttributes: expandAttributeTypess(upd),
+				UserAttributes: expandAttributeTypes(upd),
 				UserPoolId:     aws.String(userPoolID),
 			}
 
@@ -448,7 +448,7 @@ func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Cli
 	return output, nil
 }
 
-func expandAttributeTypess(tfMap map[string]interface{}) []awstypes.AttributeType {
+func expandAttributeTypes(tfMap map[string]interface{}) []awstypes.AttributeType {
 	if len(tfMap) == 0 {
 		return nil
 	}
