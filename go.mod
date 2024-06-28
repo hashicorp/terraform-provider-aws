@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/fms v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.0
-	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.44.1
