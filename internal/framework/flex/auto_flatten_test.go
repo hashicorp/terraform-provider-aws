@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -37,24 +38,40 @@ func TestFlatten(t *testing.T) {
 		{
 			TestName: "nil Source and Target",
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "target (<nil>): invalid, want pointer"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[<nil>, <nil>]"),
+			},
 		},
 		{
 			TestName: "non-pointer Target",
 			Source:   TestFlex00{},
 			Target:   0,
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "target (int): int, want pointer"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, int]"),
+			},
 		},
 		{
 			TestName: "non-struct Source",
 			Source:   testString,
 			Target:   &TestFlex00{},
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: struct"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[string, *flex.TestFlex00]"),
+			},
 		},
 		{
 			TestName: "non-struct Target",
 			Source:   TestFlex00{},
 			Target:   &testString,
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[flex.TestFlex00, *string]"),
+			},
 		},
 		{
 			TestName: "json interface Source string Target",
@@ -93,6 +110,11 @@ func TestFlatten(t *testing.T) {
 			Source:   &TestFlexAWS01{Field1: "a"},
 			Target:   &TestFlexAWS01{},
 			WantErr:  true,
+			expectedDiags: diag.Diagnostics{
+				diag.NewErrorDiagnostic("AutoFlEx", "does not implement attr.Value: string"),
+				diag.NewErrorDiagnostic("AutoFlEx", "convert (Field1)"),
+				diag.NewErrorDiagnostic("AutoFlEx", "Flatten[*flex.TestFlexAWS01, *flex.TestFlexAWS01]"),
+			},
 		},
 		{
 			TestName:   "single empty string Source and single string Target",
@@ -1166,18 +1188,22 @@ func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFl
 				testCtx = testCase.Context
 			}
 
-			err := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
-			gotErr := err != nil
+			diags := Flatten(testCtx, testCase.Source, testCase.Target, testCase.Options...)
+			gotErr := diags != nil
 
 			if gotErr != testCase.WantErr {
 				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if diff := cmp.Diff(diags, testCase.expectedDiags); diff != "" {
+				t.Errorf("unexpected diagnostics difference: %s", diff)
 			}
 
 			less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
 
 			if gotErr {
 				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
+					t.Errorf("err = %q", diags)
 				}
 			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
 				if !testCase.WantDiff {
