@@ -20,6 +20,8 @@ import (
 )
 
 func testAccLicenseAssociation_freeTrial(t *testing.T) {
+	acctest.Skip(t, "ENTERPRISE_FREE_TRIAL has been deprecated and is no longer offered")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_license_association.test"
