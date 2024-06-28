@@ -16,7 +16,7 @@ Terraform data source for managing an AWS Cognito User Pool.
 
 ```terraform
 data "aws_cognito_user_pool" "example" {
-  id = "us-west-2_aaaaaaaaa"
+  user_pool_id = "us-west-2_aaaaaaaaa"
 }
 ```
 
@@ -24,7 +24,7 @@ data "aws_cognito_user_pool" "example" {
 
 The following arguments are required:
 
-* `id` - (Required) The cognito pool id
+* `user_pool_id` - (Required) The cognito pool ID
 
 ## Attribute Reference
 

@@ -5,11 +5,11 @@ package cognitoidp
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -18,24 +18,20 @@ import (
 )
 
 // @FrameworkDataSource("aws_cognito_user_group", name="User Pool")
-func newDataSourceUserPool(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceUserPool{}, nil
+func newUserPoolDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &userPoolDataSource{}, nil
 }
 
-const (
-	DSNameUserPool = "User Pool Data Source"
-)
-
-type dataSourceUserPool struct {
+type userPoolDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceUserPool) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_cognito_user_pool"
+func (*userPoolDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_cognito_user_pool"
 }
 
-func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *userPoolDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
 				Computed: true,
@@ -60,9 +56,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 			"estimated_number_of_users": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Required: true,
-			},
+			names.AttrID: framework.IDAttribute(),
 			"last_modified_date": schema.StringAttribute{
 				Computed: true,
 			},
@@ -80,6 +74,9 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 			},
 			"sms_verification_message": schema.StringAttribute{
 				Computed: true,
+			},
+			"user_pool_id": schema.StringAttribute{
+				Required: true,
 			},
 			"user_pool_tags": tftags.TagsAttributeComputedOnly(),
 			"username_attributes": schema.ListAttribute{
@@ -308,33 +305,33 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 	}
 }
 
-func (d *dataSourceUserPool) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *userPoolDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data userPoolDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := d.Meta().CognitoIDPClient(ctx)
 
-	var data dataSourceUserPoolData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	userPoolID := data.UserPoolID.ValueString()
+	output, err := findUserPoolByID(ctx, conn, userPoolID)
 
-	out, err := findUserPoolByID(ctx, conn, data.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionReading, DSNameUserPool, data.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Cognito User Pool (%s)", userPoolID), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceUserPoolData struct {
+type userPoolDataSourceModel struct {
 	AccountRecoverySetting   fwtypes.ListNestedObjectValueOf[accountRecoverySettingType] `tfsdk:"account_recovery_setting"`
 	AdminCreateUserConfig    fwtypes.ListNestedObjectValueOf[adminCreateUserConfigType]  `tfsdk:"admin_create_user_config"`
 	Arn                      types.String                                                `tfsdk:"arn"`
@@ -355,6 +352,7 @@ type dataSourceUserPoolData struct {
 	SmsAuthenticationMessage types.String                                                `tfsdk:"sms_authentication_message"`
 	SmsConfigurationFailure  types.String                                                `tfsdk:"sms_configuration_failure"`
 	SmsVerificationMessage   types.String                                                `tfsdk:"sms_verification_message"`
+	UserPoolID               types.String                                                `tfsdk:"user_pool_id"`
 	UserPoolTags             types.Map                                                   `tfsdk:"user_pool_tags"`
 	UsernameAttributes       fwtypes.ListValueOf[types.String]                           `tfsdk:"username_attributes"`
 }

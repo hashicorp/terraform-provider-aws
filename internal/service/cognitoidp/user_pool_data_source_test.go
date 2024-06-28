@@ -124,7 +124,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 data "aws_cognito_user_pool" "test" {
-  id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 `, rName)
 }
@@ -134,7 +134,7 @@ func testAccUserPoolDataSourceConfig_schemaAttributes(rName string) string {
 		testAccUserPoolConfig_schemaAttributes(rName),
 		`
 data "aws_cognito_user_pool" "test" {
-  id = aws_cognito_user_pool.test.id
+  user_pool_id = aws_cognito_user_pool.test.id
 }
 `)
 }
