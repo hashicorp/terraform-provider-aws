@@ -168,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.51.0
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.15.1
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.22.1
