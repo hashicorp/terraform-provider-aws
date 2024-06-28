@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_outposts_sites")
@@ -20,7 +21,7 @@ func DataSourceSites() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSitesRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -57,7 +58,7 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "listing Outposts Sites: %s", err)
 	}
 
-	if err := d.Set("ids", ids); err != nil {
+	if err := d.Set(names.AttrIDs, ids); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 

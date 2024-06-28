@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_eks_node_groups")
@@ -21,12 +22,12 @@ func dataSourceNodeGroups() *schema.Resource {
 		ReadWithoutTimeout: dataSourceNodeGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -39,7 +40,7 @@ func dataSourceNodeGroupsRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	input := &eks.ListNodegroupsInput{
 		ClusterName: aws.String(clusterName),
 	}
@@ -56,8 +57,8 @@ func dataSourceNodeGroupsRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(clusterName)
-	d.Set("cluster_name", clusterName)
-	d.Set("names", nodeGroups)
+	d.Set(names.AttrClusterName, clusterName)
+	d.Set(names.AttrNames, nodeGroups)
 
 	return diags
 }

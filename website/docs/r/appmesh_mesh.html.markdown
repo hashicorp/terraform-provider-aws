@@ -40,16 +40,11 @@ This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `spec` - (Optional) Service mesh specification to apply.
+    * `egress_filter`- (Optional) Egress filter rules for the service mesh.
+        * `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`. Valid values are `ALLOW_ALL` and `DROP_ALL`.
+    * `service_discovery`- (Optional) The service discovery information for the service mesh.
+        * `ip_preference` - (Optional) The IP version to use to control traffic within the mesh. Valid values are `IPv6_PREFERRED`, `IPv4_PREFERRED`, `IPv4_ONLY`, and `IPv6_ONLY`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-The `spec` object supports the following:
-
-* `egress_filter`- (Optional) Egress filter rules for the service mesh.
-
-The `egress_filter` object supports the following:
-
-* `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`.
-Valid values are `ALLOW_ALL` and `DROP_ALL`.
 
 ## Attribute Reference
 

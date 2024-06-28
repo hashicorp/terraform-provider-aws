@@ -108,6 +108,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
+  <li><code>applicationsignals</code></li>
   <li><code>appmesh</code></li>
   <li><code>apprunner</code></li>
   <li><code>appstream</code></li>
@@ -123,6 +124,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
+  <li><code>chatbot</code></li>
   <li><code>chime</code></li>
   <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkvoice</code></li>
@@ -170,6 +172,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
   <li><code>docdbelastic</code></li>
+  <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
@@ -277,6 +280,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
+  <li><code>route53profiles</code></li>
   <li><code>route53recoverycontrolconfig</code></li>
   <li><code>route53recoveryreadiness</code></li>
   <li><code>route53resolver</code></li>
@@ -313,6 +317,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>
@@ -324,6 +329,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
+  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>
@@ -424,4 +430,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d65f1f0b651e175fa2bfe7882a2a41b16b6ea0a04040101331fe126be0abcbfe -->
+<!-- cache-key: cdktf-0.20.1 input-217dacc8986772aa95a9df842e787776d800041c33e189c22c8f136e26bc766c -->

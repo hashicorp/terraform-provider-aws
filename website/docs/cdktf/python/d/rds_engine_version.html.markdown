@@ -94,6 +94,7 @@ This data source exports the following attributes in addition to the arguments a
 * `supported_timezones` - Set of the time zones supported by the engine version.
 * `supports_global_databases` - Whether you can use Aurora global databases with the engine version.
 * `supports_log_exports_to_cloudwatch` - Whether the engine version supports exporting the log types specified by `exportable_log_types` to CloudWatch Logs.
+* `supports_limitless_database` - Whether the engine version supports Aurora Limitless Database.
 * `supports_parallel_query` - Whether you can use Aurora parallel query with the engine version.
 * `supports_read_replica` - Whether the engine version supports read replicas.
 * `valid_major_targets` - Set of versions that are valid major version upgrades for the engine version.
@@ -102,4 +103,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version_actual` - Complete engine version.
 * `version_description` - Description of the engine version.
 
-<!-- cache-key: cdktf-0.20.1 input-f080e3d72cc40cb75e584365f66abe22f499a3922d09fa93c963ef50d1a06658 -->
+<!-- cache-key: cdktf-0.20.1 input-c79463a69506695ed29ad8f547a90f667cebfb0ef7c37e26376a528db05d0b20 -->

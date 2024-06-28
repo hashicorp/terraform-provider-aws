@@ -260,6 +260,7 @@ The following arguments are optional:
 * `efs_volume_configuration` - (Optional) Configuration block for an [EFS volume](#efs_volume_configuration). Detailed below.
 * `fsx_windows_file_server_volume_configuration` - (Optional) Configuration block for an [FSX Windows File Server volume](#fsx_windows_file_server_volume_configuration). Detailed below.
 * `host_path` - (Optional) Path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
+* `configure_at_launch` - (Optional) Whether the volume should be configured at launch time. This is used to create Amazon EBS volumes for standalone tasks or tasks created as part of a service. Each task definition revision may only have one volume configured at launch in the volume configuration.
 * `name` - (Required) Name of the volume. This name is referenced in the `sourceVolume`
 parameter of container definition in the `mountPoints` section.
 

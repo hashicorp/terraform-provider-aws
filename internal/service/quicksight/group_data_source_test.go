@@ -30,10 +30,10 @@ func TestAccQuickSightGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGroupDataSourceConfig(rName, "text1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "group_name", resourceName, "group_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "description", "text1"),
-					resource.TestCheckResourceAttr(dataSourceName, "namespace", tfquicksight.DefaultUserNamespace),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrGroupName, resourceName, names.AttrGroupName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "text1"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultUserNamespace),
 					resource.TestCheckResourceAttrSet(dataSourceName, "principal_id"),
 				),
 			},

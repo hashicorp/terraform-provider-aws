@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_apigatewayv2_apis", name="APIs")
@@ -23,13 +24,13 @@ func dataSourceAPIs() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAPIsRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -37,7 +38,7 @@ func dataSourceAPIs() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
@@ -47,7 +48,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	apis, err := findAPIs(ctx, conn, &apigatewayv2.GetApisInput{})
 
@@ -58,7 +59,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var ids []*string
 
 	for _, api := range apis {
-		if v, ok := d.GetOk("name"); ok && v.(string) != aws.ToString(api.Name) {
+		if v, ok := d.GetOk(names.AttrName); ok && v.(string) != aws.ToString(api.Name) {
 			continue
 		}
 
@@ -75,7 +76,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if err := d.Set("ids", flex.FlattenStringSet(ids)); err != nil {
+	if err := d.Set(names.AttrIDs, flex.FlattenStringSet(ids)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 

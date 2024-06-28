@@ -76,7 +76,7 @@ class MyConvertedCode(TerraformStack):
             },
             ttl=DynamodbTableTtl(
                 attribute_name="TimeToExist",
-                enabled=False
+                enabled=True
             ),
             write_capacity=20
         )
@@ -290,8 +290,10 @@ Optional arguments:
 
 ### `ttl`
 
-* `enabled` - (Required) Whether TTL is enabled.
-* `attribute_name` - (Required) Name of the table attribute to store the TTL timestamp in.
+* `attribute_name` - (Optional) Name of the table attribute to store the TTL timestamp in.
+  Required if `enabled` is `true`, must not be set otherwise.
+* `enabled` - (Optional) Whether TTL is enabled.
+  Default value is `false`.
 
 ## Attribute Reference
 
@@ -341,4 +343,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cbc2fa26bfb0676021ad41f620c12f481840c859d070c707ba0ad26685f33d84 -->
+<!-- cache-key: cdktf-0.20.1 input-9e92ea59554bc9f15e82d3daaa72c4200971185e2181c1aa4b780e796f954c46 -->

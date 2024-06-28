@@ -27,12 +27,12 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstanceProfilesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "paths.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "names.#", "1"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arns.0", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "paths.0", resourceName, "path"),
-					resource.TestCheckResourceAttrPair(datasourceName, "names.0", resourceName, "name"),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "paths.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasourceName, "names.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(datasourceName, "arns.0", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "paths.0", resourceName, names.AttrPath),
+					resource.TestCheckResourceAttrPair(datasourceName, "names.0", resourceName, names.AttrName),
 				),
 			},
 		},

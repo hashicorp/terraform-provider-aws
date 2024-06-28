@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,11 +44,11 @@ func ResourceSinkPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -76,13 +77,14 @@ const (
 )
 
 func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	sinkIdentifier := d.Get("sink_identifier").(string)
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
 	in := &oam.PutSinkPolicyInput{
@@ -92,17 +94,18 @@ func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err = conn.PutSinkPolicy(ctx, in)
 	if err != nil {
-		return diag.Errorf("putting ObservabilityAccessManager Sink Policy (%s): %s", sinkIdentifier, err)
+		return sdkdiag.AppendErrorf(diags, "putting ObservabilityAccessManager Sink Policy (%s): %s", sinkIdentifier, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(sinkIdentifier)
 	}
 
-	return resourceSinkPolicyRead(ctx, d, meta)
+	return append(diags, resourceSinkPolicyRead(ctx, d, meta)...)
 }
 
 func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findSinkPolicyByID(ctx, conn, d.Id())
@@ -114,19 +117,19 @@ func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameSinkPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, ResNameSinkPolicy, d.Id(), err)
 	}
 
-	d.Set("arn", out.SinkArn)
+	d.Set(names.AttrARN, out.SinkArn)
 	d.Set("sink_id", out.SinkId)
 	d.Set("sink_identifier", d.Id())
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(out.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(out.Policy))
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return nil
 }

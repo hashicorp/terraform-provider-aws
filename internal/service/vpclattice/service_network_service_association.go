@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,7 +47,7 @@ func resourceServiceNetworkServiceAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,11 +64,11 @@ func resourceServiceNetworkServiceAssociation() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -86,7 +87,7 @@ func resourceServiceNetworkServiceAssociation() *schema.Resource {
 				ForceNew:         true,
 				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,6 +104,7 @@ const (
 )
 
 func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateServiceNetworkServiceAssociationInput{
@@ -114,23 +116,24 @@ func resourceServiceNetworkServiceAssociationCreate(ctx context.Context, d *sche
 
 	out, err := conn.CreateServiceNetworkServiceAssociation(ctx, in)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkAssociation, "", err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkAssociation, "", err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkAssociation, "", errors.New("empty output"))
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameServiceNetworkAssociation, "", errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
 	if _, err := waitServiceNetworkServiceAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForCreation, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
-	return resourceServiceNetworkServiceAssociationRead(ctx, d, meta)
+	return append(diags, resourceServiceNetworkServiceAssociationRead(ctx, d, meta)...)
 }
 
 func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findServiceNetworkServiceAssociationByID(ctx, conn, d.Id())
@@ -138,28 +141,28 @@ func resourceServiceNetworkServiceAssociationRead(ctx context.Context, d *schema
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice Service Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("created_by", out.CreatedBy)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
 		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
-			return diag.Errorf("setting dns_entry: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
 		d.Set("dns_entry", nil)
 	}
 	d.Set("service_identifier", out.ServiceId)
 	d.Set("service_network_identifier", out.ServiceNetworkId)
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 
-	return nil
+	return diags
 }
 
 func resourceServiceNetworkServiceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -168,6 +171,7 @@ func resourceServiceNetworkServiceAssociationUpdate(ctx context.Context, d *sche
 }
 
 func resourceServiceNetworkServiceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice Service Network Association %s", d.Id())
@@ -177,18 +181,18 @@ func resourceServiceNetworkServiceAssociationDelete(ctx context.Context, d *sche
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
 	if _, err := waitServiceNetworkServiceAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameServiceNetworkAssociation, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findServiceNetworkServiceAssociationByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetServiceNetworkServiceAssociationOutput, error) {

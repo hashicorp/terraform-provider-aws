@@ -47,7 +47,7 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 				Config: testAccFirewallRulesDataSourceConfig_basic(rName, fqdn, action, priority),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
@@ -63,7 +63,7 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 				Config: testAccFirewallRulesDataSourceConfig_filter(rName, fqdn, action, priority),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
@@ -79,7 +79,7 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 				Config: testAccFirewallRulesDataSourceConfig_filter_action(rName, fqdn, action, priority),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
@@ -95,7 +95,7 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 				Config: testAccFirewallRulesDataSourceConfig_filter_priority(rName, fqdn, action, priority),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_rules.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.action"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.block_override_ttl"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "firewall_rules.0.creation_time"),
