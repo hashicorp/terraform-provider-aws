@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.20.0
-	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.23.1
