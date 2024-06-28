@@ -1,4 +1,10 @@
 ## 5.57.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_cognito_user_pool_client: Fix `InvalidParameterException: 2 validation errors detected`  errors on Read ([#38168](https://github.com/hashicorp/terraform-provider-aws/issues/38168))
+* resource/aws_cognito_user: Fix a bug that caused resource recreation for resources imported with certain [import ID](https://developer.hashicorp.com/terraform/language/import#import-id) formats ([#38182](https://github.com/hashicorp/terraform-provider-aws/issues/38182))
+
 ## 5.56.0 (June 27, 2024)
 
 FEATURES:
