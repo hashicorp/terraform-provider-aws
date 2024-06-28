@@ -16,6 +16,7 @@ Terraform data source for managing an AWS Service Catalog AppRegistry Attribute 
 
 ```terraform
 data "aws_servicecatalogappregistry_attribute_group" "example" {
+  name = "example_attribute_group"
 }
 ```
 
@@ -23,16 +24,16 @@ data "aws_servicecatalogappregistry_attribute_group" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id`   - (Optional) ID of the Attribute Group to find.
+* `name` - (Optional) Name of the Attribute Group to find.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Attribute Group. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `tags` - Mapping of Key-Value tags for the resource.
+* `attributes` - A JSON string of nested key-value pairs that represents the attributes of the group.
+* `description` - Description of the Attribute Group.
+* `tags` - A map of tags assigned to the Attribute Group. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
