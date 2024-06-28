@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -96,7 +95,7 @@ func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			_, err := tfroute53profiles.FindAssociationByID(ctx, conn, rs.Primary.ID)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
