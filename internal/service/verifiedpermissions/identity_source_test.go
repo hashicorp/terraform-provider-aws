@@ -98,10 +98,10 @@ func TestAccVerifiedPermissionsIdentitySource_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIdentitySourceConfig_updateOpenIDConfiguration(),
+				Config: testAccIdentitySourceConfig_updateOpenIDConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.issuer", "https://auth.example.com"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.open_id_connect_configuration.0.issuer"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.access_token_only.0.audiences.#", acctest.Ct1),
@@ -109,10 +109,11 @@ func TestAccVerifiedPermissionsIdentitySource_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.entity_id_prefix", "MyOIDCProvider"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.0.group_claim", "groups"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.group_configuration.0.group_entity_type", "Mycorp::UserGroup"),
 				),
 			},
 			{
-				Config: testAccIdentitySourceConfig_updateOpenIDConfigurationTokenSelection(),
+				Config: testAccIdentitySourceConfig_updateOpenIDConfigurationTokenSelection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.open_id_connect_configuration.0.token_selection.0.identity_token_only.#", acctest.Ct1),
@@ -272,14 +273,19 @@ resource "aws_verifiedpermissions_identity_source" "test" {
 `, rName))
 }
 
-func testAccIdentitySourceConfig_updateOpenIDConfiguration() string {
+func testAccIdentitySourceConfig_updateOpenIDConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccIdentitySourceConfig_base(), `
+		testAccIdentitySourceConfig_base(),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
 resource "aws_verifiedpermissions_identity_source" "test" {
   policy_store_id = aws_verifiedpermissions_policy_store.test.id
   configuration {
     open_id_connect_configuration {
-      issuer = "https://auth.example.com"
+      issuer = "https://${aws_cognito_user_pool.test.endpoint}"
       token_selection {
         access_token_only {
           audiences          = ["https://myapp.example.com"]
@@ -293,18 +299,24 @@ resource "aws_verifiedpermissions_identity_source" "test" {
       }
     }
   }
+  principal_entity_type = "Mycorp::UserGroup"
 }
-`)
+`, rName))
 }
 
-func testAccIdentitySourceConfig_updateOpenIDConfigurationTokenSelection() string {
+func testAccIdentitySourceConfig_updateOpenIDConfigurationTokenSelection(rName string) string {
 	return acctest.ConfigCompose(
-		testAccIdentitySourceConfig_base(), `
+		testAccIdentitySourceConfig_base(),
+		fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
 resource "aws_verifiedpermissions_identity_source" "test" {
   policy_store_id = aws_verifiedpermissions_policy_store.test.id
   configuration {
     open_id_connect_configuration {
-      issuer = "https://auth.example.com"
+      issuer = "https://${aws_cognito_user_pool.test.endpoint}"
       token_selection {
         identity_token_only {
           client_ids         = ["1example23456789"]
@@ -318,6 +330,7 @@ resource "aws_verifiedpermissions_identity_source" "test" {
       }
     }
   }
+  principal_entity_type = "Mycorp::UserGroup"
 }
-`)
+`, rName))
 }
