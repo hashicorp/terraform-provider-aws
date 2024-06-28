@@ -29,14 +29,14 @@ func TestAccChatbotSlackChannelConfiguration_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var slackchannelconfiguration chatbot.DescribeSlackChannelConfigurationResponse
+	var slackchannelconfiguration types.SlackChannelConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chatbot_slack_channel_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ChatbotEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.ChatbotServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
@@ -81,7 +81,7 @@ func TestAccChatbotSlackChannelConfiguration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.ChatbotEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.ChatbotServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ChatbotServiceID),
@@ -89,7 +89,7 @@ func TestAccChatbotSlackChannelConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSlackChannelConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSlackChannelConfigurationConfig_basic(rName, testAccSlackChannelConfigurationVersionNewer),
+				Config: testAccSlackChannelConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, resourceName, &slackchannelconfiguration),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfchatbot.ResourceSlackChannelConfiguration, resourceName),
@@ -164,20 +164,15 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccSlackChannelConfigurationConfig_basic(rName, version string) string {
+func testAccSlackChannelConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
+
 
 resource "aws_chatbot_slack_channel_configuration" "test" {
-  slack_channel_configuration_name             = %[1]q
-  engine_type             = "ActiveChatbot"
-  engine_version          = %[2]q
-  host_instance_type      = "chatbot.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  configuration_name = %[1]q
+  iam_role_arn       = "ActiveChatbot"
+  slack_channel_id   = %[1]q
+  slack_team_id      = "chatbot.t2.micro"
 }
-`, rName, version)
+`, rName)
 }
