@@ -187,7 +187,7 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	clientID := d.Get(names.AttrClientID).(string)
-	userPoolClient, err := findUserPoolClientByTwoPartKey(ctx, conn, d.Get(names.AttrUserPoolID).(string), d.Id())
+	userPoolClient, err := findUserPoolClientByTwoPartKey(ctx, conn, d.Get(names.AttrUserPoolID).(string), clientID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientID, err)
