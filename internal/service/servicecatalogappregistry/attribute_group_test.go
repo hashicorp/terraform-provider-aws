@@ -71,7 +71,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var attributegroup servicecatalogappregistry.GetAttributeGroupOutput
+	var attributegroup1, attributegroup2 servicecatalogappregistry.GetAttributeGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
 	rDesc := "Simple Description"
@@ -89,24 +89,25 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 			{
 				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
+					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
-					resource.TestCheckResourceAttr(resourceName, "attributes.a", "1"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.b", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.a", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attributes.b", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccAttributeGroupConfig_update(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
+					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup2),
+					testAccCheckAttributeGroupNotRecreated(&attributegroup1, &attributegroup2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.b", "3"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.c", "4"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attributes.b", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "attributes.c", acctest.Ct4),
 				),
 			},
 			{
