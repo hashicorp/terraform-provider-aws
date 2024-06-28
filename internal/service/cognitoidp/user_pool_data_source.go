@@ -51,7 +51,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 			"custom_domain": schema.StringAttribute{
 				Computed: true,
 			},
-			"deletion_protection": schema.StringAttribute{
+			names.AttrDeletionProtection: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrDomain: schema.StringAttribute{

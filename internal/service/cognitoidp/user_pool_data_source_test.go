@@ -91,7 +91,7 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 
 		// Loop through the schema_attributes and check the mutable key in each attribute
 		checksCompleted := map[string]bool{
-			"email": false,
+			names.AttrEmail: false,
 		}
 		for i := 0; i < numAttributes; i++ {
 			// Get the attribute
@@ -100,11 +100,11 @@ func testSchemaAttributes(n string) resource.TestCheckFunc {
 			if name == "" || !ok {
 				return fmt.Errorf("attribute not found at %s", name)
 			}
-			if name == "email" {
+			if name == names.AttrEmail {
 				if rs.Primary.Attributes[fmt.Sprintf("schema_attributes.%d.mutable", i)] != "false" {
 					return fmt.Errorf("mutable is not false for attribute %v", name)
 				}
-				checksCompleted["email"] = true
+				checksCompleted[names.AttrEmail] = true
 			}
 		}
 		for k, v := range checksCompleted {
