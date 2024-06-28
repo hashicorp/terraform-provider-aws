@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,7 +34,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -87,7 +87,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_deletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -123,7 +123,7 @@ func TestAccCognitoIDPUserPool_deletionProtection(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -187,7 +187,7 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withAdminCreateUser(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -228,7 +228,7 @@ func TestAccCognitoIDPUserPool_withAdminCreateUser(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11858
 func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -257,7 +257,7 @@ func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T
 
 func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -297,7 +297,7 @@ func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withDevice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -333,7 +333,7 @@ func TestAccCognitoIDPUserPool_withDevice(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	subject := sdkacctest.RandString(10)
 	updatedSubject := sdkacctest.RandString(10)
@@ -373,7 +373,7 @@ func TestAccCognitoIDPUserPool_withEmailVerificationMessage(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -401,7 +401,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_mfaConfiguration(rName, cognitoidentityprovider.UserPoolMfaTypeOff),
+				Config: testAccUserPoolConfig_mfaConfiguration(rName, string(awstypes.UserPoolMfaTypeOff)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
@@ -424,7 +424,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -464,7 +464,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserPoolConfig_mfaConfiguration(rName, cognitoidentityprovider.UserPoolMfaTypeOff),
+				Config: testAccUserPoolConfig_mfaConfiguration(rName, string(awstypes.UserPoolMfaTypeOff)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
@@ -477,7 +477,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -519,7 +519,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -545,7 +545,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_mfaConfiguration(rName, cognitoidentityprovider.UserPoolMfaTypeOff),
+				Config: testAccUserPoolConfig_mfaConfiguration(rName, string(awstypes.UserPoolMfaTypeOff)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct0),
@@ -567,7 +567,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -609,7 +609,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_smsAuthenticationMessage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	smsAuthenticationMessage1 := "test authentication message {####}"
 	smsAuthenticationMessage2 := "test authentication message updated {####}"
@@ -646,7 +646,7 @@ func TestAccCognitoIDPUserPool_smsAuthenticationMessage(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -694,7 +694,7 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -726,7 +726,7 @@ func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -767,7 +767,7 @@ func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_cognito_user_pool.test"
@@ -808,7 +808,7 @@ func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_smsVerificationMessage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	smsVerificationMessage1 := "test verification message {####}"
 	smsVerificationMessage2 := "test verification message updated {####}"
@@ -845,7 +845,7 @@ func TestAccCognitoIDPUserPool_smsVerificationMessage(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withEmail(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -876,7 +876,7 @@ func TestAccCognitoIDPUserPool_withEmail(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	replyTo := acctest.DefaultEmailAddress
 	resourceName := "aws_cognito_user_pool.test"
@@ -909,7 +909,7 @@ func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -954,7 +954,7 @@ func TestAccCognitoIDPUserPool_tags(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -994,7 +994,7 @@ func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withUsernameAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1034,7 +1034,7 @@ func TestAccCognitoIDPUserPool_withUsernameAttributes(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1080,7 +1080,7 @@ func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1117,7 +1117,7 @@ func TestAccCognitoIDPUserPool_withUsername(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -1180,7 +1180,7 @@ func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -1232,7 +1232,7 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -1284,7 +1284,7 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 	lambdaResourceName := "aws_lambda_function.test"
@@ -1336,7 +1336,7 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 
 func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool1, pool2 cognitoidentityprovider.UserPoolType
+	var pool1, pool2 awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1466,7 +1466,7 @@ func TestAccCognitoIDPUserPool_schemaAttributesModified(t *testing.T) {
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/21654
 func TestAccCognitoIDPUserPool_schemaAttributesStringAttributeConstraints(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1496,7 +1496,7 @@ func TestAccCognitoIDPUserPool_schemaAttributesStringAttributeConstraints(t *tes
 
 func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1558,7 +1558,7 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withVerificationMessageTemplateUTF8(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1620,7 +1620,7 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplateUTF8(t *testing.T)
 
 func TestAccCognitoIDPUserPool_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	optionalMfa := "OPTIONAL"
 	offMfa := "OFF"
@@ -1711,7 +1711,7 @@ func TestAccCognitoIDPUserPool_update(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1735,7 +1735,7 @@ func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 
 func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool cognitoidentityprovider.UserPoolType
+	var pool awstypes.UserPoolType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
@@ -1746,18 +1746,14 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserPoolConfig_userAttributeUpdateSettings(rName, "invalid_value"),
-				ExpectError: regexache.MustCompile("expected user_attribute_update_settings.0.attributes_require_verification_before_update.0 to be one of"),
-			},
-			{
-				Config: testAccUserPoolConfig_userAttributeUpdateSettings(rName, cognitoidentityprovider.VerifiedAttributeTypeEmail),
+				Config: testAccUserPoolConfig_userAttributeUpdateSettings(rName, string(awstypes.VerifiedAttributeTypeEmail)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.0", cognitoidentityprovider.VerifiedAttributeTypeEmail),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.0", string(awstypes.VerifiedAttributeTypeEmail)),
 					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.0", cognitoidentityprovider.VerifiedAttributeTypeEmail),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.0", string(awstypes.VerifiedAttributeTypeEmail)),
 				),
 			},
 			{
@@ -1774,7 +1770,7 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 
 func testAccCheckUserPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_user_pool" {
@@ -1798,14 +1794,14 @@ func testAccCheckUserPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUserPoolExists(ctx context.Context, n string, v *cognitoidentityprovider.UserPoolType) resource.TestCheckFunc {
+func testAccCheckUserPoolExists(ctx context.Context, n string, v *awstypes.UserPoolType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		output, err := tfcognitoidp.FindUserPoolByID(ctx, conn, rs.Primary.ID)
 
@@ -1821,9 +1817,9 @@ func testAccCheckUserPoolExists(ctx context.Context, n string, v *cognitoidentit
 	}
 }
 
-func testAccCheckUserPoolNotRecreated(pool1, pool2 *cognitoidentityprovider.UserPoolType) resource.TestCheckFunc {
+func testAccCheckUserPoolNotRecreated(pool1, pool2 *awstypes.UserPoolType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(pool1.CreationDate).Equal(aws.TimeValue(pool2.CreationDate)) {
+		if !aws.ToTime(pool1.CreationDate).Equal(aws.ToTime(pool2.CreationDate)) {
 			return fmt.Errorf("user pool was recreated. expected: %s, got: %s", pool1.CreationDate, pool2.CreationDate)
 		}
 		return nil
@@ -1831,21 +1827,8 @@ func testAccCheckUserPoolNotRecreated(pool1, pool2 *cognitoidentityprovider.User
 }
 
 func testAccPreCheckIdentityProvider(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
-
-	input := &cognitoidentityprovider.ListUserPoolsInput{
-		MaxResults: aws.Int64(1),
-	}
-
-	_, err := conn.ListUserPoolsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+	t.Helper()
+	acctest.PreCheckCognitoIdentityProvider(ctx, t)
 }
 
 func testAccUserPoolSMSConfigurationConfig_base(rName string, externalID string) string {

@@ -1780,6 +1780,31 @@ service "logs" {
   brand                    = "AWS"
 }
 
+service "networkmonitor" {
+
+  sdk {
+    id             = "NetworkMonitor"
+    client_version = [2]
+  }
+
+  names {
+    provider_name_upper = "NetworkMonitor"
+    human_friendly      = "CloudWatch Network Monitor"
+  }
+
+  endpoint_info {
+    endpoint_api_call        = "ListMonitors"
+  }
+
+  resource_prefix {
+    correct = "aws_networkmonitor_"
+  }
+
+  provider_package_correct = "networkmonitor"
+  doc_prefix               = ["networkmonitor_"]
+  brand                    = "Amazon"
+}
+
 service "rum" {
 
   go_packages {
@@ -2165,7 +2190,7 @@ service "cognitoidp" {
 
   sdk {
     id             = "Cognito Identity Provider"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -2180,6 +2205,7 @@ service "cognitoidp" {
 
   endpoint_info {
     endpoint_api_call        = "ListUserPools"
+    endpoint_api_params      = "MaxResults: aws_sdkv2.Int32(1)"
   }
 
   resource_prefix {
@@ -6440,7 +6466,7 @@ service "networkfirewall" {
 
   sdk {
     id             = "Network Firewall"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {

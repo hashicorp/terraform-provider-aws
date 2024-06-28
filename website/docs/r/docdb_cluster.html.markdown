@@ -40,7 +40,7 @@ resource "aws_docdb_cluster" "docdb" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allow_major_version_upgrade` - (Optional) A value that indicates whether major version upgrades are allowed. Constraints: You must allow major version upgrades when specifying a value for the EngineVersion parameter that is a different major version than the DB cluster's current version.
 * `apply_immediately` - (Optional) Specifies whether any cluster modifications

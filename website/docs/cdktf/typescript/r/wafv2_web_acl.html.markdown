@@ -802,6 +802,7 @@ An SQL injection match condition identifies the part of web requests, such as th
 The `sqliMatchStatement` block supports the following arguments:
 
 * `fieldToMatch` - (Optional) Part of a web request that you want AWS WAF to inspect. See [`fieldToMatch`](#field_to_match-block) below for details.
+* `sensitivityLevel` - (Optional) The sensitivity that you want WAF to use to inspect for SQL injection attacks. Valid values include: `LOW` or `HIGH`.
 * `textTransformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. At least one transformation is required. See [`textTransformation`](#text_transformation-block) below for details.
 
 ### `xssMatchStatement` Block

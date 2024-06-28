@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	pluralize "github.com/gertd/go-pluralize"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
@@ -220,4 +221,11 @@ func fieldExistsInStruct(field string, str reflect.Value) bool {
 	}
 
 	return false
+}
+
+// valueWithElementsAs extends the Value interface for values that have an ElementsAs method.
+type valueWithElementsAs interface {
+	attr.Value
+
+	ElementsAs(context.Context, any, bool) diag.Diagnostics
 }
