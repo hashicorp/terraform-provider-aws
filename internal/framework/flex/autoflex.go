@@ -171,6 +171,9 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 }
 
 func fullTypeName(t reflect.Type) string {
+	if t.Kind() == reflect.Pointer {
+		return "*" + fullTypeName(t.Elem())
+	}
 	if path := t.PkgPath(); path != "" {
 		return fmt.Sprintf("%s.%s", path, t.Name())
 	}
