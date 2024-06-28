@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_route53profiles_association", name="Association")
 func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAssociation{}
@@ -215,7 +214,7 @@ func (r *resourceAssociation) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {

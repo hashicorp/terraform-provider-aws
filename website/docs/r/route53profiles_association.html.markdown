@@ -20,8 +20,8 @@ resource "aws_route53profiles_profile" "example" {
 }
 
 resource "aws_vpc" "example" {
-  cidr = "10.0.0.0/16
-} 
+  cidr = "10.0.0.0/16"
+}
 
 resource "aws_route53profiles_association" "example" {
   name        = "example"

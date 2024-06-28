@@ -30,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_route53profiles_profile", name="Profile")
 // @Tags("identifierAttribute=arn")
 func newResourceProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
