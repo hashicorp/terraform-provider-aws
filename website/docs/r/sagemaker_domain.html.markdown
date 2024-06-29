@@ -109,6 +109,7 @@ The following arguments are optional:
 ### `default_space_settings` Block
 
 * `execution_role` - (Required) The execution role for the space.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [`jupyter_lab_app_settings` Block](#jupyter_lab_app_settings-block) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [`jupyter_server_app_settings` Block](#jupyter_server_app_settings-block) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [`kernel_gateway_app_settings` Block](#kernel_gateway_app_settings-block) below.
 * `security_groups` - (Optional) The security groups for the Amazon Virtual Private Cloud that the space uses for communication.
