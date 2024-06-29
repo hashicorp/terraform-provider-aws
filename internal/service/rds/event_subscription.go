@@ -80,7 +80,7 @@ func resourceEventSubscription() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validEventSubscriptionName,
+				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
 			"sns_topic": {
 				Type:         schema.TypeString,
