@@ -395,6 +395,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("master_password"); ok {
 			inputM.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
