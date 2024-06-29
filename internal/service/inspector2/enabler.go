@@ -171,6 +171,11 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		for _, resourceType := range typeEnable {
 			delete(resourceStatuses, resourceType)
 		}
+		for resourceType, typeStatus := range resourceStatuses {
+			if typeStatus == types.StatusDisabled {
+				delete(resourceStatuses, resourceType)
+			}
+		}
 		if len(resourceStatuses) > 0 {
 			disableAccountIDs = append(disableAccountIDs, acctID)
 			in := &inspector2.DisableInput{
@@ -247,7 +252,8 @@ func resourceEnablerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	typeEnable := flex.ExpandStringyValueSet[types.ResourceScanType](d.Get("resource_types").(*schema.Set))
 	var typeDisable []types.ResourceScanType
 	if d.HasChange("resource_types") {
-		for _, v := range types.ResourceScanType("").Values() {
+		o, _ := d.GetChange("resource_types")
+		for _, v := range flex.ExpandStringyValueSet[types.ResourceScanType](o.(*schema.Set)) {
 			if !slices.Contains(typeEnable, v) {
 				typeDisable = append(typeDisable, v)
 			}
@@ -350,9 +356,28 @@ func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.ResourceData, accountIDs []string) diag.Diagnostics {
 	var diags diag.Diagnostics
+
+	s, err := AccountStatuses(ctx, conn, accountIDs)
+	if err != nil {
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
+	}
+
+	var resourceTypes []types.ResourceScanType
+	for _, st := range s {
+		for k, a := range st.ResourceStatuses {
+			if a != types.StatusDisabled && !slices.Contains(resourceTypes, k) {
+				resourceTypes = append(resourceTypes, k)
+			}
+		}
+	}
+
+	if len(resourceTypes) == 0 {
+		return diags
+	}
+
 	in := &inspector2.DisableInput{
 		AccountIds:    accountIDs,
-		ResourceTypes: types.ResourceScanType("").Values(),
+		ResourceTypes: resourceTypes,
 	}
 
 	out, err := conn.Disable(ctx, in)
