@@ -2055,6 +2055,16 @@ resource "aws_sagemaker_domain" "test" {
   vpc_id      = aws_vpc.test.id
   subnet_ids  = aws_subnet.test[*].id
 
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+
   default_space_settings {
     execution_role = aws_iam_role.test.arn
 

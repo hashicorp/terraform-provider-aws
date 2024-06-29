@@ -51,6 +51,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"codeEditorAppSettings":                                   testAccDomain_codeEditorAppSettings,
 			"codeEditorAppSettings_customImage":                       testAccDomain_codeEditorAppSettings_customImage,
 			"codeEditorAppSettings_defaultResourceSpecAndCustomImage": testAccDomain_codeEditorAppSettings_defaultResourceSpecAndCustomImage,
+			"spaceSettingsJupyterLabAppSettings":                      testAccDomain_spaceSettingsJupyterLabAppSettings,
 			"jupyterLabAppSettings":                                   testAccDomain_jupyterLabAppSettings,
 			"kms":                                                     testAccDomain_kms,
 			"securityGroup":                                           testAccDomain_securityGroup,
