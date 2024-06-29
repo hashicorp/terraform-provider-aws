@@ -84,7 +84,7 @@ func resourceWebhook() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"scope": {
+						names.AttrScope: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -326,7 +326,7 @@ func expandScopeConfiguration(tfList []interface{}) *types.ScopeConfiguration {
 
 	apiObject := &types.ScopeConfiguration{
 		Name:  aws.String(m[names.AttrName].(string)),
-		Scope: types.WebhookScopeType(m["scope"].(string)),
+		Scope: types.WebhookScopeType(m[names.AttrScope].(string)),
 	}
 
 	if v, ok := m[names.AttrDomain].(string); ok && v != "" {
@@ -389,8 +389,8 @@ func flattenScopeConfiguration(apiObjects *types.ScopeConfiguration) map[string]
 	}
 
 	tfList := map[string]interface{}{
-		names.AttrName: apiObjects.Name,
-		"scope":        apiObjects.Scope,
+		names.AttrName:  apiObjects.Name,
+		names.AttrScope: apiObjects.Scope,
 	}
 
 	if apiObjects.Domain != nil {
