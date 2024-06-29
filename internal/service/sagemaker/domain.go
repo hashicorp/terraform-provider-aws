@@ -2434,7 +2434,7 @@ func flattenDefaultSpaceSettings(config *sagemaker.DefaultSpaceSettings) []map[s
 	}
 
 	if config.JupyterLabAppSettings != nil {
-		m["jupyter_lab_app_settings"] = flattenDomainJupyterLabAppSettings(config.JupyterServerAppSettings)
+		m["jupyter_lab_app_settings"] = flattenDomainJupyterLabAppSettings(config.JupyterLabAppSettings)
 	}
 
 	if config.JupyterServerAppSettings != nil {
