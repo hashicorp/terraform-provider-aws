@@ -114,6 +114,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.cidr_block", "192.168.0.0/22"),
 				),
 			},
 			{
@@ -125,6 +126,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_resourcesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource.0.cidr_block", "192.168.0.0/24"),
 				),
 			},
 		},
@@ -278,6 +280,7 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
   name = %[1]q
 
   resource {
+    cidr_block  = "192.168.0.0/22"
     endpoint_id = aws_lb.test.id
   }
 }
@@ -296,6 +299,7 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
   name = %[1]q
 
   resource {
+    cidr_block  = "192.168.0.0/24"
     endpoint_id = aws_eip.test.arn
   }
 }
