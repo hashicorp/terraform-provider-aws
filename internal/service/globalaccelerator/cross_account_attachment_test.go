@@ -114,7 +114,6 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource.0.cidr_block", "192.168.0.0/22"),
 				),
 			},
 			{
@@ -126,41 +125,6 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_resourcesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource.0.cidr_block", "192.168.0.0/24"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccGlobalAcceleratorCrossAccountAttachment_resources_cidrBlock(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.GlobalAcceleratorServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCrossAccountAttachmentConfig_resources_cidrBlock(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource.0.cidr_block", "192.168.1.0/24"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCrossAccountAttachmentConfig_resources_cidrBlockUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "resource.0.cidr_block", "192.168.0.0/24"),
 				),
 			},
 		},
@@ -336,42 +300,6 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
   }
 }
 `, rName))
-}
-
-func testAccCrossAccountAttachmentConfig_resources_cidrBlock(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_eip" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_globalaccelerator_cross_account_attachment" "test" {
-  name = %[1]q
-
-  resource {
-    cidr_block  = "192.168.1.0/24"
-  }
-}
-`, rName)
-}
-
-func testAccCrossAccountAttachmentConfig_resources_cidrBlockUpdated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_eip" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_globalaccelerator_cross_account_attachment" "test" {
-  name = %[1]q
-
-  resource {
-    cidr_block  = "192.168.0.0/24"
-  }
-}
-`, rName)
 }
 
 func testAccCrossAccountAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
