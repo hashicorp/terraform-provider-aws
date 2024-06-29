@@ -138,6 +138,11 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		return diags
 	}
 
+	if toFlattener, ok := to.(Flattener); ok {
+		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
+		return diags
+	}
+
 	opts := flexer.getOptions()
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
 		field := typFrom.Field(i)

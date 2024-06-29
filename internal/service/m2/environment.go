@@ -354,17 +354,6 @@ func (r *environmentResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	// AutoFlEx doesn't yet handle union types.
-	if output.StorageConfigurations != nil {
-		storageConfigurationsData, diags := flattenStorageConfigurations(ctx, output.StorageConfigurations)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		data.StorageConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, storageConfigurationsData)
-	}
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -609,6 +598,11 @@ type storageConfigurationModel struct {
 	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
 }
 
+var (
+	_ fwflex.Expander  = storageConfigurationModel{}
+	_ fwflex.Flattener = &storageConfigurationModel{}
+)
+
 func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
 	case !m.EFS.IsNull():
@@ -643,6 +637,39 @@ func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diag
 	}
 
 	return nil, diags
+}
+
+func (m *storageConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.StorageConfigurationMemberEfs:
+		var model efsStorageConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.EFS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		m.FSX = fwtypes.NewListNestedObjectValueOfNull[fsxStorageConfigurationModel](ctx)
+
+		return diags
+
+	case awstypes.StorageConfigurationMemberFsx:
+		var model fsxStorageConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.EFS = fwtypes.NewListNestedObjectValueOfNull[efsStorageConfigurationModel](ctx)
+		m.FSX = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	default:
+		return diags
+	}
 }
 
 type efsStorageConfigurationModel struct {

@@ -384,12 +384,26 @@ type testFlexTFInterfaceExpander struct {
 	Field1 types.String `tfsdk:"field1"`
 }
 
-var _ Expander = testFlexTFInterfaceExpander{}
+var (
+	_ Expander  = testFlexTFInterfaceExpander{}
+	_ Flattener = &testFlexTFInterfaceExpander{}
+)
 
 func (t testFlexTFInterfaceExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return &testFlexAWSInterfaceInterfaceImpl{
 		AWSField: t.Field1.ValueString(),
 	}, nil
+}
+
+func (t *testFlexTFInterfaceExpander) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case testFlexAWSInterfaceInterfaceImpl:
+		t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		return diags
+
+	default:
+		return diags
+	}
 }
 
 type testFlexTFInterfaceIncompatibleExpander struct {
@@ -428,28 +442,42 @@ var _ testFlexAWSInterfaceInterface = &testFlexAWSInterfaceInterfaceImpl{}
 
 func (t *testFlexAWSInterfaceInterfaceImpl) isTestFlexAWSInterfaceInterface() {} // nosemgrep:ci.aws-in-func-name
 
-type testFlexTFExpander struct {
+type testFlexTFFlexer struct {
 	Field1 types.String `tfsdk:"field1"`
 }
 
-var _ Expander = testFlexTFExpander{}
+var (
+	_ Expander  = testFlexTFFlexer{}
+	_ Flattener = &testFlexTFFlexer{}
+)
 
-func (t testFlexTFExpander) Expand(ctx context.Context) (any, diag.Diagnostics) {
+func (t testFlexTFFlexer) Expand(ctx context.Context) (any, diag.Diagnostics) {
 	return &testFlexAWSExpander{
 		AWSField: t.Field1.ValueString(),
 	}, nil
 }
 
+func (t *testFlexTFFlexer) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case testFlexAWSExpander:
+		t.Field1 = StringValueToFramework(ctx, val.AWSField)
+		return diags
+
+	default:
+		return diags
+	}
+}
+
 type testFlexTFExpanderListNestedObject struct {
-	Field1 fwtypes.ListNestedObjectValueOf[testFlexTFExpander] `tfsdk:"field1"`
+	Field1 fwtypes.ListNestedObjectValueOf[testFlexTFFlexer] `tfsdk:"field1"`
 }
 
 type testFlexTFExpanderSetNestedObject struct {
-	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFExpander] `tfsdk:"field1"`
+	Field1 fwtypes.SetNestedObjectValueOf[testFlexTFFlexer] `tfsdk:"field1"`
 }
 
 type testFlexTFExpanderObjectValue struct {
-	Field1 fwtypes.ObjectValueOf[testFlexTFExpander] `tfsdk:"field1"`
+	Field1 fwtypes.ObjectValueOf[testFlexTFFlexer] `tfsdk:"field1"`
 }
 
 type testFlexTFExpanderToString struct {
@@ -475,6 +503,7 @@ func (t testFlexTFExpanderToNil) Expand(ctx context.Context) (any, diag.Diagnost
 type testFlexAWSExpander struct {
 	AWSField string
 }
+
 type testFlexAWSExpanderIncompatible struct {
 	Incompatible int
 }

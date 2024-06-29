@@ -23,6 +23,11 @@ import (
 
 // Flatten = AWS --> TF
 
+// Flattener is implemented by types that customize their flattening
+type Flattener interface {
+	Flatten(ctx context.Context, v any) diag.Diagnostics
+}
+
 // Flatten "flattens" an AWS SDK for Go v2 API data structure into
 // a resource's "business logic" data structure, implemented using
 // Terraform Plugin Framework data types.
@@ -505,8 +510,13 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 		}
 
 	case reflect.Interface:
-		// Smithy union type handling not yet implemented. Silently skip.
-		return diags
+		if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+			//
+			// []interface -> types.List(OfObject).
+			//
+			diags.Append(flattener.sliceOfStructToNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -1019,4 +1029,14 @@ func newStringValueFromReflectPointerValue(v reflect.Value) attr.Value {
 	}
 
 	return newStringValueFromReflectValue(v.Elem())
+}
+
+func flattenFlattener(ctx context.Context, fromVal reflect.Value, toFlattener Flattener) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	from := fromVal.Interface()
+
+	diags.Append(toFlattener.Flatten(ctx, from)...)
+
+	return diags
 }
