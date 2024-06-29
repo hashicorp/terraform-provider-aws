@@ -20966,6 +20966,21 @@ var awsPartition = partition{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "ca-central-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "meetings-chime-fips.ca-central-1.amazonaws.com",
+				},
+				endpointKey{
+					Region: "ca-central-1-fips",
+				}: endpoint{
+					Hostname: "meetings-chime-fips.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
