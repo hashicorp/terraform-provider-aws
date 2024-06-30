@@ -296,7 +296,7 @@ The following arguments are optional:
 
 ### `task_properties`
 
-* `containers` - The properties of the container. See [containers](#ecs_containers) below.
+* `containers` - A list of containers. See [containers](#ecs_containers) below.
 * `ephemeral_storage` - (Optional) The ephemeral storage settings for the task. See [ephemeral_storage](#ephemeral_storage) below.
 * `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role that the AWS Batch can assume.
 * `ipc_mode` - (Optional) The IPC resource namespace to use for container in the task. The valid values are `host`, `task`, or `none`.
