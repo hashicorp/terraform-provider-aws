@@ -11,8 +11,8 @@ const (
 	IpcModeHost                                  = "host"
 	IpcModeTask                                  = "task"
 	IpcModeNone                                  = "none"
-	PicModeHost                                  = "host"
-	PicModeTask                                  = "task"
+	PidModeHost                                  = "host"
+	PidModeTask                                  = "task"
 	ResourceRequirementTypeGPU                   = "GPU"
 	ResourceRequirementTypeVCPU                  = "VCPU"
 	ResourceRequirementTypeMEMORY                = "MEMORY"
@@ -34,7 +34,7 @@ func IpcMode_Values() []string {
 }
 
 func PidMode_Values() []string {
-	return []string{PicModeHost, PicModeTask}
+	return []string{PidModeHost, PidModeTask}
 }
 
 func ResourceRequirementType_Values() []string {

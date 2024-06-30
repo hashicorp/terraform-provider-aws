@@ -301,7 +301,7 @@ The following arguments are optional:
 * `execution_role_arn` - (Optional) The Amazon Resource Name (ARN) of the IAM role that the AWS Batch can assume.
 * `ipc_mode` - (Optional) The IPC resource namespace to use for container in the task. The valid values are `host`, `task`, or `none`.
 * `network_configuration` - (Optional) The network configuration for the Amazon ECS task. See [network_configuration](#network_configuration) below.
-* `pic_mode` - (Optional) The process namespace to use for the container in the task. The valid values are `host` or `task`.
+* `pid_mode` - (Optional) The process namespace to use for the container in the task. The valid values are `host` or `task`.
 * `platform_version` - (Optional) The platform version on which to run your task. If one is not specified, the LATEST platform version is used by default.
 * `runtime_platform` - (Optional) The compute environment architecture for AWS Batch job on Fargate. See [runtime_platform](#runtime_platform) below.
 * `task_role_arn` - The Amazon Resource Name (ARN) of the IAM role that the Amazon ECS task..
