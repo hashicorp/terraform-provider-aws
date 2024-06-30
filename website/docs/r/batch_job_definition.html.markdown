@@ -134,7 +134,7 @@ resource "aws_batch_job_definition" "test" {
 }
 ```
 
-### Job Definitionn of type EKS
+### Job Definition of type container using `ecs_properties`
 
 ```terraform
 resource "aws_batch_job_definition" "test" {
