@@ -305,7 +305,7 @@ The following arguments are optional:
 * `platform_version` - (Optional) The platform version on which to run your task. If one is not specified, the LATEST platform version is used by default.
 * `runtime_platform` - (Optional) The compute environment architecture for AWS Batch job on Fargate. See [runtime_platform](#runtime_platform) below.
 * `task_role_arn` - The Amazon Resource Name (ARN) of the IAM role that the Amazon ECS task..
-* `volume` - (Optional) The volumes to mount on the container in the task. See [volume](#volume) below.
+* `volumes` - (Optional) The volumes to mount on the container in the task. See [volumes](#volumes) below.
 
 ### `containers`
 
