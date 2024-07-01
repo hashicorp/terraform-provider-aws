@@ -11,8 +11,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -242,9 +243,9 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 
 func TestAccELBLoadBalancer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -296,9 +297,9 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 
 func TestAccELBLoadBalancer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var loadBalancer elb.LoadBalancerDescription
+	var loadBalancer awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -320,8 +321,8 @@ func TestAccELBLoadBalancer_disappears(t *testing.T) {
 
 func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	var conf awstypes.LoadBalancerDescription
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -348,8 +349,8 @@ func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 
 func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	var conf awstypes.LoadBalancerDescription
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -376,9 +377,9 @@ func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 
 func TestAccELBLoadBalancer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -425,8 +426,8 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 
 func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	var conf awstypes.LoadBalancerDescription
+	resourceName := "aws_elasticloadbalancing.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -448,8 +449,8 @@ func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 
 func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	var conf awstypes.LoadBalancerDescription
+	resourceName := "aws_elasticloadbalancing.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -489,8 +490,8 @@ func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 
 func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
-	resourceName := "aws_elb.test"
+	var conf awstypes.LoadBalancerDescription
+	resourceName := "aws_elasticloadbalancing.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -528,9 +529,9 @@ func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 
 func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	generatedNameRegexp := regexache.MustCompile("^tf-lb-")
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -551,9 +552,9 @@ func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 
 func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -582,11 +583,11 @@ func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 
 func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	testCheck := func(*terraform.State) error {
 		if len(conf.ListenerDescriptions) != 1 {
@@ -624,9 +625,9 @@ func TestAccELBLoadBalancer_ListenerSSLCertificateID_iamServerCertificate(t *tes
 
 func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -644,15 +645,15 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_subnetSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
-					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", acctest.Ct2),
+					testAccCheckLoadBalancerExists(ctx, "aws_elasticloadbalancing.test", &conf),
+					resource.TestCheckResourceAttr("aws_elasticloadbalancing.test", "subnets.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetCompleteSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
-					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", acctest.Ct2),
+					testAccCheckLoadBalancerExists(ctx, "aws_elasticloadbalancing.test", &conf),
+					resource.TestCheckResourceAttr("aws_elasticloadbalancing.test", "subnets.#", acctest.Ct2),
 				),
 			},
 		},
@@ -661,9 +662,9 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 
 func TestAccELBLoadBalancer_instanceAttaching(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	testCheckInstanceAttached := func(count int) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -701,9 +702,9 @@ func TestAccELBLoadBalancer_instanceAttaching(t *testing.T) {
 
 func TestAccELBLoadBalancer_listener(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -772,12 +773,12 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener removal
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
-					input := &elb.DeleteLoadBalancerListenersInput{
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+					input := &elasticloadbalancing.DeleteLoadBalancerListenersInput{
 						LoadBalancerName:  conf.LoadBalancerName,
-						LoadBalancerPorts: []*int64{aws.Int64(80)},
+						LoadBalancerPorts: []int32{80},
 					}
-					if _, err := conn.DeleteLoadBalancerListenersWithContext(ctx, input); err != nil {
+					if _, err := conn.DeleteLoadBalancerListeners(ctx, input); err != nil {
 						t.Fatalf("Error deleting listener: %s", err)
 					}
 				},
@@ -796,19 +797,19 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Simulate out of band listener addition
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
-					input := &elb.CreateLoadBalancerListenersInput{
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
+					input := &elasticloadbalancing.CreateLoadBalancerListenersInput{
 						LoadBalancerName: conf.LoadBalancerName,
-						Listeners: []*elb.Listener{
+						Listeners: []awstypes.Listener{
 							{
-								InstancePort:     aws.Int64(22),
+								InstancePort:     aws.Int32(22),
 								InstanceProtocol: aws.String("tcp"),
-								LoadBalancerPort: aws.Int64(22),
+								LoadBalancerPort: int32(22),
 								Protocol:         aws.String("tcp"),
 							},
 						},
 					}
-					if _, err := conn.CreateLoadBalancerListenersWithContext(ctx, input); err != nil {
+					if _, err := conn.CreateLoadBalancerListeners(ctx, input); err != nil {
 						t.Fatalf("Error creating listener: %s", err)
 					}
 				},
@@ -830,9 +831,9 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 
 func TestAccELBLoadBalancer_healthCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elb.LoadBalancerDescription
+	var conf awstypes.LoadBalancerDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -861,7 +862,7 @@ func TestAccELBLoadBalancer_healthCheck(t *testing.T) {
 func TestAccELBLoadBalancer_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -888,7 +889,7 @@ func TestAccELBLoadBalancer_timeout(t *testing.T) {
 func TestAccELBLoadBalancer_connectionDraining(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -923,7 +924,7 @@ func TestAccELBLoadBalancer_connectionDraining(t *testing.T) {
 func TestAccELBLoadBalancer_securityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -952,7 +953,7 @@ func TestAccELBLoadBalancer_securityGroups(t *testing.T) {
 func TestAccELBLoadBalancer_desyncMitigationMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -978,7 +979,7 @@ func TestAccELBLoadBalancer_desyncMitigationMode(t *testing.T) {
 func TestAccELBLoadBalancer_desyncMitigationMode_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_elb.test"
+	resourceName := "aws_elasticloadbalancing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1020,7 +1021,7 @@ func TestAccELBLoadBalancer_desyncMitigationMode_update(t *testing.T) {
 
 func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elb" {
@@ -1044,7 +1045,7 @@ func testAccCheckLoadBalancerDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckLoadBalancerExists(ctx context.Context, n string, v *elb.LoadBalancerDescription) resource.TestCheckFunc {
+func testAccCheckLoadBalancerExists(ctx context.Context, n string, v *awstypes.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1055,7 +1056,7 @@ func testAccCheckLoadBalancerExists(ctx context.Context, n string, v *elb.LoadBa
 			return fmt.Errorf("No ELB Classic Load Balancer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		output, err := tfelb.FindLoadBalancerByName(ctx, conn, rs.Primary.ID)
 
@@ -1069,12 +1070,12 @@ func testAccCheckLoadBalancerExists(ctx context.Context, n string, v *elb.LoadBa
 	}
 }
 
-func testAccCheckLoadBalancerAttributes(conf *elb.LoadBalancerDescription) resource.TestCheckFunc {
+func testAccCheckLoadBalancerAttributes(conf *awstypes.LoadBalancerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		l := elb.Listener{
-			InstancePort:     aws.Int64(8000),
+		l := awstypes.Listener{
+			InstancePort:     aws.Int32(8000),
 			InstanceProtocol: aws.String("HTTP"),
-			LoadBalancerPort: aws.Int64(80),
+			LoadBalancerPort: int32(80),
 			Protocol:         aws.String("HTTP"),
 		}
 
@@ -1306,7 +1307,7 @@ resource "aws_elb" "test" {
 
 # See https://github.com/hashicorp/terraform-provider-aws/issues/2498
 output "lb_name" {
-  value = aws_elb.test.name
+  value = aws_elasticloadbalancing.test.name
 }
 `)
 
