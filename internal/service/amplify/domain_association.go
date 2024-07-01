@@ -190,7 +190,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
 	}
-	if err := d.Set("certificate_settings", []interface{}{flattenCertificateSettings(domainAssociation.Certificate)}); err != nil {
+	if err := d.Set("certificate_settings", flattenCertificateSettings(domainAssociation.Certificate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_settings: %s", err)
 	}
 
@@ -436,7 +436,7 @@ func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateS
 	return apiObject
 }
 
-func flattenCertificateSettings(apiObject *types.Certificate) map[string]interface{} {
+func flattenCertificateSettings(apiObject *types.Certificate) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -452,7 +452,7 @@ func flattenCertificateSettings(apiObject *types.Certificate) map[string]interfa
 		tfMap["custom_certificate_arn"] = aws.ToString(v)
 	}
 
-	return tfMap
+	return []interface{}{tfMap}
 }
 
 func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
