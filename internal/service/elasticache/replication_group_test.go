@@ -1313,6 +1313,62 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg elasticache.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "disabled", false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.Ct2),
+				),
+			},
+			{
+				Config: testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, "compatible", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode", "compatible"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.Ct2),
+				),
+			},
+			{
+				Config: testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, names.AttrEnabled, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "cluster_mode", names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.Ct2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3548,6 +3604,30 @@ resource "aws_elasticache_replication_group" "test" {
   replicas_per_node_group    = 0
 }
 `, rName),
+	)
+}
+
+func testAccReplicationGroup_ClusterMode_updateFromDisabled_Compatible_Enabled(rName, clusterMode string, enableClusterMode bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t2.medium"
+  apply_immediately          = true
+  automatic_failover_enabled = true
+  cluster_mode               = %[2]q
+  engine_version             = "7.1"
+  parameter_group_name       = tobool("%[3]t") ? "default.redis7.cluster.on" : "default.redis7"
+  num_node_groups            = 1
+  replicas_per_node_group    = 1
+  timeouts {
+    create = "60m"
+    update = "60m"
+  }
+}
+`, rName, clusterMode, enableClusterMode),
 	)
 }
 
