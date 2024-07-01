@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
+	elb_sdkv1 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/go-cty/cty"
@@ -332,7 +332,7 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
-	client := meta.ELBConn(ctx)
+	client := meta.ELBClient(ctx)
 
 	req, _ := client.DescribeLoadBalancersRequest(&elb_sdkv1.DescribeLoadBalancersInput{})
 
