@@ -27,7 +27,7 @@ func TestAccImageDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppstreamImageDataSourceConfig_basic(),
+				Config: testAccImageDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 
 					resource.TestCheckResourceAttrSet(dataSourceName, "applications.#"),
