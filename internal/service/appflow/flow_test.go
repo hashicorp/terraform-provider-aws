@@ -147,6 +147,34 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(6hours)"),
 				),
 			},
+			{
+				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusActive),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Complete"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(6hours)"),
+					resource.TestCheckResourceAttr(resourceName, "flow_status", "Active"),
+				),
+			},
+			{
+				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusSuspended),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Complete"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(6hours)"),
+					resource.TestCheckResourceAttr(resourceName, "flow_status", "Suspended"),
+				),
+			},
 		},
 	})
 }
@@ -278,6 +306,51 @@ func TestAccAppFlowFlow_task_mapAll(t *testing.T) {
 			{
 				Config:   testAccFlowConfig_task_mapAll(rName),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAppFlowFlow_createWithActiveFlowStatus(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowOutput types.FlowDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_flow.test"
+	description := "test description"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusActive),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Complete"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(6hours)"),
+					resource.TestCheckResourceAttr(resourceName, "flow_status", "Active"),
+				),
+			},
+			{
+				Config: testAccFlowConfig_updateFlowStatus(rName, description, types.FlowStatusSuspended),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Complete"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(6hours)"),
+					resource.TestCheckResourceAttr(resourceName, "flow_status", "Suspended"),
+				),
 			},
 		},
 	})
@@ -568,6 +641,65 @@ resource "aws_appflow_flow" "test" {
   }
 }
 `, rName, description),
+	)
+}
+
+func testAccFlowConfig_updateFlowStatus(rName, description string, flowStatus types.FlowStatus) string {
+	return acctest.ConfigCompose(
+		testAccFlowConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_appflow_flow" "test" {
+  name        = %[1]q
+  description = %[2]q
+  flow_status = %[3]q
+
+  source_flow_config {
+    connector_type = "S3"
+    source_connector_properties {
+      s3 {
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type = "S3"
+    destination_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_destination.bucket
+
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+        }
+      }
+    }
+  }
+
+  task {
+    source_fields     = ["testField"]
+    destination_field = "testField"
+    task_type         = "Map"
+
+    connector_operator {
+      s3 = "NO_OP"
+    }
+  }
+
+  trigger_config {
+    trigger_type = "Scheduled"
+
+    trigger_properties {
+      scheduled {
+        data_pull_mode      = "Complete"
+        schedule_expression = "rate(6hours)"
+      }
+    }
+  }
+}
+`, rName, description, flowStatus),
 	)
 }
 
