@@ -52,7 +52,7 @@ func TestAccImageDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAppstreamImageDataSourceConfig_basic() string {
+func testAccImageDataSourceConfig_basic() string {
 	return (`
 data "aws_appstream_image" "test" {
   name        = "AppStream-WinServer2019-06-17-2024"
