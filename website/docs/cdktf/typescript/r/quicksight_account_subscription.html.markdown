@@ -56,6 +56,7 @@ The following arguments are optional:
 * `directoryId` - (Optional) Active Directory ID that is associated with your Amazon QuickSight account.
 * `emailAddress` - (Optional) Email address of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `firstName` - (Optional) First name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
+* `iamIdentityCenterInstanceArn` - (Optional) The Amazon Resource Name (ARN) for the IAM Identity Center instance.
 * `lastName` - (Optional) Last name of the author of the Amazon QuickSight account to use for future communications. This field is required if `ENTERPPRISE_AND_Q` is the selected edition of the new Amazon QuickSight account.
 * `readerGroup` - (Optional) Reader group associated with your Active Direcrtory.
 * `realm` - (Optional) Realm of the Active Directory that is associated with your Amazon QuickSight account.
@@ -77,4 +78,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import this resource.
 
-<!-- cache-key: cdktf-0.20.1 input-263024d0a0cd87af2bb2dde605ea571666d2674cbefeccb3e8334a4f7c925686 -->
+<!-- cache-key: cdktf-0.20.1 input-6814e7a35693f8c5c6631a3a5eae738a826b652a72b3cfb8a4b0731b50c2c7fb -->

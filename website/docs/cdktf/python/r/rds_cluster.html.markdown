@@ -291,7 +291,7 @@ the AWS official documentation :
 * [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html)
 * [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `allocated_storage` - (Optional, Required for Multi-AZ DB cluster) The amount of storage in gibibytes (GiB) to allocate to each DB instance in the Multi-AZ DB cluster.
 * `allow_major_version_upgrade` - (Optional) Enable to allow major engine version upgrades when changing engine versions. Defaults to `false`.
@@ -565,4 +565,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b76aaa59625a3217368da3a4df184e9d4b6cd7cd65399a0c6ee0de5bab063c0f -->
+<!-- cache-key: cdktf-0.20.1 input-4aa8b7ab5177f43e0123092bcb7fcd25b90ce3aa7103428fa9b42656f0208fe7 -->
