@@ -94,7 +94,7 @@ func findSlackWorkspaceByName(ctx context.Context, conn *chatbot.Client, slack_t
 		}
 		input.NextToken = output.NextToken
 	}
-	// If we are here, then we need to return an error that the data source was not found.
+	// If we are here, then we need to return an error that the slack workspace was not found.
 	return nil, create.Error(names.Chatbot, "missing", DSNameSlackWorkspace, slack_team_name, nil)
 }
 
