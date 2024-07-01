@@ -23,7 +23,7 @@ func DataSourceComputeEnvironment() *schema.Resource {
 		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,
 
 		Schema: map[string]*schema.Schema{
-			"compute_environment_name": {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -89,24 +89,24 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	params := &batch.DescribeComputeEnvironmentsInput{
-		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
+		ComputeEnvironments: []*string{aws.String(d.Get("name").(string))},
 	}
 	desc, err := conn.DescribeComputeEnvironmentsWithContext(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", d.Get("compute_environment_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", d.Get("name").(string), err)
 	}
 
 	if l := len(desc.ComputeEnvironments); l == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): empty response", d.Get("compute_environment_name").(string))
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): empty response", d.Get("name").(string))
 	} else if l > 1 {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): too many results: wanted 1, got %d", d.Get("compute_environment_name").(string), l)
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): too many results: wanted 1, got %d", d.Get("name").(string), l)
 	}
 
 	computeEnvironment := desc.ComputeEnvironments[0]
 	d.SetId(aws.StringValue(computeEnvironment.ComputeEnvironmentArn))
 	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
-	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
+	d.Set("name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
 	d.Set(names.AttrServiceRole, computeEnvironment.ServiceRole)
 	d.Set(names.AttrType, computeEnvironment.Type)
