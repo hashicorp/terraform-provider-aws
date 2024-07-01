@@ -447,6 +447,19 @@ func StringToIntValue(v *string) int {
 	return i
 }
 
+// StringValueToInt32 converts a string to a Go int32 pointer.
+// Invalid integer strings are converted to 0.
+func StringValueToInt32(v string) *int32 {
+	return aws.Int32(StringValueToInt32Value(v))
+}
+
+// StringValueToInt32Value converts a string to a Go int32 value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt32Value(v string) int32 {
+	i, _ := strconv.ParseInt(v, 0, 32)
+	return int32(i)
+}
+
 // StringToInt32Value converts a string pointer to a Go int32 value.
 // Invalid integer strings are converted to 0.
 func StringToInt32Value(v *string) int32 {

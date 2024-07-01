@@ -8,9 +8,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -184,16 +184,17 @@ func DataSourceTargetGroup() *schema.Resource {
 
 func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
+	partition := meta.(*conns.AWSClient).Partition
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	input := &elbv2.DescribeTargetGroupsInput{}
+	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{}
 
 	if v, ok := d.GetOk(names.AttrARN); ok {
-		input.TargetGroupArns = aws.StringSlice([]string{v.(string)})
+		input.TargetGroupArns = []string{v.(string)}
 	} else if v, ok := d.GetOk(names.AttrName); ok {
-		input.Names = aws.StringSlice([]string{v.(string)})
+		input.Names = []string{v.(string)}
 	}
 
 	results, err := findTargetGroups(ctx, conn, input)
@@ -203,13 +204,13 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if len(tagsToMatch) > 0 {
-		var targetGroups []*elbv2.TargetGroup
+		var targetGroups []awstypes.TargetGroup
 
 		for _, targetGroup := range results {
 			arn := aws.StringValue(targetGroup.TargetGroupArn)
 			tags, err := listTags(ctx, conn, arn)
 
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+			if errs.IsA[*awstypes.TargetGroupNotFoundException](err) {
 				continue
 			}
 
@@ -235,26 +236,26 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
 	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	d.Set("load_balancer_arns", flex.FlattenStringSet(targetGroup.LoadBalancerArns))
+	d.Set("load_balancer_arns", flex.FlattenStringValueSet(targetGroup.LoadBalancerArns))
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
 
-	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(targetGroup)); err != nil {
+	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(&targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
-	targetType := aws.StringValue(targetGroup.TargetType)
+	targetType := string(targetGroup.TargetType)
 	d.Set("target_type", targetType)
 
 	var protocol string
-	if targetType != elbv2.TargetTypeEnumLambda {
+	if targetType != string(awstypes.TargetTypeEnumLambda) {
 		d.Set(names.AttrPort, targetGroup.Port)
-		protocol = aws.StringValue(targetGroup.Protocol)
+		protocol = string(targetGroup.Protocol)
 		d.Set(names.AttrProtocol, protocol)
 		d.Set(names.AttrVPCID, targetGroup.VpcId)
 	}
-	switch protocol {
-	case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+	switch targetGroup.Protocol {
+	case awstypes.ProtocolEnumHttp, awstypes.ProtocolEnumHttps:
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
@@ -272,7 +273,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	tags, err := listTags(ctx, conn, d.Id())
 
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
 		return diags
 	}

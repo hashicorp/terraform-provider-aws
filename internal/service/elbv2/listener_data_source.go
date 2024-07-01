@@ -351,7 +351,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
-	tags, err := listTagsV2(ctx, conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)

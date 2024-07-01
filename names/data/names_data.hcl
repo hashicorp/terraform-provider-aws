@@ -3500,7 +3500,7 @@ service "elbv2" {
 
   sdk {
     id             = "Elastic Load Balancing v2"
-    client_version = [1, 2]
+    client_version = [2]
   }
 
   names {

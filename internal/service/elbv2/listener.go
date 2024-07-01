@@ -421,7 +421,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	lbARN := d.Get("load_balancer_arn").(string)
 	input := &elasticloadbalancingv2.CreateListenerInput{
 		LoadBalancerArn: aws.String(lbARN),
-		Tags:            getTagsInV2(ctx),
+		Tags:            getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("alpn_policy"); ok {
@@ -492,8 +492,8 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := getTagsInV2(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTagsV2(ctx, conn, d.Id(), tags)
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
 		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {

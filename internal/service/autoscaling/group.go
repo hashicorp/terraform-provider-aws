@@ -16,8 +16,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	elasticloadbalancingv2types "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -1211,7 +1212,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				return nil
 			}
 
-			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
+			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Client(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 			}
 		}
@@ -1708,7 +1709,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					return nil
 				}
 
-				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
+				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Client(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 				}
 			}
@@ -1999,16 +2000,16 @@ func findELBInstanceStates(ctx context.Context, conn *elb.ELB, g *awstypes.AutoS
 	return instanceStates, nil
 }
 
-func findELBV2InstanceStates(ctx context.Context, conn *elbv2.ELBV2, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
+func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.Client, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
 	instanceStates := make(map[string]map[string]string)
 
 	for _, v := range g.TargetGroupARNs {
 		targetGroupARN := v
-		input := &elbv2.DescribeTargetHealthInput{
+		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: aws.String(targetGroupARN),
 		}
 
-		output, err := conn.DescribeTargetHealthWithContext(ctx, input)
+		output, err := conn.DescribeTargetHealth(ctx, input)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading target group (%s) instance health: %w", targetGroupARN, err)
@@ -2025,7 +2026,7 @@ func findELBV2InstanceStates(ctx context.Context, conn *elbv2.ELBV2, g *awstypes
 			if instanceID == "" {
 				continue
 			}
-			state := aws.ToString(v.TargetHealth.State)
+			state := string(v.TargetHealth.State)
 			if state == "" {
 				continue
 			}
@@ -2284,7 +2285,7 @@ func findWarmPoolByName(ctx context.Context, conn *autoscaling.Client, name stri
 	return findWarmPool(ctx, conn, input)
 }
 
-func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
+func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elb.ELB, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		if !ignoreFailedScalingActivities {
 			// Check for fatal error in activity logs.
@@ -2367,7 +2368,7 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn 
 
 			if inAll {
 				for _, v := range targetGroupInstanceStates {
-					if state, ok := v[instanceID]; ok && state != elbv2.TargetHealthStateEnumHealthy {
+					if state, ok := v[instanceID]; ok && state != string(elasticloadbalancingv2types.TargetHealthStateEnumHealthy) {
 						inAll = false
 						break
 					}
@@ -2539,7 +2540,7 @@ func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.Client, 
 	}
 }
 
-func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool, timeout time.Duration) error {
+func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, elbconn *elb.ELB, elbv2conn *elasticloadbalancingv2.Client, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"ok"},
 		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, cb, startTime, ignoreFailedScalingActivities),

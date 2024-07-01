@@ -6,6 +6,8 @@ package elbv2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -39,10 +41,10 @@ const (
 func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	results, err := findLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})
+	results, err := findLoadBalancers(ctx, conn, &elasticloadbalancingv2.DescribeLoadBalancersInput{})
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
@@ -50,7 +52,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if len(tagsToMatch) > 0 {
-		var loadBalancers []*elbv2.LoadBalancer
+		var loadBalancers []awstypes.LoadBalancer
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
