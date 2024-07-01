@@ -204,9 +204,7 @@ func findImages(ctx context.Context, conn *appstream.Client, input *appstream.De
 		}
 
 		output = append(output, page.Images...)
-
 	}
 
 	return output, nil
-
 }
