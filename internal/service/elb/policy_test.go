@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/elb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccELBPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -44,7 +44,7 @@ func TestAccELBPolicy_basic(t *testing.T) {
 
 func TestAccELBPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -68,7 +68,7 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 
 func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyTypeName := "LBCookieStickinessPolicyType"
@@ -93,7 +93,7 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *tes
 
 func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -117,7 +117,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 
 func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -167,7 +167,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 
 func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	predefinedSecurityPolicy := "ELBSecurityPolicy-TLS-1-2-2017-01"
@@ -209,7 +209,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 
 func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	ctx := acctest.Context(t)
-	var policy elb.PolicyDescription
+	var policy awstypes.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
@@ -235,7 +235,7 @@ func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string, v *elb.PolicyDescription) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -252,7 +252,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *elb.PolicyDescri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		output, err := tfelb.FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
@@ -268,7 +268,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *elb.PolicyDescri
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_load_balancer_policy" {
@@ -317,7 +317,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_elb.test-lb.name
+  load_balancer_name = aws_awstypes.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -350,7 +350,7 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_load_balancer_policy" "test" {
-  load_balancer_name = aws_elb.test.name
+  load_balancer_name = aws_awstypes.test.name
   policy_name        = %[1]q
   policy_type_name   = %[2]q
 }
@@ -376,7 +376,7 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_load_balancer_policy" "test" {
-  load_balancer_name = aws_elb.test.name
+  load_balancer_name = aws_awstypes.test.name
   policy_name        = %[1]q
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -412,7 +412,7 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_load_balancer_policy" "test" {
-  load_balancer_name = aws_elb.test.name
+  load_balancer_name = aws_awstypes.test.name
   policy_name        = %[1]q
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -443,7 +443,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_elb.test-lb.name
+  load_balancer_name = aws_awstypes.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -454,7 +454,7 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = aws_elb.test-lb.name
+  load_balancer_name = aws_awstypes.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
@@ -483,7 +483,7 @@ resource "aws_elb" "test-lb" {
 }
 
 resource "aws_load_balancer_policy" "test-policy" {
-  load_balancer_name = aws_elb.test-lb.name
+  load_balancer_name = aws_awstypes.test-lb.name
   policy_name        = "test-policy-%[1]d"
   policy_type_name   = "AppCookieStickinessPolicyType"
 
@@ -494,7 +494,7 @@ resource "aws_load_balancer_policy" "test-policy" {
 }
 
 resource "aws_load_balancer_listener_policy" "test-lb-test-policy-80" {
-  load_balancer_name = aws_elb.test-lb.name
+  load_balancer_name = aws_awstypes.test-lb.name
   load_balancer_port = 80
 
   policy_names = [
