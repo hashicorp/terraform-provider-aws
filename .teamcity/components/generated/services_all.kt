@@ -65,7 +65,6 @@ val services = mapOf(
     "costoptimizationhub" to ServiceSpec("Cost Optimization Hub"),
     "cur" to ServiceSpec("Cost and Usage Report", regionOverride = "us-east-1"),
     "customerprofiles" to ServiceSpec("Connect Customer Profiles"),
-    "databrew" to ServiceSpec("DataBrew"),
     "databrew" to ServiceSpec("Glue DataBrew"),
     "dataexchange" to ServiceSpec("Data Exchange"),
     "datapipeline" to ServiceSpec("Data Pipeline"),

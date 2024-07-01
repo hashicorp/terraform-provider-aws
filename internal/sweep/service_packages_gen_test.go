@@ -316,7 +316,6 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		cur.ServicePackage(ctx),
 		customerprofiles.ServicePackage(ctx),
 		databrew.ServicePackage(ctx),
-		databrew.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),

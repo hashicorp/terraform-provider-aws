@@ -2661,32 +2661,6 @@ service "cur" {
   brand                    = "AWS"
 }
 
-service "databrew" {
-
-  sdk {
-    id             = "DataBrew"
-    client_version = [2]
-  }
-
-  names {
-    provider_name_upper = "DataBrew"
-    human_friendly      = "DataBrew"
-  }
-
-  endpoint_info {
-    endpoint_api_call = "ListProjects"
-  }
-
-  resource_prefix {
-    correct = "aws_databrew_"
-  }
-
-  provider_package_correct = "databrew"
-  doc_prefix               = ["databrew_"]
-  brand                    = "AWS"
-}
-
-
 service "dataexchange" {
 
   sdk {
@@ -4276,14 +4250,9 @@ service "glue" {
 
 service "databrew" {
 
-  go_packages {
-    v1_package = "gluedatabrew"
-    v2_package = "databrew"
-  }
-
   sdk {
     id             = "DataBrew"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
@@ -4292,8 +4261,8 @@ service "databrew" {
     human_friendly      = "Glue DataBrew"
   }
 
-  client {
-    go_v1_client_typename = "GlueDataBrew"
+  endpoint_info {
+    endpoint_api_call = "ListProjects"
   }
 
   resource_prefix {
@@ -4303,7 +4272,6 @@ service "databrew" {
   provider_package_correct = "databrew"
   doc_prefix               = ["databrew_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "groundstation" {

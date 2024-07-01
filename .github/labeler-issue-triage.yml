@@ -197,8 +197,6 @@ service/customerprofiles:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_customerprofiles_'
 service/databrew:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_databrew_'
-service/databrew:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_databrew_'
 service/dataexchange:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dataexchange_'
 service/datapipeline:
