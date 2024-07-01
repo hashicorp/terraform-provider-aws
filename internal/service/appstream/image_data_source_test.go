@@ -8,11 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAppStreamImageDataSource_basic(t *testing.T) {
+func TestAccImageDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

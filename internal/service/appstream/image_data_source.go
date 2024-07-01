@@ -11,21 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -158,7 +152,7 @@ func (d *dataSourceImage) Schema(ctx context.Context, req datasource.SchemaReque
 					CustomType: timetypes.RFC3339Type{},
 					Computed:   true,
 				},
-				"state": schema.StringAttribute{
+				names.AttrState: schema.StringAttribute{
 					Computed: true,
 				},
 				"state_change_reason": schema.ListAttribute{
