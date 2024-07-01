@@ -187,6 +187,7 @@ The following arguments are optional:
 * `object_lock_mode` - (Optional) Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) that you want to apply to this object. Valid values are `GOVERNANCE` and `COMPLIANCE`.
 * `object_lock_retain_until_date` - (Optional) Date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
 * `override_provider` - (Optional) Override provider-level configuration options. See [Override Provider](#override-provider) below for more details.
+* `refresh_content` - (Optional, conflicts with `content_base64` and `source`) Whether to include object content when refreshing the state of the resource. Default value is `false`. This value should be set to `true` only if the expected content is a human-readable string.
 * `server_side_encryption` - (Optional) Server-side encryption of the object in S3. Valid values are "`AES256`" and "`aws:kms`".
 * `source_hash` - (Optional) Triggers updates like `etag` but useful to address `etag` encryption limitations. Set using `filemd5("path/to/source")` (Terraform 0.11.12 or later). (The value is only stored in state and not saved by AWS.)
 * `source` - (Optional, conflicts with `content` and `content_base64`) Path to a file that will be read and uploaded as raw bytes for the object content.
