@@ -16,7 +16,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
@@ -1211,7 +1211,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				return nil
 			}
 
-			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
+			if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBClient(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 			}
 		}
@@ -1708,7 +1708,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					return nil
 				}
 
-				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBConn(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
+				if err := waitGroupCapacitySatisfied(ctx, conn, meta.(*conns.AWSClient).ELBClient(ctx), meta.(*conns.AWSClient).ELBV2Conn(ctx), d.Id(), f, startTime, d.Get("ignore_failed_scaling_activities").(bool), timeout); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Group (%s) capacity satisfied: %s", d.Id(), err)
 				}
 			}
@@ -1965,16 +1965,16 @@ func drainWarmPool(ctx context.Context, conn *autoscaling.Client, name string, t
 	return nil
 }
 
-func findELBInstanceStates(ctx context.Context, conn *elb.ELB, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
+func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Client, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
 	instanceStates := make(map[string]map[string]string)
 
 	for _, v := range g.LoadBalancerNames {
 		lbName := v
-		input := &elb.DescribeInstanceHealthInput{
+		input := &elasticloadbalancing.DescribeInstanceHealthInput{
 			LoadBalancerName: aws.String(lbName),
 		}
 
-		output, err := conn.DescribeInstanceHealthWithContext(ctx, input)
+		output, err := conn.DescribeInstanceHealth(ctx, input)
 
 		if err != nil {
 			return nil, fmt.Errorf("reading load balancer (%s) instance health: %w", lbName, err)
@@ -2284,7 +2284,7 @@ func findWarmPoolByName(ctx context.Context, conn *autoscaling.Client, name stri
 	return findWarmPool(ctx, conn, input)
 }
 
-func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
+func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		if !ignoreFailedScalingActivities {
 			// Check for fatal error in activity logs.
@@ -2539,7 +2539,7 @@ func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.Client, 
 	}
 }
 
-func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool, timeout time.Duration) error {
+func waitGroupCapacitySatisfied(ctx context.Context, conn *autoscaling.Client, elbconn *elasticloadbalancing.Client, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{"ok"},
 		Refresh: statusGroupCapacity(ctx, conn, elbconn, elbv2conn, name, cb, startTime, ignoreFailedScalingActivities),
