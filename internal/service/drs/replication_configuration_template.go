@@ -5,7 +5,6 @@ package drs
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,14 +14,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -61,7 +63,11 @@ func (r *replicationConfigurationTemplateResource) Schema(ctx context.Context, r
 				Required: true,
 			},
 			"auto_replicate_new_disks": schema.BoolAttribute{
+				Computed: true,
 				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"bandwidth_throttling": schema.Int64Attribute{
 				Required: true,
@@ -152,7 +158,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 	conn := r.Meta().DRSClient(ctx)
 
 	input := &drs.CreateReplicationConfigurationTemplateInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -161,7 +167,7 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 
 	_, err := conn.CreateReplicationConfigurationTemplate(ctx, input)
 	if err != nil {
-		response.Diagnostics.AddError("creating DRS Replication Configuration Template", err.Error())
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionCreating, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
@@ -169,12 +175,12 @@ func (r *replicationConfigurationTemplateResource) Create(ctx context.Context, r
 	output, err := waitReplicationConfigurationTemplateAvailable(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for DRS Replication Configuration Template (%s) create", data.ID.ValueString()), err.Error())
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionWaitingForCreation, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -201,12 +207,12 @@ func (r *replicationConfigurationTemplateResource) Read(ctx context.Context, req
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Replication Configuration Template (%s)", data.ID.ValueString()), err.Error())
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionReading, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -230,20 +236,20 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 	if replicationConfigurationTemplateHasChanges(ctx, new, old) {
 		input := &drs.UpdateReplicationConfigurationTemplateInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		_, err := conn.UpdateReplicationConfigurationTemplate(ctx, input)
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating DRS Replication Configuration Template (%s)", new.ID.ValueString()), err.Error())
+			create.AddError(&response.Diagnostics, names.DRS, create.ErrActionUpdating, ResNameReplicationConfigurationTemplate, new.ID.ValueString(), err)
 
 			return
 		}
 
 		if _, err := waitReplicationConfigurationTemplateAvailable(ctx, conn, old.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for DRS Replication Configuration Template (%s) update", new.ID.ValueString()), err.Error())
+			create.AddError(&response.Diagnostics, names.DRS, create.ErrActionWaitingForUpdate, ResNameReplicationConfigurationTemplate, new.ID.ValueString(), err)
 
 			return
 		}
@@ -251,12 +257,12 @@ func (r *replicationConfigurationTemplateResource) Update(ctx context.Context, r
 
 	output, err := findReplicationConfigurationTemplateByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading DRS Replication Configuration Template (%s)", old.ID.ValueString()), err.Error())
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionUpdating, ResNameReplicationConfigurationTemplate, old.ID.ValueString(), err)
 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+	response.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResPrefixReplicationConfigurationTemplate), output, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -290,13 +296,13 @@ func (r *replicationConfigurationTemplateResource) Delete(ctx context.Context, r
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting DRS Replication Configuration Template (%s)", data.ID.ValueString()), err.Error())
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionDeleting, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
 
 	if _, err := waitReplicationConfigurationTemplateDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for DRS Replication Configuration Template (%s) delete", data.ID.ValueString()), err.Error())
+		create.AddError(&response.Diagnostics, names.DRS, create.ErrActionWaitingForDeletion, ResNameReplicationConfigurationTemplate, data.ID.ValueString(), err)
 
 		return
 	}
@@ -342,7 +348,7 @@ func findReplicationConfigurationTemplates(ctx context.Context, conn *drs.Client
 
 func findReplicationConfigurationTemplateByID(ctx context.Context, conn *drs.Client, id string) (*awstypes.ReplicationConfigurationTemplate, error) {
 	input := &drs.DescribeReplicationConfigurationTemplatesInput{
-		ReplicationConfigurationTemplateIDs: []string{id},
+		//ReplicationConfigurationTemplateIDs: []string{id}, // Uncomment when SDK supports this, currently MAX of 1 so you find it anyway
 	}
 
 	return findReplicationConfigurationTemplate(ctx, conn, input)

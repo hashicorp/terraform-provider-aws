@@ -1,12 +1,12 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.22.2
+go 1.22.4
 
 require (
 	github.com/YakDriver/tfproviderdocs v0.13.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.59.1
-	github.com/hashicorp/copywrite v0.18.0
+	github.com/hashicorp/copywrite v0.19.0
 	github.com/hashicorp/go-changelog v0.0.0-20240306190400-974418b4aaa3
 	github.com/katbyte/terrafmt v0.5.3
 	github.com/pavius/impi v0.0.3
@@ -135,7 +135,7 @@ require (
 	github.com/gostaticanalysis/nilerr v0.1.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-getter v1.7.4 // indirect
+	github.com/hashicorp/go-getter v1.7.5 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.6.0 // indirect

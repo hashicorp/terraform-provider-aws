@@ -174,6 +174,16 @@ func RegisterSweepers() {
 		},
 	})
 
+	resource.AddTestSweepers("aws_ec2_managed_prefix_list", &resource.Sweeper{
+		Name: "aws_ec2_managed_prefix_list",
+		F:    sweepManagedPrefixLists,
+		Dependencies: []string{
+			"aws_route_table",
+			"aws_security_group",
+			"aws_networkfirewall_rule_group",
+		},
+	})
+
 	resource.AddTestSweepers("aws_ec2_network_insights_path", &resource.Sweeper{
 		Name: "aws_ec2_network_insights_path",
 		F:    sweepNetworkInsightsPaths,
@@ -1350,6 +1360,51 @@ func sweepNetworkInterfaces(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Network Interfaces (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepManagedPrefixLists(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := ec2.NewDescribeManagedPrefixListsPaginator(conn, &ec2.DescribeManagedPrefixListsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Managed Prefix List sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Managed Prefix Lists (%s): %w", region, err)
+		}
+
+		for _, v := range page.PrefixLists {
+			if aws.ToString(v.OwnerId) == "AWS" {
+				log.Printf("[DEBUG] Skipping AWS-managed prefix list: %s", aws.ToString(v.PrefixListName))
+				continue
+			}
+
+			r := ResourceManagedPrefixList()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.PrefixListId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Managed Prefix Lists (%s): %w", region, err)
 	}
 
 	return nil

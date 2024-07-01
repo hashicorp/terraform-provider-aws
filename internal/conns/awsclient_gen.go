@@ -21,6 +21,7 @@ import (
 	applicationsignals_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationsignals"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
+	appsync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appsync"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -56,6 +57,7 @@ import (
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	cognitoidentity_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	cognitoidentityprovider_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
@@ -95,6 +97,7 @@ import (
 	fms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fms"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	globalaccelerator_sdkv2 "github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	grafana_sdkv2 "github.com/aws/aws-sdk-go-v2/service/grafana"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
 	guardduty_sdkv2 "github.com/aws/aws-sdk-go-v2/service/guardduty"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
@@ -124,6 +127,8 @@ import (
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
+	networkfirewall_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkfirewall"
+	networkmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -188,10 +193,8 @@ import (
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
-	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
@@ -228,10 +231,8 @@ import (
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
 	locationservice_sdkv1 "github.com/aws/aws-sdk-go/service/locationservice"
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
-	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
-	networkfirewall_sdkv1 "github.com/aws/aws-sdk-go/service/networkfirewall"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
@@ -321,8 +322,8 @@ func (c *AWSClient) AppStreamClient(ctx context.Context) *appstream_sdkv2.Client
 	return errs.Must(client[*appstream_sdkv2.Client](ctx, c, names.AppStream, make(map[string]any)))
 }
 
-func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
-	return errs.Must(conn[*appsync_sdkv1.AppSync](ctx, c, names.AppSync, make(map[string]any)))
+func (c *AWSClient) AppSyncClient(ctx context.Context) *appsync_sdkv2.Client {
+	return errs.Must(client[*appsync_sdkv2.Client](ctx, c, names.AppSync, make(map[string]any)))
 }
 
 func (c *AWSClient) ApplicationInsightsClient(ctx context.Context) *applicationinsights_sdkv2.Client {
@@ -477,8 +478,8 @@ func (c *AWSClient) CodeStarNotificationsClient(ctx context.Context) *codestarno
 	return errs.Must(client[*codestarnotifications_sdkv2.Client](ctx, c, names.CodeStarNotifications, make(map[string]any)))
 }
 
-func (c *AWSClient) CognitoIDPConn(ctx context.Context) *cognitoidentityprovider_sdkv1.CognitoIdentityProvider {
-	return errs.Must(conn[*cognitoidentityprovider_sdkv1.CognitoIdentityProvider](ctx, c, names.CognitoIDP, make(map[string]any)))
+func (c *AWSClient) CognitoIDPClient(ctx context.Context) *cognitoidentityprovider_sdkv2.Client {
+	return errs.Must(client[*cognitoidentityprovider_sdkv2.Client](ctx, c, names.CognitoIDP, make(map[string]any)))
 }
 
 func (c *AWSClient) CognitoIdentityClient(ctx context.Context) *cognitoidentity_sdkv2.Client {
@@ -717,8 +718,8 @@ func (c *AWSClient) GlueConn(ctx context.Context) *glue_sdkv1.Glue {
 	return errs.Must(conn[*glue_sdkv1.Glue](ctx, c, names.Glue, make(map[string]any)))
 }
 
-func (c *AWSClient) GrafanaConn(ctx context.Context) *managedgrafana_sdkv1.ManagedGrafana {
-	return errs.Must(conn[*managedgrafana_sdkv1.ManagedGrafana](ctx, c, names.Grafana, make(map[string]any)))
+func (c *AWSClient) GrafanaClient(ctx context.Context) *grafana_sdkv2.Client {
+	return errs.Must(client[*grafana_sdkv2.Client](ctx, c, names.Grafana, make(map[string]any)))
 }
 
 func (c *AWSClient) GreengrassConn(ctx context.Context) *greengrass_sdkv1.Greengrass {
@@ -913,12 +914,16 @@ func (c *AWSClient) NeptuneGraphClient(ctx context.Context) *neptunegraph_sdkv2.
 	return errs.Must(client[*neptunegraph_sdkv2.Client](ctx, c, names.NeptuneGraph, make(map[string]any)))
 }
 
-func (c *AWSClient) NetworkFirewallConn(ctx context.Context) *networkfirewall_sdkv1.NetworkFirewall {
-	return errs.Must(conn[*networkfirewall_sdkv1.NetworkFirewall](ctx, c, names.NetworkFirewall, make(map[string]any)))
+func (c *AWSClient) NetworkFirewallClient(ctx context.Context) *networkfirewall_sdkv2.Client {
+	return errs.Must(client[*networkfirewall_sdkv2.Client](ctx, c, names.NetworkFirewall, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkManagerConn(ctx context.Context) *networkmanager_sdkv1.NetworkManager {
 	return errs.Must(conn[*networkmanager_sdkv1.NetworkManager](ctx, c, names.NetworkManager, make(map[string]any)))
+}
+
+func (c *AWSClient) NetworkMonitorClient(ctx context.Context) *networkmonitor_sdkv2.Client {
+	return errs.Must(client[*networkmonitor_sdkv2.Client](ctx, c, names.NetworkMonitor, make(map[string]any)))
 }
 
 func (c *AWSClient) ObservabilityAccessManagerClient(ctx context.Context) *oam_sdkv2.Client {
