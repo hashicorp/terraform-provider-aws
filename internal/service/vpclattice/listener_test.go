@@ -154,6 +154,47 @@ func TestAccVPCLatticeListener_fixedResponseHTTPS(t *testing.T) {
 	})
 }
 
+func TestAccVPCLatticeListener_forwardTLSPassthrough(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var listener vpclattice.GetListenerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_listener.test"
+	serviceName := "aws_vpclattice_service.test"
+	targetGroupResourceName := "aws_vpclattice_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_forwardTLSPassthrough(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &listener),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8443"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TLS_PASSTHROUGH"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_identifier", serviceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_groups.0.weight", "80"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCLatticeListener_forwardHTTPTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -547,6 +588,42 @@ resource "aws_vpclattice_listener" "test" {
   default_action {
     fixed_response {
       status_code = 404
+    }
+  }
+}
+`, rName))
+}
+
+func testAccListenerConfig_forwardTLSPassthrough(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
+resource "aws_vpclattice_service" "test" {
+  name               = %[1]q
+  auth_type          = "AWS_IAM"
+  custom_domain_name = "example.com"
+}
+
+resource "aws_vpclattice_target_group" "test" {
+  name = %[1]q
+  type = "INSTANCE"
+
+  config {
+    port           = 80
+    protocol       = "TCP"
+    vpc_identifier = aws_vpc.test.id
+  }
+}
+
+resource "aws_vpclattice_listener" "test" {
+  name               = %[1]q
+  protocol           = "TLS_PASSTHROUGH"
+  port               = 8443
+  service_identifier = aws_vpclattice_service.test.id
+  default_action {
+    forward {
+      target_groups {
+        target_group_identifier = aws_vpclattice_target_group.test.id
+        weight                  = 80
+      }
     }
   }
 }
