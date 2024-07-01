@@ -54,6 +54,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourceApplicationAttributeGroupAssociation,
+			Name:    "Application Attribute Group Association",
+		},
+		{
 			Factory: newResourceAttributeGroup,
 			Name:    "Attribute Group",
 			Tags: &types.ServicePackageResourceTags{
