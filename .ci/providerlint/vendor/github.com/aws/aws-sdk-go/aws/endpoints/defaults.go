@@ -36099,6 +36099,18 @@ var awscnPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"acm-pca": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{
+					Protocols: []string{"https"},
+				},
+			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "cn-north-1",
+				}: endpoint{},
+			},
+		},
 		"airflow": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
