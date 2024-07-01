@@ -31,11 +31,59 @@ func testAccSafetyRule_assertionRule(t *testing.T) {
 		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "asserted_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccSafetyRule_updated(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_route53recoverycontrolconfig_safety_rule.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, r53rcc.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryControlConfigServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSafetyRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "asserted_controls.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSafetyRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "PENDING"),
 					resource.TestCheckResourceAttr(resourceName, "wait_period_ms", "5000"),
 					resource.TestCheckResourceAttr(resourceName, "asserted_controls.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "control_panel_arn", "aws_route53recoverycontrolconfig_control_panel.test", names.AttrARN),
@@ -62,7 +110,7 @@ func testAccSafetyRule_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckSafetyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSafetyRuleConfig_routingControlAssertion(rName),
+				Config: testAccSafetyRuleConfig_routingControlAssertion(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSafetyRuleExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoverycontrolconfig.ResourceSafetyRule(), resourceName),
@@ -148,7 +196,7 @@ func testAccCheckSafetyRuleExists(ctx context.Context, name string) resource.Tes
 	}
 }
 
-func testAccSafetyRuleConfig_routingControlAssertion(rName string) string {
+func testAccSafetyRuleConfig_routingControlAssertion(rName string, safetyRuleName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53recoverycontrolconfig_cluster" "test" {
   name = %[1]q
@@ -166,7 +214,7 @@ resource "aws_route53recoverycontrolconfig_routing_control" "test" {
 }
 
 resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
-  name              = %[1]q
+  name              = %[2]q
   control_panel_arn = aws_route53recoverycontrolconfig_control_panel.test.arn
   wait_period_ms    = 5000
   asserted_controls = [aws_route53recoverycontrolconfig_routing_control.test.arn]
@@ -177,7 +225,7 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "test" {
     type      = "AND"
   }
 }
-`, rName)
+`, rName, safetyRuleName)
 }
 
 func testAccSafetyRuleConfig_routingControlGating(rName string) string {
