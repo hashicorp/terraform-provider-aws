@@ -59,7 +59,7 @@ func resourceDomainAssociation() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.CertificateType](),
@@ -426,7 +426,7 @@ func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateS
 	}
 
 	apiObject := &types.CertificateSettings{
-		Type: types.CertificateType(tfMap["type"].(string)),
+		Type: types.CertificateType(tfMap[names.AttrType].(string)),
 	}
 
 	if v, ok := tfMap["custom_certificate_arn"].(string); ok {
@@ -443,7 +443,7 @@ func flattenCertificateSettings(apiObject *types.Certificate) []interface{} {
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["type"] = apiObject.Type
+	tfMap[names.AttrType] = apiObject.Type
 
 	if v := apiObject.CertificateVerificationDNSRecord; v != nil {
 		tfMap["certificate_verification_dns_record"] = aws.ToString(v)

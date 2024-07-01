@@ -178,9 +178,9 @@ func testAccDomainAssociation_certificateSettings(t *testing.T) {
 				Config: testAccDomainAssociationConfig_certificateSettings(rName, domainName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
-					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
 				),
