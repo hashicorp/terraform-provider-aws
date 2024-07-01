@@ -60,6 +60,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_glue_catalog_table",
 		},
 		{
+			Factory:  ResourceCatalogTableOptimizer,
+			TypeName: "aws_glue_catalog_table_optimizer",
+			Name:     "Catalog Table Optimizer",
+		},
+		{
 			Factory:  ResourceClassifier,
 			TypeName: "aws_glue_classifier",
 		},
