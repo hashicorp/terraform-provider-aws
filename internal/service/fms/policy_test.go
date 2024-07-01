@@ -365,7 +365,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 	})
 }
 
-func testAccPolicy_rsc_set(t *testing.T) {
+func testAccPolicy_rscSet(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fms_policy.test"
@@ -382,7 +382,7 @@ func testAccPolicy_rsc_set(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, rName),
+				Config: testAccPolicyConfig_rscSet(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -883,7 +883,7 @@ resource "aws_fms_policy" "test" {
 `, rName))
 }
 
-func testAccPolicyConfig_rsc_set(policyName, ruleGroupName string) string {
+func testAccPolicyConfig_rscSet(policyName, ruleGroupName string) string {
 	return acctest.ConfigCompose(testAccAdminAccountConfig_basic, fmt.Sprintf(`
 resource "aws_fms_policy" "test" {
   exclude_resource_tags = false
