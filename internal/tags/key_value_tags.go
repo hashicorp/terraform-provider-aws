@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,8 +38,10 @@ type DefaultConfig struct {
 
 // IgnoreConfig contains various options for removing resource tags.
 type IgnoreConfig struct {
-	Keys        KeyValueTags
-	KeyPrefixes KeyValueTags
+	Keys             KeyValueTags
+	KeyPrefixes      KeyValueTags
+	KeySuffixes      KeyValueTags
+	KeyRegexPatterns KeyValueTags
 }
 
 // KeyValueTags is a standard implementation for AWS key-value resource tags.
@@ -105,8 +108,11 @@ func (tags KeyValueTags) IgnoreConfig(config *IgnoreConfig) KeyValueTags {
 		return tags
 	}
 
-	result := tags.IgnorePrefixes(config.KeyPrefixes)
-	result = result.Ignore(config.Keys)
+	prefixes := tags.IgnorePrefixes(config.KeyPrefixes)
+	suffixes := prefixes.IgnoreSuffixes(config.KeySuffixes)
+	regexes := suffixes.IgnoreRegexPatterns(config.KeyRegexPatterns)
+
+	result := regexes.Ignore(config.Keys)
 
 	return result
 }
@@ -143,6 +149,59 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 
 		for ignoreTagPrefix := range ignoreTagPrefixes {
 			if strings.HasPrefix(k, ignoreTagPrefix) {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
+// IgnoreSuffixes returns non-matching tag key suffixes.
+func (tags KeyValueTags) IgnoreSuffixes(ignoreTagSuffixes KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		var ignore bool
+
+		for ignoreTagSuffix := range ignoreTagSuffixes {
+			if strings.HasSuffix(k, ignoreTagSuffix) {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
+// IgnoreRegexPatterns returns non-matching tag key regex patterns.
+func (tags KeyValueTags) IgnoreRegexPatterns(IgnoreRegexPatterns KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		var ignore bool
+
+		for ignoreTagRegex := range IgnoreRegexPatterns {
+			re, err := regexp.Compile(ignoreTagRegex)
+			if err != nil {
+				fmt.Println("Invalid Regex expression provided")
+				break
+			}
+			if re.MatchString(k) {
 				ignore = true
 				break
 			}
