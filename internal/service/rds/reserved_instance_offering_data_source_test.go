@@ -26,9 +26,9 @@ func TestAccRDSInstanceOffering_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "currency_code"),
 					resource.TestCheckResourceAttr(dataSourceName, "db_instance_class", "db.t2.micro"),
-					resource.TestCheckResourceAttr(dataSourceName, "duration", "31536000"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDuration, "31536000"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "fixed_price"),
-					resource.TestCheckResourceAttr(dataSourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "multi_az", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(dataSourceName, "offering_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "offering_type", "All Upfront"),
 					resource.TestCheckResourceAttr(dataSourceName, "product_description", "mysql"),

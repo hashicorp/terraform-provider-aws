@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func customContentVisualSchema() *schema.Schema {
@@ -21,7 +22,7 @@ func customContentVisualSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
 				"visual_id":           idSchema(),
-				"actions":             visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
+				names.AttrActions:     visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"chart_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CustomContentConfiguration.html
 					Type:             schema.TypeList,
 					Optional:         true,
@@ -30,9 +31,9 @@ func customContentVisualSchema() *schema.Schema {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"content_type":  stringSchema(false, validation.StringInSlice(quicksight.CustomContentType_Values(), false)),
-							"content_url":   stringSchema(false, validation.StringLenBetween(1, 2048)),
-							"image_scaling": stringSchema(false, validation.StringInSlice(quicksight.CustomContentImageScalingConfiguration_Values(), false)),
+							names.AttrContentType: stringSchema(false, validation.StringInSlice(quicksight.CustomContentType_Values(), false)),
+							"content_url":         stringSchema(false, validation.StringLenBetween(1, 2048)),
+							"image_scaling":       stringSchema(false, validation.StringInSlice(quicksight.CustomContentImageScalingConfiguration_Values(), false)),
 						},
 					},
 				},
@@ -61,7 +62,7 @@ func expandCustomContentVisual(tfList []interface{}) *quicksight.CustomContentVi
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
 	}
-	if v, ok := tfMap["actions"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrActions].([]interface{}); ok && len(v) > 0 {
 		visual.Actions = expandVisualCustomActions(v)
 	}
 	if v, ok := tfMap["chart_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -89,7 +90,7 @@ func expandCustomContentConfiguration(tfList []interface{}) *quicksight.CustomCo
 
 	config := &quicksight.CustomContentConfiguration{}
 
-	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
 		config.ContentType = aws.String(v)
 	}
 	if v, ok := tfMap["content_url"].(string); ok && v != "" {
@@ -112,7 +113,7 @@ func flattenCustomContentVisual(apiObject *quicksight.CustomContentVisual) []int
 		"visual_id":           aws.StringValue(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
-		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
+		tfMap[names.AttrActions] = flattenVisualCustomAction(apiObject.Actions)
 	}
 	if apiObject.ChartConfiguration != nil {
 		tfMap["chart_configuration"] = flattenCustomContentConfiguration(apiObject.ChartConfiguration)
@@ -134,7 +135,7 @@ func flattenCustomContentConfiguration(apiObject *quicksight.CustomContentConfig
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ContentType != nil {
-		tfMap["content_type"] = aws.StringValue(apiObject.ContentType)
+		tfMap[names.AttrContentType] = aws.StringValue(apiObject.ContentType)
 	}
 	if apiObject.ContentUrl != nil {
 		tfMap["content_url"] = aws.StringValue(apiObject.ContentUrl)

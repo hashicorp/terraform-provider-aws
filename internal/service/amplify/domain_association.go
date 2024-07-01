@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_amplify_domain_association", name="Domain Association")
@@ -44,7 +45,7 @@ func resourceDomainAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +76,7 @@ func resourceDomainAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -100,7 +101,7 @@ func resourceDomainAssociation() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -126,7 +127,7 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	id := domainAssociationCreateResourceID(appID, domainName)
 	input := &amplify.CreateDomainAssociationInput{
 		AppId:               aws.String(appID),
@@ -182,9 +183,9 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("app_id", appID)
-	d.Set("arn", domainAssociation.DomainAssociationArn)
+	d.Set(names.AttrARN, domainAssociation.DomainAssociationArn)
 	d.Set("certificate_verification_dns_record", domainAssociation.CertificateVerificationDNSRecord)
-	d.Set("domain_name", domainAssociation.DomainName)
+	d.Set(names.AttrDomainName, domainAssociation.DomainName)
 	d.Set("enable_auto_sub_domain", domainAssociation.EnableAutoSubDomain)
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
@@ -386,7 +387,7 @@ func expandSubDomainSetting(tfMap map[string]interface{}) *types.SubDomainSettin
 	}
 
 	// Empty prefix is allowed.
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -469,7 +470,7 @@ func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
 		}
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 	}
 

@@ -84,6 +84,7 @@ provider "aws" {
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
+  <li><code>applicationsignals</code></li>
   <li><code>appmesh</code></li>
   <li><code>apprunner</code></li>
   <li><code>appstream</code></li>
@@ -99,6 +100,7 @@ provider "aws" {
   <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
+  <li><code>chatbot</code></li>
   <li><code>chime</code></li>
   <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkvoice</code></li>
@@ -146,6 +148,7 @@ provider "aws" {
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
   <li><code>docdb</code></li>
   <li><code>docdbelastic</code></li>
+  <li><code>drs</code></li>
   <li><code>ds</code> (or <code>directoryservice</code>)</li>
   <li><code>dynamodb</code></li>
   <li><code>ec2</code></li>
@@ -224,6 +227,7 @@ provider "aws" {
   <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
+  <li><code>networkmonitor</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
   <li><code>opensearch</code> (or <code>opensearchservice</code>)</li>
   <li><code>opensearchserverless</code></li>
@@ -290,6 +294,7 @@ provider "aws" {
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>
@@ -301,6 +306,7 @@ provider "aws" {
   <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
+  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>

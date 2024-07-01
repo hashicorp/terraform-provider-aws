@@ -34,7 +34,7 @@ data "aws_connect_queue" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `queue_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `queue_id` - (Optional) Returns information on a specific Queue by Queue id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance

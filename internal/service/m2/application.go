@@ -36,8 +36,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Application")
+// @FrameworkResource("aws_m2_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/m2;m2.GetApplicationOutput")
 func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &applicationResource{}
 
@@ -61,12 +62,12 @@ func (*applicationResource) Metadata(_ context.Context, request resource.Metadat
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": framework.IDAttribute(),
-			names.AttrARN:    framework.ARNAttributeComputedOnly(),
+			names.AttrApplicationID: framework.IDAttribute(),
+			names.AttrARN:           framework.ARNAttributeComputedOnly(),
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
@@ -80,13 +81,13 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
@@ -95,7 +96,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
@@ -114,12 +115,12 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"content": schema.StringAttribute{
+						names.AttrContent: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 65000),
 								stringvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("content"),
+									path.MatchRelative().AtParent().AtName(names.AttrContent),
 									path.MatchRelative().AtParent().AtName("s3_location"),
 								),
 							},
@@ -130,7 +131,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

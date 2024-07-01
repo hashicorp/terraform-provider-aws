@@ -23,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,11 +50,11 @@ func ResourceFeature() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceFeature() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 				),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 160),
@@ -87,11 +87,11 @@ func ResourceFeature() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -104,11 +104,11 @@ func ResourceFeature() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FeatureEvaluationStrategy](),
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -131,7 +131,7 @@ func ResourceFeature() *schema.Resource {
 					return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -148,7 +148,7 @@ func ResourceFeature() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -156,7 +156,7 @@ func ResourceFeature() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 							),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -206,7 +206,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	project := d.Get("project").(string)
 	input := &evidently.CreateFeatureInput{
 		Name:       aws.String(name),
@@ -219,7 +219,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DefaultVariation = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -279,16 +279,16 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting variations: %s", err)
 	}
 
-	d.Set("arn", feature.Arn)
-	d.Set("created_time", aws.ToTime(feature.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrARN, feature.Arn)
+	d.Set(names.AttrCreatedTime, aws.ToTime(feature.CreatedTime).Format(time.RFC3339))
 	d.Set("default_variation", feature.DefaultVariation)
-	d.Set("description", feature.Description)
+	d.Set(names.AttrDescription, feature.Description)
 	d.Set("entity_overrides", feature.EntityOverrides)
 	d.Set("evaluation_strategy", feature.EvaluationStrategy)
-	d.Set("last_updated_time", aws.ToTime(feature.LastUpdatedTime).Format(time.RFC3339))
-	d.Set("name", feature.Name)
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(feature.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrName, feature.Name)
 	d.Set("project", feature.Project)
-	d.Set("status", feature.Status)
+	d.Set(names.AttrStatus, feature.Status)
 	d.Set("value_type", feature.ValueType)
 
 	setTagsOut(ctx, feature.Tags)
@@ -301,13 +301,13 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	if d.HasChanges("default_variation", "description", "entity_overrides", "evaluation_strategy", "variations") {
-		name := d.Get("name").(string)
+	if d.HasChanges("default_variation", names.AttrDescription, "entity_overrides", "evaluation_strategy", "variations") {
+		name := d.Get(names.AttrName).(string)
 		project := d.Get("project").(string)
 
 		input := &evidently.UpdateFeatureInput{
 			DefaultVariation:   aws.String(d.Get("default_variation").(string)),
-			Description:        aws.String(d.Get("description").(string)),
+			Description:        aws.String(d.Get(names.AttrDescription).(string)),
 			EntityOverrides:    flex.ExpandStringValueMap(d.Get("entity_overrides").(map[string]interface{})),
 			EvaluationStrategy: awstypes.FeatureEvaluationStrategy(d.Get("evaluation_strategy").(string)),
 			Feature:            aws.String(name),
@@ -343,7 +343,7 @@ func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	project := d.Get("project").(string)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Feature: %s", d.Id())
@@ -393,8 +393,8 @@ func expandVariations(variations []interface{}) []awstypes.VariationConfig {
 
 func expandVariation(variation map[string]interface{}) awstypes.VariationConfig {
 	return awstypes.VariationConfig{
-		Name:  aws.String(variation["name"].(string)),
-		Value: expandValue(variation["value"].([]interface{})),
+		Name:  aws.String(variation[names.AttrName].(string)),
+		Value: expandValue(variation[names.AttrValue].([]interface{})),
 	}
 }
 
@@ -411,15 +411,15 @@ func expandValue(value []interface{}) awstypes.VariableValue {
 	var result awstypes.VariableValue
 
 	// Only one of these values can be set at a time
-	if val, null, _ := nullable.Bool(tfMap["bool_value"].(string)).Value(); !null {
+	if val, null, _ := nullable.Bool(tfMap["bool_value"].(string)).ValueBool(); !null {
 		result = &awstypes.VariableValueMemberBoolValue{
 			Value: val,
 		}
-	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).Value(); !null {
+	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).ValueInt64(); !null {
 		result = &awstypes.VariableValueMemberLongValue{
 			Value: v,
 		}
-	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).Value(); !null {
+	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).ValueFloat64(); !null {
 		result = &awstypes.VariableValueMemberDoubleValue{
 			Value: v,
 		}
@@ -439,8 +439,8 @@ func flattenVariations(apiObject []awstypes.Variation) []interface{} {
 	variationsFormatted := []interface{}{}
 	for _, variation := range apiObject {
 		variationFormatted := map[string]interface{}{
-			"name":  aws.ToString(variation.Name),
-			"value": flattenValue(variation.Value),
+			names.AttrName:  aws.ToString(variation.Name),
+			names.AttrValue: flattenValue(variation.Value),
 		}
 		variationsFormatted = append(variationsFormatted, variationFormatted)
 	}
@@ -477,8 +477,8 @@ func flattenEvaluationRules(apiObject []awstypes.EvaluationRule) []interface{} {
 	evaluationRulesFormatted := []interface{}{}
 	for _, evaluationRule := range apiObject {
 		evaluationRuleFormatted := map[string]interface{}{
-			"name": aws.ToString(evaluationRule.Name),
-			"type": aws.ToString(evaluationRule.Type),
+			names.AttrName: aws.ToString(evaluationRule.Name),
+			names.AttrType: aws.ToString(evaluationRule.Type),
 		}
 		evaluationRulesFormatted = append(evaluationRulesFormatted, evaluationRuleFormatted)
 	}
@@ -499,12 +499,12 @@ func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes
 	om := make(map[string]awstypes.VariationConfig, os.Len())
 	for _, raw := range os.List() {
 		param := raw.(map[string]interface{})
-		om[param["name"].(string)] = expandVariation(param)
+		om[param[names.AttrName].(string)] = expandVariation(param)
 	}
 	nm := make(map[string]awstypes.VariationConfig, len(addOrUpdate))
 	for _, raw := range ns.List() {
 		param := raw.(map[string]interface{})
-		nm[param["name"].(string)] = expandVariation(param)
+		nm[param[names.AttrName].(string)] = expandVariation(param)
 	}
 
 	// Remove: key is in old, but not in new

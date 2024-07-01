@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUserGroupDataSource_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccCognitoIDPUserGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "description", "test"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "test"),
 				),
 			},
 		},
