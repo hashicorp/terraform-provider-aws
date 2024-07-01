@@ -360,6 +360,7 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 
 	type testCases struct {
 		Value     string
+		MaxSize   int
 		WantError string
 	}
 	tests := []testCases{
@@ -411,13 +412,22 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 			Value:     `{"a":"foo","a":"bar"}`,
 			WantError: `"json" contains duplicate JSON keys: duplicate key "a"`,
 		},
+		{
+			Value:     `{"Version":"..."}`,
+			MaxSize:   16,
+			WantError: `Cannot exceed quota for PolicySize: 16 (actual: 17)`,
+		},
 	}
 	for _, test := range tests {
 		test := test
 		t.Run(test.Value, func(t *testing.T) {
 			t.Parallel()
 
-			_, errs := ValidIAMPolicyJSON(test.Value, "json")
+			maxSize := test.MaxSize
+			if maxSize == 0 {
+				maxSize = 9999999999
+			}
+			_, errs := ValidIAMPolicyJSON(maxSize)(test.Value, "json")
 
 			if test.WantError != "" {
 				if got, want := len(errs), 1; got != want {

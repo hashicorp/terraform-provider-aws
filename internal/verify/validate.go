@@ -165,59 +165,61 @@ func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []err
 	return
 }
 
-func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
-	// IAM Policy documents need to be valid JSON, and pass legacy parsing
-	value := v.(string)
-	value = strings.TrimSpace(value)
-	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
-		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
-	}
-
-	if first := value[:1]; first != "{" {
-		switch first {
-		case " ", "\t", "\r", "\n":
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
-		case `"`:
-			// There are some common mistakes that lead to strings appearing
-			// here instead of objects, so we'll try some heuristics to
-			// check for those so we might give more actionable feedback in
-			// these situations.
-			var hint string
-			var content string
-			var innerContent any
-			if err := json.Unmarshal([]byte(value), &content); err == nil {
-				if strings.HasSuffix(content, ".json") {
-					hint = " (have you passed a JSON-encoded filename instead of the content of that file?)"
-				} else if err := json.Unmarshal([]byte(content), &innerContent); err == nil {
-					hint = " (have you double-encoded your JSON data?)"
+func ValidIAMPolicyJSON(maxlen int) schema.SchemaValidateFunc {
+	return func(v interface{}, k string) (ws []string, errors []error) {
+		// IAM Policy documents need to be valid JSON, and pass legacy parsing
+		value := v.(string)
+		value = strings.TrimSpace(value)
+		if len(value) < 1 {
+			errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
+			return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+		} else if first := value[:1]; first != "{" {
+			switch value[:1] {
+			case " ", "\t", "\r", "\n":
+				errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
+			case `"`:
+				// There are some common mistakes that lead to strings appearing
+				// here instead of objects, so we'll try some heuristics to
+				// check for those so we might give more actionable feedback in
+				// these situations.
+				var hint string
+				var content string
+				var innerContent any
+				if err := json.Unmarshal([]byte(value), &content); err == nil {
+					if strings.HasSuffix(content, ".json") {
+						hint = " (have you passed a JSON-encoded filename instead of the content of that file?)"
+					} else if err := json.Unmarshal([]byte(content), &innerContent); err == nil {
+						hint = " (have you double-encoded your JSON data?)"
+					}
 				}
+				errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object%s", k, hint))
+			case `[`:
+				errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON array, not a JSON object", k))
+			default:
+				// Generic error for if we didn't find something more specific to say.
+				errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
 			}
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object%s", k, hint))
-		case `[`:
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON array, not a JSON object", k))
-		default:
-			// Generic error for if we didn't find something more specific to say.
-			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
+			return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+		} else {
+			normalized, err := structure.NormalizeJsonString(v)
+			if err != nil {
+				errStr := err.Error()
+				if err, ok := errs.As[*json.SyntaxError](err); ok {
+					errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
+				}
+				errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
+				return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+			} else if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
+				errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
+				return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+			} else if lenNormalized := len(normalized); lenNormalized > maxlen {
+				errStr := fmt.Sprintf("Cannot exceed quota for PolicySize: %d (actual: %d)", maxlen, lenNormalized)
+				errors = append(errors, fmt.Errorf(errStr))
+				return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+			}
 		}
-		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+		return //nolint:nakedret // Just a long function.
 	}
-
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errStr := err.Error()
-		if err, ok := errs.As[*json.SyntaxError](err); ok {
-			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
-		}
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
-		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
-	}
-
-	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
-		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
-	}
-
-	return //nolint:nakedret // Just a long function.
 }
 
 // ValidateIPv4CIDRBlock validates that the specified CIDR block is valid:

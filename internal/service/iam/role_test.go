@@ -6,6 +6,7 @@ package iam_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -1017,6 +1018,64 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 			},
 			{
 				Config: testAccRoleConfig_policyEmptyManaged(rName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_PolicySize_inline_policy_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role awstypes.Role
+	resourceName := "aws_iam_role.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccRoleConfig_long_inline_policy(rName, policyName, 10240),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 10240"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccRoleConfig_long_inline_policy(rName, policyName, 10240-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_PolicySize_assume_role_policy_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role awstypes.Role
+	resourceName := "aws_iam_role.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	//policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccRoleConfig_long_assume_role_policy(rName, 10240),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 10240"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccRoleConfig_long_assume_role_policy(rName, 10240-1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 				),
@@ -2369,4 +2428,72 @@ resource "aws_iam_policy" "managed-policy1" {
 EOF
 }
 `, roleName, policyName)
+}
+
+func testAccRoleConfig_long_inline_policy(roleName, policyName string, size int) string {
+	consumedLength := 107
+	longSid := strings.Repeat("a", size-consumedLength)
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policy {
+    name = %[2]q
+
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": %[3]q,
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+}
+`, roleName, policyName, longSid)
+}
+
+func testAccRoleConfig_long_assume_role_policy(roleName string, size int) string {
+	consumedLength := 107
+	longSid := strings.Repeat("a", size-consumedLength)
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = %[2]q
+    }]
+  })
+}
+`, roleName, longSid)
 }
