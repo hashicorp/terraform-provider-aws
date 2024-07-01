@@ -112,6 +112,9 @@ func resourceTable() *schema.Resource {
 				}
 				return errors.Join(errs...)
 			},
+			customdiff.ForceNewIfChange("restore_backup_arn", func(_ context.Context, old, new, meta interface{}) bool {
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
 			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta interface{}) bool {
 				// If they differ force new unless new is cleared
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
@@ -385,6 +388,10 @@ func resourceTable() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"import_table"},
 			},
+			"restore_backup_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -484,7 +491,69 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	if v, ok := d.GetOk("restore_source_name"); ok {
+	if v, ok := d.GetOk("restore_backup_arn"); ok {
+		input := &dynamodb.RestoreTableFromBackupInput{
+			BackupArn:       aws.String(v.(string)),
+			TargetTableName: aws.String(tableName),
+		}
+
+		billingModeOverride := d.Get("billing_mode").(string)
+
+		if _, ok := d.GetOk("write_capacity"); ok {
+			if _, ok := d.GetOk("read_capacity"); ok {
+				capacityMap := map[string]interface{}{
+					"write_capacity": d.Get("write_capacity"),
+					"read_capacity":  d.Get("read_capacity"),
+				}
+				input.ProvisionedThroughputOverride = expandProvisionedThroughput(capacityMap, billingModeOverride)
+			}
+		}
+
+		if v, ok := d.GetOk("local_secondary_index"); ok {
+			lsiSet := v.(*schema.Set)
+			input.LocalSecondaryIndexOverride = expandLocalSecondaryIndexes(lsiSet.List(), keySchemaMap)
+		}
+
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
+
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]interface{})
+				if err := validateGSIProvisionedThroughput(gsi, billingModeOverride); err != nil {
+					return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get(names.AttrName).(string), err)
+				}
+
+				gsiObject := expandGlobalSecondaryIndex(gsi, billingModeOverride)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
+			}
+			input.GlobalSecondaryIndexOverride = globalSecondaryIndexes
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]interface{}))
+		}
+
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
+			return conn.RestoreTableFromBackupWithContext(ctx, input)
+		}, func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+				return true, err
+			}
+			if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+				return true, err
+			}
+
+			return false, err
+		})
+
+		if err != nil {
+			return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, tableName, err)
+		}
+	} else if v, ok := d.GetOk("restore_source_name"); ok {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
 			SourceTableName: aws.String(v.(string)),
 			TargetTableName: aws.String(tableName),
