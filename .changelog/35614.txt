@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_vpc: add support for different sizes of ipv6_cidr_block
+```
+
+```release-note:bug
+resource/aws_vpc_ipv6_cidr_block_association: add support for different sizes of ipv6_cidr_block
+```

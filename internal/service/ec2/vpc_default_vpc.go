@@ -120,7 +120,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 				ValidateFunc: validation.All(
 					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
+					validation.IsCIDRNetwork(VPCCIDRMinIPv6, VPCCIDRMaxIPv6)),
 			},
 			"ipv6_cidr_block_network_border_group": {
 				Type:         schema.TypeString,
@@ -136,7 +136,7 @@ func ResourceDefaultVPC() *schema.Resource {
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
+				ValidateFunc:  validation.IntInSlice(VPCCIDRValidIPv6Masks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
