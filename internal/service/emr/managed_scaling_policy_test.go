@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -175,8 +175,8 @@ func testAccCheckManagedScalingPolicyExists(ctx context.Context, n string) resou
 			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
-		resp, err := conn.GetManagedScalingPolicyWithContext(ctx, &emr.GetManagedScalingPolicyInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
+		resp, err := conn.GetManagedScalingPolicy(ctx, &emr.GetManagedScalingPolicyInput{
 			ClusterId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -192,13 +192,13 @@ func testAccCheckManagedScalingPolicyExists(ctx context.Context, n string) resou
 
 func testAccCheckManagedScalingPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_managed_scaling_policy" {
 				continue
 			}
 
-			resp, err := conn.GetManagedScalingPolicyWithContext(ctx, &emr.GetManagedScalingPolicyInput{
+			resp, err := conn.GetManagedScalingPolicy(ctx, &emr.GetManagedScalingPolicyInput{
 				ClusterId: aws.String(rs.Primary.ID),
 			})
 
