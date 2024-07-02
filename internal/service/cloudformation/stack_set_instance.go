@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -110,7 +109,7 @@ func resourceStackSetInstance() *schema.Resource {
 							ForceNew:      true,
 							Optional:      true,
 							ConflictsWith: []string{names.AttrAccountID},
-							ValidateFunc:  validation.StringMatch(regexp.MustCompile(`(s3://|http(s?)://).+`), ""),
+							ValidateFunc:  validation.StringMatch(regexache.MustCompile(`(s3://|http(s?)://).+`), ""),
 						},
 					},
 				},
