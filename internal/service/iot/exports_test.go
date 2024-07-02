@@ -26,6 +26,7 @@ var (
 	FindDomainConfigurationByName  = findDomainConfigurationByName
 	FindPolicyByName               = findPolicyByName
 	FindProvisioningTemplateByName = findProvisioningTemplateByName
+	FindRoleAliasByID              = findRoleAliasByID
 	FindTopicRuleDestinationByARN  = findTopicRuleDestinationByARN
 	FindThingTypeByName            = findThingTypeByName
 	FindThingGroupByName           = findThingGroupByName

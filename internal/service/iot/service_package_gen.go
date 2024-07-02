@@ -114,6 +114,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRoleAlias,
 			TypeName: "aws_iot_role_alias",
+			Name:     "Role Alias",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
