@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,7 +26,7 @@ func TestAccEMRBlockPublicAccessConfiguration_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
@@ -72,7 +72,7 @@ func TestAccEMRBlockPublicAccessConfiguration_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
@@ -104,7 +104,7 @@ func TestAccEMRBlockPublicAccessConfiguration_default(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
@@ -138,7 +138,7 @@ func TestAccEMRBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.EMREndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
@@ -169,7 +169,7 @@ func TestAccEMRBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 
 func testAccCheckBlockPublicAccessConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emr_block_public_access_configuration" {
@@ -208,7 +208,7 @@ func testAccCheckBlockPublicAccessConfigurationAttributes_enabledOnly(ctx contex
 			return create.Error(names.EMR, create.ErrActionCheckingExistence, tfemr.ResNameBlockPublicAccessConfiguration, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 		resp, err := tfemr.FindBlockPublicAccessConfiguration(ctx, conn)
 
 		if err != nil {
@@ -232,7 +232,7 @@ func testAccCheckBlockPublicAccessConfigurationAttributes_enabledOnly(ctx contex
 
 func testAccCheckBlockPublicAccessConfigurationAttributes_default(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -270,7 +270,7 @@ func testAccCheckBlockPublicAccessConfigurationAttributes_enabledMultiRange(ctx 
 			return create.Error(names.EMR, create.ErrActionCheckingExistence, tfemr.ResNameBlockPublicAccessConfiguration, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 		resp, err := tfemr.FindBlockPublicAccessConfiguration(ctx, conn)
 
 		if err != nil {
@@ -305,7 +305,7 @@ func testAccCheckBlockPublicAccessConfigurationAttributes_disabled(ctx context.C
 			return create.Error(names.EMR, create.ErrActionCheckingExistence, tfemr.ResNameBlockPublicAccessConfiguration, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 		resp, err := tfemr.FindBlockPublicAccessConfiguration(ctx, conn)
 
 		if err != nil {
@@ -327,10 +327,10 @@ func testAccCheckBlockPublicAccessConfigurationAttributes_disabled(ctx context.C
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
 	input := &emr.GetBlockPublicAccessConfigurationInput{}
-	_, err := conn.GetBlockPublicAccessConfigurationWithContext(ctx, input)
+	_, err := conn.GetBlockPublicAccessConfiguration(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
