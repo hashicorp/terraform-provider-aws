@@ -35,6 +35,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Reusable Delegation Set",
 		},
 		{
+			Factory:  DataSourceRecords,
+			TypeName: "aws_route53_record",
+			Name:     "Record",
+		},
+		{
 			Factory:  dataSourceTrafficPolicyDocument,
 			TypeName: "aws_route53_traffic_policy_document",
 			Name:     "Traffic Policy Document",
