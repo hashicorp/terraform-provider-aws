@@ -21,6 +21,8 @@ var (
 	ResourceThingGroupMembership     = resourceThingGroupMembership
 	ResourceThingPrincipalAttachment = resourceThingPrincipalAttachment
 	ResourceThingType                = resourceThingType
+	ResourceTopicRule                = resourceTopicRule
+	ResourceTopicRuleDestination     = resourceTopicRuleDestination
 
 	FindAttachedPolicyByTwoPartKey           = findAttachedPolicyByTwoPartKey
 	FindAuthorizerByName                     = findAuthorizerByName

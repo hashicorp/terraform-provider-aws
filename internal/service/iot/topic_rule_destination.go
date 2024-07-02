@@ -26,7 +26,7 @@ import (
 )
 
 // @SDKResource("aws_iot_topic_rule_destination", name="Topic Rule Destination")
-func ResourceTopicRuleDestination() *schema.Resource {
+func resourceTopicRuleDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicRuleDestinationCreate,
 		ReadWithoutTimeout:   resourceTopicRuleDestinationRead,

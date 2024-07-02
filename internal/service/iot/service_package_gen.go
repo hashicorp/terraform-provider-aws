@@ -151,7 +151,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTopicRule,
+			Factory:  resourceTopicRule,
 			TypeName: "aws_iot_topic_rule",
 			Name:     "Topic Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -159,7 +159,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTopicRuleDestination,
+			Factory:  resourceTopicRuleDestination,
 			TypeName: "aws_iot_topic_rule_destination",
 			Name:     "Topic Rule Destination",
 		},

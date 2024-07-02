@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_iot_topic_rule", name="Topic Rule")
 // @Tags(identifierAttribute="arn")
-func ResourceTopicRule() *schema.Resource {
+func resourceTopicRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicRuleCreate,
 		ReadWithoutTimeout:   resourceTopicRuleRead,
@@ -39,1199 +39,1203 @@ func ResourceTopicRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cloudwatch_alarm": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			topicRuleErrorActionExactlyOneOf := []string{
+				"error_action.0.cloudwatch_alarm",
+				"error_action.0.cloudwatch_logs",
+				"error_action.0.cloudwatch_metric",
+				"error_action.0.dynamodb",
+				"error_action.0.dynamodbv2",
+				"error_action.0.elasticsearch",
+				"error_action.0.firehose",
+				"error_action.0.http",
+				"error_action.0.iot_analytics",
+				"error_action.0.iot_events",
+				"error_action.0.kafka",
+				"error_action.0.kinesis",
+				"error_action.0.lambda",
+				"error_action.0.republish",
+				"error_action.0.s3",
+				"error_action.0.sns",
+				"error_action.0.sqs",
+				"error_action.0.step_functions",
+				"error_action.0.timestream",
+			}
+
+			timestreamDimensionResource := func() *schema.Resource {
+				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"alarm_name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"state_reason": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"state_value": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
-						},
-					},
-				},
-			},
-			names.AttrCloudWatchLogs: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrLogGroupName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"cloudwatch_metric": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMetricName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"metric_namespace": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"metric_timestamp": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidUTCTimestamp,
-						},
-						"metric_unit": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"metric_value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"dynamodb": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"hash_key_field": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"hash_key_value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"hash_key_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"operation": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"DELETE",
-								"INSERT",
-								"UPDATE",
-							}, false),
-						},
-						"payload_field": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"range_key_field": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"range_key_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"range_key_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrTableName: {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"dynamodbv2": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"put_item": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrTableName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+				"cloudwatch_alarm": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"alarm_name": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"state_reason": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"state_value": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
+							},
 						},
 					},
 				},
-			},
-			"elasticsearch": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEndpoint: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validTopicRuleElasticsearchEndpoint,
-						},
-						names.AttrID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"index": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
+				names.AttrCloudWatchLogs: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrLogGroupName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrEnabled: {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"error_action": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_alarm": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"alarm_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"state_reason": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"state_value": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
-									},
-								},
+				"cloudwatch_metric": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMetricName: {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						names.AttrCloudWatchLogs: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrLogGroupName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							"metric_namespace": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"cloudwatch_metric": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrMetricName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metric_namespace": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metric_timestamp": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidUTCTimestamp,
-									},
-									"metric_unit": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"metric_value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							"metric_timestamp": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidUTCTimestamp,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"dynamodb": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"hash_key_field": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"hash_key_value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"hash_key_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"operation": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"DELETE",
-											"INSERT",
-											"UPDATE",
-										}, false),
-									},
-									"payload_field": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"range_key_field": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"range_key_value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"range_key_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrTableName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							"metric_unit": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"dynamodbv2": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"put_item": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrTableName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							"metric_value": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"elasticsearch": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrEndpoint: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validTopicRuleElasticsearchEndpoint,
-									},
-									names.AttrID: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"index": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 						},
-						"firehose": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"batch_mode": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"delivery_stream_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"separator": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validTopicRuleFirehoseSeparator,
-									},
-								},
+					},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"dynamodb": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hash_key_field": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"http": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"confirmation_url": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.IsURLWithHTTPS,
-									},
-									"http_header": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									names.AttrURL: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.IsURLWithHTTPS,
-									},
-								},
+							"hash_key_value": {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"iot_analytics": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"batch_mode": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"channel_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							"hash_key_type": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"iot_events": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"batch_mode": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-									"input_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"message_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							"operation": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									"DELETE",
+									"INSERT",
+									"UPDATE",
+								}, false),
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"kafka": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"client_properties": {
-										Type:     schema.TypeMap,
-										Required: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrDestinationARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrHeader: {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"partition": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"topic": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							"payload_field": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"kinesis": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"partition_key": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"stream_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							"range_key_field": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"lambda": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrFunctionARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							"range_key_value": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"republish": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"qos": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										Default:      0,
-										ValidateFunc: validation.IntBetween(0, 1),
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"topic": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							"range_key_type": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"s3": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"canned_acl": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CannedAccessControlList](),
-									},
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"sns": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"message_format": {
-										Type:     schema.TypeString,
-										Default:  awstypes.MessageFormatRaw,
-										Optional: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrTargetARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 						},
-						"sqs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"queue_url": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"use_base64": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-								},
-							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"step_functions": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"execution_name_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"state_machine_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-						"timestream": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDatabaseName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"dimension": {
-										Type:     schema.TypeSet,
-										Required: true,
-										Elem:     timestreamDimensionResource,
-									},
-									names.AttrRoleARN: {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrTableName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"timestamp": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrUnit: {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														"SECONDS",
-														"MILLISECONDS",
-														"MICROSECONDS",
-														"NANOSECONDS",
-													}, false),
-												},
-												names.AttrValue: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
+					},
+				},
+				"dynamodbv2": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"put_item": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrTableName: {
+											Type:     schema.TypeString,
+											Required: true,
 										},
 									},
 								},
 							},
-							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
-						},
-					},
-				},
-			},
-			"firehose": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"batch_mode": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"delivery_stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"separator": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validTopicRuleFirehoseSeparator,
-						},
-					},
-				},
-			},
-			"http": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"confirmation_url": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-						"http_header": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						names.AttrURL: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsURLWithHTTPS,
-						},
-					},
-				},
-			},
-			"iot_analytics": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"batch_mode": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"channel_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"iot_events": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"batch_mode": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"input_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"message_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"kafka": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"client_properties": {
-							Type:     schema.TypeMap,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrDestinationARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrHeader: {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"partition": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"kinesis": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"partition_key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"stream_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"lambda": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrFunctionARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validTopicRuleName,
-			},
-			"republish": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"qos": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      0,
-							ValidateFunc: validation.IntBetween(0, 1),
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"topic": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"s3": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"canned_acl": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.CannedAccessControlList](),
-						},
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"sns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  awstypes.MessageFormatRaw,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrTargetARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"sql": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sql_version": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"sqs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"queue_url": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"use_base64": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
-					},
-				},
-			},
-			"step_functions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"execution_name_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"state_machine_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timestream": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"dimension": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     timestreamDimensionResource,
-						},
-						names.AttrRoleARN: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrTableName: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"timestamp": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrUnit: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"SECONDS",
-											"MILLISECONDS",
-											"MICROSECONDS",
-											"NANOSECONDS",
-										}, false),
-									},
-									names.AttrValue: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
+				"elasticsearch": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEndpoint: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validTopicRuleElasticsearchEndpoint,
+							},
+							names.AttrID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"index": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Required: true,
+				},
+				"error_action": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_alarm": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"alarm_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"state_reason": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"state_value": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validTopicRuleCloudWatchAlarmStateValue,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							names.AttrCloudWatchLogs: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrLogGroupName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"cloudwatch_metric": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrMetricName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metric_namespace": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metric_timestamp": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidUTCTimestamp,
+										},
+										"metric_unit": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"metric_value": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"dynamodb": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hash_key_field": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"hash_key_value": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"hash_key_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"operation": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"DELETE",
+												"INSERT",
+												"UPDATE",
+											}, false),
+										},
+										"payload_field": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"range_key_field": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"range_key_value": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"range_key_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrTableName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"dynamodbv2": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"put_item": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrTableName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"elasticsearch": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrEndpoint: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validTopicRuleElasticsearchEndpoint,
+										},
+										names.AttrID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"index": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"firehose": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"batch_mode": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"delivery_stream_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"separator": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validTopicRuleFirehoseSeparator,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"http": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"confirmation_url": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.IsURLWithHTTPS,
+										},
+										"http_header": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										names.AttrURL: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.IsURLWithHTTPS,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"iot_analytics": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"batch_mode": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"channel_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"iot_events": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"batch_mode": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"input_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"message_id": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"kafka": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"client_properties": {
+											Type:     schema.TypeMap,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										names.AttrDestinationARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrHeader: {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrKey: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"partition": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"topic": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"kinesis": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"partition_key": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"stream_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"lambda": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrFunctionARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"republish": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"qos": {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Default:      0,
+											ValidateFunc: validation.IntBetween(0, 1),
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"topic": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"s3": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"canned_acl": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CannedAccessControlList](),
+										},
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"sns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"message_format": {
+											Type:     schema.TypeString,
+											Default:  awstypes.MessageFormatRaw,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrTargetARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"sqs": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"queue_url": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"use_base64": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"step_functions": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"execution_name_prefix": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"state_machine_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+							"timestream": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDatabaseName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"dimension": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem:     timestreamDimensionResource(),
+										},
+										names.AttrRoleARN: {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrTableName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"timestamp": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrUnit: {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.StringInSlice([]string{
+															"SECONDS",
+															"MILLISECONDS",
+															"MICROSECONDS",
+															"NANOSECONDS",
+														}, false),
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+												},
+											},
+										},
+									},
+								},
+								ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
+							},
+						},
+					},
+				},
+				"firehose": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"delivery_stream_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"separator": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validTopicRuleFirehoseSeparator,
+							},
+						},
+					},
+				},
+				"http": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"confirmation_url": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+							"http_header": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							names.AttrURL: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.IsURLWithHTTPS,
+							},
+						},
+					},
+				},
+				"iot_analytics": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"channel_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"iot_events": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"batch_mode": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"input_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"message_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"kafka": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"client_properties": {
+								Type:     schema.TypeMap,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrDestinationARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrHeader: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrKey: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"partition": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"topic": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"kinesis": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"partition_key": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"stream_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"lambda": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrFunctionARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validTopicRuleName,
+				},
+				"republish": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"qos": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      0,
+								ValidateFunc: validation.IntBetween(0, 1),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"topic": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"s3": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"canned_acl": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.CannedAccessControlList](),
+							},
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"sns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"message_format": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  awstypes.MessageFormatRaw,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrTargetARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+						},
+					},
+				},
+				"sql": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"sql_version": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"sqs": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"queue_url": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"use_base64": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				"step_functions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"execution_name_prefix": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"state_machine_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"timestream": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"dimension": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     timestreamDimensionResource(),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"timestamp": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrUnit: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"SECONDS",
+												"MILLISECONDS",
+												"MICROSECONDS",
+												"NANOSECONDS",
+											}, false),
+										},
+										names.AttrValue: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
-}
-
-var topicRuleErrorActionExactlyOneOf = []string{
-	"error_action.0.cloudwatch_alarm",
-	"error_action.0.cloudwatch_logs",
-	"error_action.0.cloudwatch_metric",
-	"error_action.0.dynamodb",
-	"error_action.0.dynamodbv2",
-	"error_action.0.elasticsearch",
-	"error_action.0.firehose",
-	"error_action.0.http",
-	"error_action.0.iot_analytics",
-	"error_action.0.iot_events",
-	"error_action.0.kafka",
-	"error_action.0.kinesis",
-	"error_action.0.lambda",
-	"error_action.0.republish",
-	"error_action.0.s3",
-	"error_action.0.sns",
-	"error_action.0.sqs",
-	"error_action.0.step_functions",
-	"error_action.0.timestream",
-}
-
-var timestreamDimensionResource *schema.Resource = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		names.AttrName: {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		names.AttrValue: {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-	},
 }
 
 func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1405,41 +1409,40 @@ func findTopicRuleByName(ctx context.Context, conn *iot.Client, name string) (*i
 	// GetTopicRule returns unhelpful errors such as
 	//	"An error occurred (UnauthorizedException) when calling the GetTopicRule operation: Access to topic rule 'xxxxxxxx' was denied"
 	// when querying for a rule that doesn't exist.
-	var rule awstypes.TopicRuleListItem
+	inputL := &iot.ListTopicRulesInput{}
+	var rule *awstypes.TopicRuleListItem
 
-	out, err := conn.ListTopicRules(ctx, &iot.ListTopicRulesInput{})
+	pages := iot.NewListTopicRulesPaginator(conn, inputL)
+pageLoop:
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: &iot.ListTopicRulesInput{},
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Rules {
+			if aws.ToString(v.RuleName) == name {
+				rule = &v
+				break pageLoop
+			}
 		}
 	}
 
-	for _, v := range out.Rules {
-		if aws.ToString(v.RuleName) == name {
-			rule = v
-		}
+	if rule == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if rule.RuleName == nil {
-		return nil, tfresource.NewEmptyResultError(name)
-	}
-
-	input := &iot.GetTopicRuleInput{
+	inputG := &iot.GetTopicRuleInput{
 		RuleName: aws.String(name),
 	}
 
-	output, err := conn.GetTopicRule(ctx, input)
+	output, err := conn.GetTopicRule(ctx, inputG)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: inputG,
 		}
 	}
 
@@ -1448,7 +1451,7 @@ func findTopicRuleByName(ctx context.Context, conn *iot.Client, name string) (*i
 	}
 
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(inputG)
 	}
 
 	return output, nil
@@ -3248,12 +3251,12 @@ func flattenTimestreamAction(apiObject *awstypes.TimestreamAction) []interface{}
 	return []interface{}{tfMap}
 }
 
-func flattenTimestreamDimensions(apiObjects []awstypes.TimestreamDimension) *schema.Set {
+func flattenTimestreamDimensions(apiObjects []awstypes.TimestreamDimension) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
 
-	tfSet := schema.NewSet(schema.HashResource(timestreamDimensionResource), []interface{}{})
+	tfList := make([]interface{}, 0)
 
 	for _, apiObject := range apiObjects {
 		tfMap := make(map[string]interface{})
@@ -3266,10 +3269,10 @@ func flattenTimestreamDimensions(apiObjects []awstypes.TimestreamDimension) *sch
 			tfMap[names.AttrValue] = aws.ToString(v)
 		}
 
-		tfSet.Add(tfMap)
+		tfList = append(tfList, tfMap)
 	}
 
-	return tfSet
+	return tfList
 }
 
 func flattenTimestreamTimestamp(apiObject *awstypes.TimestreamTimestamp) []interface{} {
