@@ -63,6 +63,8 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 }
 
 func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsync.Semaphore) {
+	acctest.Skip(t, "IncorrectState: You cannot create a dynamic peering attachment")
+
 	ctx := acctest.Context(t)
 	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -326,6 +328,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
+
   options {
     dynamic_routing = "enable"
   }
