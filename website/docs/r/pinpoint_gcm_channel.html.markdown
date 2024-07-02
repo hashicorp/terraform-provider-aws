@@ -10,15 +10,24 @@ description: |-
 
 Provides a Pinpoint GCM Channel resource.
 
-~> **Note:** Api Key argument will be stored in the raw state as plain-text.
+~> **Note:** Credentials (Service Account JSON and API Key) will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
 ```terraform
+# Token method
 resource "aws_pinpoint_gcm_channel" "gcm" {
-  application_id = aws_pinpoint_app.app.application_id
-  api_key        = "api_key"
+  application_id                  = aws_pinpoint_app.app.application_id
+  default_authentication_method   = "TOKEN"
+  service_json                    = file("path_to_service_json")
+}
+
+# API Key (Legacy) method
+resource "aws_pinpoint_gcm_channel" "gcm" {
+  application_id                  = aws_pinpoint_app.app.application_id
+  default_authentication_method   = "KEY"
+  api_key                         = "api_key"
 }
 
 resource "aws_pinpoint_app" "app" {}
