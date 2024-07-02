@@ -200,6 +200,41 @@ func TestAccCodeBuildWebhook_buildType(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildWebhook_ScopeConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var webhook types.Webhook
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebhookConfig_ScopeConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.scope", "GITHUB_GLOBAL"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
+
 func TestAccCodeBuildWebhook_branchFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	var webhook types.Webhook
@@ -500,6 +535,20 @@ resource "aws_codebuild_webhook" "test" {
       type    = "EVENT"
       pattern = "PULL_REQUEST_UPDATED"
     }
+  }
+}
+`)
+}
+
+func testAccWebhookConfig_ScopeConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_basic(rName),
+		`
+resource "aws_codebuild_webhook" "test" {
+  project_name = aws_codebuild_project.test.name
+  scope_configuration {
+    name  = %[1]q
+    scope = "GITHUB_GLOBAL"
   }
 }
 `)

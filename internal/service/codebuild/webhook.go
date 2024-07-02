@@ -74,6 +74,28 @@ func resourceWebhook() *schema.Resource {
 				},
 				ConflictsWith: []string{"branch_filter"},
 			},
+			"scope_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrScope: {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						names.AttrDomain: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.WebhookScopeType](),
+						},
+					},
+				},
+			},
 			"payload_url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -117,6 +139,10 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.FilterGroups = expandWebhookFilterGroups(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("scope_configuration"); ok && len(v.([]interface{})) > 0 {
+		input.ScopeConfiguration = expandScopeConfiguration(v.([]interface{}))
+	}
+
 	output, err := conn.CreateWebhook(ctx, input)
 
 	if err != nil {
@@ -149,6 +175,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("build_type", webhook.BuildType)
 	d.Set("branch_filter", webhook.BranchFilter)
 	d.Set("filter_group", flattenWebhookFilterGroups(webhook.FilterGroups))
+	d.Set("scope_configuration", flattenScopeConfiguration(webhook.ScopeConfiguration))
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
 	d.Set("secret", d.Get("secret").(string))
@@ -290,6 +317,25 @@ func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
 	return apiObject
 }
 
+func expandScopeConfiguration(tfList []interface{}) *types.ScopeConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	apiObject := &types.ScopeConfiguration{
+		Name:  aws.String(m[names.AttrName].(string)),
+		Scope: types.WebhookScopeType(m[names.AttrScope].(string)),
+	}
+
+	if v, ok := m[names.AttrDomain].(string); ok && v != "" {
+		apiObject.Domain = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
@@ -335,4 +381,21 @@ func flattenWebhookFilter(apiObject types.WebhookFilter) map[string]interface{} 
 	}
 
 	return tfMap
+}
+
+func flattenScopeConfiguration(apiObjects *types.ScopeConfiguration) map[string]interface{} {
+	if apiObjects == nil {
+		return map[string]interface{}{}
+	}
+
+	tfList := map[string]interface{}{
+		names.AttrName:  apiObjects.Name,
+		names.AttrScope: apiObjects.Scope,
+	}
+
+	if apiObjects.Domain != nil {
+		tfList[names.AttrDomain] = apiObjects.Domain
+	}
+
+	return tfList
 }
