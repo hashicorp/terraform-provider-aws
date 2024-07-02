@@ -151,6 +151,10 @@ func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta i
 		RoleAlias: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IoT Role Alias (%s): %s", d.Id(), err)
 	}
