@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource(name="Image")
 func newDataSourceImage(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceImage{}, nil
@@ -191,7 +190,6 @@ func (d *dataSourceImage) Read(ctx context.Context, req datasource.ReadRequest, 
 	}
 	image := images[0]
 
-	// TIP: -- 6. Set the state
 	data.Type = fwtypes.StringEnum[awstypes.VisibilityType]{}.StringEnumValue(string(image.Visibility))
 	resp.Diagnostics.Append(flex.Flatten(ctx, &image, &data)...)
 	if resp.Diagnostics.HasError() {
