@@ -83,7 +83,7 @@ func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsy
 				Config: testAccTransitGatewayPeeringAttachmentConfig_options_sameAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.dynamic_routing", "enable"),
 				),
 			},
