@@ -1,0 +1,1171 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../changelog-process/">
+      
+      
+        <link rel="next" href="../prioritization/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Raising a Pull Request - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#raising-a-pull-request" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Raising a Pull Request
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="true">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Raising a Pull Request
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Raising a Pull Request
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#go-coding-style" class="md-nav__link">
+    Go Coding Style
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-contribution-guidelines" class="md-nav__link">
+    Resource Contribution Guidelines
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="false">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-go-sdk-versions/" class="md-nav__link">
+        AWS SDK for Go Versions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-go-sdk-migrations/" class="md-nav__link">
+        AWS SDK for Go Migrations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        Error Handling
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#go-coding-style" class="md-nav__link">
+    Go Coding Style
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-contribution-guidelines" class="md-nav__link">
+    Resource Contribution Guidelines
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<h1 id="raising-a-pull-request">Raising a Pull Request<a class="headerlink" href="#raising-a-pull-request" title="Permanent link">#</a></h1>
+<ol>
+<li>
+<p><a href="https://help.github.com/en/articles/fork-a-repo">Fork the GitHub repository</a> allowing you to make the changes in your own copy of the repository.</p>
+</li>
+<li>
+<p>Create a branch using the following naming prefixes:</p>
+<ul>
+<li>f = feature</li>
+<li>b = bug fix</li>
+<li>d = documentation</li>
+<li>t = tests</li>
+<li>td = technical debt</li>
+<li>v = dependencies ("vendoring" previously)</li>
+</ul>
+<p>Some indicative example branch names would be <code>f-aws_emr_instance_group-refactor</code> or <code>td-staticcheck-st1008</code></p>
+</li>
+<li>
+<p>Make the changes you would like to include in the provider, add new tests as required, and make sure that all relevant existing tests are passing.</p>
+</li>
+<li>
+<p><a href="https://help.github.com/en/articles/creating-a-pull-request-from-a-fork">Create a pull request</a>. Please ensure (if possible) that the 'Allow edits from maintainers' checkbox is checked. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor.
+   You are welcome to submit your pull request for commentary or review before
+   it is fully completed by creating a <a href="https://help.github.com/en/articles/about-pull-requests#draft-pull-requests">draft pull request</a>.
+   Please include specific questions or items you'd like feedback on.</p>
+</li>
+<li>
+<p>Create a changelog entry following the process outlined <a href="../changelog-process/">here</a></p>
+</li>
+<li>
+<p>Once you believe your pull request is ready to be reviewed, ensure the
+   pull request is not a draft pull request by <a href="https://help.github.com/en/articles/changing-the-stage-of-a-pull-request">marking it ready for review</a>
+   or removing <code>[WIP]</code> from the pull request title if necessary, and a
+   maintainer will review it. Follow <a href="#resource-contribution-guidelines">the checklists below</a>
+   to help ensure that your contribution can be easily reviewed and potentially
+   merged.</p>
+</li>
+<li>
+<p>One of Terraform's provider team members will look over your contribution and
+   either approve it or provide comments letting you know if there is anything
+   left to do. We'll try to give you the opportunity to make the required changes yourself, but in some cases, we may perform the changes ourselves if it makes sense to (minor changes, or for urgent issues).  We do our best to keep up with the volume of PRs waiting for review, but it may take some time depending on the complexity of the work.</p>
+</li>
+<li>
+<p>Once all outstanding comments and checklist items have been addressed, your
+   contribution will be merged! Merged PRs will be included in the next
+   Terraform release.</p>
+</li>
+<li>
+<p>In some cases, we might decide that a PR should be closed without merging.
+   We'll make sure to provide clear reasoning when this happens.</p>
+</li>
+</ol>
+<h3 id="go-coding-style">Go Coding Style<a class="headerlink" href="#go-coding-style" title="Permanent link">#</a></h3>
+<p>All Go code is automatically checked for compliance with various linters, such as <code>gofmt</code>. These tools can be installed using the <code>GNUMakefile</code> in this repository.</p>
+<div class="highlight"><pre><span></span><code><span class="go">make tools</span>
+</code></pre></div>
+<p>Check your code with the linters:</p>
+<div class="highlight"><pre><span></span><code><span class="go">make lint</span>
+</code></pre></div>
+<p>We use <a href="https://semgrep.dev/docs/">Semgrep</a> to check for other code standards.
+This can be run directly on the command line, i.e.,</p>
+<div class="highlight"><pre><span></span><code><span class="go">semgrep</span>
+</code></pre></div>
+<p>or it can be run using Docker via the Makefile, i.e.,</p>
+<div class="highlight"><pre><span></span><code><span class="go">make semgrep</span>
+</code></pre></div>
+<p><code>gofmt</code> will also fix many simple formatting issues for you. The Makefile includes a target for this:</p>
+<div class="highlight"><pre><span></span><code><span class="go">make fmt</span>
+</code></pre></div>
+<p>The import statement in a Go file follows these rules (see <a href="https://github.com/hashicorp/terraform-provider-aws/issues/15903">#15903</a>):</p>
+<ol>
+<li>Import declarations are grouped into a maximum of three groups in the following order:<ul>
+<li>Standard packages (also called short import path or built-in packages)</li>
+<li>Third-party packages (also called long import path packages)</li>
+<li>Local packages</li>
+</ul>
+</li>
+<li>Groups are separated by a single blank line</li>
+<li>Packages within each group are alphabetized</li>
+</ol>
+<p>Check your imports:</p>
+<div class="highlight"><pre><span></span><code><span class="go">make import-lint</span>
+</code></pre></div>
+<p>For greater detail, the following Go language resources provide common coding preferences that may be referenced during review, if not automatically handled by the project's linting tools.</p>
+<ul>
+<li><a href="https://golang.org/doc/effective_go.html">Effective Go</a></li>
+<li><a href="https://github.com/golang/go/wiki/CodeReviewComments">Go Code Review Comments</a></li>
+</ul>
+<h3 id="resource-contribution-guidelines">Resource Contribution Guidelines<a class="headerlink" href="#resource-contribution-guidelines" title="Permanent link">#</a></h3>
+<p>The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. Some of these are not handled by the automated code testing that occurs during submission, so reviewers (even those outside the maintainers) are encouraged to reach out to contributors about any issues to save time.</p>
+<p>This Contribution Guide also includes separate sections on topics such as <a href="../error-handling/">Error Handling</a>, which also applies to contributions.</p>
+<ul>
+<li><strong>Passes Testing</strong>: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.</li>
+<li><strong>Avoids API Calls Across Account, Region, and Service Boundaries</strong>: Resources should not implement cross-account, cross-region, or cross-service API calls.</li>
+<li><strong>Does Not Set Optional or Required for Non-Configurable Attributes</strong>: Resource schema definitions for read-only attributes must not include <code>Optional: true</code> or <code>Required: true</code>.</li>
+<li><strong>Avoids retry.RetryContext() without retry.RetryableError()</strong>: Resource logic should only implement <a href="https://godoc.org/github.com/hashicorp/terraform/helper/retry#Retry"><code>retry.Retry()</code></a> if there is a retryable condition (e.g., <code>return retry.RetryableError(err)</code>).</li>
+<li><strong>Avoids Reusing Resource Read Function in Data Source Read Function</strong>: Data sources should fully implement their own resource <code>Read</code> functionality.</li>
+<li><strong>Avoids Reading Schema Structure in Resource Code</strong>: The resource <code>Schema</code> should not be read in resource <code>Create</code>/<code>Read</code>/<code>Update</code>/<code>Delete</code> functions to perform looping or otherwise complex attribute logic. Use <a href="https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Get"><code>d.Get()</code></a> and <a href="https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set"><code>d.Set()</code></a> directly with individual attributes instead.</li>
+<li><strong>Avoids ResourceData.GetOkExists()</strong>: Resource logic should avoid using <a href="https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.GetOkExists"><code>ResourceData.GetOkExists()</code></a> as its expected functionality is not guaranteed in all scenarios.</li>
+<li><strong>Calls Read After Create and Update</strong>: Except where API eventual consistency prohibits immediate reading of resources or updated attributes,  resource <code>Create</code> and <code>Update</code> functions should return the resource <code>Read</code> function.</li>
+<li><strong>Implements Immediate Resource ID Set During Create</strong>: Immediately after calling the API creation function, the resource ID should be set with <a href="https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.SetId"><code>d.SetId()</code></a> before other API operations or returning the <code>Read</code> function.</li>
+<li><strong>Implements Attribute Refreshes During Read</strong>: All attributes available in the API should have <a href="https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set"><code>d.Set()</code></a> called their values in the Terraform state during the <code>Read</code> function.</li>
+<li><strong>Performs Error Checks with Non-Primitive Attribute Refreshes</strong>: When using <a href="https://godoc.org/github.com/hashicorp/terraform/helper/schema#ResourceData.Set"><code>d.Set()</code></a> with non-primitive types (<code>schema.TypeList</code>, <code>schema.TypeSet</code>, or <code>schema.TypeMap</code>), perform error checking to <a href="https://www.terraform.io/plugin/sdkv2/best-practices/detecting-drift#error-checking-aggregate-types">prevent issues where the code is not properly able to refresh the Terraform state</a>.</li>
+<li><strong>Implements Import Acceptance Testing and Documentation</strong>: Support for resource import (<code>Importer</code> in resource schema) must include <code>ImportState</code> acceptance testing (see also the <a href="../running-and-writing-acceptance-tests/">Acceptance Testing Guidelines</a>) and <code>## Import</code> section in resource documentation.</li>
+<li><strong>Implements Customizable Timeouts Documentation</strong>: Support for customizable timeouts (<code>Timeouts</code> in resource schema) must include <code>## Timeouts</code> section in resource documentation.</li>
+<li><strong>Implements State Migration When Adding New Virtual Attribute</strong>: For new "virtual" attributes (those only in Terraform and not in the API), the schema should implement <a href="https://www.terraform.io/plugin/sdkv2/resources#state-migrations">State Migration</a> to prevent differences for existing configurations that upgrade.</li>
+<li><strong>Uses AWS Go SDK Constants</strong>: Many AWS services provide string constants for value enumerations, error codes, and status types. See also the "Constants" sections under each of the service packages in the <a href="https://docs.aws.amazon.com/sdk-for-go/api/">AWS Go SDK documentation</a>.</li>
+<li><strong>Uses AWS Go SDK Pointer Conversion Functions</strong>: Many APIs return pointer types and these functions return the zero value for the type if the pointer is <code>nil</code>. This prevents potential panics from unchecked <code>*</code> pointer dereferences and can eliminate boilerplate <code>nil</code> checking in many cases. See also the <a href="https://docs.aws.amazon.com/sdk-for-go/api/aws/"><code>aws</code> package in the AWS Go SDK documentation</a>.</li>
+<li><strong>Uses AWS Go SDK Types</strong>: Use available SDK structs instead of implementing custom types with indirection.</li>
+<li><strong>Uses Existing Validation Functions</strong>: Schema definitions including <code>ValidateFunc</code> for attribute validation should use available <a href="https://godoc.org/github.com/hashicorp/terraform/helper/validation">Terraform <code>helper/validation</code> package</a> functions. <code>All()</code>/<code>Any()</code> can be used for combining multiple validation function behaviors.</li>
+<li><strong>Uses tfresource.TimedOut() with retry.Retry()</strong>: Resource logic implementing <a href="https://godoc.org/github.com/hashicorp/terraform/helper/retry#Retry"><code>retry.Retry()</code></a> should error check with <a href="https://godoc.org/github.com/hashicorp/terraform-provider-aws/internal/tfresource#TimedOut"><code>tfresource.TimedOut(err error)</code></a> and potentially unset the error before returning the error. For example:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kd">var</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">*</span><span class="nx">kms</span><span class="p">.</span><span class="nx">CreateKeyOutput</span>
+<span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">retry</span><span class="p">.</span><span class="nx">Retry</span><span class="p">(</span><span class="mi">1</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Minute</span><span class="p">,</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="nx">retry</span><span class="p">.</span><span class="nx">RetryError</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">var</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="kt">error</span>
+
+<span class="w">  </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">CreateKey</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+
+<span class="w">  </span><span class="cm">/* ... */</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span>
+<span class="p">})</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">tfresource</span><span class="p">.</span><span class="nx">TimedOut</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">CreateKey</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;creating KMS External Key: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><strong>Uses id.UniqueId()</strong>: API fields for concurrency protection such as <code>CallerReference</code> and <code>IdempotencyToken</code> should use <a href="https://godoc.org/github.com/hashicorp/terraform/helper/resource#UniqueId"><code>id.UniqueId()</code></a>. The implementation includes a monotonic counter which is safer for concurrent operations than solutions such as <code>time.Now()</code>.</li>
+<li><strong>Skips id Attribute</strong>: The <code>id</code> attribute is implicit for all Terraform resources and does not need to be defined in the schema.</li>
+</ul>
+<p>The below are style-based items that <em>may</em> be noted during review and are recommended for simplicity, consistency, and quality assurance:</p>
+<ul>
+<li><strong>Implements arn Attribute</strong>: APIs that return an ARN should implement <code>arn</code> as an attribute. Alternatively, the ARN can be synthesized using the AWS Go SDK <a href="https://docs.aws.amazon.com/sdk-for-go/api/aws/arn/#ARN"><code>arn.ARN</code></a> structure. For example:</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1">// Direct Connect Virtual Interface ARN.</span>
+<span class="c1">// See https://docs.aws.amazon.com/directconnect/latest/UserGuide/security_iam_service-with-iam.html#security_iam_service-with-iam-id-based-policies-resources.</span>
+<span class="nx">arn</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">arn</span><span class="p">.</span><span class="nx">ARN</span><span class="p">{</span>
+<span class="w">    </span><span class="nx">Partition</span><span class="p">:</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">Partition</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">Region</span><span class="p">:</span><span class="w">    </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">Region</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">Service</span><span class="p">:</span><span class="w">   </span><span class="s">&quot;directconnect&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">AccountID</span><span class="p">:</span><span class="w"> </span><span class="nx">meta</span><span class="p">.(</span><span class="o">*</span><span class="nx">conns</span><span class="p">.</span><span class="nx">AWSClient</span><span class="p">).</span><span class="nx">AccountID</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">Resource</span><span class="p">:</span><span class="w">  </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Sprintf</span><span class="p">(</span><span class="s">&quot;dxvif/%s&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">()),</span>
+<span class="p">}.</span><span class="nx">String</span><span class="p">()</span>
+<span class="nx">d</span><span class="p">.</span><span class="nx">Set</span><span class="p">(</span><span class="s">&quot;arn&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">arn</span><span class="p">)</span>
+</code></pre></div>
+<p>When the <code>arn</code> attribute is synthesized this way, add the resource to the <a href="https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id">list</a> of those affected by the provider's <code>skip_requesting_account_id</code> attribute.</p>
+<ul>
+<li><strong>Implements Warning Logging With Resource State Removal</strong>: If a resource is removed outside of Terraform (e.g., via a different tool, API, or web UI), <code>d.SetId("")</code> and <code>return nil</code> can be used in the resource <code>Read</code> function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: <code>log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())</code></li>
+<li><strong>Uses American English for Attribute Naming</strong>: For any ambiguity with attribute naming, prefer American English over British English. e.g., <code>color</code> without the British <code>u</code>.</li>
+<li><strong>Skips Timestamp Attributes</strong>: Generally, creation and modification dates from the API should be omitted from the schema.</li>
+<li><strong>Uses Paginated AWS Go SDK Functions When Iterating Over a Collection of Objects</strong>: When the API for listing a collection of objects provides a paginated function, use it instead of looping until the next page token is not set. For example, with the EC2 API, <a href="https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstancesPages"><code>DescribeInstancesPages</code></a> should be used instead of <a href="https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstances"><code>DescribeInstances</code></a> when more than one result is expected.</li>
+<li><strong>Adds Paginated Functions Missing from the AWS Go SDK to Internal Service Package</strong>: If the AWS Go SDK does not define a paginated equivalent for a function to list a collection of objects, it should be added to a per-service internal package using the <a href="https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md"><code>listpages</code> generator</a>. A support case should also be opened with AWS to have the paginated functions added to the AWS Go SDK.</li>
+</ul>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
