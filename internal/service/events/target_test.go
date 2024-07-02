@@ -225,6 +225,7 @@ func TestAccEventsTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", acctest.Ct0),
 				),
 			},
 			{
@@ -1187,6 +1188,39 @@ func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.propagate_tags", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccEventsTarget_appsync(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Target
+	rName := sdkacctest.RandomWithPrefix("tf_appsync_target")
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_appsync(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "appsync_target.0.graphql_operation", "mutation TestMutation($input:MutationInput!){testMutation(input: $input) {test}}"),
 				),
 			},
 			{
@@ -2645,4 +2679,104 @@ resource "aws_cloudwatch_event_target" "test" {
   }
 }
 `)
+}
+
+func testAccTargetConfig_appsync(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  description         = "schedule_batch_test"
+  schedule_expression = "rate(5 minutes)"
+}
+
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = replace(aws_appsync_graphql_api.test.arn, "apis", "endpoints/graphql-api")
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  input_transformer {
+    input_paths = {
+      input = "$.detail.input"
+    }
+
+    input_template = <<EOF
+      {
+        "input": <input>
+      }
+    EOF
+  }
+
+  appsync_target {
+    graphql_operation = "mutation TestMutation($input:MutationInput!){testMutation(input: $input) {test}}"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "events.${data.aws_partition.current.dns_suffix}"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "appsync:GraphQL",
+            "Effect": "Allow",
+            "Resource": [
+                "*"
+            ]
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  name                = %[1]q
+  authentication_type = "AWS_IAM"
+  schema              = <<EOF
+    schema {
+      mutation: Mutation
+      query: Query
+    }
+
+    type Query {
+      testQuery: String
+    }
+
+    type Mutation {
+      testMutation(input: MutationInput!): TestMutationResult
+    }
+
+    type TestMutationResult {
+      test: String
+    }
+
+    input MutationInput {
+      testInput: String
+    }
+  EOF
+}
+`, rName)
 }
