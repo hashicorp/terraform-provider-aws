@@ -1,10 +1,14 @@
 name: Dependency Checks
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   push:
     branches:
       - main
-      - 'release/**'
+      - "release/**"
   pull_request_target:
 
 ## NOTE: !!!
@@ -14,23 +18,46 @@ on:
 ##   - Makefile: ./GNUmakefile
 
 jobs:
-  community_check:
-    if: github.event_name == 'pull_request_target'
-    uses: ./.github/workflows/community-check.yml
-    secrets: inherit
-    with:
-      username: ${{ github.event.pull_request.user.login }}
-
-  changes:
-    needs: community_check
-    name: Filter Changes
+  checks:
+    name: go mod
     runs-on: ubuntu-latest
-    outputs:
-      changed: ${{ steps.filter.outputs.changed }}
+    permissions:
+      contents: read
     steps:
-      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
-        if: needs.community_check.outputs.maintainer == 'false'
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup Go
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version-file: .go-version
+
+      - name: Run make deps-check
+        run: |
+          echo "Using make to check dependencies"
+          make deps-check
+
+  comment:
+    if: github.event_name == 'pull_request_target'
+    name: Comment if Needed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Community Check
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.pull_request.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+
+      - name: Filter Changes
         id: filter
+        if: steps.community_check.outputs.maintainer == 'false'
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
         with:
           filters: |
             changed:
@@ -38,21 +65,16 @@ jobs:
               - go.mod
               - go.sum
 
-  comment:
-    needs: changes
-    if: needs.changes.outputs.changed == 'true'
-    name: Comment
-    runs-on: ubuntu-latest
-    steps:
-      - name: Find Existing PR Comment
+      - name: Check for Existing Comment
         id: prc
+        if: steps.filter.outputs.changed == 'true'
         uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: "github-actions[bot]"
           body-includes: "Please note that typically Go dependency changes"
-      - run: echo ${{ steps.prc.outputs.comment-id }}
-      - name: PR Comment
+
+      - name: Leave a New Comment if One Does Not Exist
         if: steps.prc.outputs.comment-id == ''
         uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
         env:
@@ -71,16 +93,3 @@ jobs:
             * If this pull request is for supporting a new AWS service:
               * Ensure the new AWS service changes are following the [Contributing Guide section on new services](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/add-a-new-service.md), in particular that the dependency addition and initial provider support are in a separate pull request from other changes (e.g. new resources). Contributions not following this item will not be reviewed until the changes are split.
               * If this pull request is already a separate pull request from the above item, you can ignore this message.
-
-  go_mod:
-    name: go mod
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
-        with:
-          go-version-file: .go-version
-      - name: go mod
-        run: |
-          echo "Using make to check dependencies"
-          make deps-check
