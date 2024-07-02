@@ -123,6 +123,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.24.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.24.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/guardduty v1.45.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.26.1 // indirect
@@ -135,6 +136,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.13 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.16.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iot v1.55.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.14.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.35.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.52.1 // indirect
