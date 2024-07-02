@@ -41,8 +41,6 @@ func TestAccTransferConnectorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "as2_config.#", resourceName, "as2_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					//resource.TestCheckResourceAttrPair(dataSourceName, "logging_role", resourceName, "logging_role"),
-					//resource.TestCheckResourceAttrPair(dataSourceName, "security_policy_name", resourceName, "security_policy_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "service_managed_egress_ip_addresses.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "sftp_config.#", resourceName, "sftp_config.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
