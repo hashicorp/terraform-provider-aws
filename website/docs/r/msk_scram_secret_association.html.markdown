@@ -80,7 +80,8 @@ resource "aws_secretsmanager_secret_policy" "example" {
 This resource supports the following arguments:
 
 * `cluster_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) of the MSK cluster.
-* `secret_arn_list` - (Required) List of AWS Secrets Manager secret ARNs.
+* `secret_arn_list` - (Optional) List of AWS Secrets Manager secret ARNs.
+* `secret_arn` - (Optional) Single AWS Secrets Manager secret ARN.
 
 ## Attribute Reference
 
@@ -99,8 +100,23 @@ import {
 }
 ```
 
+Alternatively, import a single MSK SCRAM Secret Association using a combination of the `id` and Secrets Manager secret ARN delimited by `#`. For example:
+
+```terraform
+import {
+  to = aws_msk_scram_secret_association.example
+  id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3#arn:aws:secretsmanager:us-west-2:123456789012:secret:/example"
+}
+```
+
 Using `terraform import`, import MSK SCRAM Secret Associations using the `id`. For example:
 
 ```console
 % terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+```
+
+Alternatively, import a single MSK SCRAM Secret Association using a combination of the `id` and Secrets Manager secret ARN delimited by `#`. For example:
+
+```console
+% terraform import aws_msk_scram_secret_association.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3#arn:aws:secretsmanager:us-west-2:123456789012:secret:/example
 ```
