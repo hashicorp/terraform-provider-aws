@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -60,16 +61,16 @@ func ResourceRoleAlias() *schema.Resource {
 
 func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	roleAlias := d.Get(names.AttrAlias).(string)
 	roleArn := d.Get(names.AttrRoleARN).(string)
 	credentialDuration := d.Get("credential_duration").(int)
 
-	_, err := conn.CreateRoleAliasWithContext(ctx, &iot.CreateRoleAliasInput{
+	_, err := conn.CreateRoleAlias(ctx, &iot.CreateRoleAliasInput{
 		RoleAlias:                 aws.String(roleAlias),
 		RoleArn:                   aws.String(roleArn),
-		CredentialDurationSeconds: aws.Int64(int64(credentialDuration)),
+		CredentialDurationSeconds: aws.Int32(int32(credentialDuration)),
 		Tags:                      getTagsIn(ctx),
 	})
 
@@ -81,8 +82,8 @@ func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return append(diags, resourceRoleAliasRead(ctx, d, meta)...)
 }
 
-func GetRoleAliasDescription(ctx context.Context, conn *iot.IoT, alias string) (*iot.RoleAliasDescription, error) {
-	roleAliasDescriptionOutput, err := conn.DescribeRoleAliasWithContext(ctx, &iot.DescribeRoleAliasInput{
+func GetRoleAliasDescription(ctx context.Context, conn *iot.Client, alias string) (*awstypes.RoleAliasDescription, error) {
+	roleAliasDescriptionOutput, err := conn.DescribeRoleAlias(ctx, &iot.DescribeRoleAliasInput{
 		RoleAlias: aws.String(alias),
 	})
 
@@ -99,9 +100,9 @@ func GetRoleAliasDescription(ctx context.Context, conn *iot.IoT, alias string) (
 
 func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	var roleAliasDescription *iot.RoleAliasDescription
+	var roleAliasDescription *awstypes.RoleAliasDescription
 
 	roleAliasDescription, err := GetRoleAliasDescription(ctx, conn, d.Id())
 
@@ -125,11 +126,11 @@ func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	alias := d.Get(names.AttrAlias).(string)
 
-	_, err := conn.DeleteRoleAliasWithContext(ctx, &iot.DeleteRoleAliasInput{
+	_, err := conn.DeleteRoleAlias(ctx, &iot.DeleteRoleAliasInput{
 		RoleAlias: aws.String(d.Id()),
 	})
 
@@ -142,14 +143,14 @@ func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRoleAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.HasChange("credential_duration") {
 		roleAliasInput := &iot.UpdateRoleAliasInput{
 			RoleAlias:                 aws.String(d.Id()),
-			CredentialDurationSeconds: aws.Int64(int64(d.Get("credential_duration").(int))),
+			CredentialDurationSeconds: aws.Int32(int32(d.Get("credential_duration").(int))),
 		}
-		_, err := conn.UpdateRoleAliasWithContext(ctx, roleAliasInput)
+		_, err := conn.UpdateRoleAlias(ctx, roleAliasInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating role alias %s: %s", d.Id(), err)
 		}
@@ -160,7 +161,7 @@ func resourceRoleAliasUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			RoleAlias: aws.String(d.Id()),
 			RoleArn:   aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
-		_, err := conn.UpdateRoleAliasWithContext(ctx, roleAliasInput)
+		_, err := conn.UpdateRoleAlias(ctx, roleAliasInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating role alias %s: %s", d.Id(), err)
 		}

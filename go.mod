@@ -258,11 +258,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.13 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/greengrass v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.13 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iot v1.55.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.24.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iotevents v1.25.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect

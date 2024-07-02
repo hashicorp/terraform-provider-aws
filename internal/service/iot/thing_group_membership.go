@@ -9,12 +9,14 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -52,7 +54,7 @@ func ResourceThingGroupMembership() *schema.Resource {
 
 func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	thingGroupName := d.Get("thing_group_name").(string)
 	thingName := d.Get("thing_name").(string)
@@ -62,11 +64,11 @@ func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("override_dynamic_group"); ok {
-		input.OverrideDynamicGroups = aws.Bool(v.(bool))
+		input.OverrideDynamicGroups = v.(bool)
 	}
 
-	log.Printf("[DEBUG] Creating IoT Thing Group Membership: %s", input)
-	_, err := conn.AddThingToThingGroupWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating IoT Thing Group Membership: %s", d.Id())
+	_, err := conn.AddThingToThingGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "adding IoT Thing (%s) to IoT Thing Group (%s): %s", thingName, thingGroupName, err)
@@ -79,7 +81,7 @@ func resourceThingGroupMembershipCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 
@@ -87,7 +89,7 @@ func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Group Membership (%s): %s", d.Id(), err)
 	}
 
-	err = FindThingGroupMembership(ctx, conn, thingGroupName, thingName)
+	_, err = findThingGroupMembership(ctx, conn, thingGroupName, thingName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Group Membership (%s) not found, removing from state", d.Id())
@@ -107,7 +109,7 @@ func resourceThingGroupMembershipRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceThingGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 
@@ -116,12 +118,12 @@ func resourceThingGroupMembershipDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group Membership: %s", d.Id())
-	_, err = conn.RemoveThingFromThingGroupWithContext(ctx, &iot.RemoveThingFromThingGroupInput{
+	_, err = conn.RemoveThingFromThingGroup(ctx, &iot.RemoveThingFromThingGroupInput{
 		ThingGroupName: aws.String(thingGroupName),
 		ThingName:      aws.String(thingName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -130,6 +132,46 @@ func resourceThingGroupMembershipDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return diags
+}
+
+func findThingGroupMembership(ctx context.Context, conn *iot.Client, thingGroupName, thingName string) (*awstypes.GroupNameAndArn, error) {
+	input := &iot.ListThingGroupsForThingInput{
+		ThingName: aws.String(thingName),
+	}
+
+	var v awstypes.GroupNameAndArn
+
+	output, err := conn.ListThingGroupsForThing(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ThingGroups == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, group := range output.ThingGroups {
+		if aws.ToString(group.GroupName) == thingGroupName {
+			v = group
+		}
+	}
+
+	if v.GroupName == nil {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	return &v, nil
 }
 
 const thingGroupMembershipResourceIDSeparator = "/"

@@ -8,13 +8,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -130,7 +132,7 @@ const (
 
 func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateThingGroupInput{
@@ -146,22 +148,22 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateThingGroupWithContext(ctx, input)
+	output, err := conn.CreateThingGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IoT Thing Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ThingGroupName))
+	d.SetId(aws.ToString(output.ThingGroupName))
 
 	return append(diags, resourceThingGroupRead(ctx, d, meta)...)
 }
 
 func resourceThingGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	output, err := FindThingGroupByName(ctx, conn, d.Id())
+	output, err := findThingGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Group (%s) not found, removing from state", d.Id())
@@ -203,7 +205,7 @@ func resourceThingGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iot.UpdateThingGroupInput{
@@ -214,19 +216,19 @@ func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		if v, ok := d.GetOk(names.AttrProperties); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 		} else {
-			input.ThingGroupProperties = &iot.ThingGroupProperties{}
+			input.ThingGroupProperties = &awstypes.ThingGroupProperties{}
 		}
 
 		// https://docs.aws.amazon.com/iot/latest/apireference/API_AttributePayload.html#API_AttributePayload_Contents:
 		// "To remove an attribute, call UpdateThing with an empty attribute value."
 		if input.ThingGroupProperties.AttributePayload == nil {
-			input.ThingGroupProperties.AttributePayload = &iot.AttributePayload{
-				Attributes: map[string]*string{},
+			input.ThingGroupProperties.AttributePayload = &awstypes.AttributePayload{
+				Attributes: map[string]string{},
 			}
 		}
 
-		log.Printf("[DEBUG] Updating IoT Thing Group: %s", input)
-		_, err := conn.UpdateThingGroupWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating IoT Thing Group: %s", d.Id())
+		_, err := conn.UpdateThingGroup(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IoT Thing Group (%s): %s", d.Id(), err)
@@ -238,24 +240,24 @@ func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceThingGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
 	_, err := tfresource.RetryWhen(ctx, thingGroupDeleteTimeout,
 		func() (interface{}, error) {
-			return conn.DeleteThingGroupWithContext(ctx, &iot.DeleteThingGroupInput{
+			return conn.DeleteThingGroup(ctx, &iot.DeleteThingGroupInput{
 				ThingGroupName: aws.String(d.Id()),
 			})
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "there are still child groups attached") {
+			if errs.IsA[*awstypes.InvalidRequestException](err) {
 				return true, err
 			}
 
 			return false, err
 		})
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -266,12 +268,37 @@ func resourceThingGroupDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func expandThingGroupProperties(tfMap map[string]interface{}) *iot.ThingGroupProperties {
+func findThingGroupByName(ctx context.Context, conn *iot.Client, name string) (*iot.DescribeThingGroupOutput, error) {
+	input := &iot.DescribeThingGroupInput{
+		ThingGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeThingGroup(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandThingGroupProperties(tfMap map[string]interface{}) *awstypes.ThingGroupProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &iot.ThingGroupProperties{}
+	apiObject := &awstypes.ThingGroupProperties{}
 
 	if v, ok := tfMap["attribute_payload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.AttributePayload = expandAttributePayload(v[0].(map[string]interface{}))
@@ -284,21 +311,21 @@ func expandThingGroupProperties(tfMap map[string]interface{}) *iot.ThingGroupPro
 	return apiObject
 }
 
-func expandAttributePayload(tfMap map[string]interface{}) *iot.AttributePayload {
+func expandAttributePayload(tfMap map[string]interface{}) *awstypes.AttributePayload {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &iot.AttributePayload{}
+	apiObject := &awstypes.AttributePayload{}
 
 	if v, ok := tfMap[names.AttrAttributes].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Attributes = flex.ExpandStringMap(v)
+		apiObject.Attributes = flex.ExpandStringValueMap(v)
 	}
 
 	return apiObject
 }
 
-func flattenThingGroupMetadata(apiObject *iot.ThingGroupMetadata) map[string]interface{} {
+func flattenThingGroupMetadata(apiObject *awstypes.ThingGroupMetadata) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -306,11 +333,11 @@ func flattenThingGroupMetadata(apiObject *iot.ThingGroupMetadata) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CreationDate; v != nil {
-		tfMap[names.AttrCreationDate] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap[names.AttrCreationDate] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.ParentGroupName; v != nil {
-		tfMap["parent_group_name"] = aws.StringValue(v)
+		tfMap["parent_group_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RootToParentThingGroups; v != nil {
@@ -320,25 +347,21 @@ func flattenThingGroupMetadata(apiObject *iot.ThingGroupMetadata) map[string]int
 	return tfMap
 }
 
-func flattenGroupNameAndARN(apiObject *iot.GroupNameAndArn) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenGroupNameAndARN(apiObject awstypes.GroupNameAndArn) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.GroupArn; v != nil {
-		tfMap["group_arn"] = aws.StringValue(v)
+		tfMap["group_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap[names.AttrGroupName] = aws.StringValue(v)
+		tfMap[names.AttrGroupName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenGroupNameAndARNs(apiObjects []*iot.GroupNameAndArn) []interface{} {
+func flattenGroupNameAndARNs(apiObjects []awstypes.GroupNameAndArn) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -346,17 +369,13 @@ func flattenGroupNameAndARNs(apiObjects []*iot.GroupNameAndArn) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenGroupNameAndARN(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenThingGroupProperties(apiObject *iot.ThingGroupProperties) map[string]interface{} {
+func flattenThingGroupProperties(apiObject *awstypes.ThingGroupProperties) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -368,13 +387,13 @@ func flattenThingGroupProperties(apiObject *iot.ThingGroupProperties) map[string
 	}
 
 	if v := apiObject.ThingGroupDescription; v != nil {
-		tfMap[names.AttrDescription] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenAttributePayload(apiObject *iot.AttributePayload) map[string]interface{} {
+func flattenAttributePayload(apiObject *awstypes.AttributePayload) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -382,7 +401,7 @@ func flattenAttributePayload(apiObject *iot.AttributePayload) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Attributes; v != nil {
-		tfMap[names.AttrAttributes] = aws.StringValueMap(v)
+		tfMap[names.AttrAttributes] = aws.StringMap(v)
 	}
 
 	return tfMap

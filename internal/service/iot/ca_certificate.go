@@ -5,20 +5,23 @@ package iot
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -55,11 +58,11 @@ func ResourceCACertificate() *schema.Resource {
 				Sensitive: true,
 			},
 			"certificate_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      iot.CertificateModeDefault,
-				ValidateFunc: validation.StringInSlice(iot.CertificateMode_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.CertificateModeDefault,
+				ValidateDiagFunc: enum.Validate[awstypes.CertificateMode](),
 			},
 			"customer_version": {
 				Type:     schema.TypeInt,
@@ -124,7 +127,7 @@ func ResourceCACertificate() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				if mode := diff.Get("certificate_mode").(string); mode == iot.CertificateModeDefault {
+				if mode := diff.Get("certificate_mode").(string); mode == string(awstypes.CertificateModeDefault) {
 					if v := diff.GetRawConfig().GetAttr("verification_certificate_pem"); v.IsKnown() {
 						if v.IsNull() || v.AsString() == "" {
 							return fmt.Errorf(`"verification_certificate_pem" is required when certificate_mode is %q`, mode)
@@ -141,13 +144,13 @@ func ResourceCACertificate() *schema.Resource {
 
 func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	input := &iot.RegisterCACertificateInput{
-		AllowAutoRegistration: aws.Bool(d.Get("allow_auto_registration").(bool)),
+		AllowAutoRegistration: d.Get("allow_auto_registration").(bool),
 		CaCertificate:         aws.String(d.Get("ca_certificate_pem").(string)),
-		CertificateMode:       aws.String(d.Get("certificate_mode").(string)),
-		SetAsActive:           aws.Bool(d.Get("active").(bool)),
+		CertificateMode:       awstypes.CertificateMode(d.Get("certificate_mode").(string)),
+		SetAsActive:           d.Get("active").(bool),
 		Tags:                  getTagsIn(ctx),
 	}
 
@@ -159,26 +162,34 @@ func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VerificationCertificate = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.RegisterCACertificateWithContext(ctx, input)
-		},
-		iot.ErrCodeInvalidRequestException, "included in the RegistrationConfig does not exist or cannot be assumed by AWS IoT")
+	var out *iot.RegisterCACertificateOutput
+	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+		var err error
+		out, err = conn.RegisterCACertificate(ctx, input)
+		if err != nil {
+			var ire *awstypes.InvalidRequestException
+			if errors.As(err, &ire) {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering IoT CA Certificate: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*iot.RegisterCACertificateOutput).CertificateId))
+	d.SetId(aws.ToString(out.CertificateId))
 
 	return append(diags, resourceCACertificateRead(ctx, d, meta)...)
 }
 
 func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	output, err := FindCACertificateByID(ctx, conn, d.Id())
+	output, err := findCACertificateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT CA Certificate (%s) not found, removing from state", d.Id())
@@ -191,8 +202,8 @@ func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	certificateDescription := output.CertificateDescription
-	d.Set("active", aws.StringValue(certificateDescription.Status) == iot.CACertificateStatusActive)
-	d.Set("allow_auto_registration", aws.StringValue(certificateDescription.AutoRegistrationStatus) == iot.AutoRegistrationStatusEnable)
+	d.Set("active", string(certificateDescription.Status) == string(awstypes.CACertificateStatusActive))
+	d.Set("allow_auto_registration", string(certificateDescription.AutoRegistrationStatus) == string(awstypes.AutoRegistrationStatusEnable))
 	d.Set(names.AttrARN, certificateDescription.CertificateArn)
 	d.Set("ca_certificate_pem", certificateDescription.CertificatePem)
 	d.Set("certificate_mode", certificateDescription.CertificateMode)
@@ -218,7 +229,7 @@ func resourceCACertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iot.UpdateCACertificateInput{
@@ -226,15 +237,15 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if d.Get("active").(bool) {
-			input.NewStatus = aws.String(iot.CACertificateStatusActive)
+			input.NewStatus = awstypes.CACertificateStatusActive
 		} else {
-			input.NewStatus = aws.String(iot.CACertificateStatusInactive)
+			input.NewStatus = awstypes.CACertificateStatusInactive
 		}
 
 		if d.Get("allow_auto_registration").(bool) {
-			input.NewAutoRegistrationStatus = aws.String(iot.AutoRegistrationStatusEnable)
+			input.NewAutoRegistrationStatus = awstypes.AutoRegistrationStatusEnable
 		} else {
-			input.NewAutoRegistrationStatus = aws.String(iot.AutoRegistrationStatusDisable)
+			input.NewAutoRegistrationStatus = awstypes.AutoRegistrationStatusDisable
 		}
 
 		if d.HasChange("registration_config") {
@@ -243,11 +254,18 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
-			func() (interface{}, error) {
-				return conn.UpdateCACertificateWithContext(ctx, input)
-			},
-			iot.ErrCodeInvalidRequestException, "included in the RegistrationConfig does not exist or cannot be assumed by AWS IoT")
+		err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+			var err error
+			_, err = conn.UpdateCACertificate(ctx, input)
+			if err != nil {
+				var ire *awstypes.InvalidRequestException
+				if errors.As(err, &ire) {
+					return retry.RetryableError(err)
+				}
+				return retry.NonRetryableError(err)
+			}
+			return nil
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IoT CA Certificate (%s): %s", d.Id(), err)
@@ -259,16 +277,16 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceCACertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.Get("active").(bool) {
 		log.Printf("[DEBUG] Disabling IoT CA Certificate: %s", d.Id())
-		_, err := conn.UpdateCACertificateWithContext(ctx, &iot.UpdateCACertificateInput{
+		_, err := conn.UpdateCACertificate(ctx, &iot.UpdateCACertificateInput{
 			CertificateId: aws.String(d.Id()),
-			NewStatus:     aws.String(iot.CACertificateStatusInactive),
+			NewStatus:     awstypes.CACertificateStatusInactive,
 		})
 
-		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 
@@ -278,11 +296,11 @@ func resourceCACertificateDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting IoT CA Certificate: %s", d.Id())
-	_, err := conn.DeleteCACertificateWithContext(ctx, &iot.DeleteCACertificateInput{
+	_, err := conn.DeleteCACertificate(ctx, &iot.DeleteCACertificateInput{
 		CertificateId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -293,14 +311,14 @@ func resourceCACertificateDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindCACertificateByID(ctx context.Context, conn *iot.IoT, id string) (*iot.DescribeCACertificateOutput, error) {
+func findCACertificateByID(ctx context.Context, conn *iot.Client, id string) (*iot.DescribeCACertificateOutput, error) {
 	input := &iot.DescribeCACertificateInput{
 		CertificateId: aws.String(id),
 	}
 
-	output, err := conn.DescribeCACertificateWithContext(ctx, input)
+	output, err := conn.DescribeCACertificate(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -318,12 +336,12 @@ func FindCACertificateByID(ctx context.Context, conn *iot.IoT, id string) (*iot.
 	return output, nil
 }
 
-func expandRegistrationConfig(tfMap map[string]interface{}) *iot.RegistrationConfig {
+func expandRegistrationConfig(tfMap map[string]interface{}) *awstypes.RegistrationConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &iot.RegistrationConfig{}
+	apiObject := &awstypes.RegistrationConfig{}
 
 	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
@@ -340,7 +358,7 @@ func expandRegistrationConfig(tfMap map[string]interface{}) *iot.RegistrationCon
 	return apiObject
 }
 
-func flattenRegistrationConfig(apiObject *iot.RegistrationConfig) map[string]interface{} {
+func flattenRegistrationConfig(apiObject *awstypes.RegistrationConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -348,21 +366,21 @@ func flattenRegistrationConfig(apiObject *iot.RegistrationConfig) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap[names.AttrRoleARN] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.TemplateBody; v != nil {
-		tfMap["template_body"] = aws.StringValue(v)
+		tfMap["template_body"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TemplateName; v != nil {
-		tfMap["template_name"] = aws.StringValue(v)
+		tfMap["template_name"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenCertificateValidity(apiObject *iot.CertificateValidity) map[string]interface{} {
+func flattenCertificateValidity(apiObject *awstypes.CertificateValidity) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -370,11 +388,11 @@ func flattenCertificateValidity(apiObject *iot.CertificateValidity) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.NotAfter; v != nil {
-		tfMap["not_after"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap["not_after"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.NotBefore; v != nil {
-		tfMap["not_before"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap["not_before"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	return tfMap

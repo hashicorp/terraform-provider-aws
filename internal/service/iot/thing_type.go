@@ -6,15 +6,15 @@ package iot
 import (
 	"context"
 	"log"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -91,7 +91,7 @@ func ResourceThingType() *schema.Resource {
 
 func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateThingTypeInput{
@@ -106,21 +106,21 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	out, err := conn.CreateThingTypeWithContext(ctx, input)
+	out, err := conn.CreateThingType(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IoT Thing Type (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.ThingTypeName))
+	d.SetId(aws.ToString(out.ThingTypeName))
 
 	if v := d.Get("deprecated").(bool); v {
 		input := &iot.DeprecateThingTypeInput{
 			ThingTypeName: aws.String(d.Id()),
-			UndoDeprecate: aws.Bool(false),
+			UndoDeprecate: false,
 		}
 
-		_, err := conn.DeprecateThingTypeWithContext(ctx, input)
+		_, err := conn.DeprecateThingType(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deprecating IoT Thing Type (%s): %s", d.Id(), err)
@@ -132,9 +132,9 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	output, err := FindThingTypeByName(ctx, conn, d.Id())
+	output, err := findThingTypeByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Thing Type (%s) not found, removing from state", d.Id())
@@ -159,15 +159,15 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	if d.HasChange("deprecated") {
 		input := &iot.DeprecateThingTypeInput{
 			ThingTypeName: aws.String(d.Id()),
-			UndoDeprecate: aws.Bool(!d.Get("deprecated").(bool)),
+			UndoDeprecate: !d.Get("deprecated").(bool),
 		}
 
-		_, err := conn.DeprecateThingTypeWithContext(ctx, input)
+		_, err := conn.DeprecateThingType(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deprecating IoT Thing Type (%s): %s", d.Id(), err)
@@ -179,14 +179,14 @@ func resourceThingTypeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	// In order to delete an IoT Thing Type, you must deprecate it first and wait at least 5 minutes.
-	_, err := conn.DeprecateThingTypeWithContext(ctx, &iot.DeprecateThingTypeInput{
+	_, err := conn.DeprecateThingType(ctx, &iot.DeprecateThingTypeInput{
 		ThingTypeName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -195,13 +195,14 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, 6*time.Minute, func() (interface{}, error) {
-		return conn.DeleteThingTypeWithContext(ctx, &iot.DeleteThingTypeInput{
-			ThingTypeName: aws.String(d.Id()),
+	_, err = tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, deprecatePropagationTimeout,
+		func() (interface{}, error) {
+			return conn.DeleteThingType(ctx, &iot.DeleteThingTypeInput{
+				ThingTypeName: aws.String(d.Id()),
+			})
 		})
-	}, iot.ErrCodeInvalidRequestException, "Please wait for 5 minutes after deprecation and then retry")
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -212,14 +213,14 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func FindThingTypeByName(ctx context.Context, conn *iot.IoT, name string) (*iot.DescribeThingTypeOutput, error) {
+func findThingTypeByName(ctx context.Context, conn *iot.Client, name string) (*iot.DescribeThingTypeOutput, error) {
 	input := &iot.DescribeThingTypeInput{
 		ThingTypeName: aws.String(name),
 	}
 
-	output, err := conn.DescribeThingTypeWithContext(ctx, input)
+	output, err := conn.DescribeThingType(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -4,16 +4,16 @@
 package iot
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProperties {
-	properties := &iot.ThingTypeProperties{
-		SearchableAttributes: flex.ExpandStringSet(config["searchable_attributes"].(*schema.Set)),
+func expandThingTypeProperties(config map[string]interface{}) *awstypes.ThingTypeProperties {
+	properties := &awstypes.ThingTypeProperties{
+		SearchableAttributes: flex.ExpandStringValueSet(config["searchable_attributes"].(*schema.Set)),
 	}
 
 	if v, ok := config[names.AttrDescription]; ok && v.(string) != "" {
@@ -23,7 +23,7 @@ func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProp
 	return properties
 }
 
-func flattenThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
+func flattenThingTypeProperties(s *awstypes.ThingTypeProperties) []map[string]interface{} {
 	m := map[string]interface{}{
 		names.AttrDescription:   "",
 		"searchable_attributes": flex.FlattenStringSet(nil),
@@ -33,8 +33,8 @@ func flattenThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interfa
 		return []map[string]interface{}{m}
 	}
 
-	m[names.AttrDescription] = aws.StringValue(s.ThingTypeDescription)
-	m["searchable_attributes"] = flex.FlattenStringSet(s.SearchableAttributes)
+	m[names.AttrDescription] = aws.ToString(s.ThingTypeDescription)
+	m["searchable_attributes"] = flex.FlattenStringValueSet(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}
 }
