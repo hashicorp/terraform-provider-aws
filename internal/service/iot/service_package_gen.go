@@ -87,8 +87,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Indexing Configuration",
 		},
 		{
-			Factory:  ResourceLoggingOptions,
+			Factory:  resourceLoggingOptions,
 			TypeName: "aws_iot_logging_options",
+			Name:     "Logging Options",
 		},
 		{
 			Factory:  ResourcePolicy,
@@ -98,7 +99,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePolicyAttachment,
+			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_iot_policy_attachment",
 		},
 		{

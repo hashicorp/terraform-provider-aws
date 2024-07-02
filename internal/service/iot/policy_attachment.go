@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_policy_attachment")
-func ResourcePolicyAttachment() *schema.Resource {
+// @SDKResource("aws_iot_policy_attachment", nmw="Policy Attachment")
+func resourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
@@ -76,7 +76,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = FindAttachedPolicyByTwoPartKey(ctx, conn, policyName, target)
+	_, err = findAttachedPolicyByTwoPartKey(ctx, conn, policyName, target)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Policy Attachment (%s) not found, removing from state", d.Id())
@@ -117,7 +117,7 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindAttachedPolicyByTwoPartKey(ctx context.Context, conn *iot.Client, policyName, target string) (*awstypes.Policy, error) {
+func findAttachedPolicyByTwoPartKey(ctx context.Context, conn *iot.Client, policyName, target string) (*awstypes.Policy, error) {
 	input := &iot.ListAttachedPoliciesInput{
 		PageSize:  aws.Int32(250),
 		Recursive: false,
@@ -138,20 +138,27 @@ func findAttachedPolicy(ctx context.Context, conn *iot.Client, input *iot.ListAt
 }
 
 func findAttachedPolicies(ctx context.Context, conn *iot.Client, input *iot.ListAttachedPoliciesInput) ([]awstypes.Policy, error) {
-	output, err := conn.ListAttachedPolicies(ctx, input)
+	var output []awstypes.Policy
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	pages := iot.NewListAttachedPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Policies...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output.Policies, nil
+	return output, nil
 }
 
 const policyAttachmentResourceIDSeparator = "|"

@@ -12,8 +12,11 @@ var (
 	ResourceDomainConfiguration   = resourceDomainConfiguration
 	ResourceEventConfigurations   = resourceEventConfigurations
 	ResourceIndexingConfiguration = resourceIndexingConfiguration
+	ResourceLoggingOptions        = resourceLoggingOptions
+	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceThingType             = resourceThingType
 
+	FindAttachedPolicyByTwoPartKey = findAttachedPolicyByTwoPartKey
 	FindAuthorizerByName           = findAuthorizerByName
 	FindBillingGroupByName         = findBillingGroupByName
 	FindCACertificateByID          = findCACertificateByID
