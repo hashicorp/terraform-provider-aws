@@ -259,19 +259,8 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 }
 
 func testAccPreCheckApp(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn(ctx)
-
-	input := &pinpoint.GetAppsInput{}
-
-	_, err := conn.GetAppsWithContext(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+	t.Helper()
+	acctest.PreCheckPinpointApp(ctx, t)
 }
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {

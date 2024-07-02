@@ -9,6 +9,9 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,19 +31,23 @@ func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
 			},
 		},
 	})
 }
 
-func TestAccEC2InstanceDataSource_tags(t *testing.T) {
+func TestAccEC2InstanceDataSource_instanceTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
@@ -52,13 +59,18 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_tags(rName),
+				Config: testAccInstanceDataSourceConfig_instanceTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name":     knownvalue.StringExact(rName),
+						"TestSeed": knownvalue.NotNull(),
+					})),
+				},
 			},
 		},
 	})
@@ -79,12 +91,16 @@ func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_azUser(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_data", resourceName, "user_data"),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
 			},
 		},
 	})
@@ -332,11 +348,15 @@ func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_keyPair(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_name", resourceName, "key_name"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
 			},
 		},
 	})
@@ -746,11 +766,15 @@ func TestAccEC2InstanceDataSource_timeout(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(datasourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
 			},
 		},
 	})
@@ -778,7 +802,7 @@ data "aws_instance" "test" {
 }
 
 // Use the tags attribute to filter
-func testAccInstanceDataSourceConfig_tags(rName string) string {
+func testAccInstanceDataSourceConfig_instanceTags(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id

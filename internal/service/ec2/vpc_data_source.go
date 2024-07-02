@@ -155,7 +155,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Filters = nil
 	}
 
-	vpc, err := findVPCV2(ctx, conn, input)
+	vpc, err := findVPC(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC", err))
@@ -178,19 +178,19 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set(names.AttrOwnerID, ownerID)
 
-	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames); err != nil {
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport); err != nil {
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+	if v, err := findVPCAttribute(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
 	} else {
 		d.Set("enable_network_address_usage_metrics", v)

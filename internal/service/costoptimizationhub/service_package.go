@@ -16,22 +16,20 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costoptimizationhub.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
-		if config["partition"].(string) == names.StandardPartitionID {
-			// Cost Optimization Hub endpoint is available only in us-east-1 Region.
-			o.Region = names.USEast1RegionID
-		}
-
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws.String(endpoint)
-
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+	return costoptimizationhub.NewFromConfig(cfg,
+		costoptimizationhub.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *costoptimizationhub.Options) {
+			if config["partition"].(string) == names.StandardPartitionID {
+				// Cost Optimization Hub endpoint is available only in us-east-1 Region.
+				if cfg.Region != names.USEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USEast1RegionID,
+					})
+					o.Region = names.USEast1RegionID
+				}
 			}
-		}
-	}), nil
+		},
+	), nil
 }
