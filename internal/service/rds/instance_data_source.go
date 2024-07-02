@@ -156,6 +156,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"multi_tenant": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"network_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -288,6 +292,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("monitoring_interval", instance.MonitoringInterval)
 	d.Set("monitoring_role_arn", instance.MonitoringRoleArn)
 	d.Set("multi_az", instance.MultiAZ)
+	d.Set("multi_tenant", instance.MultiTenant)
 	d.Set("network_type", instance.NetworkType)
 	optionGroupNames := tfslices.ApplyToAll(instance.OptionGroupMemberships, func(v *rds.OptionGroupMembership) string {
 		return aws.StringValue(v.OptionGroupName)

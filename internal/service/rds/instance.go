@@ -465,6 +465,11 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"multi_tenant": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"nchar_character_set_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -809,6 +814,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("multi_az"); ok {
 			input.MultiAZ = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("multi_tenant"); ok {
+			input.MultiTenant = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("network_type"); ok {
