@@ -40,7 +40,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_basic(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "TRANSIT_GATEWAY_ROUTE_TABLE"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),

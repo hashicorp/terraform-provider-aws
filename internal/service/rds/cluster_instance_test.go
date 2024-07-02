@@ -49,7 +49,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "custom_iam_instance_profile", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
@@ -493,7 +493,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 30),
@@ -550,7 +550,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARN(rName),
@@ -593,7 +593,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARN(rName),
@@ -635,7 +635,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_monitoringRoleARNRemoved(rName),

@@ -10,9 +10,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +26,7 @@ import (
 
 func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster docdb.GlobalCluster
+	var globalCluster awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_global_cluster.test"
 
@@ -42,12 +43,12 @@ func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 					//This is a rds arn
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, "engine"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 				),
 			},
 			{
@@ -61,7 +62,7 @@ func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 
 func TestAccDocDBGlobalCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster docdb.GlobalCluster
+	var globalCluster awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_global_cluster.test"
 
@@ -85,7 +86,7 @@ func TestAccDocDBGlobalCluster_disappears(t *testing.T) {
 
 func TestAccDocDBGlobalCluster_DatabaseName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster1, globalCluster2 docdb.GlobalCluster
+	var globalCluster1, globalCluster2 awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_global_cluster.test"
 
@@ -121,7 +122,7 @@ func TestAccDocDBGlobalCluster_DatabaseName(t *testing.T) {
 
 func TestAccDocDBGlobalCluster_DeletionProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster1, globalCluster2 docdb.GlobalCluster
+	var globalCluster1, globalCluster2 awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_global_cluster.test"
 
@@ -135,7 +136,7 @@ func TestAccDocDBGlobalCluster_DeletionProtection(t *testing.T) {
 				Config: testAccGlobalClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
@@ -148,7 +149,7 @@ func TestAccDocDBGlobalCluster_DeletionProtection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -157,7 +158,7 @@ func TestAccDocDBGlobalCluster_DeletionProtection(t *testing.T) {
 
 func TestAccDocDBGlobalCluster_Engine(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster docdb.GlobalCluster
+	var globalCluster awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_global_cluster.test"
 
@@ -171,7 +172,7 @@ func TestAccDocDBGlobalCluster_Engine(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engine(rName, "docdb"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
-					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "docdb"),
 				),
 			},
 			{
@@ -185,7 +186,7 @@ func TestAccDocDBGlobalCluster_Engine(t *testing.T) {
 
 func TestAccDocDBGlobalCluster_EngineVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster docdb.GlobalCluster
+	var globalCluster awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_global_cluster.test"
 
@@ -213,7 +214,7 @@ func TestAccDocDBGlobalCluster_EngineVersion(t *testing.T) {
 
 func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster docdb.GlobalCluster
+	var globalCluster awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	clusterResourceName := "aws_docdb_cluster.test"
 	resourceName := "aws_docdb_global_cluster.test"
@@ -243,7 +244,7 @@ func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
 
 func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster docdb.GlobalCluster
+	var globalCluster awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	clusterResourceName := "aws_docdb_cluster.test"
 	resourceName := "aws_docdb_global_cluster.test"
@@ -273,7 +274,7 @@ func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *tes
 
 func TestAccDocDBGlobalCluster_StorageEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var globalCluster1, globalCluster2 docdb.GlobalCluster
+	var globalCluster1, globalCluster2 awstypes.GlobalCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_global_cluster.test"
 
@@ -287,7 +288,7 @@ func TestAccDocDBGlobalCluster_StorageEncrypted(t *testing.T) {
 				Config: testAccGlobalClusterConfig_storageEncrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 			{
@@ -300,21 +301,21 @@ func TestAccDocDBGlobalCluster_StorageEncrypted(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *docdb.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *awstypes.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -330,7 +331,7 @@ func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *docdb.Glo
 
 func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_global_cluster" {
@@ -354,19 +355,19 @@ func testAccCheckGlobalClusterDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckGlobalClusterNotRecreated(i, j *docdb.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterNotRecreated(i, j *awstypes.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.GlobalClusterArn) != aws.StringValue(j.GlobalClusterArn) {
-			return fmt.Errorf("DocumentDB Global Cluster was recreated. got: %s, expected: %s", aws.StringValue(i.GlobalClusterArn), aws.StringValue(j.GlobalClusterArn))
+		if aws.ToString(i.GlobalClusterArn) != aws.ToString(j.GlobalClusterArn) {
+			return fmt.Errorf("DocumentDB Global Cluster was recreated. got: %s, expected: %s", aws.ToString(i.GlobalClusterArn), aws.ToString(j.GlobalClusterArn))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckGlobalClusterRecreated(i, j *docdb.GlobalCluster) resource.TestCheckFunc {
+func testAccCheckGlobalClusterRecreated(i, j *awstypes.GlobalCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.GlobalClusterResourceId) == aws.StringValue(j.GlobalClusterResourceId) {
+		if aws.ToString(i.GlobalClusterResourceId) == aws.ToString(j.GlobalClusterResourceId) {
 			return errors.New("DocumentDB Global Cluster was not recreated")
 		}
 
@@ -375,11 +376,11 @@ func testAccCheckGlobalClusterRecreated(i, j *docdb.GlobalCluster) resource.Test
 }
 
 func testAccPreCheckGlobalCluster(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 	input := &docdb.DescribeGlobalClustersInput{}
 
-	_, err := conn.DescribeGlobalClustersWithContext(ctx, input)
+	_, err := conn.DescribeGlobalClusters(ctx, input)
 
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
 		// Current Region/Partition does not support DocumentDB Global Clusters

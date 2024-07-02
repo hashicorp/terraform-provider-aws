@@ -63,7 +63,7 @@ func customizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.R
 		return nil
 	}
 
-	return validateClusterEngineVersion(diff.Get("engine").(string), engineVersion.(string))
+	return validateClusterEngineVersion(diff.Get(names.AttrEngine).(string), engineVersion.(string))
 }
 
 // validateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`

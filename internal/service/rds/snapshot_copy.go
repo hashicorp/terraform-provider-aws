@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_db_snapshot_copy", name="DB Snapshot")
 // @Tags(identifierAttribute="db_snapshot_arn")
+// @Testing(tagsTest=false)
 func ResourceSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyCreate,
@@ -41,7 +42,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -67,7 +68,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,7 +201,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -208,11 +209,11 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	arn := aws.StringValue(snapshot.DBSnapshotArn)
-	d.Set("allocated_storage", snapshot.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
 	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_snapshot_arn", arn)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
-	d.Set("engine", snapshot.Engine)
+	d.Set(names.AttrEngine, snapshot.Engine)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
 	d.Set(names.AttrIOPS, snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)

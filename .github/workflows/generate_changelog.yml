@@ -8,9 +8,15 @@ jobs:
     if: github.event.pull_request.merged || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+      - uses: actions/create-github-app-token@ad38cffc07bac6e3857755914c4c88bfd2db4da4 # v1.10.2
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PEM }}
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
       - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: .ci/tools/go.mod

@@ -43,7 +43,7 @@ func TestAccM2Application_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, "bluage"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
@@ -97,57 +97,6 @@ func TestAccM2Application_disappears(t *testing.T) {
 	})
 }
 
-func TestAccM2Application_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_m2_application.test"
-	var application m2.GetApplicationOutput
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckApplicationDestroy(ctx),
-		),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccM2Application_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -169,7 +118,7 @@ func TestAccM2Application_full(t *testing.T) {
 				Config: testAccApplicationConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
@@ -390,61 +339,4 @@ resource "aws_iam_role_policy" "test" {
   })
 }
 `, rName)
-}
-
-func testAccApplicationConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = "v1/PlanetsDemo-v1.zip"
-  source = "test-fixtures/PlanetsDemo-v1.zip"
-}
-
-resource "aws_m2_application" "test" {
-  name        = %[1]q
-  engine_type = "bluage"
-  definition {
-    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = "v1" })
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  depends_on = [aws_s3_object.test]
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccApplicationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = "v1/PlanetsDemo-v1.zip"
-  source = "test-fixtures/PlanetsDemo-v1.zip"
-}
-
-resource "aws_m2_application" "test" {
-  name        = %[1]q
-  engine_type = "bluage"
-  definition {
-    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = "v1" })
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  depends_on = [aws_s3_object.test]
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

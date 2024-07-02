@@ -37,7 +37,7 @@ func TestAccElastiCacheUserGroup_basic(t *testing.T) {
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
 			},
 			{
@@ -85,7 +85,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
 					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 				),
 			},
 		},

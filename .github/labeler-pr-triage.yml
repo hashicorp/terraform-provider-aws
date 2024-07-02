@@ -240,6 +240,12 @@ service/applicationinsights:
           - any-glob-to-any-file:
               - 'internal/service/applicationinsights/**/*'
               - 'website/**/applicationinsights_*'
+service/applicationsignals:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/applicationsignals/**/*'
+              - 'website/**/applicationsignals_*'
 service/appmesh:
   - any:
       - changed-files:
@@ -1526,6 +1532,12 @@ service/networkmanager:
           - any-glob-to-any-file:
               - 'internal/service/networkmanager/**/*'
               - 'website/**/networkmanager_*'
+service/networkmonitor:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/networkmonitor/**/*'
+              - 'website/**/networkmonitor_*'
 service/nimble:
   - any:
       - changed-files:
@@ -2093,6 +2105,12 @@ service/textract:
           - any-glob-to-any-file:
               - 'internal/service/textract/**/*'
               - 'website/**/textract_*'
+service/timestreaminfluxdb:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/timestreaminfluxdb/**/*'
+              - 'website/**/timestreaminfluxdb_*'
 service/timestreamquery:
   - any:
       - changed-files:

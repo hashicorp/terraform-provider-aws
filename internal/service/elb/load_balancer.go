@@ -932,7 +932,7 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // So we make the cleanup "synchronous" here
 func deleteNetworkInterfaces(ctx context.Context, conn *ec2.Client, name string) error {
 	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx, conn, "amazon-elb", "ELB "+name)
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
 
 	if err != nil {
 		return err

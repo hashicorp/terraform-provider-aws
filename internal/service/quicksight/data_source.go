@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,7 +42,7 @@ func ResourceDataSource() *schema.Resource {
 					Computed: true,
 				},
 
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -548,7 +549,7 @@ func ResourceDataSource() *schema.Resource {
 					MaxItems: 64,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": {
+							names.AttrActions: {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
@@ -610,12 +611,13 @@ func ResourceDataSource() *schema.Resource {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	id := d.Get("data_source_id").(string)
 
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 
@@ -646,24 +648,25 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	_, err := conn.CreateDataSourceWithContext(ctx, params)
 	if err != nil {
-		return diag.Errorf("creating QuickSight Data Source: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Data Source: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
 
 	if _, err := waitCreated(ctx, conn, awsAccountId, id); err != nil {
-		return diag.Errorf("waiting from QuickSight Data Source (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting from QuickSight Data Source (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceDataSourceRead(ctx, d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	descOpts := &quicksight.DescribeDataSourceInput{
@@ -676,36 +679,36 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Data Source (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DataSource == nil {
-		return diag.Errorf("describing QuickSight Data Source (%s): empty output", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s): empty output", d.Id())
 	}
 
 	dataSource := output.DataSource
 
 	d.Set(names.AttrARN, dataSource.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("data_source_id", dataSource.DataSourceId)
 	d.Set(names.AttrName, dataSource.Name)
 
 	if err := d.Set(names.AttrParameters, flattenParameters(dataSource.DataSourceParameters)); err != nil {
-		return diag.Errorf("setting parameters: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
 	if err := d.Set("ssl_properties", flattenSSLProperties(dataSource.SslProperties)); err != nil {
-		return diag.Errorf("setting ssl_properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ssl_properties: %s", err)
 	}
 
 	d.Set(names.AttrType, dataSource.Type)
 
 	if err := d.Set("vpc_connection_properties", flattenVPCConnectionProperties(dataSource.VpcConnectionProperties)); err != nil {
-		return diag.Errorf("setting vpc_connection_properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_connection_properties: %s", err)
 	}
 
 	permsResp, err := conn.DescribeDataSourcePermissionsWithContext(ctx, &quicksight.DescribeDataSourcePermissionsInput{
@@ -714,23 +717,24 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil {
-		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("permission", flattenPermissions(permsResp.Permissions)); err != nil {
-		return diag.Errorf("setting permission: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting permission: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	if d.HasChangesExcept("permission", names.AttrTags, names.AttrTagsAll) {
 		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		params := &quicksight.UpdateDataSourceInput{
@@ -758,18 +762,18 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.UpdateDataSourceWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("updating QuickSight Data Source (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitUpdated(ctx, conn, awsAccountId, dataSourceId); err != nil {
-			return diag.Errorf("waiting for QuickSight Data Source (%s) to update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for QuickSight Data Source (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("permission") {
 		awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		oraw, nraw := d.GetChange("permission")
@@ -794,19 +798,20 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		_, err = conn.UpdateDataSourcePermissionsWithContext(ctx, params)
 
 		if err != nil {
-			return diag.Errorf("updating QuickSight Data Source (%s) permissions: %s", dataSourceId, err)
+			return sdkdiag.AppendErrorf(diags, "updating QuickSight Data Source (%s) permissions: %s", dataSourceId, err)
 		}
 	}
 
-	return resourceDataSourceRead(ctx, d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId, dataSourceId, err := ParseDataSourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	deleteOpts := &quicksight.DeleteDataSourceInput{
@@ -817,14 +822,14 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 	_, err = conn.DeleteDataSourceWithContext(ctx, deleteOpts)
 
 	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting QuickSight Data Source (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDataSourceCredentials(tfList []interface{}) *quicksight.DataSourceCredentials {

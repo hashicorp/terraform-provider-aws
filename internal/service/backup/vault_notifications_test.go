@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -73,7 +73,7 @@ func TestAccBackupVaultNotification_disappears(t *testing.T) {
 
 func testAccCheckVaultNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault_notifications" {
 				continue
@@ -83,10 +83,10 @@ func testAccCheckVaultNotificationDestroy(ctx context.Context) resource.TestChec
 				BackupVaultName: aws.String(rs.Primary.ID),
 			}
 
-			resp, err := conn.GetBackupVaultNotificationsWithContext(ctx, input)
+			resp, err := conn.GetBackupVaultNotifications(ctx, input)
 
 			if err == nil {
-				if aws.StringValue(resp.BackupVaultName) == rs.Primary.ID {
+				if aws.ToString(resp.BackupVaultName) == rs.Primary.ID {
 					return fmt.Errorf("Backup Plan notifications '%s' was not deleted properly", rs.Primary.ID)
 				}
 			}
@@ -103,11 +103,11 @@ func testAccCheckVaultNotificationExists(ctx context.Context, name string, vault
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		params := &backup.GetBackupVaultNotificationsInput{
 			BackupVaultName: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.GetBackupVaultNotificationsWithContext(ctx, params)
+		resp, err := conn.GetBackupVaultNotifications(ctx, params)
 		if err != nil {
 			return err
 		}

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,7 +57,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -180,6 +181,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 }
 
 func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	websiteConfig := &types.WebsiteConfiguration{}
@@ -203,13 +205,13 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	if v, ok := d.GetOk("routing_rules"); ok {
 		var unmarshalledRules []types.RoutingRule
 		if err := json.Unmarshal([]byte(v.(string)), &unmarshalledRules); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 		websiteConfig.RoutingRules = unmarshalledRules
 	}
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
 		WebsiteConfiguration: websiteConfig,
@@ -227,7 +229,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	}
 
 	if err != nil {
-		return diag.Errorf("creating S3 Bucket (%s) Website Configuration: %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Website Configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
@@ -237,18 +239,19 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Website Configuration (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Website Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceBucketWebsiteConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketWebsiteConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := findBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
@@ -256,31 +259,31 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Website Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Bucket Website Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Website Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrBucket, bucket)
 	if err := d.Set("error_document", flattenErrorDocument(output.ErrorDocument)); err != nil {
-		return diag.Errorf("setting error_document: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting error_document: %s", err)
 	}
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set("index_document", flattenIndexDocument(output.IndexDocument)); err != nil {
-		return diag.Errorf("setting index_document: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting index_document: %s", err)
 	}
 	if err := d.Set("redirect_all_requests_to", flattenRedirectAllRequestsTo(output.RedirectAllRequestsTo)); err != nil {
-		return diag.Errorf("setting redirect_all_requests_to: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting redirect_all_requests_to: %s", err)
 	}
 	if err := d.Set("routing_rule", flattenRoutingRules(output.RoutingRules)); err != nil {
-		return diag.Errorf("setting routing_rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting routing_rule: %s", err)
 	}
 	if output.RoutingRules != nil {
 		rr, err := normalizeRoutingRules(output.RoutingRules)
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 		d.Set("routing_rules", rr)
 	} else {
@@ -288,22 +291,23 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if output, err := findBucketLocation(ctx, conn, bucket, expectedBucketOwner); err != nil {
-		return diag.Errorf("reading S3 Bucket (%s) Location: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Location: %s", d.Id(), err)
 	} else {
 		endpoint, domain := bucketWebsiteEndpointAndDomain(bucket, string(output.LocationConstraint))
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	websiteConfig := &types.WebsiteConfiguration{}
@@ -326,7 +330,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		} else {
 			var unmarshalledRules []types.RoutingRule
 			if err := json.Unmarshal([]byte(d.Get("routing_rules").(string)), &unmarshalledRules); err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 			websiteConfig.RoutingRules = unmarshalledRules
 		}
@@ -339,7 +343,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 		if v, ok := d.GetOk("routing_rules"); ok {
 			var unmarshalledRules []types.RoutingRule
 			if err := json.Unmarshal([]byte(v.(string)), &unmarshalledRules); err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 			websiteConfig.RoutingRules = unmarshalledRules
 		}
@@ -356,18 +360,19 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 	_, err = conn.PutBucketWebsite(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Bucket Website Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Website Configuration (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketWebsiteConfigurationRead(ctx, d, meta)
+	return append(diags, resourceBucketWebsiteConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3.DeleteBucketWebsiteInput{
@@ -380,11 +385,11 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 	_, err = conn.DeleteBucketWebsite(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchWebsiteConfiguration) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Bucket Website Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Website Configuration (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
@@ -392,10 +397,10 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for S3 Bucket Website Configuration (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Website Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findBucketWebsite(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketWebsiteOutput, error) {

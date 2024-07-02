@@ -74,7 +74,7 @@ func ResourcePrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -147,7 +147,7 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 	}
 
 	req := &directconnect.CreatePrivateVirtualInterfaceInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		NewPrivateVirtualInterface: &directconnect.NewPrivateVirtualInterface{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
@@ -217,7 +217,7 @@ func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
-	d.Set("connection_id", vif.ConnectionId)
+	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)

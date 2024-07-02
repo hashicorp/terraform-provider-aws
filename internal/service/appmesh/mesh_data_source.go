@@ -18,6 +18,8 @@ import (
 )
 
 // @SDKDataSource("aws_appmesh_mesh", name="Service Mesh")
+// @Tags
+// @Testing(serialize=true)
 func dataSourceMesh() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMeshRead,
@@ -45,7 +47,7 @@ func dataSourceMesh() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -59,7 +61,6 @@ func dataSourceMesh() *schema.Resource {
 func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get(names.AttrName).(string)
 	mesh, err := findMeshByTwoPartKey(ctx, conn, meshName, d.Get("mesh_owner").(string))
@@ -75,7 +76,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	meshOwner := aws.StringValue(mesh.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
@@ -93,9 +94,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setKeyValueTagsOut(ctx, tags)
 
 	return diags
 }

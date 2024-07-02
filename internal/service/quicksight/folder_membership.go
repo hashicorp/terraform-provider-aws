@@ -49,7 +49,7 @@ func (r *resourceFolderMembership) Metadata(_ context.Context, req resource.Meta
 func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

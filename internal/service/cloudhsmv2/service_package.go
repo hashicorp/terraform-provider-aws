@@ -19,16 +19,16 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudhsmv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return cloudhsmv2.NewFromConfig(cfg, func(o *cloudhsmv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
-
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*types.CloudHsmInternalFailureException](err, "request was rejected because of an AWS CloudHSM internal failure") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return cloudhsmv2.NewFromConfig(cfg,
+		cloudhsmv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *cloudhsmv2.Options) {
+			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+				if errs.IsAErrorMessageContains[*types.CloudHsmInternalFailureException](err, "request was rejected because of an AWS CloudHSM internal failure") {
+					return aws.TrueTernary
+				}
+				return aws.UnknownTernary // Delegate to configured Retryer.
+			}))
+		},
+	), nil
 }

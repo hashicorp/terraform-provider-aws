@@ -29,7 +29,7 @@ func ResourceAPNSChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -93,7 +93,7 @@ func resourceAPNSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.APNSChannelRequest{}
 
@@ -142,7 +142,7 @@ func resourceAPNSChannelRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "getting Pinpoint APNs Channel for application %s: %s", d.Id(), err)
 	}
 
-	d.Set("application_id", output.APNSChannelResponse.ApplicationId)
+	d.Set(names.AttrApplicationID, output.APNSChannelResponse.ApplicationId)
 	d.Set("default_authentication_method", output.APNSChannelResponse.DefaultAuthenticationMethod)
 	d.Set(names.AttrEnabled, output.APNSChannelResponse.Enabled)
 	// Sensitive params are not returned

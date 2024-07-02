@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -74,6 +75,7 @@ func dataSourceDelegatedAdministrators() *schema.Resource {
 }
 
 func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
@@ -85,12 +87,12 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 	output, err := findDelegatedAdministrators(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DelegatedAdministrator]())
 
 	if err != nil {
-		return diag.Errorf("reading Organizations Delegated Administrators: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Administrators: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(output)); err != nil {
-		return diag.Errorf("setting delegated_administrators: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting delegated_administrators: %s", err)
 	}
 
 	return nil

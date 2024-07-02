@@ -70,7 +70,7 @@ func ResourceTopicRule() *schema.Resource {
 					},
 				},
 			},
-			"cloudwatch_logs": {
+			names.AttrCloudWatchLogs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -273,7 +273,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 						},
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -1286,7 +1286,7 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_alarm: %s", err)
 	}
 
-	if err := d.Set("cloudwatch_logs", flattenCloudWatchLogsActions(output.Rule.Actions)); err != nil {
+	if err := d.Set(names.AttrCloudWatchLogs, flattenCloudWatchLogsActions(output.Rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_logs: %s", err)
 	}
 
@@ -2070,7 +2070,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *awstypes.TopicRulePayload {
 	}
 
 	// Legacy root attribute handling
-	for _, tfMapRaw := range d.Get("cloudwatch_logs").(*schema.Set).List() {
+	for _, tfMapRaw := range d.Get(names.AttrCloudWatchLogs).(*schema.Set).List() {
 		action := expandCloudWatchLogsAction([]interface{}{tfMapRaw})
 
 		if action == nil {
@@ -3303,7 +3303,7 @@ func flattenErrorAction(errorAction *awstypes.Action) []map[string]interface{} {
 		return results
 	}
 	if errorAction.CloudwatchLogs != nil {
-		results = append(results, map[string]interface{}{"cloudwatch_logs": flattenCloudWatchLogsActions(input)})
+		results = append(results, map[string]interface{}{names.AttrCloudWatchLogs: flattenCloudWatchLogsActions(input)})
 		return results
 	}
 	if errorAction.CloudwatchMetric != nil {

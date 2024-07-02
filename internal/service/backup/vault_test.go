@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -223,7 +223,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 
 func testAccCheckVaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_backup_vault" {
 				continue
@@ -257,7 +257,7 @@ func testAccCheckVaultExists(ctx context.Context, name string, v *backup.Describ
 			return fmt.Errorf("No Backup Vault ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		output, err := tfbackup.FindVaultByName(ctx, conn, rs.Primary.ID)
 
@@ -274,7 +274,7 @@ func testAccCheckVaultExists(ctx context.Context, name string, v *backup.Describ
 func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) resource.TestCheckFunc { // nosemgrep:ci.backup-in-func-name
 	return func(s *terraform.State) error {
 		client := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := client.BackupConn(ctx)
+		conn := client.BackupClient(ctx)
 
 		iamRoleARN := arn.ARN{
 			Partition: client.Partition,
@@ -289,7 +289,7 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 			AccountID: client.AccountID,
 			Resource:  fmt.Sprintf("table/%s", rName),
 		}.String()
-		output, err := conn.StartBackupJobWithContext(ctx, &backup.StartBackupJobInput{
+		output, err := conn.StartBackupJob(ctx, &backup.StartBackupJobInput{
 			BackupVaultName: aws.String(rName),
 			IamRoleArn:      aws.String(iamRoleARN),
 			ResourceArn:     aws.String(resourceARN),
@@ -299,7 +299,7 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 			return fmt.Errorf("error starting Backup Job: %w", err)
 		}
 
-		jobID := aws.StringValue(output.BackupJobId)
+		jobID := aws.ToString(output.BackupJobId)
 
 		_, err = tfbackup.WaitJobCompleted(ctx, conn, jobID, 10*time.Minute)
 
@@ -312,11 +312,11 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.ListBackupVaultsInput{}
 
-	_, err := conn.ListBackupVaultsWithContext(ctx, input)
+	_, err := conn.ListBackupVaults(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

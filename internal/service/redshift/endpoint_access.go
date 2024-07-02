@@ -56,7 +56,7 @@ func resourceEndpointAccess() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"resource_owner": {
+			names.AttrResourceOwner: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -134,7 +134,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 		createOpts.ClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("resource_owner"); ok {
+	if v, ok := d.GetOk(names.AttrResourceOwner); ok {
 		createOpts.ResourceOwner = aws.String(v.(string))
 	}
 
@@ -172,7 +172,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("endpoint_name", endpoint.EndpointName)
 	d.Set("subnet_group_name", endpoint.SubnetGroupName)
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSgsIdsToSlice(endpoint.VpcSecurityGroups))
-	d.Set("resource_owner", endpoint.ResourceOwner)
+	d.Set(names.AttrResourceOwner, endpoint.ResourceOwner)
 	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
 	d.Set(names.AttrPort, endpoint.Port)
 	d.Set(names.AttrAddress, endpoint.Address)

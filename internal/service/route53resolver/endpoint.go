@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -126,6 +127,7 @@ func ResourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.CreateResolverEndpointInput{
@@ -151,19 +153,20 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateResolverEndpointWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route53 Resolver Endpoint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Resolver Endpoint: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverEndpoint.Id))
 
 	if _, err := waitEndpointCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Endpoint (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceEndpointRead(ctx, d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	ep, err := FindResolverEndpointByID(ctx, conn, d.Id())
@@ -171,11 +174,11 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route53 Resolver Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route53 Resolver Endpoint (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(ep.Arn)
@@ -190,17 +193,18 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrIPAddress, schema.NewSet(endpointHashIPAddress, flattenEndpointIPAddresses(ipAddresses))); err != nil {
-		return diag.Errorf("setting ip_address: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ip_address: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	if d.HasChanges(names.AttrName, "protocols", "resolver_endpoint_type") {
@@ -223,11 +227,11 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		_, err := conn.UpdateResolverEndpointWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Route53 Resolver Endpoint (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Route53 Resolver Endpoint (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -248,11 +252,11 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.AssociateResolverEndpointIpAddressWithContext(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("associating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "associating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
 			}
 
 			if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
 			}
 		}
 
@@ -265,19 +269,20 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.DisassociateResolverEndpointIpAddressWithContext(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("disassociating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disassociating Route53 Resolver Endpoint (%s) IP address: %s", d.Id(), err)
 			}
 
 			if _, err := waitEndpointUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Endpoint (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceEndpointRead(ctx, d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Endpoint: %s", d.Id())
@@ -286,18 +291,18 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route53 Resolver Endpoint (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Resolver Endpoint (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Route53 Resolver Endpoint (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Resolver Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindResolverEndpointByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverEndpoint, error) {

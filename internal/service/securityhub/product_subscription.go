@@ -89,7 +89,7 @@ func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Product Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
