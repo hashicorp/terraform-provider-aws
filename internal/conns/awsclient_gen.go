@@ -90,6 +90,7 @@ import (
 	elasticloadbalancing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
+	emrcontainers_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrcontainers"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	eventbridge_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
@@ -216,7 +217,6 @@ import (
 	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
-	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
@@ -641,8 +641,8 @@ func (c *AWSClient) EMRClient(ctx context.Context) *emr_sdkv2.Client {
 	return errs.Must(client[*emr_sdkv2.Client](ctx, c, names.EMR, make(map[string]any)))
 }
 
-func (c *AWSClient) EMRContainersConn(ctx context.Context) *emrcontainers_sdkv1.EMRContainers {
-	return errs.Must(conn[*emrcontainers_sdkv1.EMRContainers](ctx, c, names.EMRContainers, make(map[string]any)))
+func (c *AWSClient) EMRContainersClient(ctx context.Context) *emrcontainers_sdkv2.Client {
+	return errs.Must(client[*emrcontainers_sdkv2.Client](ctx, c, names.EMRContainers, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRServerlessClient(ctx context.Context) *emrserverless_sdkv2.Client {

@@ -3808,7 +3808,7 @@ service "emrcontainers" {
 
   sdk {
     id             = "EMR containers"
-    client_version = [1]
+    client_version = [2]
   }
 
   names {
